@@ -37,16 +37,13 @@ public class Main implements Runnable {
     private HashMap<String, Agent> agents;
 
     //Our end point to the apis
-    public static String ENDPOINT;// = "https://api.gdax.com";
+    public static String ENDPOINT;
 
     //How much money do we start with
     public static double FUNDS;
 
     //where we write our log file(s)
     private PrintWriter writer;
-
-    //how long do we delay between created each agent during init
-    public static final long INIT_DELAY = 750L;
 
     //how long do we sleep the thread for
     public static final long DELAY = 1000L;
@@ -60,9 +57,6 @@ public class Main implements Runnable {
             //load the properties from our application.properties
             PropertyUtil.loadProperties();
 
-            //send notification our bot is starting
-            sendEmail("Trading Bot Hello", "Starting");
-
             SpringApplicationBuilder springApp = new SpringApplicationBuilder().properties(PropertyUtil.getProperties());
             springApp.sources(GdaxApiApplication.class);
             springApp.web(false);
@@ -71,6 +65,9 @@ public class Main implements Runnable {
             Main app = new Main(context);
             Thread thread = new Thread(app);
             thread.start();
+
+            //send notification our bot is starting
+            sendEmail("Trading Bot Hello", "Starting");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -163,7 +160,7 @@ public class Main implements Runnable {
                 displayMessage("Agent created - " + productId, true, writer);
 
                 //sleep for a few seconds
-                Thread.sleep(INIT_DELAY);
+                Thread.sleep(DELAY);
 
             } catch (Exception e) {
                 e.printStackTrace();

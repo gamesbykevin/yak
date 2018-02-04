@@ -19,7 +19,7 @@ public class Email {
     public static String GMAIL_SMTP_USERNAME = null;
     public static String GMAIL_SMTP_PASSWORD = null;
 
-    public static void sendEmail(final String subject, final String text) {
+    public static synchronized void sendEmail(final String subject, final String text) {
 
         //don't send email if email address doesn't exist
         if (EMAIL_NOTIFICATION_ADDRESS == null || EMAIL_NOTIFICATION_ADDRESS.trim().length() < 5)

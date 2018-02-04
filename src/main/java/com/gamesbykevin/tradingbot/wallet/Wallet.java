@@ -80,6 +80,8 @@ public class Wallet {
 
     public void update(final Agent agent, final float rsi, final String productId, final double currentPrice) {
 
+        String subject = null, text = null;
+
         //if we have quantity check current stock price
         if (quantity > 0) {
 
@@ -115,8 +117,6 @@ public class Wallet {
                 final double priceBought = (this.purchasePrice * getQuantity());
                 final double priceSold = (currentPrice * getQuantity());
 
-                String subject, text;
-
                 //display money changed
                 if (priceBought > priceSold) {
                     subject = "We lost $" + (priceBought - priceSold);
@@ -131,9 +131,6 @@ public class Wallet {
                 agent.displayMessage(subject, true);
                 agent.displayMessage(text, true);
 
-                //send message
-                sendEmail(subject, text);
-
                 //reset quantity back to 0
                 setQuantity(0);
             }
@@ -143,12 +140,9 @@ public class Wallet {
                 setStopTrading(true);
 
             if (hasStopTrading()) {
-                String subject = "We stopped trading " + productId;
-                String text = "Funds dropped below our comfort level ($" + getFunds() + "). Stopped Trading for " + productId;
+                subject = "We stopped trading " + productId;
+                text = "Funds dropped below our comfort level ($" + getFunds() + "). Stopped Trading for " + productId;
                 agent.displayMessage(text,true);
-
-                //send message
-                sendEmail(subject, text);
             }
 
         } else {
@@ -181,5 +175,11 @@ public class Wallet {
                 agent.displayMessage("Waiting. Product " + productId + ", Available funds $" + getFunds(), true);
             }
         }
+
+
+        //send message
+        if (subject != null && text != null)
+            sendEmail(subject, text);
+
     }
 }
