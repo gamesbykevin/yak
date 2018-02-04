@@ -29,11 +29,11 @@ public class Agent {
     //the product we are trading
     private final String productId;
 
-    //how long do we sleep the thread for
-    public static final long DELAY = 1000L;
-
     //when is the last time we loaded historical data
     private long previous;
+
+    //are we updating the agent?
+    private boolean working = false;
 
     public Agent(final String productId, final double funds) {
 
@@ -59,6 +59,13 @@ public class Agent {
     }
 
     public synchronized void update() {
+
+        //don't continue if we are working
+        if (working)
+            return;
+
+        //flag that this agent is working
+        working = true;
 
         try {
 
@@ -87,6 +94,9 @@ public class Agent {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        //flag that we are no longer working
+        working = false;
     }
 
     private double getCurrentPrice() {

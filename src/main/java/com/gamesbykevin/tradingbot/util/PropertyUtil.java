@@ -4,6 +4,7 @@ import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
@@ -25,8 +26,8 @@ public class PropertyUtil {
                 //call this when running the project in intellij
                 PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
 
-                //call this when you create an executable .jar and place the config.properties file in the same directory as the .jar
-                //properties.load(new FileInputStream(PROPERTY_FILE));
+                //call this when you create an executable .jar and place the application.properties file in the same directory as the .jar
+                //PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
             } catch(Exception ex) {
                 ex.printStackTrace();
                 System.exit(10);
@@ -39,6 +40,9 @@ public class PropertyUtil {
     public static void loadProperties() {
 
         displayMessage("Loading properties: " + PROPERTY_FILE, false, null);
+
+        //our api url endpoint
+        Main.ENDPOINT = getProperties().getProperty("gdax.api.baseUrl");
 
         //grab the email address from our config
         Email.EMAIL_NOTIFICATION_ADDRESS = getProperties().getProperty("emailNotification");

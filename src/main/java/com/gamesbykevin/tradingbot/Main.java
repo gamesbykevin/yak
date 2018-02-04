@@ -12,6 +12,7 @@ import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -20,11 +21,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.Agent.DELAY;
 import static com.gamesbykevin.tradingbot.util.Email.getDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
+@SpringBootApplication
 public class Main implements Runnable {
 
     private AccountService accountService;
@@ -35,14 +36,10 @@ public class Main implements Runnable {
     private String[] productIds;
     private HashMap<String, Agent> agents;
 
-    /**
-     * Our end point to the apis
-     */
-    public static final String ENDPOINT = "https://api.gdax.com";
+    //Our end point to the apis
+    public static String ENDPOINT;// = "https://api.gdax.com";
 
-    /**
-     * How much money do we start with
-     */
+    //How much money do we start with
     public static double FUNDS;
 
     //where we write our log file(s)
@@ -50,6 +47,9 @@ public class Main implements Runnable {
 
     //how long do we delay between created each agent during init
     public static final long INIT_DELAY = 750L;
+
+    //how long do we sleep the thread for
+    public static final long DELAY = 1000L;
 
     public static void main(String[] args) {
 
