@@ -1,13 +1,13 @@
 package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
+import java.io.PrintWriter;
 import java.util.Properties;
 
-import static com.gamesbykevin.tradingbot.agent.Agent.displayMessage;
+import static com.gamesbykevin.tradingbot.util.Email.getDateDesc;
 
 public class PropertyUtil {
 
@@ -38,7 +38,7 @@ public class PropertyUtil {
 
     public static void loadProperties() {
 
-        displayMessage("Loading properties: " + PROPERTY_FILE, false);
+        displayMessage("Loading properties: " + PROPERTY_FILE, false, null);
 
         //grab the email address from our config
         Email.EMAIL_NOTIFICATION_ADDRESS = getProperties().getProperty("emailNotification");
@@ -64,5 +64,17 @@ public class PropertyUtil {
 
         //how many periods to we use to calculate rsi
         Calculator.PERIODS = Integer.parseInt(getProperties().getProperty("periods"));
+    }
+
+    public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {
+
+        //print to console
+        System.out.println(message);
+        System.out.flush();
+
+        if (write) {
+            writer.println(getDateDesc() + ":  " + message);
+            writer.flush();
+        }
     }
 }

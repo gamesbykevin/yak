@@ -2,6 +2,8 @@ package com.gamesbykevin.tradingbot.agent;
 
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.rsi.Calculator.Duration;
+import com.gamesbykevin.tradingbot.util.LogFile;
+import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.PrintWriter;
@@ -10,7 +12,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.util.Email.getDateDesc;
 
-public class Agent implements Runnable {
+public class Agent {
 
     //our reference to calculate rsi
     private final Calculator calculator;
@@ -19,7 +21,7 @@ public class Agent implements Runnable {
     private final Wallet wallet;
 
     //object used to write to a text file
-    public static PrintWriter WRITER;
+    private final PrintWriter writer;
 
     //history of stock prices
     private final List<Double> history;
@@ -27,22 +29,19 @@ public class Agent implements Runnable {
     //the product we are trading
     private final String productId;
 
-    //we want to run a thread
-    private Thread thread;
-
     //how long do we sleep the thread for
-    public static final long DELAY = 1000;
+    public static final long DELAY = 1000L;
 
     //when is the last time we loaded historical data
     private long previous;
 
-    public Agent(final String productId, final double funds) throws Exception {
+    public Agent(final String productId, final double funds) {
 
         //store the product this agent is trading
         this.productId = productId;
 
         //create our object to write to a text file
-        WRITER = new PrintWriter(productId + "-" + getDateDesc() + ".log", "UTF-8");
+        this.writer = LogFile.getPrintWriter(productId + "-" + getDateDesc() + ".log");
 
         //update historical data and sleep
         this.calculator = new Calculator(productId);
@@ -57,51 +56,40 @@ public class Agent implements Runnable {
 
         //display message and write to file
         displayMessage("Product: " + productId + ", Starting $" + funds, true);
-
-        //create new thread and start it
-        this.thread = new Thread(this);
-        this.thread.start();
     }
 
-    @Override
-    public void run() {
+    public synchronized void update() {
 
-        while (true) {
+        try {
 
-            try {
+            //skip if we are no longer trading this coin
+            if (wallet.hasStopTrading())
+                return;
 
-                //skip if we are no longer trading this coin
-                if (wallet.hasStopTrading())
-                    return;
+            //we can't continue if we can't access the current price
+            if (history.isEmpty())
+                return;
 
-                //we can't continue if we can't access the current price
-                if (history.isEmpty())
-                    return;
+            //we don't need to update every second
+            if (System.currentTimeMillis() - previous >= Duration.OneMinute.duration * 1000) {
 
-                //we don't need to update every second
-                if (System.currentTimeMillis() - previous >= Duration.OneMinute.duration * 1000) {
-
-                    //update our historical data and update the last update
-                    calculator.update(Duration.OneMinute);
-                    this.previous = System.currentTimeMillis();
-                }
-
-                //calculate rsi
-                calculator.calculateRsi(getCurrentPrice());
-
-                //now let's check our wallet
-                wallet.update(calculator.getRsi(), productId, getCurrentPrice());
-
-                //sleep the thread
-                Thread.sleep(DELAY);
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                //update our historical data and update the last update
+                this.calculator.update(Duration.OneMinute);
+                this.previous = System.currentTimeMillis();
             }
+
+            //calculate rsi
+            calculator.calculateRsi(this, getCurrentPrice());
+
+            //now let's check our wallet
+            wallet.update(this, calculator.getRsi(), productId, getCurrentPrice());
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
-    public double getCurrentPrice() {
+    private double getCurrentPrice() {
         return this.history.get(this.history.size() - 1);
     }
 
@@ -113,14 +101,7 @@ public class Agent implements Runnable {
         return wallet.getTotalAssets();
     }
 
-    public static void displayMessage(String message, boolean write) {
-
-        //print to console
-        System.out.println(message);
-
-        if (write) {
-            WRITER.println(getDateDesc() + ":  " + message);
-            WRITER.flush();
-        }
+    public void displayMessage(String message, boolean write) {
+        PropertyUtil.displayMessage(message, write, writer);
     }
 }

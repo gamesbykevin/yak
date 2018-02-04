@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
-import static com.gamesbykevin.tradingbot.agent.Agent.displayMessage;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class Email {
 
@@ -46,13 +46,13 @@ public class Email {
             message.setText(text);
 
             //we are now sending
-            displayMessage("Sending email....", false);
+            displayMessage("Sending email....", false, null);
 
             //send the email
             Transport.send(message);
 
             //display we are good
-            displayMessage("Sent message successfully....", false);
+            displayMessage("Sent message successfully....", false, null);
 
         } catch (Exception e) {
             e.printStackTrace();

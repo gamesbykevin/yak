@@ -2,11 +2,9 @@ package com.gamesbykevin.tradingbot.websocket;
 
 import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.websocketfeed.message.*;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.product.Ticker;
+import com.gamesbykevin.tradingbot.util.GSon;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +14,10 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import javax.websocket.*;
-import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 
-import static com.gamesbykevin.tradingbot.agent.Agent.displayMessage;
 
 @Component
 @ClientEndpoint
@@ -124,10 +120,11 @@ public class MyWebsocketFeed {
                     //displayMessage("message: " + json, false);
 
                     //parse json string to java object
-                    Ticker ticker = Main.getGson().fromJson(json, Ticker.class);
+                    Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
                     //update the appropriate agent with the current stock price
                     agents.get(ticker.product_id).addHistory(ticker.price);
+                    agents.get(ticker.product_id).update();
 
                     return null;
                 }

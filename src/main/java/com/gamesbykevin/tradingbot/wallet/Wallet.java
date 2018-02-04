@@ -1,10 +1,8 @@
 package com.gamesbykevin.tradingbot.wallet;
 
-import static com.gamesbykevin.tradingbot.agent.Agent.displayMessage;
-import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
+import com.gamesbykevin.tradingbot.agent.Agent;
 
-import com.gamesbykevin.tradingbot.product.Product;
-import com.gamesbykevin.tradingbot.rsi.Calculator;
+import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 
 public class Wallet {
 
@@ -80,7 +78,7 @@ public class Wallet {
         return getFunds() + (purchasePrice * getQuantity());
     }
 
-    public void update(final float rsi, final String productId, final double currentPrice) {
+    public void update(final Agent agent, final float rsi, final String productId, final double currentPrice) {
 
         //if we have quantity check current stock price
         if (quantity > 0) {
@@ -105,7 +103,7 @@ public class Wallet {
 
             } else {
 
-                displayMessage("Waiting. Product " + productId + " Current $" + currentPrice + ", Purchase $" + purchasePrice + ", Quantity: " + getQuantity(), true);
+                agent.displayMessage("Waiting. Product " + productId + " Current $" + currentPrice + ", Purchase $" + purchasePrice + ", Quantity: " + getQuantity(), true);
             }
 
             //if we are selling our stock
@@ -130,8 +128,8 @@ public class Wallet {
                 text = "Sell " + productId + " quantity: " + getQuantity() + " @ $" + currentPrice + " remaining funds $" + getFunds();
 
                 //display message(s)
-                displayMessage(subject, true);
-                displayMessage(text, true);
+                agent.displayMessage(subject, true);
+                agent.displayMessage(text, true);
 
                 //send message
                 sendEmail(subject, text);
@@ -140,14 +138,14 @@ public class Wallet {
                 setQuantity(0);
             }
 
-            //if we lost too much money we will stop trading
-            if (getFunds() < (STOP_TRADING_RATIO * startingFunds))
+            //if we lost too much money and have no quantity we will stop trading
+            if (getFunds() < (STOP_TRADING_RATIO * startingFunds) && quantity <= 0)
                 setStopTrading(true);
 
             if (hasStopTrading()) {
                 String subject = "We stopped trading " + productId;
                 String text = "Funds dropped below our comfort level ($" + getFunds() + "). Stopped Trading for " + productId;
-                displayMessage(text,true);
+                agent.displayMessage(text,true);
 
                 //send message
                 sendEmail(subject, text);
@@ -177,10 +175,10 @@ public class Wallet {
                 setFunds(0);
 
                 //display the transaction
-                displayMessage("Buy " + productId + " quantity: " + getQuantity() + " @ $" + this.purchasePrice, true);
+                agent.displayMessage("Buy " + productId + " quantity: " + getQuantity() + " @ $" + this.purchasePrice, true);
 
             } else {
-                displayMessage("Waiting. Product " + productId + ", Available funds $" + getFunds(), true);
+                agent.displayMessage("Waiting. Product " + productId + ", Available funds $" + getFunds(), true);
             }
         }
     }

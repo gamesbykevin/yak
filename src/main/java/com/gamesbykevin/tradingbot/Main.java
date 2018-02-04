@@ -8,58 +8,32 @@ import com.coinbase.exchange.api.marketdata.MarketDataService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
-import com.google.gson.*;
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.lang.reflect.Type;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.Agent.DELAY;
-import static com.gamesbykevin.tradingbot.agent.Agent.displayMessage;
+import static com.gamesbykevin.tradingbot.util.Email.getDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
-public class Main {
-
-    public static void main(String[] args) {
-
-        try {
-
-            displayMessage("Starting...", false);
-
-            //load the properties from our application.properties
-            PropertyUtil.loadProperties();
-
-            //send notification our bot is starting
-            //sendEmail("Trading Bot Hello", "Starting");
-
-            SpringApplicationBuilder springApp = new SpringApplicationBuilder().properties(PropertyUtil.getProperties());
-            springApp.sources(GdaxApiApplication.class);
-            springApp.web(false);
-            ConfigurableApplicationContext context = springApp.run();
-            Main app = new Main(context);
-            app.loop();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+public class Main implements Runnable {
 
     private AccountService accountService;
     private MarketDataService marketService;
     private ProductService productService;
 
-    private static Gson GSON;
     private MyWebsocketFeed websocketFeed;
     private String[] productIds;
-    private final HashMap<String, Agent> agents;
+    private HashMap<String, Agent> agents;
 
     /**
      * Our end point to the apis
@@ -69,15 +43,55 @@ public class Main {
     /**
      * How much money do we start with
      */
-    public static double FUNDS = 1000.00d;
+    public static double FUNDS;
+
+    //where we write our log file(s)
+    private PrintWriter writer;
+
+    //how long do we delay between created each agent during init
+    public static final long INIT_DELAY = 750L;
+
+    public static void main(String[] args) {
+
+        try {
+
+            displayMessage("Starting...", false, null);
+
+            //load the properties from our application.properties
+            PropertyUtil.loadProperties();
+
+            //send notification our bot is starting
+            sendEmail("Trading Bot Hello", "Starting");
+
+            SpringApplicationBuilder springApp = new SpringApplicationBuilder().properties(PropertyUtil.getProperties());
+            springApp.sources(GdaxApiApplication.class);
+            springApp.web(false);
+            ConfigurableApplicationContext context = springApp.run();
+
+            Main app = new Main(context);
+            Thread thread = new Thread(app);
+            thread.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private Main(ConfigurableApplicationContext context) {
 
         ConfigurableListableBeanFactory factory = context.getBeanFactory();
+        this.accountService = factory.getBean(AccountService.class);
+        this.marketService = factory.getBean(MarketDataService.class);
+        this.productService = factory.getBean(ProductService.class);
 
-        accountService = factory.getBean(AccountService.class);
-        marketService = factory.getBean(MarketDataService.class);
-        productService = factory.getBean(ProductService.class);
+        //create the main log file
+        this.writer = LogFile.getPrintWriter("main-" + getDateDesc() + ".log");
+
+        //load our products we will be trading
+        loadProducts();
+    }
+
+    private void loadProducts() {
 
         List<Product> tmp = productService.getProducts();
         List<String> tmp1 = new ArrayList<>();
@@ -93,39 +107,18 @@ public class Main {
         for (int i = 0; i < productIds.length; i++) {
             productIds[i] = tmp1.get(i);
         }
-
-        //we will invest in each product equally
-        final double funds = FUNDS / (double)productIds.length;
-
-        //create new hash map of agents
-        this.agents = new HashMap<>();
-
-        //add an agent for each product we are trading
-        for (String productId : productIds) {
-            try {
-                this.agents.put(productId, new Agent(productId, funds));
-                Thread.sleep(5000);
-                displayMessage("Agent created - " + productId, true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        //create our web socket feed
-        websocketFeed = new MyWebsocketFeed(
-            PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
-            PropertyUtil.getProperties().getProperty("gdax.key"),
-            PropertyUtil.getProperties().getProperty("gdax.passphrase"),
-            new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
-            this.agents
-        );
     }
 
-    public void loop() {
+    @Override
+    public void run() {
+
+        //initialize
+        init();
 
         while(true) {
 
             try {
+
                 //get the updated information
                 websocketFeed.subscribe(new Subscribe(productIds));
 
@@ -139,7 +132,7 @@ public class Main {
                 }
 
                 //print current funds
-                displayMessage("Total assets $" + total + ", Starting funds $" + FUNDS, true);
+                displayMessage("Total assets $" + total + ", Starting funds $" + FUNDS, true, writer);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -147,28 +140,43 @@ public class Main {
         }
     }
 
-    /**
-     * Get GSon object
-     * @return Object used to parse json string
-     */
-    public static Gson getGson() {
+    private void init() {
 
-        if (GSON == null) {
+        //we will invest in each product equally
+        final double funds = FUNDS / (double)productIds.length;
 
-            //create our GSON object specifically to handle the unique datetime format in the json response
-            GSON = new GsonBuilder().registerTypeAdapter(DateTime.class, new JsonSerializer<DateTime>() {
-                @Override
-                public JsonElement serialize(DateTime json, Type typeOfSrc, JsonSerializationContext context) {
-                    return new JsonPrimitive(ISODateTimeFormat.dateTime().print(json));
-                }
-            }).registerTypeAdapter(DateTime.class, new JsonDeserializer<DateTime>() {
-                @Override
-                public DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                    return ISODateTimeFormat.dateTime().parseDateTime(json.getAsString());
-                }
-            }).create();
+        //create new hash map of agents
+        this.agents = new HashMap<>();
+
+        //add an agent for each product we are trading
+        for (String productId : productIds) {
+
+            try {
+
+                //create new agent
+                Agent agent = new Agent(productId, funds);
+
+                //add to list
+                this.agents.put(productId, agent);
+
+                //display agent is created
+                displayMessage("Agent created - " + productId, true, writer);
+
+                //sleep for a few seconds
+                Thread.sleep(INIT_DELAY);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
-        return GSON;
+        //create our web socket feed
+        websocketFeed = new MyWebsocketFeed(
+            PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
+            PropertyUtil.getProperties().getProperty("gdax.key"),
+            PropertyUtil.getProperties().getProperty("gdax.passphrase"),
+            new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
+            this.agents
+        );
     }
 }

@@ -1,12 +1,13 @@
 package com.gamesbykevin.tradingbot.rsi;
 
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.util.GSon;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.agent.Agent.displayMessage;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
@@ -54,29 +55,33 @@ public class Calculator {
 
     public synchronized void update(Duration key) {
 
-        //clear the current list
-        this.history.clear();
-
         //make our rest call and get the json response
         final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
 
         //convert json text to multi array
-        double[][] data = Main.getGson().fromJson(json, double[][].class);
+        double[][] data = GSon.getGson().fromJson(json, double[][].class);
 
-        //parse each period from the data
-        for (int row = 0; row < data.length; row++) {
+        //make sure we have data before we update
+        if (data != null) {
 
-            //create and populate our period
-            Period period = new Period();
-            period.time = (long)data[row][0];
-            period.low = data[row][1];
-            period.high = data[row][2];
-            period.open = data[row][3];
-            period.close = data[row][4];
-            period.volume = data[row][5];
+            //clear the current list
+            this.history.clear();
 
-            //add to array list
-            this.history.add(period);
+            //parse each period from the data
+            for (int row = 0; row < data.length; row++) {
+
+                //create and populate our period
+                Period period = new Period();
+                period.time = (long) data[row][0];
+                period.low = data[row][1];
+                period.high = data[row][2];
+                period.open = data[row][3];
+                period.close = data[row][4];
+                period.volume = data[row][5];
+
+                //add to array list
+                this.history.add(period);
+            }
         }
     }
 
@@ -84,7 +89,7 @@ public class Calculator {
      * Get the RSI value
      * @return The RSI value based on our data
      */
-    public synchronized void calculateRsi(final double currentPrice) {
+    public synchronized void calculateRsi(final Agent agent, final double currentPrice) {
 
         //create temp list
         List<Double> tmp = new ArrayList<>();
@@ -95,10 +100,10 @@ public class Calculator {
         }
 
         //return our result
-        calculateRsi(tmp, PERIODS, currentPrice);
+        calculateRsi(tmp, PERIODS, agent, currentPrice);
     }
 
-    private void calculateRsi(List<Double> periods, final int periodTotal, final double currentPrice) {
+    private synchronized void calculateRsi(List<Double> periods, final int periodTotal, final Agent agent, final double currentPrice) {
 
         //track total gains and losses
         float gain = 0, loss = 0;
@@ -148,7 +153,7 @@ public class Calculator {
         setRsi(100 - (100 / (1 + smotheredRS)));
 
         //print the rsi value
-        displayMessage("Product (" + productId + ") RSI = " + getRsi() + ", Stock Price $" + currentPrice, true);
+        agent.displayMessage("Product (" + productId + ") RSI = " + getRsi() + ", Stock Price $" + currentPrice, true);
     }
 
     private void setRsi(final float rsi) {
