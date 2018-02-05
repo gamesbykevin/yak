@@ -29,6 +29,16 @@ public class Calculator {
     //the product we are tracking
     private String productId;
 
+    public enum Trend {
+        Upward, Downward, None
+    }
+
+    //what is the current trend?
+    private Trend trend = Trend.None;
+
+    //total number of breaks
+    private int breaks = 0;
+
     public enum Duration {
 
         OneMinute(60);
@@ -68,7 +78,7 @@ public class Calculator {
             this.history.clear();
 
             //parse each period from the data
-            for (int row = 0; row < data.length; row++) {
+            for (int row = PERIODS - 1; row >= 0; row--) {
 
                 //create and populate our period
                 Period period = new Period();
@@ -81,6 +91,106 @@ public class Calculator {
 
                 //add to array list
                 this.history.add(period);
+            }
+        }
+    }
+
+    private void setTrend(final Trend trend) {
+        this.trend = trend;
+    }
+
+    private void setBreaks(final int breaks) {
+        this.breaks = breaks;
+    }
+
+    public Trend getTrend() {
+        return this.trend;
+    }
+
+    public int getBreaks() {
+        return this.breaks;
+    }
+
+    public synchronized void calculateTrend(final Agent agent) {
+
+        //reset values
+        setTrend(Trend.None);
+        setBreaks(0);
+
+        //if not large enough skip, this shouldn't happen
+        if (history.size() < PERIODS)
+            return;
+
+        //we want to start here
+        Period first = history.get(0);
+
+        //the first element is the most recent and is last
+        Period last = history.get(PERIODS - 1);
+
+        //our coordinates to calculate slope
+        final double x1 = 0, y1, x2 = PERIODS - 1, y2;
+
+        //are we checking an upward trend?
+        if (first.close < last.close) {
+            setTrend(Trend.Upward);
+        } else if (first.close > last.close) {
+            setTrend(Trend.Downward);
+        } else {
+            //no difference
+            return;
+        }
+
+        //are we detecting and upward or downward trend?
+        switch (getTrend()) {
+            case Upward:
+                y1 = first.low;
+                y2 = last.low;
+                break;
+
+            case Downward:
+                y1 = first.high;
+                y2 = last.high;
+                break;
+
+            case None:
+            default:
+                return;
+        }
+
+        //the value of y when x = 0
+        final double yIntercept = y1;
+
+        //calculate slope
+        final double slope = (y2 - y1) / (x2 - x1);
+
+        //check and see if every period is above the slope indicating an upward trend
+        for (int i = 1; i < PERIODS - 1; i++) {
+
+            //get the current period
+            Period current = history.get(i);
+
+            //the current x-coordinate
+            final double x = i;
+
+            //calculate the y-coordinate
+            final double y = (slope * x) + yIntercept;
+
+            //are we checking for an upward trend
+            switch (getTrend()) {
+
+                case Upward:
+
+                    //if the current low is below the calculated y-coordinate slope we have a break
+                    if (current.low < y)
+                        setBreaks(getBreaks() + 1);
+                    break;
+
+                case Downward:
+
+                    //if the current high is above the calculated y-coordinate slope we have a break
+                    if (current.high > y)
+                        setBreaks(getBreaks() + 1);
+                    break;
             }
         }
     }
@@ -100,25 +210,25 @@ public class Calculator {
         }
 
         //return our result
-        calculateRsi(tmp, PERIODS, agent, currentPrice);
+        calculateRsi(tmp, agent, currentPrice);
     }
 
-    private synchronized void calculateRsi(List<Double> periods, final int periodTotal, final Agent agent, final double currentPrice) {
+    private synchronized void calculateRsi(List<Double> periods, final Agent agent, final double currentPrice) {
 
         //track total gains and losses
         float gain = 0, loss = 0;
         float gainCurrent = 0, lossCurrent = 0;
 
         //go through the periods to calculate rsi
-        for (int i = 0; i < periodTotal - 1; i++) {
+        for (int i = 0; i < periods.size() - 1; i++) {
 
             //prevent index out of bounds exception
             if (i + 1 >= periods.size())
                 break;
 
             //get the next and previous prices
-            double next = periods.get(i);
-            double previous = periods.get(i + 1);
+            double previous = periods.get(i);
+            double next = periods.get(i + 1);
 
             if (next > previous) {
 
@@ -132,22 +242,25 @@ public class Calculator {
             }
         }
 
+        //get the latest price in our list so we can compare to the current price
+        final double recentPrice = periods.get(periods.size() - 1);
+
         //check if the current price is a gain or loss
-        if (currentPrice > periods.get(0)) {
-            gainCurrent = (float)(currentPrice - periods.get(0));
+        if (currentPrice > recentPrice) {
+            gainCurrent = (float)(currentPrice - recentPrice);
         } else {
-            lossCurrent = (float)(periods.get(0) - currentPrice);
+            lossCurrent = (float)(recentPrice - currentPrice);
         }
 
         //calculate the average gain and loss
-        float avgGain = (gain / periodTotal);
-        float avgLoss = (loss / periodTotal);
+        float avgGain = (gain / periods.size());
+        float avgLoss = (loss / periods.size());
 
         //smothered rsi including current gain loss (more accurate)
         float smotheredRS =
-            (((avgGain * (periodTotal - 1)) + gainCurrent) / periodTotal)
+            (((avgGain * (periods.size() - 1)) + gainCurrent) / periods.size())
             /
-            (((avgLoss * (periodTotal - 1)) + lossCurrent) / periodTotal);
+            (((avgLoss * (periods.size() - 1)) + lossCurrent) / periods.size());
 
         //calculate the new and improved more accurate rsi
         setRsi(100 - (100 / (1 + smotheredRS)));

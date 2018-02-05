@@ -24,10 +24,10 @@ public class PropertyUtil {
 
             try {
                 //call this when running the project in intellij
-                //PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
+                PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
 
                 //call this when you create an executable .jar and place the application.properties file in the same directory as the .jar
-                PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
+                //PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
             } catch(Exception ex) {
                 ex.printStackTrace();
                 System.exit(10);
@@ -61,7 +61,10 @@ public class PropertyUtil {
         Wallet.RESISTANCE_LINE = Float.parseFloat(getProperties().getProperty("resistanceLine"));
 
         //how long do we hold onto stock until we sell to cut our losses
-        Wallet.SELL_RATIO = Float.parseFloat(getProperties().getProperty("sellRatio"));
+        Wallet.SELL_LOSS_RATIO = Float.parseFloat(getProperties().getProperty("sellLossRatio"));
+
+        //how long do we hold onto stock until we sell
+        Wallet.SELL_GAIN_RATIO = Float.parseFloat(getProperties().getProperty("sellGainRatio"));
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));

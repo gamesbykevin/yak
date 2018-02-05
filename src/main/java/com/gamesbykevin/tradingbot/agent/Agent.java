@@ -67,6 +67,9 @@ public class Agent {
         //flag that this agent is working
         working = true;
 
+        //get the current price in case it changes while we are still processing
+        final double currentPrice = getCurrentPrice();
+
         try {
 
             //skip if we are no longer trading this coin
@@ -85,11 +88,14 @@ public class Agent {
                 this.previous = System.currentTimeMillis();
             }
 
+            //check if there is a trend
+            calculator.calculateTrend(this);
+
             //calculate rsi
-            calculator.calculateRsi(this, getCurrentPrice());
+            calculator.calculateRsi(this, currentPrice);
 
             //now let's check our wallet
-            wallet.update(this, calculator.getRsi(), productId, getCurrentPrice());
+            wallet.update(this, calculator, productId, currentPrice);
 
         } catch (Exception ex) {
             ex.printStackTrace();

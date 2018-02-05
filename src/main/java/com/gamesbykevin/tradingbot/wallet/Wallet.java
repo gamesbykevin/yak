@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.wallet;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.rsi.Calculator;
 
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 
@@ -18,22 +19,27 @@ public class Wallet {
     /**
      * The support line meaning the stock is oversold
      */
-    public static float SUPPORT_LINE = 30.0f;
+    public static float SUPPORT_LINE;
 
     /**
      * The resistance line meaning the stock is overbought
      */
-    public static float RESISTANCE_LINE = 60.0f;
+    public static float RESISTANCE_LINE;
 
     /**
      * The starting ratio point to sell if the stock drops too much to stop the bleeding
      */
-    public static float SELL_RATIO = .15f;
+    public static float SELL_LOSS_RATIO;
+
+    /**
+     * If the stock increases enough we will sell regardless of rsi value
+     */
+    public static float SELL_GAIN_RATIO;
 
     /**
      * If we lose an overall % of our funds let's stop the bleeding
      */
-    public static float STOP_TRADING_RATIO = .75f;
+    public static float STOP_TRADING_RATIO;
 
     //how many funds did we start with
     private final double startingFunds;
@@ -78,7 +84,7 @@ public class Wallet {
         return getFunds() + (purchasePrice * getQuantity());
     }
 
-    public void update(final Agent agent, final float rsi, final String productId, final double currentPrice) {
+    public void update(final Agent agent, final Calculator calculator, final String productId, final double currentPrice) {
 
         String subject = null, text = null;
 
@@ -86,13 +92,20 @@ public class Wallet {
         if (quantity > 0) {
 
             final double priceHigh = purchasePrice;
-            final double priceLow = purchasePrice - (purchasePrice * SELL_RATIO);
+            final double priceGain = purchasePrice + (purchasePrice * SELL_GAIN_RATIO);
+            final double priceLow = purchasePrice - (purchasePrice * SELL_LOSS_RATIO);
 
+            //do we sell the stock
             boolean sell = false;
 
-            if (currentPrice > priceHigh && rsi >= RESISTANCE_LINE) {
+            if (currentPrice > priceHigh && calculator.getRsi() >= RESISTANCE_LINE) {
 
                 //it grew enough, sell it
+                sell = true;
+
+            } else if (currentPrice >= priceGain) {
+
+                //regardless of rsi, if we made enough money to sell it
                 sell = true;
 
             } else if (currentPrice <= priceLow) {
@@ -101,7 +114,7 @@ public class Wallet {
                 sell = true;
 
                 //we also need to stop trading
-                setStopTrading(true);
+                //setStopTrading(true);
 
             } else {
 
@@ -149,9 +162,45 @@ public class Wallet {
 
             boolean buy = false;
 
-            //buy if the stock is oversold
-            if (rsi < SUPPORT_LINE)
-                buy = true;
+            //if the stock is oversold we are on the right track
+            if (calculator.getRsi() < SUPPORT_LINE) {
+
+                switch (calculator.getTrend()) {
+
+                    case Upward:
+
+                        //if the rsi is low and we see a constant upward trend, we will buy
+                        if (calculator.getBreaks() < 1) {
+                            buy = true;
+                            agent.displayMessage("There is a constant upward trend", true);
+                        }
+                        break;
+
+                    //we like downward trends
+                    case Downward:
+
+                        //there is a downward trend but some breaks so we think it will go back upwards
+                        if (calculator.getBreaks() > 3) {
+                            buy = true;
+                        } else if (calculator.getBreaks() < 1) {
+                            agent.displayMessage("There is a constant downward trend, and we will wait a little longer", true);
+                        } else {
+                            agent.displayMessage("There is a downward trend, but not enough breaks", true);
+                        }
+                        break;
+                }
+            } else {
+
+                //if there is a constant upward trend lets buy anyway regardless of rsi
+                switch (calculator.getTrend()) {
+                    case Upward:
+                        if (calculator.getBreaks() < 1) {
+                            buy = true;
+                            agent.displayMessage("There is a constant upward trend", true);
+                        }
+                        break;
+                }
+            }
 
             //are we buying stock
             if (buy) {
@@ -175,7 +224,6 @@ public class Wallet {
                 agent.displayMessage("Waiting. Product " + productId + ", Available funds $" + getFunds(), true);
             }
         }
-
 
         //send message
         if (subject != null && text != null)
