@@ -16,6 +16,13 @@ public class PropertyUtil {
 
     private static Properties PROPERTIES;
 
+    public static final long SECONDS_PER_MINUTE = 60L;
+
+    public static final long MILLISECONDS_PER_SECOND = 1000L;
+
+    //how many milliseconds are there per minute
+    public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
+
     public static Properties getProperties() {
 
         if (PROPERTIES == null) {
@@ -53,6 +60,16 @@ public class PropertyUtil {
 
         //our starting total funds
         Main.FUNDS = Double.parseDouble(getProperties().getProperty("funds"));
+
+        //get how long we wait until sending a notification delay of total assets
+        Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
+
+        //make sure minimum value is entered
+        if (Main.NOTIFICATION_DELAY * MILLISECONDS_PER_MINUTE < MILLISECONDS_PER_MINUTE) {
+            Main.NOTIFICATION_DELAY = MILLISECONDS_PER_MINUTE;
+        } else {
+            Main.NOTIFICATION_DELAY = Main.NOTIFICATION_DELAY * MILLISECONDS_PER_MINUTE;
+        }
 
         //what is the support line
         Wallet.SUPPORT_LINE = Float.parseFloat(getProperties().getProperty("supportLine"));

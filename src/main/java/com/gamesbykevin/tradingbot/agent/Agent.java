@@ -113,8 +113,12 @@ public class Agent {
         this.history.add(price);
     }
 
+    /**
+     * Get the total assets
+     * @return The total funds available + the value of stock we currently have @ the current stock price
+     */
     public double getAssets() {
-        return wallet.getTotalAssets();
+        return (wallet.getQuantity() * getCurrentPrice()) + wallet.getFunds();
     }
 
     public void displayMessage(String message, boolean write) {

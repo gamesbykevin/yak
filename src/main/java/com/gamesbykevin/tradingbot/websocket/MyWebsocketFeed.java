@@ -18,7 +18,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 
-
 @Component
 @ClientEndpoint
 public class MyWebsocketFeed {
@@ -30,7 +29,9 @@ public class MyWebsocketFeed {
     private MessageHandler messageHandler;
     private String passphrase;
     private String key;
+    private final String websocketUrl;
     private final HashMap<String, Agent> agents;
+    private boolean connecting = false;
 
     @Autowired
     public MyWebsocketFeed(
@@ -40,12 +41,22 @@ public class MyWebsocketFeed {
             Signature signature,
             HashMap<String, Agent> agents) {
 
+        this.websocketUrl = websocketUrl;
         this.key = key;
         this.passphrase = passphrase;
         this.signature = signature;
         this.agents = agents;
 
+        //connect to server
+        connect();
+    }
+
+    public void connect() {
+
         try {
+            //flag we are connecting
+            this.connecting = true;
+
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             container.connectToServer(this, new URI(websocketUrl));
         } catch (Exception e) {
@@ -54,25 +65,35 @@ public class MyWebsocketFeed {
         }
     }
 
+    public boolean isConnecting() {
+        return this.connecting;
+    }
+
+    public boolean hasConnection() {
+        return (this.userSession != null);
+    }
+
     /**
      * Callback hook for Connection open events.
      * @param userSession the userSession which is opened.
      */
     @OnOpen
     public void onOpen(Session userSession) {
-        //System.out.println("MyWebsocketFeed.onOpen()");
+        log.info("MyWebsocketFeed.onOpen()");
         this.userSession = userSession;
+
+        //we have now connected, flag false
+        this.connecting = false;
     }
 
     /**
      * Callback hook for Connection close events.
-     *
      * @param userSession the userSession which is getting closed.
      * @param reason      the reason for connection close
      */
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        //System.out.println("MyWebsocketFeed.onClose()");
+        log.info("MyWebsocketFeed.onClose()");
         this.userSession = null;
     }
 
@@ -92,7 +113,7 @@ public class MyWebsocketFeed {
      * @param msgHandler
      */
     public void addMyMessageHandler(MessageHandler msgHandler) {
-        //System.out.println("MyWebsocketFeed.addMyMessageHandler()");
+        log.info("MyWebsocketFeed.addMyMessageHandler()");
         this.messageHandler = msgHandler;
     }
 

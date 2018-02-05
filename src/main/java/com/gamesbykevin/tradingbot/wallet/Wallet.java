@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.wallet;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 
+import static com.gamesbykevin.tradingbot.rsi.Calculator.PERIODS;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 
 public class Wallet {
@@ -76,14 +77,6 @@ public class Wallet {
         return this.quantity;
     }
 
-    /**
-     * Get our total assets for this wallet
-     * @return Include our available funds plus the stock we bought at our purchase price
-     */
-    public double getTotalAssets() {
-        return getFunds() + (purchasePrice * getQuantity());
-    }
-
     public void update(final Agent agent, final Calculator calculator, final String productId, final double currentPrice) {
 
         String subject = null, text = null;
@@ -112,9 +105,6 @@ public class Wallet {
 
                 //it dropped enough, sell it
                 sell = true;
-
-                //we also need to stop trading
-                //setStopTrading(true);
 
             } else {
 
@@ -149,7 +139,7 @@ public class Wallet {
             }
 
             //if we lost too much money and have no quantity we will stop trading
-            if (getFunds() < (STOP_TRADING_RATIO * startingFunds) && quantity <= 0)
+            if (getFunds() < (STOP_TRADING_RATIO * startingFunds) && getQuantity() <= 0)
                 setStopTrading(true);
 
             if (hasStopTrading()) {
@@ -180,15 +170,17 @@ public class Wallet {
                     case Downward:
 
                         //there is a downward trend but some breaks so we think it will go back upwards
-                        if (calculator.getBreaks() > 3) {
+                        if (calculator.getBreaks() > (int)(PERIODS / 2)) {
                             buy = true;
+                            agent.displayMessage("There is a downward trend, but we see at least half of the periods with breaks so we will buy", true);
                         } else if (calculator.getBreaks() < 1) {
-                            agent.displayMessage("There is a constant downward trend, and we will wait a little longer", true);
+                            agent.displayMessage("There is a constant downward trend, and we will wait a little longer to buy", true);
                         } else {
-                            agent.displayMessage("There is a downward trend, but not enough breaks", true);
+                            agent.displayMessage("There is a downward trend, but not enough breaks to buy", true);
                         }
                         break;
                 }
+
             } else {
 
                 //if there is a constant upward trend lets buy anyway regardless of rsi
@@ -196,7 +188,7 @@ public class Wallet {
                     case Upward:
                         if (calculator.getBreaks() < 1) {
                             buy = true;
-                            agent.displayMessage("There is a constant upward trend", true);
+                            agent.displayMessage("There is a constant upward trend, so we will buy", true);
                         }
                         break;
                 }
@@ -225,8 +217,8 @@ public class Wallet {
             }
         }
 
-        //send message
-        if (subject != null && text != null)
+        //send message only if we stopped trading for this coin
+        if (subject != null && text != null && hasStopTrading())
             sendEmail(subject, text);
 
     }

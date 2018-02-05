@@ -48,6 +48,12 @@ public class Main implements Runnable {
     //how long do we sleep the thread for
     public static final long DELAY = 1000L;
 
+    //how long until we send an overall update
+    public static long NOTIFICATION_DELAY;
+
+    //the previous time
+    private long previous;
+
     public static void main(String[] args) {
 
         try {
@@ -67,7 +73,7 @@ public class Main implements Runnable {
             thread.start();
 
             //send notification our bot is starting
-            sendEmail("Trading Bot Hello", "Starting");
+            sendEmail("Trading Bot", "Started");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,20 +122,49 @@ public class Main implements Runnable {
 
             try {
 
-                //get the updated information
-                websocketFeed.subscribe(new Subscribe(productIds));
+                //if we have a connection and aren't currently trying to connect
+                if (websocketFeed.hasConnection() && !websocketFeed.isConnecting()) {
 
-                //sleep for a second
-                Thread.sleep(DELAY);
+                    //subscribe to get the updated information
+                    websocketFeed.subscribe(new Subscribe(productIds));
 
-                double total = 0;
+                    //sleep for a second
+                    Thread.sleep(DELAY);
 
-                for (Agent agent : agents.values()) {
-                    total += agent.getAssets();
+                    double total = 0;
+
+                    for (Agent agent : agents.values()) {
+                        total += agent.getAssets();
+                    }
+
+                    //print current funds
+                    displayMessage("Total assets $" + total + ", Starting funds $" + FUNDS, true, writer);
+
+                    //if enough time has passed send ourselves a notification
+                    if (System.currentTimeMillis() - previous >= NOTIFICATION_DELAY) {
+
+                        //send our total assets
+                        sendEmail("Current Assets $" + total, "Started with $" + FUNDS);
+
+                        //update the timer
+                        previous = System.currentTimeMillis();
+                    }
+
+                } else {
+
+                    //if we don't have a connection and we aren't trying to connect, let's start connecting
+                    if (!websocketFeed.isConnecting()) {
+
+                        displayMessage("Lost connection, attempting to re-connect", true, writer);
+                        websocketFeed.connect();
+
+                    } else {
+
+                        //we are trying to connect and just need to be patient
+                        displayMessage("Waiting to connect...", true, writer);
+                    }
+
                 }
-
-                //print current funds
-                displayMessage("Total assets $" + total + ", Starting funds $" + FUNDS, true, writer);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -175,5 +210,8 @@ public class Main implements Runnable {
             new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
             this.agents
         );
+
+        //store the last time we checked
+        previous = System.currentTimeMillis();
     }
 }
