@@ -144,8 +144,7 @@ public class MyWebsocketFeed {
                     Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
                     //update the appropriate agent with the current stock price
-                    agents.get(ticker.product_id).addHistory(ticker.price);
-                    agents.get(ticker.product_id).update();
+                    agents.get(ticker.product_id).update(ticker.price);
 
                     return null;
                 }

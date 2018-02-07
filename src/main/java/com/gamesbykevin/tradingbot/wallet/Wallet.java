@@ -1,7 +1,13 @@
 package com.gamesbykevin.tradingbot.wallet;
 
+import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
+import com.coinbase.exchange.api.entity.Product;
+import com.coinbase.exchange.api.orders.Order;
+import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
+
+import java.math.BigDecimal;
 
 import static com.gamesbykevin.tradingbot.rsi.Calculator.PERIODS;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -77,7 +83,7 @@ public class Wallet {
         return this.quantity;
     }
 
-    public void update(final Agent agent, final Calculator calculator, final String productId, final double currentPrice) {
+    public synchronized void update(final Agent agent, final Calculator calculator, final Product product, final double currentPrice) {
 
         String subject = null, text = null;
 
@@ -108,14 +114,25 @@ public class Wallet {
 
             } else {
 
-                agent.displayMessage("Waiting. Product " + productId + " Current $" + currentPrice + ", Purchase $" + purchasePrice + ", Quantity: " + getQuantity(), true);
+                agent.displayMessage("Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + purchasePrice + ", Quantity: " + getQuantity(), true);
             }
 
             //if we are selling our stock
             if (sell) {
 
+                //if we aren't paper trading sell the stock for real
+                if (!Main.PAPER_TRADING) {
+                    final boolean success = createLimitOrder(product, currentPrice, "sell");
+
+                    if (!success) {
+                        what do we do if we fail?
+                    }
+                }
+
+                final double result = (currentPrice * getQuantity());
+
                 //add the money back to our total funds
-                setFunds(getFunds() + (currentPrice * getQuantity()));
+                setFunds(getFunds() + result);
 
                 final double priceBought = (this.purchasePrice * getQuantity());
                 final double priceSold = (currentPrice * getQuantity());
@@ -128,7 +145,7 @@ public class Wallet {
                 }
 
                 //display the transaction
-                text = "Sell " + productId + " quantity: " + getQuantity() + " @ $" + currentPrice + " remaining funds $" + getFunds();
+                text = "Sell " + product.getId() + " quantity: " + getQuantity() + " @ $" + currentPrice + " remaining funds $" + getFunds();
 
                 //display message(s)
                 agent.displayMessage(subject, true);
@@ -143,8 +160,8 @@ public class Wallet {
                 setStopTrading(true);
 
             if (hasStopTrading()) {
-                subject = "We stopped trading " + productId;
-                text = "Funds dropped below our comfort level ($" + getFunds() + "). Stopped Trading for " + productId;
+                subject = "We stopped trading " + product.getId();
+                text = "Funds dropped below our comfort level ($" + getFunds() + "). Stopped Trading for " + product.getId();
                 agent.displayMessage(text,true);
             }
 
@@ -197,6 +214,15 @@ public class Wallet {
             //are we buying stock
             if (buy) {
 
+                //if we aren't paper trading buy the stock for real
+                if (!Main.PAPER_TRADING) {
+                    final boolean success = createLimitOrder(product, currentPrice, "buy");
+
+                    if (!success) {
+                        what do we do if we fail?
+                    }
+                }
+
                 //how much can we buy?
                 final double availableQuantity = getFunds() / currentPrice;
 
@@ -210,16 +236,76 @@ public class Wallet {
                 setFunds(0);
 
                 //display the transaction
-                agent.displayMessage("Buy " + productId + " quantity: " + getQuantity() + " @ $" + this.purchasePrice, true);
+                agent.displayMessage("Buy " + product.getId() + " quantity: " + getQuantity() + " @ $" + this.purchasePrice, true);
 
             } else {
-                agent.displayMessage("Waiting. Product " + productId + ", Available funds $" + getFunds(), true);
+                agent.displayMessage("Waiting. Product " + product.getId() + ", Available funds $" + getFunds(), true);
             }
         }
 
         //send message only if we stopped trading for this coin
         if (subject != null && text != null && hasStopTrading())
             sendEmail(subject, text);
+    }
 
+    private boolean createLimitOrder(Product product, double currentPrice, String action) {
+
+        boolean success = false;
+
+        Main.getOrderService();
+
+        //the price we want to buy/sell
+        BigDecimal price = new BigDecimal(1000.00);
+
+        //the quantity
+        BigDecimal size = new BigDecimal(.1);
+
+        NewLimitOrderSingle limitOrder = new NewLimitOrderSingle();
+        limitOrder.setProduct_id(product.getId());
+
+        //are we buying or selling
+        limitOrder.setSide(action);
+
+        //this is a limit order
+        limitOrder.setType("limit");
+
+        //our price
+        limitOrder.setPrice(price);
+
+        //our quantity
+        limitOrder.setSize(size);
+
+        //create limit order
+        Order order = Main.getOrderService().createOrder(limitOrder);
+
+        //keep checking the status of our order until we get the result we want
+        while(true) {
+
+            System.out.println("Order status: " + order.getStatus());
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if(order.getStatus().equals("filled")) {
+
+                //we are successful
+                success = true;
+                break;
+            }
+
+            //get the order from gdax again so we can check the status
+            order = Main.getOrderService().getOrder(order.getId());
+        }
+
+        //cancel order
+        //String result = service.cancelOrder("c04ad9d2-7a57-4133-a3e9-bc789cd1e6fe");
+
+        //print result
+        //System.out.println(result);
+
+        return success;
     }
 }

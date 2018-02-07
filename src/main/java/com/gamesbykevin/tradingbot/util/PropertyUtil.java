@@ -61,6 +61,9 @@ public class PropertyUtil {
         //our starting total funds
         Main.FUNDS = Double.parseDouble(getProperties().getProperty("funds"));
 
+        //are we paper trading, or using real money
+        Main.PAPER_TRADING = Boolean.parseBoolean(getProperties().getProperty("paperTrading"));
+
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
 
@@ -100,5 +103,30 @@ public class PropertyUtil {
             writer.println(getDateDesc() + ":  " + message);
             writer.flush();
         }
+    }
+
+    public static synchronized void displayMessage(final Exception e, final boolean write, PrintWriter writer) {
+        displayMessage(getErrorMessage(e), write, writer);
+    }
+
+    private static String getErrorMessage(Exception e) {
+
+        String message = "";
+
+        try {
+
+            message += e.getMessage() + "\n\t\t";;
+
+            StackTraceElement[] stack = e.getStackTrace();
+
+            for (StackTraceElement s : stack) {
+                message = message + s.toString() + "\n\t\t";
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return message;
     }
 }

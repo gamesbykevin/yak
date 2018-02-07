@@ -1,10 +1,9 @@
 package com.gamesbykevin.tradingbot;
 
 import com.coinbase.exchange.api.GdaxApiApplication;
-import com.coinbase.exchange.api.accounts.AccountService;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.exchange.Signature;
-import com.coinbase.exchange.api.marketdata.MarketDataService;
+import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.Agent;
@@ -28,8 +27,7 @@ import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 @SpringBootApplication
 public class Main implements Runnable {
 
-    private AccountService accountService;
-    private MarketDataService marketService;
+    private static OrderService ORDER_SERVICE;
     private ProductService productService;
 
     private MyWebsocketFeed websocketFeed;
@@ -54,6 +52,14 @@ public class Main implements Runnable {
     //the previous time
     private long previous;
 
+    /**
+     * Are we paper trading?
+     */
+    public static boolean PAPER_TRADING = true;
+
+    //our list of products
+    private List<Product> products;
+
     public static void main(String[] args) {
 
         try {
@@ -73,7 +79,7 @@ public class Main implements Runnable {
             thread.start();
 
             //send notification our bot is starting
-            sendEmail("Trading Bot", "Started");
+            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "Enabled" : "Disabled"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,8 +89,7 @@ public class Main implements Runnable {
     private Main(ConfigurableApplicationContext context) {
 
         ConfigurableListableBeanFactory factory = context.getBeanFactory();
-        this.accountService = factory.getBean(AccountService.class);
-        this.marketService = factory.getBean(MarketDataService.class);
+        ORDER_SERVICE = factory.getBean(OrderService.class);
         this.productService = factory.getBean(ProductService.class);
 
         //create the main log file
@@ -94,21 +99,23 @@ public class Main implements Runnable {
         loadProducts();
     }
 
+    public static OrderService getOrderService() {
+        return ORDER_SERVICE;
+    }
+
     private void loadProducts() {
 
         List<Product> tmp = productService.getProducts();
-        List<String> tmp1 = new ArrayList<>();
+
+        //create new list of products we want to trade
+        this.products = new ArrayList<>();
+
+        List<Product> tmp1 = new ArrayList<>();
 
         //only get the USD products
         for (Product product : tmp) {
             if (product.getId().endsWith("-USD"))
-                tmp1.add(product.getId());
-        }
-
-        productIds = new String[tmp1.size()];
-
-        for (int i = 0; i < productIds.length; i++) {
-            productIds[i] = tmp1.get(i);
+                this.products.add(product);
         }
     }
 
@@ -131,20 +138,33 @@ public class Main implements Runnable {
                     //sleep for a second
                     Thread.sleep(DELAY);
 
+                    //text of our notification message
+                    String subject = "", text = "\nStarted with $" + FUNDS + "\n";
+
                     double total = 0;
 
                     for (Agent agent : agents.values()) {
-                        total += agent.getAssets();
+
+                        //get the total assets for the current product
+                        final double assets = agent.getAssets();
+
+                        //add to our total
+                        total += assets;
+
+                        //add to our details
+                        text = text + agent.getProductId() + " - $" + assets + "\n";
                     }
 
+                    subject = "Total assets $" + total;
+
                     //print current funds
-                    displayMessage("Total assets $" + total + ", Starting funds $" + FUNDS, true, writer);
+                    displayMessage(subject, true, writer);
 
                     //if enough time has passed send ourselves a notification
                     if (System.currentTimeMillis() - previous >= NOTIFICATION_DELAY) {
 
-                        //send our total assets
-                        sendEmail("Current Assets $" + total, "Started with $" + FUNDS);
+                        //send our total assets in an email
+                        sendEmail(subject, text);
 
                         //update the timer
                         previous = System.currentTimeMillis();
@@ -167,7 +187,9 @@ public class Main implements Runnable {
                 }
 
             } catch (Exception e) {
+
                 e.printStackTrace();
+                displayMessage(e, true, writer);
             }
         }
     }
@@ -181,18 +203,18 @@ public class Main implements Runnable {
         this.agents = new HashMap<>();
 
         //add an agent for each product we are trading
-        for (String productId : productIds) {
+        for (Product product : products) {
 
             try {
 
                 //create new agent
-                Agent agent = new Agent(productId, funds);
+                Agent agent = new Agent(product, funds);
 
                 //add to list
-                this.agents.put(productId, agent);
+                this.agents.put(product.getId(), agent);
 
                 //display agent is created
-                displayMessage("Agent created - " + productId, true, writer);
+                displayMessage("Agent created - " + product.getId(), true, writer);
 
                 //sleep for a few seconds
                 Thread.sleep(DELAY);
