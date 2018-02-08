@@ -8,6 +8,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static com.gamesbykevin.tradingbot.rsi.Calculator.PERIODS;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -53,6 +54,55 @@ public class Wallet {
 
     //should we stop trading
     private boolean stopTrading = false;
+
+    //how many times we check to see if the limit order is successful
+    private static final int FAILURE_LIMIT = 5;
+
+    //how long do we wait until we check the status of our limit order
+    private static final long LIMIT_ORDER_STATUS_DELAY = 175L;
+
+    //every order will be a limit order
+    private static final String ORDER_DESC = "limit";
+
+    //keep track of our limit order success
+    private int sellOrders = 0, sellSuccesses = 0, sellFailures = 0;
+    private int buyOrders = 0, buySuccesses = 0, buyFailures = 0;
+
+    public enum Action {
+
+        Buy("buy"),
+        Sell("sell");
+
+        private final String description;
+
+        Action(String description) {
+            this.description = description;
+        }
+
+        private String getDescription() {
+            return this.description;
+        }
+    }
+
+    public enum Status {
+
+        Pending("pending"),
+        Open("open"),
+        Done("done"),
+        Filled("filled"),
+        Cancelled("cancelled"),
+        Rejected("rejected");
+
+        private final String description;
+
+        Status(String description) {
+            this.description = description;
+        }
+
+        private String getDescription() {
+            return this.description;
+        }
+    }
 
     public Wallet(double funds) {
         this.funds = funds;
@@ -120,39 +170,49 @@ public class Wallet {
             //if we are selling our stock
             if (sell) {
 
+                //are we successful selling
+                final boolean success;
+
                 //if we aren't paper trading sell the stock for real
                 if (!Main.PAPER_TRADING) {
-                    final boolean success = createLimitOrder(product, currentPrice, "sell");
-
-                    if (!success) {
-                        what do we do if we fail?
-                    }
-                }
-
-                final double result = (currentPrice * getQuantity());
-
-                //add the money back to our total funds
-                setFunds(getFunds() + result);
-
-                final double priceBought = (this.purchasePrice * getQuantity());
-                final double priceSold = (currentPrice * getQuantity());
-
-                //display money changed
-                if (priceBought > priceSold) {
-                    subject = "We lost $" + (priceBought - priceSold);
+                    success = createLimitOrder(agent, product, currentPrice, Action.Sell);
+                    //agent.displayMessage("Total sell orders : " + this.sellOrders, true);
+                    //agent.displayMessage("Total sell success: " + this.sellSuccesses, true);
+                    //agent.displayMessage("Total sell failure: " + this.sellFailures, true);
                 } else {
-                    subject = "We made $" + (priceSold - priceBought);
+
+                    //when paper trading we are always successful
+                    success = true;
                 }
 
-                //display the transaction
-                text = "Sell " + product.getId() + " quantity: " + getQuantity() + " @ $" + currentPrice + " remaining funds $" + getFunds();
+                //update bot and funds if we are successful
+                if (success) {
 
-                //display message(s)
-                agent.displayMessage(subject, true);
-                agent.displayMessage(text, true);
+                    final double result = (currentPrice * getQuantity());
 
-                //reset quantity back to 0
-                setQuantity(0);
+                    //add the money back to our total funds
+                    setFunds(getFunds() + result);
+
+                    final double priceBought = (this.purchasePrice * getQuantity());
+                    final double priceSold = (currentPrice * getQuantity());
+
+                    //display money changed
+                    if (priceBought > priceSold) {
+                        subject = "We lost $" + (priceBought - priceSold);
+                    } else {
+                        subject = "We made $" + (priceSold - priceBought);
+                    }
+
+                    //display the transaction
+                    text = "Sell " + product.getId() + " quantity: " + getQuantity() + " @ $" + currentPrice + " remaining funds $" + getFunds();
+
+                    //display message(s)
+                    agent.displayMessage(subject, true);
+                    agent.displayMessage(text, true);
+
+                    //reset quantity back to 0
+                    setQuantity(0);
+                }
             }
 
             //if we lost too much money and have no quantity we will stop trading
@@ -214,29 +274,36 @@ public class Wallet {
             //are we buying stock
             if (buy) {
 
+                //are we successful buying
+                final boolean success;
+
                 //if we aren't paper trading buy the stock for real
                 if (!Main.PAPER_TRADING) {
-                    final boolean success = createLimitOrder(product, currentPrice, "buy");
+                    success = createLimitOrder(agent, product, currentPrice, Action.Buy);
+                    //agent.displayMessage("Total buy orders : " + this.buyOrders, true);
+                    //agent.displayMessage("Total buy success: " + this.buySuccesses, true);
+                    //agent.displayMessage("Total buy failure: " + this.buyFailures, true);
+                } else {
 
-                    if (!success) {
-                        what do we do if we fail?
-                    }
+                    //when paper trading we are always successful
+                    success = true;
+
+                    //calculate quantity if paper trading
+                    setQuantity(getFunds() / currentPrice);
                 }
 
-                //how much can we buy?
-                final double availableQuantity = getFunds() / currentPrice;
+                //update bot and funds if we are successful
+                if (success) {
 
-                //store the purchase price
-                this.purchasePrice = currentPrice;
+                    //store the purchase price
+                    this.purchasePrice = currentPrice;
 
-                //store the quantity we bought
-                setQuantity(availableQuantity);
+                    //our funds are now gone since we bought as much stock as possible
+                    setFunds(0);
 
-                //our funds are now gone
-                setFunds(0);
-
-                //display the transaction
-                agent.displayMessage("Buy " + product.getId() + " quantity: " + getQuantity() + " @ $" + this.purchasePrice, true);
+                    //display the transaction
+                    agent.displayMessage("Buy " + product.getId() + " quantity: " + getQuantity() + " @ $" + this.purchasePrice, true);
+                }
 
             } else {
                 agent.displayMessage("Waiting. Product " + product.getId() + ", Available funds $" + getFunds(), true);
@@ -248,26 +315,70 @@ public class Wallet {
             sendEmail(subject, text);
     }
 
-    private boolean createLimitOrder(Product product, double currentPrice, String action) {
+    private synchronized boolean createLimitOrder(final Agent agent, Product product, double currentPrice, Action action) {
 
-        boolean success = false;
+        //were we successful
+        boolean success;
 
-        Main.getOrderService();
+        //do we cancel the order
+        boolean cancel = false;
 
         //the price we want to buy/sell
-        BigDecimal price = new BigDecimal(1000.00);
+        BigDecimal price;
 
-        //the quantity
-        BigDecimal size = new BigDecimal(.1);
+        //what is the quantity that we are buying/selling
+        final double tmpQuantity;
 
+        switch (action) {
+
+            case Buy:
+
+                //keep track of our buy orders
+                this.buyOrders++;
+
+                //adjust price
+                price = new BigDecimal(currentPrice - .01);
+
+                //see how much we can buy
+                tmpQuantity = (getFunds() / currentPrice);
+                break;
+
+            case Sell:
+
+                //keep track of our sell orders
+                this.sellOrders++;
+
+                //adjust price
+                price = new BigDecimal(currentPrice + .01);
+
+                //sell all the quantity we have
+                tmpQuantity = getQuantity();
+                break;
+
+            default:
+                throw new RuntimeException("Action not defined: " + action.toString());
+        }
+
+        //the quantity we want to purchase
+        BigDecimal size = new BigDecimal(tmpQuantity).setScale(4, RoundingMode.HALF_DOWN);
+
+        //make sure we have enough quantity to buy or else we can't continue
+        if (size.doubleValue() < product.getBase_min_size()) {
+            agent.displayMessage("Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size(), true);
+            return false;
+        }
+
+        //create our limit order
         NewLimitOrderSingle limitOrder = new NewLimitOrderSingle();
+
+        //which coin we are trading
         limitOrder.setProduct_id(product.getId());
 
         //are we buying or selling
-        limitOrder.setSide(action);
+        limitOrder.setSide(action.getDescription());
 
         //this is a limit order
-        limitOrder.setType("limit");
+        limitOrder.setType(ORDER_DESC);
 
         //our price
         limitOrder.setPrice(price);
@@ -275,37 +386,189 @@ public class Wallet {
         //our quantity
         limitOrder.setSize(size);
 
-        //create limit order
-        Order order = Main.getOrderService().createOrder(limitOrder);
+        //write limit order to log
+        agent.displayMessage("Creating limit order (" + product.getId() + "): " + action.getDescription() + " $" + price.toString() + ", Quantity: " + size.doubleValue(), true);
+
+        //our market order
+        Order order = null;
+
+        //how many attempts to try
+        int attempts = 0;
+
+        //there is a chance the order is null, so we will continue to create until not null
+        while (order == null) {
+
+            //create limit order
+            order = Main.getOrderService().createOrder(limitOrder);
+
+            //keep track of the number of attempts
+            attempts++;
+
+            //notify user we are trying to create the limit order
+            agent.displayMessage("Creating limit order attempt: " + attempts, true);
+
+            //if we reach our limit, just stop
+            if (attempts >= FAILURE_LIMIT)
+                break;
+
+            try {
+                //sleep for a short time
+                Thread.sleep(LIMIT_ORDER_STATUS_DELAY);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (order != null) {
+            //write order status to log
+            agent.displayMessage("Order created", true);
+            agent.displayMessage("Order status: " + order.getStatus(), true);
+        } else {
+            agent.displayMessage("Order NOT created", true);
+            return false;
+        }
+
+        //how many times have we checked the status
+        attempts = 0;
 
         //keep checking the status of our order until we get the result we want
         while(true) {
 
-            System.out.println("Order status: " + order.getStatus());
+            //get the order from gdax so we can check the updated status
+            order = Main.getOrderService().getOrder(order.getId());
+
+            //write order status to log
+            agent.displayMessage("Checking order status: " + order.getStatus() + ", attempts: " + attempts, true);
 
             try {
-                Thread.sleep(100);
+                //wait for a brief moment
+                Thread.sleep(LIMIT_ORDER_STATUS_DELAY);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            if(order.getStatus().equals("filled")) {
+            if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription())) {
 
                 //we are successful
                 success = true;
+
+                //exit loop
+                break;
+
+            } else if (order.getStatus().equalsIgnoreCase(Status.Done.getDescription())) {
+
+                //we are successful
+                success = true;
+
+                //exit loop
+                break;
+
+            } else if (order.getStatus().equalsIgnoreCase(Status.Open.getDescription())) {
+
+                //do nothing
+
+            } else if (order.getStatus().equalsIgnoreCase(Status.Pending.getDescription())) {
+
+                //do nothing
+
+            } else if (order.getStatus().equalsIgnoreCase(Status.Rejected.getDescription())) {
+
+                //we lose
+                success = false;
+
+                //cancel order
+                cancel = true;
+
+                //exit loop
+                break;
+
+            } else if (order.getStatus().equalsIgnoreCase(Status.Cancelled.getDescription())) {
+
+                //we lose
+                success = false;
+
+                //exit loop
                 break;
             }
 
-            //get the order from gdax again so we can check the status
-            order = Main.getOrderService().getOrder(order.getId());
+            //keep track of our attempts
+            attempts++;
+
+            if (attempts >= FAILURE_LIMIT) {
+
+                //we lose
+                success = false;
+
+                //cancel the order
+                cancel = true;
+
+                //exit loop
+                break;
+            }
         }
 
-        //cancel order
-        //String result = service.cancelOrder("c04ad9d2-7a57-4133-a3e9-bc789cd1e6fe");
+        //are we cancelling the order?
+        if (cancel) {
 
-        //print result
-        //System.out.println(result);
+            //cancel the order
+            final String result = Main.getOrderService().cancelOrder(order.getId());
+
+            //write to log file
+            agent.displayMessage("Order cancelled: " + result, true);
+        }
+
+        //keep track of our successes
+        switch (action) {
+
+            case Buy:
+
+                //keep track of our buy orders and quantity
+                if (success) {
+                    setQuantity(size.doubleValue());
+                    this.buySuccesses++;
+                } else {
+                    this.buyFailures++;
+                }
+                break;
+
+            case Sell:
+
+                //keep track of our sell orders and quantity
+                if (success) {
+                    this.sellSuccesses++;
+                } else {
+                    this.sellFailures++;
+                }
+                break;
+
+            default:
+                throw new RuntimeException("Action not defined: " + action.toString());
+        }
 
         return success;
+    }
+
+    public int getBuySuccesses() {
+        return this.buySuccesses;
+    }
+
+    public int getBuyFailures() {
+        return this.buyFailures;
+    }
+
+    public int getBuyOrders() {
+        return this.buyOrders;
+    }
+
+    public int getSellSuccesses() {
+        return this.sellSuccesses;
+    }
+
+    public int getSellFailures() {
+        return this.sellFailures;
+    }
+
+    public int getSellOrders() {
+        return this.sellOrders;
     }
 }

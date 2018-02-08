@@ -31,7 +31,6 @@ public class Main implements Runnable {
     private ProductService productService;
 
     private MyWebsocketFeed websocketFeed;
-    private String[] productIds;
     private HashMap<String, Agent> agents;
 
     //Our end point to the apis
@@ -110,11 +109,10 @@ public class Main implements Runnable {
         //create new list of products we want to trade
         this.products = new ArrayList<>();
 
-        List<Product> tmp1 = new ArrayList<>();
-
         //only get the USD products
         for (Product product : tmp) {
-            if (product.getId().endsWith("-USD"))
+            //if (product.getId().endsWith("-USD"))
+            if (product.getId().endsWith("LTC-USD"))
                 this.products.add(product);
         }
     }
@@ -124,6 +122,14 @@ public class Main implements Runnable {
 
         //initialize
         init();
+
+        //create string array for our products
+        final String[] productIds = new String[products.size()];
+
+        //add each product id to the string
+        for (int index = 0; index < productIds.length; index++) {
+            productIds[index] = products.get(index).getId();
+        }
 
         while(true) {
 
@@ -197,7 +203,7 @@ public class Main implements Runnable {
     private void init() {
 
         //we will invest in each product equally
-        final double funds = FUNDS / (double)productIds.length;
+        final double funds = FUNDS / (double)products.size();
 
         //create new hash map of agents
         this.agents = new HashMap<>();
