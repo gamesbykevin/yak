@@ -117,9 +117,10 @@ public class Agent {
                     //we don't have any quantity so let's see if we can buy
                     checkBuy(this);
 
-                    //whenever we can possibly buy, reset our attempts counter
-                    setAttempts(0);
                 }
+
+                //reset our attempts counter
+                setAttempts(0);
 
             } else {
 

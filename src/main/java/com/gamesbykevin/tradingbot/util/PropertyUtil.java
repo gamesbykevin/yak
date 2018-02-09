@@ -5,6 +5,7 @@ import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 

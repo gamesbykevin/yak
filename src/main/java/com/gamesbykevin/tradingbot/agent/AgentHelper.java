@@ -307,7 +307,7 @@ public class AgentHelper {
         limitOrder.setSize(size);
 
         //write limit order to log
-        agent.displayMessage("Creating limit order (" + agent.getProductId() + "): " + action.getDescription() + " $" + price + ", Quantity: " + size, true);
+        agent.displayMessage("Creating limit order (" + agent.getProductId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
 
         //our market order
         Order order = null;
@@ -365,11 +365,9 @@ public class AgentHelper {
             }
         }
 
+        //write order result to log
         if (order != null) {
-
-            //write order status to log
-            agent.displayMessage("Order created", true);
-            agent.displayMessage("Order status: " + order.getStatus(), true);
+            agent.displayMessage("Order created status: " + order.getStatus() + ", id: " + order.getId(), true);
         } else {
             agent.displayMessage("Order NOT created", true);
         }
