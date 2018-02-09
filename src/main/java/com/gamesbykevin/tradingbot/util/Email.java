@@ -59,7 +59,11 @@ public class Email {
         }
     }
 
-    public static String getDateDesc() {
+    public static String getTextDateDesc() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    }
+
+    public static String getFileDateDesc() {
         return new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date());
     }
 }

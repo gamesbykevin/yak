@@ -1,14 +1,14 @@
 package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
-import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
-import static com.gamesbykevin.tradingbot.util.Email.getDateDesc;
+import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
 
 public class PropertyUtil {
 
@@ -75,16 +75,16 @@ public class PropertyUtil {
         }
 
         //what is the support line
-        Wallet.SUPPORT_LINE = Float.parseFloat(getProperties().getProperty("supportLine"));
+        AgentHelper.SUPPORT_LINE = Float.parseFloat(getProperties().getProperty("supportLine"));
 
         //what is the resistance line
-        Wallet.RESISTANCE_LINE = Float.parseFloat(getProperties().getProperty("resistanceLine"));
+        AgentHelper.RESISTANCE_LINE = Float.parseFloat(getProperties().getProperty("resistanceLine"));
 
         //how long do we hold onto stock until we sell to cut our losses
-        Wallet.SELL_LOSS_RATIO = Float.parseFloat(getProperties().getProperty("sellLossRatio"));
+        AgentHelper.SELL_LOSS_RATIO = Float.parseFloat(getProperties().getProperty("sellLossRatio"));
 
         //how long do we hold onto stock until we sell
-        Wallet.SELL_GAIN_RATIO = Float.parseFloat(getProperties().getProperty("sellGainRatio"));
+        AgentHelper.SELL_GAIN_RATIO = Float.parseFloat(getProperties().getProperty("sellGainRatio"));
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
@@ -100,7 +100,7 @@ public class PropertyUtil {
         System.out.flush();
 
         if (write) {
-            writer.println(getDateDesc() + ":  " + message);
+            writer.println(getTextDateDesc() + ":  " + message);
             writer.flush();
         }
     }

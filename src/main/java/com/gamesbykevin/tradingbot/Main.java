@@ -2,11 +2,12 @@ package com.gamesbykevin.tradingbot;
 
 import com.coinbase.exchange.api.GdaxApiApplication;
 import com.coinbase.exchange.api.entity.Product;
-import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.product.Ticker;
+import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
@@ -20,17 +21,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.util.Email.getDateDesc;
+import static com.gamesbykevin.tradingbot.rsi.Calculator.ENDPOINT_TICKER;
+import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
+import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 @SpringBootApplication
 public class Main implements Runnable {
 
+    //used to place orders
     private static OrderService ORDER_SERVICE;
+
+    //used to retrieve gdax products
     private ProductService productService;
 
+    //websocket feed (unstable as it gives old price information sometimes)
     private MyWebsocketFeed websocketFeed;
+
+    //list of agents trading for each coin
     private HashMap<String, Agent> agents;
 
     //Our end point to the apis
@@ -43,7 +52,7 @@ public class Main implements Runnable {
     private PrintWriter writer;
 
     //how long do we sleep the thread for
-    public static final long DELAY = 1000L;
+    public static final long DELAY = 335L;
 
     //how long until we send an overall update
     public static long NOTIFICATION_DELAY;
@@ -52,7 +61,7 @@ public class Main implements Runnable {
     private long previous;
 
     /**
-     * Are we paper trading?
+     * Are we paper trading? default true
      */
     public static boolean PAPER_TRADING = true;
 
@@ -92,7 +101,7 @@ public class Main implements Runnable {
         this.productService = factory.getBean(ProductService.class);
 
         //create the main log file
-        this.writer = LogFile.getPrintWriter("main-" + getDateDesc() + ".log");
+        this.writer = LogFile.getPrintWriter("main-" + getFileDateDesc() + ".log");
 
         //load our products we will be trading
         loadProducts();
@@ -131,65 +140,67 @@ public class Main implements Runnable {
             productIds[index] = products.get(index).getId();
         }
 
+        //only need to create once
+        Subscribe subscribe = new Subscribe(productIds);
+
         while(true) {
 
             try {
 
-                //if we have a connection and aren't currently trying to connect
-                if (websocketFeed.hasConnection() && !websocketFeed.isConnecting()) {
+                //if not null we are using websocket
+                if (websocketFeed != null) {
 
-                    //subscribe to get the updated information
-                    websocketFeed.subscribe(new Subscribe(productIds));
+                    //if we have a connection and aren't currently trying to connect
+                    if (websocketFeed.hasConnection() && !websocketFeed.isConnecting()) {
 
-                    //sleep for a second
-                    Thread.sleep(DELAY);
+                        //subscribe to get the updated information
+                        websocketFeed.subscribe(subscribe);
 
-                    //text of our notification message
-                    String subject = "", text = "\nStarted with $" + FUNDS + "\n";
+                        //sleep for a second
+                        Thread.sleep(DELAY);
 
-                    double total = 0;
+                        //display total assets update
+                        manageStatusUpdate();
 
-                    for (Agent agent : agents.values()) {
+                    } else {
 
-                        //get the total assets for the current product
-                        final double assets = agent.getAssets();
+                        //if we don't have a connection and we aren't trying to connect, let's start connecting
+                        if (!websocketFeed.isConnecting()) {
 
-                        //add to our total
-                        total += assets;
+                            displayMessage("Lost connection, attempting to re-connect", true, writer);
+                            websocketFeed.connect();
 
-                        //add to our details
-                        text = text + agent.getProductId() + " - $" + assets + "\n";
-                    }
+                        } else {
 
-                    subject = "Total assets $" + total;
-
-                    //print current funds
-                    displayMessage(subject, true, writer);
-
-                    //if enough time has passed send ourselves a notification
-                    if (System.currentTimeMillis() - previous >= NOTIFICATION_DELAY) {
-
-                        //send our total assets in an email
-                        sendEmail(subject, text);
-
-                        //update the timer
-                        previous = System.currentTimeMillis();
+                            //we are trying to connect and just need to be patient
+                            displayMessage("Waiting to connect...", true, writer);
+                        }
                     }
 
                 } else {
 
-                    //if we don't have a connection and we aren't trying to connect, let's start connecting
-                    if (!websocketFeed.isConnecting()) {
+                    //we aren't using websocket since it is null
+                    for (Agent agent : agents.values()) {
 
-                        displayMessage("Lost connection, attempting to re-connect", true, writer);
-                        websocketFeed.connect();
+                        //skip if we aren't trading with this agent
+                        if (agent.hasStopTrading())
+                            continue;
 
-                    } else {
+                        //get json response from ticker
+                        final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agent.getProductId()));
 
-                        //we are trying to connect and just need to be patient
-                        displayMessage("Waiting to connect...", true, writer);
+                        //convert to pojo
+                        Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
+
+                        //update the agent with the current price
+                        agent.update(ticker.price);
+
+                        //sleep for a second
+                        Thread.sleep(DELAY);
+
+                        //display total assets update
+                        manageStatusUpdate();
                     }
-
                 }
 
             } catch (Exception e) {
@@ -197,6 +208,41 @@ public class Main implements Runnable {
                 e.printStackTrace();
                 displayMessage(e, true, writer);
             }
+        }
+    }
+
+    private void manageStatusUpdate() {
+
+        //text of our notification message
+        String subject = "", text = "\nStarted with $" + FUNDS + "\n";
+
+        double total = 0;
+
+        for (Agent agent : agents.values()) {
+
+            //get the total assets for the current product
+            final double assets = agent.getAssets();
+
+            //add to our total
+            total += assets;
+
+            //add to our details
+            text = text + agent.getProductId() + " - $" + assets + "\n";
+        }
+
+        subject = "Total assets $" + total;
+
+        //print current funds
+        displayMessage(subject, true, writer);
+
+        //if enough time has passed send ourselves a notification
+        if (System.currentTimeMillis() - previous >= NOTIFICATION_DELAY) {
+
+            //send our total assets in an email
+            sendEmail(subject, text);
+
+            //update the timer
+            previous = System.currentTimeMillis();
         }
     }
 
@@ -230,6 +276,7 @@ public class Main implements Runnable {
             }
         }
 
+        /*
         //create our web socket feed
         websocketFeed = new MyWebsocketFeed(
             PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
@@ -238,6 +285,7 @@ public class Main implements Runnable {
             new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
             this.agents
         );
+        */
 
         //store the last time we checked
         previous = System.currentTimeMillis();

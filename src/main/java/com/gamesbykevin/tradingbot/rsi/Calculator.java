@@ -23,6 +23,9 @@ public class Calculator {
     //endpoint to get the history
     public static final String ENDPOINT_HISTORIC = ENDPOINT + "/products/%s/candles?granularity=%s";
 
+    //endpoint to get the history
+    public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
+
     //our calculated rsi value
     private float rsi;
 
@@ -264,9 +267,6 @@ public class Calculator {
 
         //calculate the new and improved more accurate rsi
         setRsi(100 - (100 / (1 + smotheredRS)));
-
-        //print the rsi value
-        agent.displayMessage("Product (" + productId + ") RSI = " + getRsi() + ", Stock Price $" + currentPrice, true);
     }
 
     private void setRsi(final float rsi) {
