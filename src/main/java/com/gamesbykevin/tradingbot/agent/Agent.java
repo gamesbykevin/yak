@@ -130,7 +130,7 @@ public class Agent {
                 if (Main.PAPER_TRADING) {
 
                     //if we are paper trading assume the order has been completed
-                    status = AgentHelper.Status.Done;
+                    status = AgentHelper.Status.Filled;
 
                 } else {
 
@@ -171,18 +171,28 @@ public class Agent {
 
                 //if our money has gone up, increase the stop trading limit
                 if (getWallet().getFunds() > getWallet().getStartingFunds()) {
+
+                    final double oldRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
                     getWallet().setStartingFunds(getWallet().getFunds());
-                    displayMessage("Congrats, stop trading ratio has increased", true);
+                    final double newRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                    displayMessage("Good news, stop trading limit has increased", true);
+                    displayMessage("    Funds $" + getWallet().getFunds(), true);
+                    displayMessage("Old limit $" + oldRatio, true);
+                    displayMessage("New limit $" + newRatio, true);
+                    displayMessage("If your funds fall below the new limit we will stop trading", true);
                 }
 
                 //notify if this agent has stopped trading
                 if (hasStopTrading()) {
-                    String subject = "We stopped trading " + getProductId();
-                    String text = "Funds dropped below our comfort level ($" + getWallet().getFunds() + "). Stopped Trading for " + getProductId();
-                    displayMessage(text,true);
+                    String subject = "We stopped trading: " + getProductId();
+                    String text1 = "Funds $" + getWallet().getFunds();
+                    String text2 = "Limit $" + (STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                    displayMessage(subject, true);
+                    displayMessage(text1,true);
+                    displayMessage(text2,true);
 
                     //send email
-                    Email.sendEmail(subject, text);
+                    Email.sendEmail(subject, text1 + "\n" + text2);
                 }
             }
 

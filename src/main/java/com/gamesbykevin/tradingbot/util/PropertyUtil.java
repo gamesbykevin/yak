@@ -65,6 +65,12 @@ public class PropertyUtil {
         //are we paper trading, or using real money
         Main.PAPER_TRADING = Boolean.parseBoolean(getProperties().getProperty("paperTrading"));
 
+        //which crypto currencies do we want to trade
+        Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(",");
+
+        if (Main.TRADING_CURRENCIES.length < 1)
+            throw new RuntimeException("You haven't specified what products you want to trade in your properties file");
+
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
 

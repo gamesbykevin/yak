@@ -36,7 +36,7 @@ public class Main implements Runnable {
     //used to retrieve gdax products
     private ProductService productService;
 
-    //websocket feed (unstable as it gives old price information sometimes)
+    //web socket feed (unstable as it gives old price information sometimes)
     private MyWebsocketFeed websocketFeed;
 
     //list of agents trading for each coin
@@ -57,8 +57,14 @@ public class Main implements Runnable {
     //how long until we send an overall update
     public static long NOTIFICATION_DELAY;
 
-    //the previous time
+    //which currencies do we want to trade with (separated by comma)
+    public static String[] TRADING_CURRENCIES;
+
+    //the previous time we sent a notification
     private long previous;
+
+    //what are the previous total assets
+    private double previousTotal = 0;
 
     /**
      * Are we paper trading? default true
@@ -87,11 +93,13 @@ public class Main implements Runnable {
             thread.start();
 
             //send notification our bot is starting
-            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "Enabled" : "Disabled"));
+            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On" : "Off"));
 
         } catch (Exception e) {
+            displayMessage("Trading bot not started...", false, null);
             e.printStackTrace();
         }
+
     }
 
     private Main(ConfigurableApplicationContext context) {
@@ -118,12 +126,27 @@ public class Main implements Runnable {
         //create new list of products we want to trade
         this.products = new ArrayList<>();
 
-        //only get the USD products
+        //figure out which products we are trading
         for (Product product : tmp) {
-            //if (product.getId().endsWith("-USD"))
-            if (product.getId().endsWith("LTC-USD"))
-                this.products.add(product);
+
+            //make sure we only add products we want to trade
+            for (String productId : TRADING_CURRENCIES) {
+
+                //does this product match, if yes we will add it
+                if (product.getId().trim().equalsIgnoreCase(productId.trim())) {
+
+                    //add to list
+                    this.products.add(product);
+
+                    //exit loop
+                    break;
+                }
+            }
         }
+
+        //make sure we are trading at least 1 product
+        if (this.products.isEmpty())
+            throw new RuntimeException("No products were found");
     }
 
     @Override
@@ -132,22 +155,14 @@ public class Main implements Runnable {
         //initialize
         init();
 
-        //create string array for our products
-        final String[] productIds = new String[products.size()];
-
-        //add each product id to the string
-        for (int index = 0; index < productIds.length; index++) {
-            productIds[index] = products.get(index).getId();
-        }
-
-        //only need to create once
-        Subscribe subscribe = new Subscribe(productIds);
+        //only need to create subscription once
+        Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
 
         while(true) {
 
             try {
 
-                //if not null we are using websocket
+                //if not null we are using the web socket connection
                 if (websocketFeed != null) {
 
                     //if we have a connection and aren't currently trying to connect
@@ -179,7 +194,7 @@ public class Main implements Runnable {
 
                 } else {
 
-                    //we aren't using websocket since it is null
+                    //we aren't using web socket since it is null
                     for (Agent agent : agents.values()) {
 
                         //skip if we aren't trading with this agent
@@ -232,8 +247,11 @@ public class Main implements Runnable {
 
         subject = "Total assets $" + total;
 
-        //print current funds
-        displayMessage(subject, true, writer);
+        //print our total assets if they have changed
+        if (total != previousTotal) {
+            displayMessage(subject, true, writer);
+            previousTotal = total;
+        }
 
         //if enough time has passed send ourselves a notification
         if (System.currentTimeMillis() - previous >= NOTIFICATION_DELAY) {
