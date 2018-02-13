@@ -95,7 +95,7 @@ public class Agent {
             }
 
             //check if there is a trend
-            getCalculator().calculateTrend(this);
+            getCalculator().calculateTrend();
 
             //calculate rsi
             getCalculator().calculateRsi(currentPrice);

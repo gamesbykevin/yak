@@ -1,6 +1,5 @@
 package com.gamesbykevin.tradingbot.rsi;
 
-import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.util.GSon;
 
@@ -114,14 +113,14 @@ public class Calculator {
         return this.breaks;
     }
 
-    public synchronized void calculateTrend(final Agent agent) {
+    public synchronized void calculateTrend() {
 
         //reset values
         setTrend(Trend.None);
         setBreaks(0);
 
         //if not large enough skip, this shouldn't happen
-        if (history.size() < PERIODS)
+        if (history.size() < PERIODS || history.isEmpty())
             return;
 
         //we want to start here
@@ -166,14 +165,18 @@ public class Calculator {
         //calculate slope
         final double slope = (y2 - y1) / (x2 - x1);
 
+        //the start and end index
+        final int start = history.size() - PERIODS + 1;
+        final int end = history.size() - 1;
+
         //check and see if every period is above the slope indicating an upward trend
-        for (int i = history.size() - PERIODS; i < PERIODS - 1; i++) {
+        for (int i = start; i < end; i++) {
 
             //get the current period
             Period current = history.get(i);
 
             //the current x-coordinate
-            final double x = i;
+            final double x = i - start;
 
             //calculate the y-coordinate
             final double y = (slope * x) + yIntercept;
