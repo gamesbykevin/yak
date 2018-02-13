@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
@@ -92,6 +93,9 @@ public class PropertyUtil {
 
         //how long do we hold onto stock until we sell
         AgentHelper.SELL_GAIN_RATIO = Float.parseFloat(getProperties().getProperty("sellGainRatio"));
+
+        //do we send a notification for every transaction?
+        AgentHelper.NOTIFICATION_EVERY_TRANSACTION = Boolean.parseBoolean(getProperties().getProperty("notificationEveryTransaction"));
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));

@@ -14,10 +14,9 @@ import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.checkBuy;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.checkSell;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.updateLimitOrder;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
+import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent {
@@ -99,7 +98,7 @@ public class Agent {
             getCalculator().calculateTrend(this);
 
             //calculate rsi
-            getCalculator().calculateRsi(this, currentPrice);
+            getCalculator().calculateRsi(currentPrice);
 
             //what is the rsi
             displayMessage("Product (" + getProductId() + ") RSI = " + getCalculator().getRsi() + ", Stock Price $" + currentPrice, true);
@@ -207,6 +206,9 @@ public class Agent {
 
     private void fillOrder(final Order order) {
 
+        //our notification message
+        String subject = null, text = null;
+
         //get the purchase price from the order
         BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
         price.setScale(AgentHelper.ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
@@ -226,8 +228,12 @@ public class Agent {
             //add the quantity to our wallet
             getWallet().setQuantity(getWallet().getQuantity() + quantity.doubleValue());
 
+            //setup our notification message
+            subject = "Purchase " + getProductId();
+            text = "Buy " + getProductId() + " quantity: " + quantity + " @ $" + getWallet().getPurchasePrice();
+
             //display the transaction
-            displayMessage("Buy " + getProductId() + " quantity: " + quantity + " @ $" + getWallet().getPurchasePrice(), true);
+            displayMessage(text, true);
 
         } else if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Sell.getDescription())) {
 
@@ -243,9 +249,6 @@ public class Agent {
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
 
-            //summary message of transaction
-            final String subject;
-
             //display money made / lost
             if (bought > sold) {
                 subject = "We lost $" + (bought - sold);
@@ -254,7 +257,7 @@ public class Agent {
             }
 
             //the transaction description
-            final String text = "Sell " + getProductId() + " quantity: " + quantity + " @ $" + price + " remaining funds $" + getWallet().getFunds();
+            text = "Sell " + getProductId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + getWallet().getPurchasePrice() + ", remaining funds $" + getWallet().getFunds();
 
             //display and write to log
             displayMessage(subject, true);
@@ -263,6 +266,10 @@ public class Agent {
         } else {
             throw new RuntimeException("Side not handled here: " + order.getSide());
         }
+
+        //are we going to notify every transaction
+        if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
+            sendEmail(subject, text);
     }
 
     public String getProductId() {

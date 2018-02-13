@@ -81,7 +81,7 @@ public class Calculator {
             this.history.clear();
 
             //parse each period from the data
-            for (int row = PERIODS - 1; row >= 0; row--) {
+            for (int row = data.length - 1; row >= 0; row--) {
 
                 //create and populate our period
                 Period period = new Period();
@@ -125,7 +125,7 @@ public class Calculator {
             return;
 
         //we want to start here
-        Period first = history.get(0);
+        Period first = history.get(history.size() - PERIODS);
 
         //the first element is the most recent and is last
         Period last = history.get(PERIODS - 1);
@@ -167,7 +167,7 @@ public class Calculator {
         final double slope = (y2 - y1) / (x2 - x1);
 
         //check and see if every period is above the slope indicating an upward trend
-        for (int i = 1; i < PERIODS - 1; i++) {
+        for (int i = history.size() - PERIODS; i < PERIODS - 1; i++) {
 
             //get the current period
             Period current = history.get(i);
@@ -202,21 +202,21 @@ public class Calculator {
      * Get the RSI value
      * @return The RSI value based on our data
      */
-    public synchronized void calculateRsi(final Agent agent, final double currentPrice) {
+    public synchronized void calculateRsi(final double currentPrice) {
 
         //create temp list
         List<Double> tmp = new ArrayList<>();
 
         //populate with historical feed
-        for (int i = 0; i < PERIODS; i++) {
+        for (int i = history.size() - PERIODS; i < history.size(); i++) {
             tmp.add(this.history.get(i).close);
         }
 
         //return our result
-        calculateRsi(tmp, agent, currentPrice);
+        calculateRsi(tmp, currentPrice);
     }
 
-    private synchronized void calculateRsi(List<Double> periods, final Agent agent, final double currentPrice) {
+    private synchronized void calculateRsi(List<Double> periods, final double currentPrice) {
 
         //track total gains and losses
         float gain = 0, loss = 0;

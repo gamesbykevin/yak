@@ -89,6 +89,11 @@ public class AgentHelper {
         }
     }
 
+    /**
+     * Do we want to send a notification for every transaction?
+     */
+    public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
+
     protected static void checkSell(final Agent agent) {
 
         final double priceHigh = agent.getWallet().getPurchasePrice();
