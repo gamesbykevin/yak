@@ -143,10 +143,16 @@ public class AgentHelper {
         final double macdLine = period12 - period26;
 
         //the signal line is the 9 period ema of ...
-        final double signalLine = agent.getCalculator().getExponentialMovingAverage(9) of ;
+        final double signalLine = agent.getCalculator().getExponentialMovingAverage(9) * macdLine;
 
         //calculate macd histogram
         final double macdHistogram = macdLine - signalLine;
+
+        agent.displayMessage("period12: " + period12, false);
+        agent.displayMessage("period26: " + period26, false);
+        agent.displayMessage("signalLine: " + signalLine, false);
+        agent.displayMessage("macdLine: " + macdLine, false);
+        agent.displayMessage("macdHistogram: " + macdHistogram, false);
 
         /*
         //if the stock is oversold we are on the right track
