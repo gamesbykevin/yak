@@ -97,6 +97,28 @@ public class Calculator {
         }
     }
 
+    public double getExponentialMovingAverage(final int periods) {
+
+        double sum = 0;
+
+        //add the sum of the specified periods
+        for (int i = history.size() - (periods + 1); i < history.size() - 1; i++) {
+            sum += history.get(i).close;
+        }
+
+        //calculate simple moving average
+        final double initialSMA = (sum / periods);
+
+        //calculate our multiplier
+        final double multiplier = (2 / (periods + 1));
+
+        //the most recent close price
+        final double close = history.get(history.size() - 1).close;
+
+        //return the ema
+        return (close - initialSMA) * multiplier + initialSMA;
+    }
+
     private void setTrend(final Trend trend) {
         this.trend = trend;
     }

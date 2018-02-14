@@ -135,6 +135,20 @@ public class AgentHelper {
 
         boolean buy = false;
 
+        //get the ema for the 2 periods
+        final double period12 = agent.getCalculator().getExponentialMovingAverage(12);
+        final double period26 = agent.getCalculator().getExponentialMovingAverage(26);
+
+        //subtract to get the macd line
+        final double macdLine = period12 - period26;
+
+        //the signal line is the 9 period ema of ...
+        final double signalLine = agent.getCalculator().getExponentialMovingAverage(9) of ;
+
+        //calculate macd histogram
+        final double macdHistogram = macdLine - signalLine;
+
+        /*
         //if the stock is oversold we are on the right track
         if (agent.getCalculator().getRsi() < SUPPORT_LINE) {
 
@@ -178,6 +192,7 @@ public class AgentHelper {
                     break;
             }
         }
+        */
 
         //are we buying stock?
         if (buy) {
