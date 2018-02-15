@@ -108,15 +108,21 @@ public class AgentHelper {
         //if the stock is worth more than what we paid, and we see a divergence sell quickly
         if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergenceUptrend()) {
 
+            agent.displayMessage("We see a divergence in the uptrend", true);
+
             //it grew enough, sell it
             sell = true;
 
         } else if (agent.getWallet().getCurrentPrice() >= priceGain) {
 
+            agent.displayMessage("The stock price has exceeded our price gain ratio", true);
+
             //regardless of rsi, if we made enough money to sell it
             sell = true;
 
         } else if (agent.getWallet().getCurrentPrice() <= priceLow) {
+
+            agent.displayMessage("We have lost too much, sell now", true);
 
             //it dropped enough, sell it
             sell = true;
@@ -127,6 +133,7 @@ public class AgentHelper {
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Sell));
+
         } else {
 
             //we are still waiting
@@ -142,8 +149,10 @@ public class AgentHelper {
         if (agent.getRsiCurrent() < SUPPORT_LINE) {
 
             //if we have a divergence in our downtrend, let's buy
-            if (agent.getCalculator().hasDivergenceDowntrend())
+            if (agent.getCalculator().hasDivergenceDowntrend()) {
+                agent.displayMessage("We see a divergence in the downtrend", true);
                 buy = true;
+            }
         }
 
         /*
