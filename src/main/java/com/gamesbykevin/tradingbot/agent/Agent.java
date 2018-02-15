@@ -48,6 +48,9 @@ public class Agent {
     //number of attempts we try to verify the order
     private int attempts = 0;
 
+    //what is the current rsi value
+    private float rsiCurrent;
+
     public Agent(final Product product, final double funds) {
 
         //store the product this agent is trading
@@ -98,10 +101,10 @@ public class Agent {
             getCalculator().calculateTrend();
 
             //calculate rsi
-            getCalculator().calculateRsi(currentPrice);
+            this.rsiCurrent = getCalculator().getRsiCurrent(currentPrice);
 
             //what is the rsi
-            displayMessage("Product (" + getProductId() + ") RSI = " + getCalculator().getRsi() + ", Stock Price $" + currentPrice, true);
+            displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + currentPrice, true);
 
             //if we don't have a pending order
             if (getOrder() == null) {
@@ -202,6 +205,10 @@ public class Agent {
 
         //flag that we are no longer working
         working = false;
+    }
+
+    public float getRsiCurrent() {
+        return this.rsiCurrent;
     }
 
     private void fillOrder(final Order order) {

@@ -103,7 +103,10 @@ public class AgentHelper {
         //do we sell the stock
         boolean sell = false;
 
-        if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().getRsi() >= RESISTANCE_LINE) {
+        //if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getRsiCurrent() >= RESISTANCE_LINE) {
+
+        //if the stock is worth more than what we paid, and we see a divergence sell quickly
+        if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergenceUptrend()) {
 
             //it grew enough, sell it
             sell = true;
@@ -135,32 +138,17 @@ public class AgentHelper {
 
         boolean buy = false;
 
+        //if we are at or below the support line, let's check if we are in a good place to buy
+        if (agent.getRsiCurrent() < SUPPORT_LINE) {
+
+            //if we have a divergence in our downtrend, let's buy
+            if (agent.getCalculator().hasDivergenceDowntrend())
+                buy = true;
+        }
+
         /*
-        final double currentPrice = agent.getWallet().getCurrentPrice();
-
-        //get the ema for the 2 periods
-        final double period12 = agent.getCalculator().getExponentialMovingAverage(12, currentPrice);
-        final double period26 = agent.getCalculator().getExponentialMovingAverage(26, currentPrice);
-
-        //subtract to get the macd line
-        final double macdLine = period12 - period26;
-
-        //the signal line is the 9 period ema of ...
-        final double signalLine = agent.getCalculator().getExponentialMovingAverage(9, currentPrice) * macdLine;
-
-        //calculate macd histogram
-        final double macdHistogram = macdLine - signalLine;
-
-        agent.displayMessage("period12: " + period12, false);
-        agent.displayMessage("period26: " + period26, false);
-        agent.displayMessage("signalLine: " + signalLine, false);
-        agent.displayMessage("macdLine: " + macdLine, false);
-        agent.displayMessage("macdHistogram: " + macdHistogram, false);
-        */
-
-
         //if the stock is oversold we are on the right track
-        if (agent.getCalculator().getRsi() < SUPPORT_LINE) {
+        if (agent.getRsiCurrent() < SUPPORT_LINE) {
 
             switch (agent.getCalculator().getTrend()) {
 
@@ -202,6 +190,7 @@ public class AgentHelper {
                     break;
             }
         }
+        */
 
         //are we buying stock?
         if (buy) {

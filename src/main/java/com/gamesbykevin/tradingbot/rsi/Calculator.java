@@ -11,8 +11,11 @@ import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
 
-    //list of our periods
+    //keep a list of our periods
     private List<Period> history;
+
+    //keep a historical list of the rsi so we can check for divergence
+    private List<Float> rsi;
 
     /**
      * How many periods to calculate rsi
@@ -24,9 +27,6 @@ public class Calculator {
 
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
-
-    //our calculated rsi value
-    private float rsi;
 
     //the product we are tracking
     private String productId;
@@ -63,6 +63,7 @@ public class Calculator {
     public Calculator(final String productId) {
         this.productId = productId;
         this.history = new ArrayList<>();
+        this.rsi = new ArrayList<>();
     }
 
     public synchronized void update(Duration key) {
@@ -94,29 +95,10 @@ public class Calculator {
                 //add to array list
                 this.history.add(period);
             }
+
+            //calculate the rsi for all our specified periods now that we have new data
+            calculateRsi();
         }
-    }
-
-    public double getExponentialMovingAverage(final int periods, final double currentClosePrice) {
-
-        double sum = 0;
-
-        //add the sum of the specified periods
-        for (int i = history.size() - periods; i < history.size(); i++) {
-            sum += history.get(i).close;
-        }
-
-        //calculate simple moving average
-        final double initialSMA = (sum / periods);
-
-        //calculate our multiplier
-        final double multiplier = (2 / (periods + 1));
-
-        //the most recent close price
-        final double close = currentClosePrice;//history.get(history.size() - 1).close;
-
-        //return the ema
-        return (close - initialSMA) * multiplier + initialSMA;
     }
 
     private void setTrend(final Trend trend) {
@@ -224,39 +206,161 @@ public class Calculator {
     }
 
     /**
-     * Get the RSI value
-     * @return The RSI value based on our data
+     * Do we have a divergence in the uptrend?
+     * @return true if the closing price ends with a higher high, but the indicator is not a higher high, false otherwise
      */
-    public synchronized void calculateRsi(final double currentPrice) {
+    public boolean hasDivergenceUptrend() {
 
-        //create temp list
-        List<Double> tmp = new ArrayList<>();
+        //is the high at the most recent period greater than all others in our period range
+        boolean higherPrice = true;
 
-        //populate with historical feed
-        for (int i = history.size() - PERIODS; i < history.size(); i++) {
-            tmp.add(this.history.get(i).close);
+        //track the high price for the latest period
+        final double highPrice = history.get(history.size() - 1).high;
+
+        //make sure all periods before the recent have a high price that is lower
+        for (int i = history.size() - PERIODS; i < history.size() - 1; i++) {
+
+            //get the current period
+            Period period = history.get(i);
+
+            //oops we have a high price that is higher than our latest high, so this is no good
+            if (period.high > highPrice) {
+                higherPrice = false;
+                break;
+            }
         }
 
-        //return our result
-        calculateRsi(tmp, currentPrice);
+        //at this point we don't have a divergence in the uptrend
+        if (!higherPrice)
+            return false;
+
+        //is the rsi at the most recent period greater than all others in our period range
+        boolean higherRsi = true;
+
+        //track the high rsi for the latest period
+        final float highRsi = rsi.get(rsi.size() - 1);
+
+        for (int i = 0; i < rsi.size() - 1; i++) {
+
+            //oops we have a rsi higher that the latest rsi, so this is no good
+            if (rsi.get(i) > highRsi) {
+                higherRsi = false;
+                break;
+            }
+        }
+
+        //at this point we don't have a divergence in the uptrend
+        if (higherRsi)
+            return false;
+
+        //if the high is higher than all previous, but the indicator is not higher than all previous we will have a divergence
+        return (higherPrice && !higherRsi);
     }
 
-    private synchronized void calculateRsi(List<Double> periods, final double currentPrice) {
+    /**
+     * Do we have a divergence in the downtrend?
+     @return true if the closing price ends with a lower low, but the indicator is not a lower low, false otherwise
+     */
+    public boolean hasDivergenceDowntrend() {
+
+        //is the low at the most recent period lower  than all others in our period range
+        boolean lowerPrice = true;
+
+        //track the low price for the latest period
+        final double lowPrice = history.get(history.size() - 1).low;
+
+        //make sure all periods before the recent have a low price that is greater
+        for (int i = history.size() - PERIODS; i < history.size() - 1; i++) {
+
+            //get the current period
+            Period period = history.get(i);
+
+            //oops we have a low price that is lower than our latest low, so this is no good
+            if (period.low < lowPrice) {
+                lowerPrice = false;
+                break;
+            }
+        }
+
+        //at this point we don't have a divergence in the downtrend
+        if (!lowerPrice)
+            return false;
+
+        //is the rsi at the most recent period lower than all others in our period range
+        boolean lowerRsi = true;
+
+        //track the low rsi for the latest period
+        final float lowRsi = rsi.get(rsi.size() - 1);
+
+        for (int i = 0; i < rsi.size() - 1; i++) {
+
+            //oops we have a rsi lower that the latest rsi, so this is no good
+            if (rsi.get(i) < lowRsi) {
+                lowerRsi = false;
+                break;
+            }
+        }
+
+        //at this point we don't have a divergence in the uptrend
+        if (lowerRsi)
+            return false;
+
+        //if the low is lower than all previous, but the indicator is not lower than all previous we will have a divergence
+        return (lowerPrice && !lowerRsi);
+    }
+
+    /**
+     * Calculate the rsi values for each period
+     */
+    private synchronized void calculateRsi() {
+
+        //clear our historical rsi list
+        this.rsi.clear();
+
+        //calculate the rsi for each period
+        for (int i = PERIODS; i >= 0; i--) {
+
+            //we need to go back the desired number of periods
+            final int startIndex = history.size() - (PERIODS + i);
+
+            //we only go the length of the desired periods
+            final int endIndex = startIndex + PERIODS;
+
+            //get the rsi for this period
+            final float rsi = calculateRsi(startIndex, endIndex, false, 0);
+
+            //add the rsi calculation to the list
+            this.rsi.add(rsi);
+        }
+    }
+
+    /**
+     * Calcuate the rsi value for the specified range
+     * @param startIndex Begining period
+     * @param endIndex Ending period
+     * @param current Are we calculating the current rsi? if false we just want the historical rsi
+     * @param currentPrice The current price when calculating the current rsi, otherwise this field is not used
+     * @return The rsi value
+     */
+    private synchronized float calculateRsi(final int startIndex, final int endIndex, final boolean current, final double currentPrice) {
+
+        //the length of our calculation
+        final int size = endIndex - startIndex;
 
         //track total gains and losses
         float gain = 0, loss = 0;
         float gainCurrent = 0, lossCurrent = 0;
 
         //go through the periods to calculate rsi
-        for (int i = 0; i < periods.size() - 1; i++) {
+        for (int i = startIndex; i < endIndex - 1; i++) {
 
             //prevent index out of bounds exception
-            if (i + 1 >= periods.size())
+            if (i + 1 >= endIndex)
                 break;
 
             //get the next and previous prices
-            double previous = periods.get(i);
-            double next = periods.get(i + 1);
+            double previous = history.get(i).close;
+            double next     = history.get(i + 1).close;
 
             if (next > previous) {
 
@@ -270,35 +374,49 @@ public class Calculator {
             }
         }
 
-        //get the latest price in our list so we can compare to the current price
-        final double recentPrice = periods.get(periods.size() - 1);
-
-        //check if the current price is a gain or loss
-        if (currentPrice > recentPrice) {
-            gainCurrent = (float)(currentPrice - recentPrice);
-        } else {
-            lossCurrent = (float)(recentPrice - currentPrice);
-        }
-
         //calculate the average gain and loss
-        float avgGain = (gain / periods.size());
-        float avgLoss = (loss / periods.size());
+        float avgGain = (gain / size);
+        float avgLoss = (loss / size);
 
-        //smothered rsi including current gain loss (more accurate)
-        float smotheredRS =
-            (((avgGain * (periods.size() - 1)) + gainCurrent) / periods.size())
-            /
-            (((avgLoss * (periods.size() - 1)) + lossCurrent) / periods.size());
+        //if we don't want the current rsi we can do simple moving average (SMA)
+        if (!current) {
 
-        //calculate the new and improved more accurate rsi
-        setRsi(100 - (100 / (1 + smotheredRS)));
+            //calculate relative strength
+            final float rs = avgGain / avgLoss;
+
+            //calculate relative strength index
+            final float rsi = 100 - (100 / (1 + rs));
+
+            //return our rsi value
+            return rsi;
+
+        } else {
+
+            //get the latest price in our list so we can compare to the current price
+            final double recentPrice = history.get(endIndex - 1).close;
+
+            //check if the current price is a gain or loss
+            if (currentPrice > recentPrice) {
+                gainCurrent = (float)(currentPrice - recentPrice);
+            } else {
+                lossCurrent = (float)(recentPrice - currentPrice);
+            }
+
+            //smothered rsi including current gain loss
+            float smotheredRS =
+                (((avgGain * (size - 1)) + gainCurrent) / size)
+                /
+                (((avgLoss * (size - 1)) + lossCurrent) / size);
+
+            //calculate our rsi value
+            final float rsi = 100 - (100 / (1 + smotheredRS));
+
+            //return our rsi value
+            return rsi;
+        }
     }
 
-    private void setRsi(final float rsi) {
-        this.rsi = rsi;
-    }
-
-    public float getRsi() {
-        return this.rsi;
+    public float getRsiCurrent(final double currentPrice) {
+        return calculateRsi(history.size() - PERIODS, history.size(),true, currentPrice);
     }
 }
