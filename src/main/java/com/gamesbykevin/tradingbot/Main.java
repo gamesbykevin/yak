@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot;
 
 import com.coinbase.exchange.api.GdaxApiApplication;
 import com.coinbase.exchange.api.entity.Product;
+import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
@@ -70,6 +71,11 @@ public class Main implements Runnable {
      * Are we paper trading? default true
      */
     public static boolean PAPER_TRADING = true;
+
+    /**
+     * Are we using the websocket connection?
+     */
+    public static boolean WEBSOCKET_ENABLED = false;
 
     //our list of products
     private List<Product> products;
@@ -294,16 +300,22 @@ public class Main implements Runnable {
             }
         }
 
-        /*
-        //create our web socket feed
-        websocketFeed = new MyWebsocketFeed(
-            PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
-            PropertyUtil.getProperties().getProperty("gdax.key"),
-            PropertyUtil.getProperties().getProperty("gdax.passphrase"),
-            new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
-            this.agents
-        );
-        */
+        //create our web socket feed if the websocket is enabled
+        if (WEBSOCKET_ENABLED) {
+
+            displayMessage("Connected via websocket...", true, writer);
+
+            websocketFeed = new MyWebsocketFeed(
+                    PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
+                    PropertyUtil.getProperties().getProperty("gdax.key"),
+                    PropertyUtil.getProperties().getProperty("gdax.passphrase"),
+                    new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
+                    this.agents
+            );
+        } else {
+
+            displayMessage("Websocket is not enabled...", true, writer);
+        }
 
         //store the last time we checked
         previous = System.currentTimeMillis();

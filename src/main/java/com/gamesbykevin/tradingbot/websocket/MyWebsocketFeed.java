@@ -141,12 +141,6 @@ public class MyWebsocketFeed {
                     //parse json string to java object
                     Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
-                    //if (ticker.price == 139.09)
-                    //    return null;
-
-                    //write json string to log file
-                    //agents.get(ticker.product_id).displayMessage(json, true);
-
                     //update the appropriate agent with the current stock price
                     agents.get(ticker.product_id).update(ticker.price);
 

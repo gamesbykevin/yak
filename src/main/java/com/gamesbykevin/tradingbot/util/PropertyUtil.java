@@ -53,6 +53,9 @@ public class PropertyUtil {
         //our api url endpoint
         Main.ENDPOINT = getProperties().getProperty("gdax.api.baseUrl");
 
+        //is the websocket enabled?
+        Main.WEBSOCKET_ENABLED = Boolean.parseBoolean(getProperties().getProperty("websocketEnabled"));
+
         //grab the email address from our config
         Email.EMAIL_NOTIFICATION_ADDRESS = getProperties().getProperty("emailNotification");
 
