@@ -205,17 +205,84 @@ public class Calculator {
         }
     }
 
+    public boolean hasDivergence(final boolean uptrend, final double currentPrice, final float currentRsi) {
+
+        //flag we will use to track if the price is following the desired trend
+        boolean betterPrice = true;
+
+        //check all recent periods
+        for (int i = history.size() - PERIODS; i < history.size() - 1; i++) {
+
+            //get the current period
+            Period period = history.get(i);
+
+            if (uptrend) {
+
+                //if we are checking for an uptrend we don't want any "high" price higher than our current price
+                if (period.high > currentPrice) {
+                    betterPrice = false;
+                    break;
+                }
+
+            } else {
+
+                //if we are checking for a downtrend we don't want any "low" price lower than our current price
+                if (period.low < currentPrice) {
+                    betterPrice = false;
+                    break;
+                }
+            }
+        }
+
+        //if we don't have a better price, we don't have a divergence
+        if (!betterPrice)
+            return false;
+
+        //now that the price is good, let's look at the rsi
+        boolean betterRsi = true;
+
+        //look at all our rsi periods
+        for (int i = 0; i < rsi.size() - 1; i++) {
+
+            if (uptrend) {
+
+                //if checking uptrend we don't want any rsi values higher
+                if (rsi.get(i) > currentRsi) {
+                    betterRsi = false;
+                    break;
+                }
+
+            } else {
+
+                //if checking downtrend we don't want any rsi values lower
+                if (rsi.get(i) < currentRsi) {
+                    betterRsi = false;
+                    break;
+                }
+
+            }
+        }
+
+        //at this point we don't have a divergence in the uptrend
+        if (betterRsi)
+            return false;
+
+        //if the price is better but the rsi isn't that means we have a divergence
+        return (betterPrice && !betterRsi);
+    }
+
     /**
      * Do we have a divergence in the uptrend?
      * @return true if the closing price ends with a higher high, but the indicator is not a higher high, false otherwise
      */
-    public boolean hasDivergenceUptrend() {
+    private boolean hasDivergenceUptrend(final double currentPrice, final float currentRsi) {
 
         //is the high at the most recent period greater than all others in our period range
         boolean higherPrice = true;
 
         //track the high price for the latest period
-        final double highPrice = history.get(history.size() - 1).high;
+        //final double highPrice = history.get(history.size() - 1).high;
+        final double highPrice = currentPrice;
 
         //make sure all periods before the recent have a high price that is lower
         for (int i = history.size() - PERIODS; i < history.size() - 1; i++) {
@@ -238,7 +305,8 @@ public class Calculator {
         boolean higherRsi = true;
 
         //track the high rsi for the latest period
-        final float highRsi = rsi.get(rsi.size() - 1);
+        //final float highRsi = rsi.get(rsi.size() - 1);
+        final float highRsi = currentRsi;
 
         for (int i = 0; i < rsi.size() - 1; i++) {
 
@@ -261,13 +329,14 @@ public class Calculator {
      * Do we have a divergence in the downtrend?
      @return true if the closing price ends with a lower low, but the indicator is not a lower low, false otherwise
      */
-    public boolean hasDivergenceDowntrend() {
+    private boolean hasDivergenceDowntrend(final double currentPrice, final float currentRsi) {
 
         //is the low at the most recent period lower  than all others in our period range
         boolean lowerPrice = true;
 
         //track the low price for the latest period
-        final double lowPrice = history.get(history.size() - 1).low;
+        //final double lowPrice = history.get(history.size() - 1).low;
+        final double lowPrice = currentPrice;
 
         //make sure all periods before the recent have a low price that is greater
         for (int i = history.size() - PERIODS; i < history.size() - 1; i++) {
@@ -290,7 +359,8 @@ public class Calculator {
         boolean lowerRsi = true;
 
         //track the low rsi for the latest period
-        final float lowRsi = rsi.get(rsi.size() - 1);
+        //final float lowRsi = rsi.get(rsi.size() - 1);
+        final float lowRsi = currentRsi;
 
         for (int i = 0; i < rsi.size() - 1; i++) {
 

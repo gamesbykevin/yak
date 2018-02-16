@@ -106,7 +106,7 @@ public class AgentHelper {
         //if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
         //if the stock is worth more than what we paid, and we are above the resistance and we see a divergence sell quickly
-        if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergenceUptrend()  && agent.getRsiCurrent() >= RESISTANCE_LINE) {
+        if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())  && agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
             agent.displayMessage("We see a divergence in the uptrend", true);
 
@@ -149,7 +149,7 @@ public class AgentHelper {
         if (agent.getRsiCurrent() < SUPPORT_LINE) {
 
             //if we have a divergence in our downtrend, let's buy
-            if (agent.getCalculator().hasDivergenceDowntrend()) {
+            if (agent.getCalculator().hasDivergence(false, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())) {
                 agent.displayMessage("We see a divergence in the downtrend", true);
                 buy = true;
             }

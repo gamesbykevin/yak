@@ -203,24 +203,32 @@ public class Main implements Runnable {
                     //we aren't using web socket since it is null
                     for (Agent agent : agents.values()) {
 
-                        //skip if we aren't trading with this agent
-                        if (agent.hasStopTrading())
-                            continue;
+                        try {
 
-                        //get json response from ticker
-                        final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agent.getProductId()));
+                            //skip if we aren't trading with this agent
+                            if (agent.hasStopTrading())
+                                continue;
 
-                        //convert to pojo
-                        Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
+                            //get json response from ticker
+                            final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agent.getProductId()));
 
-                        //update the agent with the current price
-                        agent.update(ticker.price);
+                            //convert to pojo
+                            Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
-                        //sleep for a second
-                        Thread.sleep(DELAY);
+                            //update the agent with the current price
+                            agent.update(ticker.price);
 
-                        //display total assets update
-                        manageStatusUpdate();
+                            //sleep for a second
+                            Thread.sleep(DELAY);
+
+                            //display total assets update
+                            manageStatusUpdate();
+
+                        } catch (Exception e1) {
+
+                            e1.printStackTrace();
+                            displayMessage(e1, true, writer);
+                        }
                     }
                 }
 

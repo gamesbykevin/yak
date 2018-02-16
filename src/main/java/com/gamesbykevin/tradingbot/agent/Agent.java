@@ -13,6 +13,9 @@ import com.gamesbykevin.tradingbot.wallet.Wallet;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
@@ -50,6 +53,9 @@ public class Agent {
 
     //what is the current rsi value
     private float rsiCurrent;
+
+    //what time did we purchase?
+    private long purchaseTime;
 
     public Agent(final Product product, final double funds) {
 
@@ -144,6 +150,34 @@ public class Agent {
                 switch (status) {
 
                     case Filled:
+
+                        //if we are successful purchasing, store the purchase time
+                        if (getOrder().getSide().equalsIgnoreCase(Action.Buy.getDescription())) {
+
+                            //keep track of the transaction time
+                            purchaseTime = System.currentTimeMillis();
+
+                        } else {
+
+                            //how long did it take?
+                            final long duration = System.currentTimeMillis() - purchaseTime;
+
+                            //set our time
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.setTimeInMillis(duration);
+
+                            //the format of our time
+                            final String pattern = "mm:ss.SSS";
+
+                            //how we are going to format our time
+                            DateFormat formatter = new SimpleDateFormat(pattern);
+
+                            //format into a time we can read
+                            String desc = formatter.format(calendar.getTime());
+
+                            //display the time it took to sell the stock
+                            displayMessage("Duration of the order from buy to sell: " + desc + " (" + pattern + ")", true);
+                        }
 
                         //update our wallet with the order info
                         fillOrder(getOrder());
