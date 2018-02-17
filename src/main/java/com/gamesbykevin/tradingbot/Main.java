@@ -215,8 +215,9 @@ public class Main implements Runnable {
                             //convert to pojo
                             Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
-                            //update the agent with the current price
-                            agent.update(ticker.price);
+                            //sometimes we don't get a successful response so let's check for null
+                            if (ticker != null)
+                                agent.update(ticker.price);
 
                             //sleep for a second
                             Thread.sleep(DELAY);
@@ -257,6 +258,8 @@ public class Main implements Runnable {
 
             //add to our details
             text = text + agent.getProductId() + " - $" + assets + "\n";
+            text = text + "Gain #" + agent.getCountWin() + ", $" + agent.getTotalGain() + "\n";
+            text = text + "Loss #" + agent.getCountLose() + ", $" + agent.getTotalLoss() + "\n\n";
         }
 
         subject = "Total assets $" + total;

@@ -57,6 +57,14 @@ public class Agent {
     //what time did we purchase?
     private long purchaseTime;
 
+    //how many trades have we won and lost
+    private int countWin = 0;
+    private int countLose = 0;
+
+    //what are our total profit and losses?
+    private double totalGain = 0;
+    private double totalLoss = 0;
+
     public Agent(final Product product, final double funds) {
 
         //store the product this agent is trading
@@ -293,8 +301,21 @@ public class Agent {
             //display money made / lost
             if (bought > sold) {
                 subject = "We lost $" + (bought - sold);
+
+                //our total number of transaction losses
+                this.countLose++;
+
+                //total dollars lost
+                this.totalLoss += (bought - sold);
+
             } else {
                 subject = "We made $" + (sold - bought);
+
+                //our total number of transaction wins
+                this.countWin++;
+
+                //total dollars won
+                this.totalGain += (sold - bought);
             }
 
             //the transaction description
@@ -303,6 +324,8 @@ public class Agent {
             //display and write to log
             displayMessage(subject, true);
             displayMessage(text, true);
+            displayMessage("Total losses :" + getCountLose() + ", $" + getTotalLoss(), true);
+            displayMessage("Total   wins :" + getCountWin() + ", $" + getTotalGain(), true);
 
         } else {
             throw new RuntimeException("Side not handled here: " + order.getSide());
@@ -367,5 +390,21 @@ public class Agent {
 
     protected int getAttempts() {
         return this.attempts;
+    }
+
+    public int getCountLose() {
+        return this.countLose;
+    }
+
+    public int getCountWin() {
+        return this.countWin;
+    }
+
+    public double getTotalGain() {
+        return this.totalGain;
+    }
+
+    public double getTotalLoss() {
+        return this.totalLoss;
     }
 }

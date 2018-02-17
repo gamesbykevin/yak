@@ -155,6 +155,28 @@ public class AgentHelper {
             }
         }
 
+        switch (agent.getCalculator().getTrend()) {
+
+            //if there is a constant uptrend we will buy regardless of rsi or divergence
+            case Upward:
+
+                //if there are no breaks it is constant
+                if (agent.getCalculator().getBreaks() < 1) {
+                    buy = true;
+                    agent.displayMessage("There is a constant upward trend so we will buy", true);
+                }
+                break;
+
+            //if there is a constant downward trend, let's wait before buying
+            case Downward:
+
+                //if there are no breaks it is constant
+                if (agent.getCalculator().getBreaks() < 1) {
+                    buy = false;
+                    agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
+                }
+        }
+
         /*
         //if the stock is oversold we are on the right track
         if (agent.getRsiCurrent() < SUPPORT_LINE) {
