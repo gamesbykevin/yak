@@ -25,38 +25,49 @@ public class Email {
         if (EMAIL_NOTIFICATION_ADDRESS == null || EMAIL_NOTIFICATION_ADDRESS.trim().length() < 5)
             return;
 
-        try {
+        //we will send the email on a separate thread
+        Thread thread = new Thread(
+            new Runnable() {
+                @Override
+                public void run() {
 
-            Properties props = new Properties();
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-            props.put("mail.smtp.host", "smtp.gmail.com");
-            props.put("mail.smtp.port", "587");
+                    try {
 
-            Session session = Session.getInstance(props, new javax.mail.Authenticator() {
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(GMAIL_SMTP_USERNAME, GMAIL_SMTP_PASSWORD);
+                        Properties props = new Properties();
+                        props.put("mail.smtp.auth", "true");
+                        props.put("mail.smtp.starttls.enable", "true");
+                        props.put("mail.smtp.host", "smtp.gmail.com");
+                        props.put("mail.smtp.port", "587");
+
+                        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+                            protected PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(GMAIL_SMTP_USERNAME, GMAIL_SMTP_PASSWORD);
+                            }
+                        });
+
+                        Message message = new MimeMessage(session);
+                        message.setFrom(new InternetAddress(GMAIL_SMTP_USERNAME));
+                        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(EMAIL_NOTIFICATION_ADDRESS));
+                        message.setSubject(subject);
+                        message.setText(text);
+
+                        //we are now sending
+                        displayMessage("Sending email....", false, null);
+
+                        //send the email
+                        Transport.send(message);
+
+                        //display we are good
+                        displayMessage("Sent message successfully....", false, null);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             });
 
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(GMAIL_SMTP_USERNAME));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(EMAIL_NOTIFICATION_ADDRESS));
-            message.setSubject(subject);
-            message.setText(text);
-
-            //we are now sending
-            displayMessage("Sending email....", false, null);
-
-            //send the email
-            Transport.send(message);
-
-            //display we are good
-            displayMessage("Sent message successfully....", false, null);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //start sending the email on a separate thread
+        thread.start();
     }
 
     public static String getTextDateDesc() {
