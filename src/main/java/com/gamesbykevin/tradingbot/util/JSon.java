@@ -8,6 +8,11 @@ import java.net.URL;
 public class JSon {
 
     /**
+     * We need to set a timeout so we aren't waiting forever
+     */
+    public static final int HTTP_REQUEST_TIMEOUT = 3000;
+
+    /**
      * Perform GET rest call and give us the json response
      * @param link The url we want to access
      * @return The response in json string format
@@ -16,17 +21,24 @@ public class JSon {
 
         String result = "";
 
+        HttpURLConnection connection = null;
+
         try {
 
             URL url = new URL(link);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
+            connection = (HttpURLConnection)url.openConnection();
 
-            if (conn.getResponseCode() != 200)
-                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            //set time out so we aren't waiting forever
+            connection.setConnectTimeout(HTTP_REQUEST_TIMEOUT);
+            connection.setReadTimeout(HTTP_REQUEST_TIMEOUT * 2);
 
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Accept", "application/json");
+
+            if (connection.getResponseCode() != 200)
+                throw new RuntimeException("Failed : HTTP error code : " + connection.getResponseCode());
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((connection.getInputStream())));
 
             String output;
 
@@ -34,10 +46,20 @@ public class JSon {
                 result += output;
             }
 
-            conn.disconnect();
-
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+
+            if (connection != null) {
+
+                try {
+                    //after we are done, let's disconnect
+                    connection.disconnect();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+            }
         }
 
         return result;
