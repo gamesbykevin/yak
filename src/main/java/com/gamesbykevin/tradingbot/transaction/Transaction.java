@@ -3,14 +3,13 @@ package com.gamesbykevin.tradingbot.transaction;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
+import com.gamesbykevin.tradingbot.agent.AgentHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.agent.AgentHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.NOTIFICATION_EVERY_TRANSACTION;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -47,6 +46,12 @@ public class Transaction {
      * Time format when displaying the average time
      */
     public static final String TIME_FORMAT_AVG = "mm:ss";
+
+    //the reason why we bought
+    private ReasonBuy reasonBuy;
+
+    //the reason why we sold
+    private ReasonSell reasonSell;
 
     public Transaction() {
         //default constructor
@@ -108,6 +113,9 @@ public class Transaction {
             //assign our buy order
             setBuy(order);
 
+            //assign our reason for buying
+            setReasonBuy(agent.getReasonBuy());
+
             //if our buy order has been filled, update our wallet to have the current purchase price
             agent.getWallet().setPurchasePrice(price.doubleValue());
 
@@ -129,6 +137,9 @@ public class Transaction {
             //assign our sell order
             setSell(order);
 
+            //assign our reason for selling
+            setReasonSell(agent.getReasonSell());
+
             //if our sell order has been filled, update our wallet with our new funds
             agent.getWallet().setFunds(agent.getWallet().getFunds() + (price.doubleValue() * quantity.doubleValue()));
 
@@ -140,6 +151,9 @@ public class Transaction {
 
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
+
+            agent.displayMessage("Reason buy: " + agent.getReasonBuy().getDescription(), true);
+            agent.displayMessage("Reason sell: " + agent.getReasonSell().getDescription(), true);
 
             //did we win or lose?
             if (bought > sold) {
@@ -198,5 +212,21 @@ public class Transaction {
 
         //return our formatted time
         return new SimpleDateFormat(format).format(new Date(duration));
+    }
+
+    private void setReasonBuy(ReasonBuy reasonBuy) {
+        this.reasonBuy = reasonBuy;
+    }
+
+    private void setReasonSell(ReasonSell reasonSell) {
+        this.reasonSell = reasonSell;
+    }
+
+    public ReasonSell getReasonSell() {
+        return this.reasonSell;
+    }
+
+    public ReasonBuy getReasonBuy() {
+        return this.reasonBuy;
     }
 }

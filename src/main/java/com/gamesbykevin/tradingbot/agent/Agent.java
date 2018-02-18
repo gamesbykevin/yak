@@ -56,6 +56,12 @@ public class Agent {
     //what is the current rsi value
     private float rsiCurrent;
 
+    //the reason why we are buying
+    private ReasonBuy reasonBuy;
+
+    //the reason why we are selling
+    private ReasonSell reasonSell;
+
     public Agent(final Product product, final double funds) {
 
         //store the product this agent is trading
@@ -249,6 +255,54 @@ public class Agent {
 
             //display the total $ amount invested in stocks
             displayMessage(getStockInvestmentDesc(), true);
+
+            //display the count for each buying reason
+            displayBuyingReasonCount();
+
+            //display the count for each selling reason
+            displaySellingReasonCount();
+        }
+    }
+
+    private void displayBuyingReasonCount() {
+
+        //check each reason
+        for (ReasonBuy buy : ReasonBuy.values()) {
+
+            //keep track of the count
+            int count = 0;
+
+            //look at each transaction
+            for (Transaction transaction : transactions) {
+
+                //if there is a match increase the count
+                if (transaction.getReasonBuy() == buy)
+                    count++;
+            }
+
+            //display the count and description
+            displayMessage("Buy " + buy.toString() +  " total " + count + ". " + buy.getDescription(), true);
+        }
+    }
+
+    private void displaySellingReasonCount() {
+
+        //check each reason
+        for (ReasonSell sell : ReasonSell.values()) {
+
+            //keep track of the count
+            int count = 0;
+
+            //look at each transaction
+            for (Transaction transaction : transactions) {
+
+                //if there is a match increase the count
+                if (transaction.getReasonSell() == sell)
+                    count++;
+            }
+
+            //display the count and description
+            displayMessage("Sell " + sell.toString() +  " total " + count + ". " + sell.getDescription(), true);
         }
     }
 
@@ -403,5 +457,21 @@ public class Agent {
 
     public void displayMessage(String message, boolean write) {
         PropertyUtil.displayMessage(message, write, writer);
+    }
+
+    public void setReasonBuy(final ReasonBuy reasonBuy) {
+        this.reasonBuy = reasonBuy;
+    }
+
+    public void setReasonSell(final ReasonSell reasonSell) {
+        this.reasonSell = reasonSell;
+    }
+
+    public ReasonBuy getReasonBuy() {
+        return this.reasonBuy;
+    }
+
+    public ReasonSell getReasonSell() {
+        return this.reasonSell;
     }
 }

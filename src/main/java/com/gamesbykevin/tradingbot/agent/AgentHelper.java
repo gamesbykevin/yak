@@ -67,6 +67,46 @@ public class AgentHelper {
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
 
+    /**
+     * The reasons for why we buy
+     */
+    public enum ReasonBuy {
+
+        Reason_1("We see a divergence in the downtrend"),
+        Reason_2("There is a constant upward trend so we will buy");
+
+        private final String description;
+
+        ReasonBuy(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return this.description;
+        }
+    }
+
+    /**
+     * The reasons for why we sell
+     */
+    public enum ReasonSell {
+
+        Reason_1("We see a divergence in the uptrend"),
+        Reason_2("The stock price has exceeded our price gain ratio"),
+        Reason_3("We have lost too much, sell now");
+
+        private final String description;
+
+        ReasonSell(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return this.description;
+        }
+    }
+
+
     public enum Status {
 
         Pending("pending"),
@@ -100,25 +140,32 @@ public class AgentHelper {
 
         //do we sell the stock
         boolean sell = false;
+        agent.setReasonSell(null);
 
         //if the stock is worth more than what we paid, and we are above the resistance and we see a divergence sell quickly
         if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())  && agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
-            agent.displayMessage("We see a divergence in the uptrend", true);
+            //assign our reason and print
+            agent.setReasonSell(ReasonSell.Reason_1);
+            agent.displayMessage(agent.getReasonSell().getDescription(), true);
 
             //it grew enough, sell it
             sell = true;
 
         } else if (agent.getWallet().getCurrentPrice() >= priceGain) {
 
-            agent.displayMessage("The stock price has exceeded our price gain ratio", true);
+            //assign our reason and print
+            agent.setReasonSell(ReasonSell.Reason_2);
+            agent.displayMessage(agent.getReasonSell().getDescription(), true);
 
             //regardless of rsi, if we made enough money to sell it
             sell = true;
 
         } else if (agent.getWallet().getCurrentPrice() <= priceLow) {
 
-            agent.displayMessage("We have lost too much, sell now", true);
+            //assign our reason and print
+            agent.setReasonSell(ReasonSell.Reason_3);
+            agent.displayMessage(agent.getReasonSell().getDescription(), true);
 
             //it dropped enough, sell it
             sell = true;
@@ -140,14 +187,16 @@ public class AgentHelper {
     protected static void checkBuy(final Agent agent) {
 
         boolean buy = false;
+        agent.setReasonBuy(null);
 
         //if we are at or below the support line, let's check if we are in a good place to buy
         if (agent.getRsiCurrent() < SUPPORT_LINE) {
 
             //if we have a divergence in our downtrend, let's buy
             if (agent.getCalculator().hasDivergence(false, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())) {
-                agent.displayMessage("We see a divergence in the downtrend", true);
                 buy = true;
+                agent.setReasonBuy(ReasonBuy.Reason_1);
+                agent.displayMessage(agent.getReasonBuy().getDescription(), true);
             }
         }
 
@@ -159,7 +208,8 @@ public class AgentHelper {
                 //if there are no breaks it is constant
                 if (agent.getCalculator().getBreaks() < 1) {
                     buy = true;
-                    agent.displayMessage("There is a constant upward trend so we will buy", true);
+                    agent.setReasonBuy(ReasonBuy.Reason_2);
+                    agent.displayMessage(agent.getReasonBuy().getDescription(), true);
                 }
                 break;
 
@@ -383,5 +433,4 @@ public class AgentHelper {
         BigDecimal result = BigDecimal.valueOf(value);
         return result.setScale(decimals, RoundingMode.HALF_DOWN);
     }
-
 }
