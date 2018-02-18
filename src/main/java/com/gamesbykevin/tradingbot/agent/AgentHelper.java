@@ -7,8 +7,6 @@ import com.gamesbykevin.tradingbot.Main;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import static com.gamesbykevin.tradingbot.rsi.Calculator.PERIODS;
-
 public class AgentHelper {
 
     /**
@@ -103,8 +101,6 @@ public class AgentHelper {
         //do we sell the stock
         boolean sell = false;
 
-        //if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getRsiCurrent() >= RESISTANCE_LINE) {
-
         //if the stock is worth more than what we paid, and we are above the resistance and we see a divergence sell quickly
         if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())  && agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
@@ -176,52 +172,6 @@ public class AgentHelper {
                     agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
                 }
         }
-
-        /*
-        //if the stock is oversold we are on the right track
-        if (agent.getRsiCurrent() < SUPPORT_LINE) {
-
-            switch (agent.getCalculator().getTrend()) {
-
-                case Upward:
-
-                    //if the rsi is low and we see a constant upward trend, we will buy
-                    if (agent.getCalculator().getBreaks() < 1) {
-                        buy = true;
-                        agent.displayMessage("There is a constant upward trend", true);
-                    } else {
-                        agent.displayMessage("There is an upward trend, but there are " + agent.getCalculator().getBreaks() + " break(s)", true);
-                    }
-                    break;
-
-                //we like downward trends
-                case Downward:
-
-                    //there is a downward trend but some breaks so we think it will go back upwards
-                    if (agent.getCalculator().getBreaks() >= (PERIODS / 2)) {
-                        buy = true;
-                        agent.displayMessage("There is a downward trend, but we see at least half of the periods with breaks so we will buy", true);
-                    } else if (agent.getCalculator().getBreaks() < 1) {
-                        agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
-                    } else {
-                        agent.displayMessage("There is a downward trend, but not enough breaks to buy (" + agent.getCalculator().getBreaks() + ")", true);
-                    }
-                    break;
-            }
-
-        } else {
-
-            //if there is a constant upward trend lets buy anyway regardless of rsi
-            switch (agent.getCalculator().getTrend()) {
-                case Upward:
-                    if (agent.getCalculator().getBreaks() < 1) {
-                        buy = true;
-                        agent.displayMessage("There is a constant upward trend, so we will buy", true);
-                    }
-                    break;
-            }
-        }
-        */
 
         //are we buying stock?
         if (buy) {
@@ -424,4 +374,14 @@ public class AgentHelper {
         //return our order
         return order;
     }
+
+    public static BigDecimal formatValue(final double value) {
+        return formatValue(ROUND_DECIMALS_PRICE, value);
+    }
+
+    public static BigDecimal formatValue(final int decimals, final double value) {
+        BigDecimal result = BigDecimal.valueOf(value);
+        return result.setScale(decimals, RoundingMode.HALF_DOWN);
+    }
+
 }

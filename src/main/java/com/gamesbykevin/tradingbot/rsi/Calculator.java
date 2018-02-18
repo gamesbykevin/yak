@@ -142,6 +142,7 @@ public class Calculator {
         } else if (first.close > last.close) {
             setTrend(Trend.Downward);
         } else {
+
             //no difference
             return;
         }

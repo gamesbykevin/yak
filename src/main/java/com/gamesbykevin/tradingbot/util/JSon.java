@@ -17,6 +17,7 @@ public class JSon {
         String result = "";
 
         try {
+
             URL url = new URL(link);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");

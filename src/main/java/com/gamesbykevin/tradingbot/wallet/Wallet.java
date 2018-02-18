@@ -67,7 +67,11 @@ public class Wallet {
         return this.purchasePrice;
     }
 
+    public double getStockInvestment() {
+        return (getQuantity() * getCurrentPrice());
+    }
+
     public double getCurrentAssets() {
-        return (getQuantity() * getCurrentPrice()) + getFunds();
+        return (getStockInvestment() + getFunds());
     }
 }

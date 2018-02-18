@@ -7,7 +7,9 @@ import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.product.Ticker;
+import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
@@ -23,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.rsi.Calculator.ENDPOINT_TICKER;
+import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT;
+import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT_BOT_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
@@ -80,6 +84,9 @@ public class Main implements Runnable {
     //our list of products
     private List<Product> products;
 
+    //how long has the bot been running
+    private final long start;
+
     public static void main(String[] args) {
 
         try {
@@ -109,6 +116,9 @@ public class Main implements Runnable {
     }
 
     private Main(ConfigurableApplicationContext context) {
+
+        //track the start time
+        this.start = System.currentTimeMillis();
 
         ConfigurableListableBeanFactory factory = context.getBeanFactory();
         ORDER_SERVICE = factory.getBean(OrderService.class);
@@ -244,7 +254,17 @@ public class Main implements Runnable {
     private void manageStatusUpdate() {
 
         //text of our notification message
-        String subject = "", text = "\nStarted with $" + FUNDS + "\n";
+        String subject = "", text = "\n";
+
+        //how much did we start with
+        text = text + "Started with $" + FUNDS + "\n";
+
+        //how long has the bot been running
+        text = text + "Bot Running: " +
+            Transaction.getDurationDesc(
+                    (System.currentTimeMillis() - start),
+                    TIME_FORMAT_BOT_DURATION
+            ) + "\n\n";
 
         double total = 0;
 
@@ -257,12 +277,25 @@ public class Main implements Runnable {
             total += assets;
 
             //add to our details
-            text = text + agent.getProductId() + " - $" + assets + "\n";
-            text = text + "Gain #" + agent.getCountWin() + ", $" + agent.getTotalGain() + "\n";
-            text = text + "Loss #" + agent.getCountLose() + ", $" + agent.getTotalLoss() + "\n\n";
+            text = text + agent.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
+
+            //summary of our winning transactions
+            text = text + agent.getDescWins() + "\n";
+
+            //summary of our losing transactions
+            text = text + agent.getDescLost() + "\n";
+
+            //average transaction duration
+            text = text + agent.getAverageDurationDesc() + "\n";
+
+            //currently holding in stock
+            text = text + agent.getStockInvestmentDesc() + "\n";
+
+            //add line break in the end
+            text = text + "\n";
         }
 
-        subject = "Total assets $" + total;
+        subject = "Total assets $" + AgentHelper.formatValue(total);
 
         //print our total assets if they have changed
         if (total != previousTotal) {
@@ -278,6 +311,14 @@ public class Main implements Runnable {
 
             //update the timer
             previous = System.currentTimeMillis();
+
+        } else {
+
+            //how much time remaining
+            final long duration = NOTIFICATION_DELAY - (System.currentTimeMillis() - previous);
+
+            //show when the next notification message will be sent
+            displayMessage("Next notification message in " + Transaction.getDurationDesc(duration, TIME_FORMAT_BOT_DURATION), false, null);
         }
     }
 
@@ -304,7 +345,7 @@ public class Main implements Runnable {
                 displayMessage("Agent created - " + product.getId(), true, writer);
 
                 //sleep for a few seconds
-                Thread.sleep(DELAY);
+                Thread.sleep(DELAY * 2);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -323,6 +364,7 @@ public class Main implements Runnable {
                     new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
                     this.agents
             );
+
         } else {
 
             displayMessage("Websocket is not enabled...", true, writer);

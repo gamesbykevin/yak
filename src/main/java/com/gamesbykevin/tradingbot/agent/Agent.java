@@ -5,21 +5,20 @@ import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.rsi.Calculator;
 import com.gamesbykevin.tradingbot.rsi.Calculator.Duration;
+import com.gamesbykevin.tradingbot.transaction.Transaction;
+import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.PrintWriter;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
+import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT_AVG;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
-import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent {
@@ -45,6 +44,9 @@ public class Agent {
     //do we have an order?
     private Order order = null;
 
+    //list of transactions
+    private List<Transaction> transactions;
+
     //do we stop trading
     private boolean stopTrading = false;
 
@@ -54,21 +56,13 @@ public class Agent {
     //what is the current rsi value
     private float rsiCurrent;
 
-    //what time did we purchase?
-    private long purchaseTime;
-
-    //how many trades have we won and lost
-    private int countWin = 0;
-    private int countLose = 0;
-
-    //what are our total profit and losses?
-    private double totalGain = 0;
-    private double totalLoss = 0;
-
     public Agent(final Product product, final double funds) {
 
         //store the product this agent is trading
         this.product = product;
+
+        //create new list of transactions
+        this.transactions = new ArrayList<>();
 
         //create our object to write to a text file
         this.writer = LogFile.getPrintWriter(product.getId() + "-" + getFileDateDesc() + ".log");
@@ -118,7 +112,7 @@ public class Agent {
             this.rsiCurrent = getCalculator().getRsiCurrent(currentPrice);
 
             //what is the rsi
-            displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + currentPrice, true);
+            displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
 
             //if we don't have a pending order
             if (getOrder() == null) {
@@ -135,7 +129,7 @@ public class Agent {
 
                 }
 
-                //reset our attempts counter
+                //reset our attempts counter, which is used when we create a limit order
                 setAttempts(0);
 
             } else {
@@ -158,34 +152,6 @@ public class Agent {
                 switch (status) {
 
                     case Filled:
-
-                        //if we are successful purchasing, store the purchase time
-                        if (getOrder().getSide().equalsIgnoreCase(Action.Buy.getDescription())) {
-
-                            //keep track of the transaction time
-                            purchaseTime = System.currentTimeMillis();
-
-                        } else {
-
-                            //how long did it take?
-                            final long duration = System.currentTimeMillis() - purchaseTime;
-
-                            //set our time
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTimeInMillis(duration);
-
-                            //the format of our time
-                            final String pattern = "mm:ss.SSS";
-
-                            //how we are going to format our time
-                            DateFormat formatter = new SimpleDateFormat(pattern);
-
-                            //format into a time we can read
-                            String desc = formatter.format(calendar.getTime());
-
-                            //display the time it took to sell the stock
-                            displayMessage("Duration of the order from buy to sell: " + desc + " (" + pattern + ")", true);
-                        }
 
                         //update our wallet with the order info
                         fillOrder(getOrder());
@@ -220,17 +186,17 @@ public class Agent {
                     getWallet().setStartingFunds(getWallet().getFunds());
                     final double newRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
                     displayMessage("Good news, stop trading limit has increased", true);
-                    displayMessage("    Funds $" + getWallet().getFunds(), true);
-                    displayMessage("Old limit $" + oldRatio, true);
-                    displayMessage("New limit $" + newRatio, true);
+                    displayMessage("    Funds $" + AgentHelper.formatValue(getWallet().getFunds()), true);
+                    displayMessage("Old limit $" + AgentHelper.formatValue(oldRatio), true);
+                    displayMessage("New limit $" + AgentHelper.formatValue(newRatio), true);
                     displayMessage("If your funds fall below the new limit we will stop trading", true);
                 }
 
                 //notify if this agent has stopped trading
                 if (hasStopTrading()) {
                     String subject = "We stopped trading: " + getProductId();
-                    String text1 = "Funds $" + getWallet().getFunds();
-                    String text2 = "Limit $" + (STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                    String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
+                    String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
                     displayMessage(subject, true);
                     displayMessage(text1,true);
                     displayMessage(text2,true);
@@ -255,85 +221,132 @@ public class Agent {
 
     private void fillOrder(final Order order) {
 
-        //our notification message
-        String subject = null, text = null;
-
-        //get the purchase price from the order
-        BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
-        price.setScale(AgentHelper.ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
-
-        //get the quantity from the order
-        BigDecimal quantity = BigDecimal.valueOf(Double.parseDouble(order.getSize()));
-        quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
-
         if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription())) {
 
-            //if our buy order has been filled, update our wallet to have the current purchase price
-            getWallet().setPurchasePrice(price.doubleValue());
+            //create a new transaction to track
+            Transaction transaction = new Transaction();
 
-            //update our available funds based on our purchase
-            getWallet().setFunds(getWallet().getFunds() - (price.doubleValue() * quantity.doubleValue()));
+            //update our transaction
+            transaction.update(this, order);
 
-            //add the quantity to our wallet
-            getWallet().setQuantity(getWallet().getQuantity() + quantity.doubleValue());
-
-            //setup our notification message
-            subject = "Purchase " + getProductId();
-            text = "Buy " + getProductId() + " quantity: " + quantity + " @ $" + getWallet().getPurchasePrice();
-
-            //display the transaction
-            displayMessage(text, true);
+            //add to our list
+            this.transactions.add(transaction);
 
         } else if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Sell.getDescription())) {
 
-            //if our sell order has been filled, update our wallet with our new funds
-            getWallet().setFunds(getWallet().getFunds() + (price.doubleValue() * quantity.doubleValue()));
+            //get the most recent transaction so we can complete it
+            Transaction transaction = transactions.get(transactions.size() - 1);
 
-            //update the quantity as well
-            getWallet().setQuantity(getWallet().getQuantity() - quantity.doubleValue());
+            //update our transaction
+            transaction.update(this, order);
 
-            //figure out the total price we bought the stock for
-            final double bought = (getWallet().getPurchasePrice() * quantity.doubleValue());
+            //display wins and losses
+            displayMessage(getDescWins(), true);
+            displayMessage(getDescLost(), true);
 
-            //figure out the total price we sold the stock for
-            final double sold = (price.doubleValue() * quantity.doubleValue());
+            //display average transaction time
+            displayMessage(getAverageDurationDesc(), true);
 
-            //display money made / lost
-            if (bought > sold) {
-                subject = "We lost $" + (bought - sold);
+            //display the total $ amount invested in stocks
+            displayMessage(getStockInvestmentDesc(), true);
+        }
+    }
 
-                //our total number of transaction losses
-                this.countLose++;
+    public String getDescLost() {
+        return "Lost :" + getCount(Result.Lose) + ", $" + AgentHelper.formatValue(getAmount(Result.Lose));
+    }
 
-                //total dollars lost
-                this.totalLoss += (bought - sold);
+    public String getDescWins() {
+        return "Wins :" + getCount(Result.Win) + ", $" + AgentHelper.formatValue(getAmount(Result.Win));
+    }
 
-            } else {
-                subject = "We made $" + (sold - bought);
+    public String getStockInvestmentDesc() {
+        return "Owned Stock: " + AgentHelper.formatValue(getWallet().getQuantity());
+    }
 
-                //our total number of transaction wins
-                this.countWin++;
+    public String getAverageDurationDesc() {
+        return "Avg time: " + Transaction.getDurationDesc(getAverageDuration(), TIME_FORMAT_AVG);
+    }
 
-                //total dollars won
-                this.totalGain += (sold - bought);
-            }
+    private long getAverageDuration() {
 
-            //the transaction description
-            text = "Sell " + getProductId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + getWallet().getPurchasePrice() + ", remaining funds $" + getWallet().getFunds();
+        //how many transactions
+        int count = 0;
 
-            //display and write to log
-            displayMessage(subject, true);
-            displayMessage(text, true);
-            displayMessage("Total losses :" + getCountLose() + ", $" + getTotalLoss(), true);
-            displayMessage("Total   wins :" + getCountWin() + ", $" + getTotalGain(), true);
+        //total duration
+        long duration = 0;
 
-        } else {
-            throw new RuntimeException("Side not handled here: " + order.getSide());
+        //if empty return 0
+        if (transactions.isEmpty())
+            return 0;
+
+        //check every transaction
+        for (Transaction transaction : transactions) {
+
+            if (transaction.getResult() == null)
+                continue;
+
+            //keep track of total transactions
+            count++;
+
+            //add total duration
+            duration += transaction.getDuration();
         }
 
-        //are we going to notify every transaction
-        if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
-            sendEmail(subject, text);
+        //if nothing, return 0
+        if (count == 0)
+            return 0;
+
+        //return the average duration
+        return (duration / count);
+    }
+
+    /**
+     * Get the total count of our transactions
+     * @param result Do we want to check for wins or losses?
+     * @return The total count of the specified result
+     */
+    public int getCount(Result result) {
+
+        int count = 0;
+
+        //check every transaction
+        for (Transaction transaction : transactions) {
+
+            if (transaction.getResult() == null)
+                continue;
+
+            //if there is a match keep track
+            if (transaction.getResult() == result)
+                count++;
+        }
+
+        //return our result
+        return count;
+    }
+
+    /**
+     * Get the total $ amount for our transaction
+     * @param result Do we want to check for wins or losses?
+     * @return The total $ amount of the specified result
+     */
+    public double getAmount(Result result) {
+
+        double amount = 0;
+
+        //check every transaction
+        for (Transaction transaction : transactions) {
+
+            if (transaction.getResult() == null)
+                continue;
+
+            //if there is a match keep track
+            if (transaction.getResult() == result)
+                amount += transaction.getAmount();
+        }
+
+        //return our result
+        return amount;
     }
 
     public String getProductId() {
@@ -356,23 +369,15 @@ public class Agent {
         return getWallet().getCurrentAssets();
     }
 
-    protected void displayMessage(Exception e, boolean write) {
-        PropertyUtil.displayMessage(e, write, writer);
-    }
-
-    protected void displayMessage(String message, boolean write) {
-        PropertyUtil.displayMessage(message, write, writer);
-    }
-
     protected Calculator getCalculator() {
         return this.calculator;
     }
 
-    protected Wallet getWallet() {
+    public Wallet getWallet() {
         return this.wallet;
     }
 
-    protected Product getProduct() {
+    public Product getProduct() {
         return this.product;
     }
 
@@ -392,19 +397,11 @@ public class Agent {
         return this.attempts;
     }
 
-    public int getCountLose() {
-        return this.countLose;
+    public void displayMessage(Exception e, boolean write) {
+        PropertyUtil.displayMessage(e, write, writer);
     }
 
-    public int getCountWin() {
-        return this.countWin;
-    }
-
-    public double getTotalGain() {
-        return this.totalGain;
-    }
-
-    public double getTotalLoss() {
-        return this.totalLoss;
+    public void displayMessage(String message, boolean write) {
+        PropertyUtil.displayMessage(message, write, writer);
     }
 }
