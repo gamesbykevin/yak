@@ -256,15 +256,21 @@ public class Agent {
             //display the total $ amount invested in stocks
             displayMessage(getStockInvestmentDesc(), true);
 
-            //display the count for each buying reason
-            displayBuyingReasonCount();
+            //display the count for each buying reason for when we win
+            displayBuyingReasonCount(Result.Win);
 
-            //display the count for each selling reason
-            displaySellingReasonCount();
+            //display the count for each selling reason for when we win
+            displaySellingReasonCount(Result.Win);
+
+            //display the count for each buying reason for when we lose
+            displayBuyingReasonCount(Result.Lose);
+
+            //display the count for each selling reason for when we lose
+            displaySellingReasonCount(Result.Lose);
         }
     }
 
-    private void displayBuyingReasonCount() {
+    private void displayBuyingReasonCount(Result result) {
 
         //check each reason
         for (ReasonBuy buy : ReasonBuy.values()) {
@@ -272,20 +278,29 @@ public class Agent {
             //keep track of the count
             int count = 0;
 
+            //keep track of the money involved
+            double amount = 0;
+
             //look at each transaction
             for (Transaction transaction : transactions) {
 
+                //skip if no match
+                if (transaction.getResult() == null || transaction.getResult() != result)
+                    continue;
+
                 //if there is a match increase the count
-                if (transaction.getReasonBuy() == buy)
+                if (transaction.getReasonBuy() == buy) {
                     count++;
+                    amount += transaction.getAmount();
+                }
             }
 
             //display the count and description
-            displayMessage("Buy " + buy.toString() +  " total " + count + ". " + buy.getDescription(), true);
+            displayMessage(result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + AgentHelper.formatValue(amount) + ". " + buy.getDescription(), true);
         }
     }
 
-    private void displaySellingReasonCount() {
+    private void displaySellingReasonCount(Result result) {
 
         //check each reason
         for (ReasonSell sell : ReasonSell.values()) {
@@ -293,16 +308,25 @@ public class Agent {
             //keep track of the count
             int count = 0;
 
+            //keep track of the money involved
+            double amount = 0;
+
             //look at each transaction
             for (Transaction transaction : transactions) {
 
+                //skip if no match
+                if (transaction.getResult() == null || transaction.getResult() != result)
+                    continue;
+
                 //if there is a match increase the count
-                if (transaction.getReasonSell() == sell)
+                if (transaction.getReasonSell() == sell) {
                     count++;
+                    amount += transaction.getAmount();
+                }
             }
 
             //display the count and description
-            displayMessage("Sell " + sell.toString() +  " total " + count + ". " + sell.getDescription(), true);
+            displayMessage(result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + AgentHelper.formatValue(amount) + ". " + sell.getDescription(), true);
         }
     }
 

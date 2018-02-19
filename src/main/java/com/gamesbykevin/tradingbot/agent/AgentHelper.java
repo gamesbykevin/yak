@@ -219,6 +219,7 @@ public class AgentHelper {
                 //if there are no breaks it is constant
                 if (agent.getCalculator().getBreaks() < 1) {
                     buy = false;
+                    agent.setReasonBuy(null);
                     agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
                 }
         }

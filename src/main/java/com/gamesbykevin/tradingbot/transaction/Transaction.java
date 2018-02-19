@@ -87,7 +87,7 @@ public class Transaction {
         return this.sell;
     }
 
-    public void setAmount(final double amount) {
+    private void setAmount(final double amount) {
         this.amount = amount;
     }
 
