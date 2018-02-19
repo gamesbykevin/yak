@@ -3,8 +3,9 @@ package com.gamesbykevin.tradingbot.transaction;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.agent.AgentHelper.ReasonBuy;
-import com.gamesbykevin.tradingbot.agent.AgentHelper.ReasonSell;
+
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -48,10 +49,10 @@ public class Transaction {
     public static final String TIME_FORMAT_AVG = "mm:ss";
 
     //the reason why we bought
-    private ReasonBuy reasonBuy;
+    private TransactionHelper.ReasonBuy reasonBuy;
 
     //the reason why we sold
-    private ReasonSell reasonSell;
+    private TransactionHelper.ReasonSell reasonSell;
 
     public Transaction() {
         //default constructor
@@ -182,20 +183,22 @@ public class Transaction {
             //the transaction description
             text = "Sell " + agent.getProductId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + agent.getWallet().getPurchasePrice() + ", remaining funds $" + agent.getWallet().getFunds();
 
-            //include the duration description
-            text = text + "\n" + getDurationSummaryDesc(getDuration());
-
         } else {
             throw new RuntimeException("Side not handled here: " + order.getSide());
         }
 
+        //include the duration description
+        final String summary = getDurationSummaryDesc(getDuration());
+
         //display and write to log
         agent.displayMessage(subject, true);
         agent.displayMessage(text, true);
+        agent.displayMessage(summary, true);
+        agent.displayMessage(getDurationSummaryDesc(getDuration()), true);
 
         //are we going to notify every transaction?
         if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
-            sendEmail(subject, text);
+            sendEmail(subject, text + "\n" + summary);
     }
 
     public long getDuration() {

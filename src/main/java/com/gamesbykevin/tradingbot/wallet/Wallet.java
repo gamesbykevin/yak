@@ -11,15 +11,12 @@ public class Wallet {
     //the price we bought the stock
     private double purchasePrice = 0;
 
-    //current price of stock
-    private double currentPrice = 0;
-
     /**
      * If we lose an overall % of our funds let's stop the bleeding
      */
     public static float STOP_TRADING_RATIO;
 
-    //how many funds did we start with
+    //how many funds did we start with?
     private double startingFunds;
 
     public Wallet(double funds) {
@@ -51,27 +48,11 @@ public class Wallet {
         return this.quantity;
     }
 
-    public void setCurrentPrice(final double currentPrice) {
-        this.currentPrice = currentPrice;
-    }
-
-    public double getCurrentPrice() {
-        return this.currentPrice;
-    }
-
     public void setPurchasePrice(final double purchasePrice) {
         this.purchasePrice = purchasePrice;
     }
 
     public double getPurchasePrice() {
         return this.purchasePrice;
-    }
-
-    public double getStockInvestment() {
-        return (getQuantity() * getCurrentPrice());
-    }
-
-    public double getCurrentAssets() {
-        return (getStockInvestment() + getFunds());
     }
 }

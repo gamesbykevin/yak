@@ -2,10 +2,9 @@ package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.rsi.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
-import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
@@ -102,7 +101,7 @@ public class PropertyUtil {
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 
-        //how many periods to we use to calculate rsi
+        //how many periods to we use to calculate calculator
         Calculator.PERIODS = Integer.parseInt(getProperties().getProperty("periods"));
     }
 

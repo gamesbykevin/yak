@@ -1,6 +1,5 @@
-package com.gamesbykevin.tradingbot.rsi;
+package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.util.GSon;
 
 import java.util.ArrayList;
@@ -14,11 +13,14 @@ public class Calculator {
     //keep a list of our periods
     private List<Period> history;
 
-    //keep a historical list of the rsi so we can check for divergence
+    //keep a historical list of the calculator so we can check for divergence
     private List<Float> rsi;
 
+    //the momentum of each period
+    private List<Double> momentum;
+
     /**
-     * How many periods to calculate rsi
+     * How many periods to calculate calculator
      */
     public static int PERIODS;
 
@@ -64,6 +66,7 @@ public class Calculator {
         this.productId = productId;
         this.history = new ArrayList<>();
         this.rsi = new ArrayList<>();
+        this.momentum = new ArrayList<>();
     }
 
     public synchronized void update(Duration key) {
@@ -96,7 +99,7 @@ public class Calculator {
                 this.history.add(period);
             }
 
-            //calculate the rsi for all our specified periods now that we have new data
+            //calculate the calculator for all our specified periods now that we have new data
             calculateRsi();
         }
     }
@@ -117,7 +120,7 @@ public class Calculator {
         return this.breaks;
     }
 
-    public synchronized void calculateTrend() {
+    public synchronized void calculateTrend(final double currentPrice) {
 
         //reset values
         setTrend(Trend.None);
@@ -128,35 +131,31 @@ public class Calculator {
             return;
 
         //we want to start here
-        Period first = history.get(history.size() - PERIODS);
-
-        //the first element is the most recent and is last
-        Period last = history.get(PERIODS - 1);
-
-        //our coordinates to calculate slope
-        final double x1 = 0, y1, x2 = PERIODS - 1, y2;
+        Period begin = history.get(history.size() - PERIODS);
 
         //are we checking an upward trend?
-        if (first.close < last.close) {
+        if (begin.close < currentPrice) {
             setTrend(Trend.Upward);
-        } else if (first.close > last.close) {
+        } else if (begin.close > currentPrice) {
             setTrend(Trend.Downward);
         } else {
-
             //no difference
             return;
         }
 
+        //our coordinates to calculate slope
+        final double x1 = 0, y1, x2 = PERIODS, y2;
+
         //are we detecting and upward or downward trend?
         switch (getTrend()) {
             case Upward:
-                y1 = first.low;
-                y2 = last.low;
+                y1 = begin.low;
+                y2 = currentPrice;
                 break;
 
             case Downward:
-                y1 = first.high;
-                y2 = last.high;
+                y1 = begin.high;
+                y2 = currentPrice;
                 break;
 
             case None:
@@ -170,18 +169,14 @@ public class Calculator {
         //calculate slope
         final double slope = (y2 - y1) / (x2 - x1);
 
-        //the start and end index
-        final int start = history.size() - PERIODS + 1;
-        final int end = history.size() - 1;
-
         //check and see if every period is above the slope indicating an upward trend
-        for (int i = start; i < end; i++) {
+        for (int i = history.size() - PERIODS; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);
 
             //the current x-coordinate
-            final double x = i - start;
+            final double x = i - (history.size() - PERIODS);
 
             //calculate the y-coordinate
             final double y = (slope * x) + yIntercept;
@@ -206,13 +201,13 @@ public class Calculator {
         }
     }
 
-    public boolean hasDivergence(final boolean uptrend, final double currentPrice, final float currentRsi) {
+    public synchronized boolean hasDivergence(final boolean uptrend, final double currentPrice, final float currentRsi) {
 
         //flag we will use to track if the price is following the desired trend
         boolean betterPrice = true;
 
         //check all recent periods
-        for (int i = history.size() - PERIODS; i < history.size() - 1; i++) {
+        for (int i = history.size() - PERIODS; i < history.size(); i++) {
 
             //get the current period
             Period period = history.get(i);
@@ -239,15 +234,15 @@ public class Calculator {
         if (!betterPrice)
             return false;
 
-        //now that the price is good, let's look at the rsi
+        //now that the price is good, let's look at the calculator
         boolean betterRsi = true;
 
-        //look at all our rsi periods
-        for (int i = 0; i < rsi.size() - 1; i++) {
+        //look at all our calculator periods
+        for (int i = 0; i < rsi.size(); i++) {
 
             if (uptrend) {
 
-                //if checking uptrend we don't want any rsi values higher
+                //if checking uptrend we don't want any calculator values higher
                 if (rsi.get(i) > currentRsi) {
                     betterRsi = false;
                     break;
@@ -255,7 +250,7 @@ public class Calculator {
 
             } else {
 
-                //if checking downtrend we don't want any rsi values lower
+                //if checking downtrend we don't want any calculator values lower
                 if (rsi.get(i) < currentRsi) {
                     betterRsi = false;
                     break;
@@ -268,19 +263,43 @@ public class Calculator {
         if (betterRsi)
             return false;
 
-        //if the price is better but the rsi isn't that means we have a divergence
+        //if the price is better but the calculator isn't that means we have a divergence
         return (betterPrice && !betterRsi);
     }
 
-    /**
-     * Calculate the rsi values for each period
-     */
-    private synchronized void calculateRsi() {
+    public synchronized void calculateMomentum(final double currentPrice) {
 
-        //clear our historical rsi list
+        //if not large enough skip, this shouldn't happen
+        if (history.size() < PERIODS || history.isEmpty())
+            return;
+
+        //clear the list
+        this.momentum.clear();
+
+        //calculate the momentum for each recent period
+        for (int i = history.size() - PERIODS; i < history.size(); i++) {
+
+            //obtain the previous period and current
+            Period earlier = history.get(i - PERIODS);
+            Period current = history.get(i);
+
+            //the momentum is the current closing price - first closing price in our period range
+            momentum.add(current.close - earlier.close);
+        }
+
+        //add the current price to our momentum list
+        momentum.add(currentPrice - history.get(history.size() - PERIODS).close);
+    }
+
+    /**
+     * Calculate the calculator values for each period
+     */
+    private void calculateRsi() {
+
+        //clear our historical calculator list
         this.rsi.clear();
 
-        //calculate the rsi for each period
+        //calculate the calculator for each period
         for (int i = PERIODS; i >= 0; i--) {
 
             //we need to go back the desired number of periods
@@ -289,23 +308,23 @@ public class Calculator {
             //we only go the length of the desired periods
             final int endIndex = startIndex + PERIODS;
 
-            //get the rsi for this period
+            //get the calculator for this period
             final float rsi = calculateRsi(startIndex, endIndex, false, 0);
 
-            //add the rsi calculation to the list
+            //add the calculator calculation to the list
             this.rsi.add(rsi);
         }
     }
 
     /**
-     * Calcuate the rsi value for the specified range
+     * Calcuate the calculator value for the specified range
      * @param startIndex Begining period
      * @param endIndex Ending period
-     * @param current Are we calculating the current rsi? if false we just want the historical rsi
-     * @param currentPrice The current price when calculating the current rsi, otherwise this field is not used
-     * @return The rsi value
+     * @param current Are we calculating the current calculator? if false we just want the historical calculator
+     * @param currentPrice The current price when calculating the current calculator, otherwise this field is not used
+     * @return The calculator value
      */
-    private synchronized float calculateRsi(final int startIndex, final int endIndex, final boolean current, final double currentPrice) {
+    private float calculateRsi(final int startIndex, final int endIndex, final boolean current, final double currentPrice) {
 
         //the length of our calculation
         final int size = endIndex - startIndex;
@@ -314,7 +333,7 @@ public class Calculator {
         float gain = 0, loss = 0;
         float gainCurrent = 0, lossCurrent = 0;
 
-        //go through the periods to calculate rsi
+        //go through the periods to calculate calculator
         for (int i = startIndex; i < endIndex - 1; i++) {
 
             //prevent index out of bounds exception
@@ -341,7 +360,7 @@ public class Calculator {
         float avgGain = (gain / size);
         float avgLoss = (loss / size);
 
-        //if we don't want the current rsi we can do simple moving average (SMA)
+        //if we don't want the current calculator we can do simple moving average (SMA)
         if (!current) {
 
             //calculate relative strength
@@ -350,7 +369,7 @@ public class Calculator {
             //calculate relative strength index
             final float rsi = 100 - (100 / (1 + rs));
 
-            //return our rsi value
+            //return our calculator value
             return rsi;
 
         } else {
@@ -365,16 +384,16 @@ public class Calculator {
                 lossCurrent = (float)(recentPrice - currentPrice);
             }
 
-            //smothered rsi including current gain loss
+            //smothered calculator including current gain loss
             float smotheredRS =
                 (((avgGain * (size - 1)) + gainCurrent) / size)
                 /
                 (((avgLoss * (size - 1)) + lossCurrent) / size);
 
-            //calculate our rsi value
+            //calculate our calculator value
             final float rsi = 100 - (100 / (1 + smotheredRS));
 
-            //return our rsi value
+            //return our calculator value
             return rsi;
         }
     }

@@ -3,6 +3,8 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,7 +43,7 @@ public class AgentHelper {
     public static float SELL_LOSS_RATIO;
 
     /**
-     * If the stock increases enough we will sell regardless of rsi value
+     * If the stock increases enough we will sell regardless of calculator value
      */
     public static float SELL_GAIN_RATIO;
 
@@ -68,45 +70,8 @@ public class AgentHelper {
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
 
     /**
-     * The reasons for why we buy
+     * The possible status of our limit order
      */
-    public enum ReasonBuy {
-
-        Reason_1("We see a divergence in the downtrend"),
-        Reason_2("There is a constant upward trend so we will buy");
-
-        private final String description;
-
-        ReasonBuy(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return this.description;
-        }
-    }
-
-    /**
-     * The reasons for why we sell
-     */
-    public enum ReasonSell {
-
-        Reason_1("We see a divergence in the uptrend"),
-        Reason_2("The stock price has exceeded our price gain ratio"),
-        Reason_3("We have lost too much, sell now");
-
-        private final String description;
-
-        ReasonSell(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return this.description;
-        }
-    }
-
-
     public enum Status {
 
         Pending("pending"),
@@ -139,40 +104,30 @@ public class AgentHelper {
         final double priceLow = agent.getWallet().getPurchasePrice() - (agent.getWallet().getPurchasePrice() * SELL_LOSS_RATIO);
 
         //do we sell the stock
-        boolean sell = false;
         agent.setReasonSell(null);
 
         //if the stock is worth more than what we paid, and we are above the resistance and we see a divergence sell quickly
-        if (agent.getWallet().getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())  && agent.getRsiCurrent() >= RESISTANCE_LINE) {
+        if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent())) {
 
             //assign our reason and print
             agent.setReasonSell(ReasonSell.Reason_1);
-            agent.displayMessage(agent.getReasonSell().getDescription(), true);
 
-            //it grew enough, sell it
-            sell = true;
-
-        } else if (agent.getWallet().getCurrentPrice() >= priceGain) {
+        } else if (agent.getCurrentPrice() >= priceGain) {
 
             //assign our reason and print
             agent.setReasonSell(ReasonSell.Reason_2);
-            agent.displayMessage(agent.getReasonSell().getDescription(), true);
 
-            //regardless of rsi, if we made enough money to sell it
-            sell = true;
-
-        } else if (agent.getWallet().getCurrentPrice() <= priceLow) {
+        } else if (agent.getCurrentPrice() <= priceLow) {
 
             //assign our reason and print
             agent.setReasonSell(ReasonSell.Reason_3);
-            agent.displayMessage(agent.getReasonSell().getDescription(), true);
-
-            //it dropped enough, sell it
-            sell = true;
         }
 
-        //are we selling stock?
-        if (sell) {
+        //if there is a reason then we will sell
+        if (agent.getReasonSell() != null) {
+
+            //if there is a reason, display message
+            agent.displayMessage(agent.getReasonSell().getDescription(), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Sell));
@@ -180,37 +135,31 @@ public class AgentHelper {
         } else {
 
             //we are still waiting
-            agent.displayMessage("Waiting. Product " + agent.getProductId() + " Current $" + agent.getWallet().getCurrentPrice() + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true);
+            agent.displayMessage("Waiting. Product " + agent.getProductId() + " Current $" + agent.getCurrentPrice() + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true);
         }
     }
 
     protected static void checkBuy(final Agent agent) {
 
-        boolean buy = false;
+        //check for reasons first
         agent.setReasonBuy(null);
 
         //if we are at or below the support line, let's check if we are in a good place to buy
         if (agent.getRsiCurrent() < SUPPORT_LINE) {
 
             //if we have a divergence in our downtrend, let's buy
-            if (agent.getCalculator().hasDivergence(false, agent.getWallet().getCurrentPrice(), agent.getRsiCurrent())) {
-                buy = true;
+            if (agent.getCalculator().hasDivergence(false, agent.getCurrentPrice(), agent.getRsiCurrent()))
                 agent.setReasonBuy(ReasonBuy.Reason_1);
-                agent.displayMessage(agent.getReasonBuy().getDescription(), true);
-            }
         }
 
         switch (agent.getCalculator().getTrend()) {
 
-            //if there is a constant uptrend we will buy regardless of rsi or divergence
+            //if there is a constant uptrend we will buy regardless of calculator or divergence
             case Upward:
 
                 //if there are no breaks it is constant
-                if (agent.getCalculator().getBreaks() < 1) {
-                    buy = true;
+                if (agent.getCalculator().getBreaks() < 1)
                     agent.setReasonBuy(ReasonBuy.Reason_2);
-                    agent.displayMessage(agent.getReasonBuy().getDescription(), true);
-                }
                 break;
 
             //if there is a constant downward trend, let's wait before buying
@@ -218,14 +167,16 @@ public class AgentHelper {
 
                 //if there are no breaks it is constant
                 if (agent.getCalculator().getBreaks() < 1) {
-                    buy = false;
                     agent.setReasonBuy(null);
                     agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
                 }
         }
 
-        //are we buying stock?
-        if (buy) {
+        //we will buy if there is a reason
+        if (agent.getReasonBuy() != null) {
+
+            //if there is a reason display it
+            agent.displayMessage(agent.getReasonBuy().getDescription(), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy));
@@ -291,7 +242,7 @@ public class AgentHelper {
     private static synchronized Order createLimitOrder(final Agent agent, final Action action) {
 
         //the price we want to buy/sell
-        BigDecimal price = new BigDecimal(agent.getWallet().getCurrentPrice());
+        BigDecimal price = new BigDecimal(agent.getCurrentPrice());
 
         //what is the quantity that we are buying/selling
         final double quantity;
@@ -307,7 +258,7 @@ public class AgentHelper {
                 //price.add(penny);
 
                 //see how much we can buy
-                quantity = (agent.getWallet().getFunds() / agent.getWallet().getCurrentPrice());
+                quantity = (agent.getWallet().getFunds() / agent.getCurrentPrice());
                 break;
 
             case Sell:
@@ -433,5 +384,9 @@ public class AgentHelper {
     public static BigDecimal formatValue(final int decimals, final double value) {
         BigDecimal result = BigDecimal.valueOf(value);
         return result.setScale(decimals, RoundingMode.HALF_DOWN);
+    }
+
+    public static String getStockInvestmentDesc(Agent agent) {
+        return "Owned Stock: " + formatValue(agent.getWallet().getQuantity());
     }
 }

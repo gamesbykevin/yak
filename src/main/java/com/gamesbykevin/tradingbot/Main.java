@@ -10,6 +10,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
@@ -24,8 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.rsi.Calculator.ENDPOINT_TICKER;
-import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
 import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT_BOT_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -280,16 +280,16 @@ public class Main implements Runnable {
             text = text + agent.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
 
             //summary of our winning transactions
-            text = text + agent.getDescWins() + "\n";
+            text = text + TransactionHelper.getDescWins(agent) + "\n";
 
             //summary of our losing transactions
-            text = text + agent.getDescLost() + "\n";
+            text = text + TransactionHelper.getDescLost(agent) + "\n";
 
             //average transaction duration
-            text = text + agent.getAverageDurationDesc() + "\n";
+            text = text + TransactionHelper.getAverageDurationDesc(agent) + "\n";
 
             //currently holding in stock
-            text = text + agent.getStockInvestmentDesc() + "\n";
+            text = text + AgentHelper.getStockInvestmentDesc(agent) + "\n";
 
             //add line break in the end
             text = text + "\n";

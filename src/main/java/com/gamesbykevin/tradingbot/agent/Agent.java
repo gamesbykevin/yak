@@ -3,10 +3,13 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.rsi.Calculator;
-import com.gamesbykevin.tradingbot.rsi.Calculator.Duration;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
@@ -17,13 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
-import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT_AVG;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent {
 
-    //our reference to calculate rsi
+    //our reference to calculate calculator
     private final Calculator calculator;
 
     //list of wallet for each product we are investing
@@ -53,7 +55,7 @@ public class Agent {
     //number of attempts we try to verify the order
     private int attempts = 0;
 
-    //what is the current rsi value
+    //what is the current calculator value
     private float rsiCurrent;
 
     //the reason why we are buying
@@ -61,6 +63,9 @@ public class Agent {
 
     //the reason why we are selling
     private ReasonSell reasonSell;
+
+    //current price of stock
+    private double currentPrice = 0;
 
     public Agent(final Product product, final double funds) {
 
@@ -100,8 +105,8 @@ public class Agent {
             if (hasStopTrading())
                 return;
 
-            //the wallet will keep track of the current price
-            getWallet().setCurrentPrice(currentPrice);
+            //keep track of the current price
+            setCurrentPrice(currentPrice);
 
             //we don't need to update every second
             if (System.currentTimeMillis() - previous >= Duration.OneMinute.duration * 1000) {
@@ -111,13 +116,16 @@ public class Agent {
                 this.previous = System.currentTimeMillis();
             }
 
-            //check if there is a trend
-            getCalculator().calculateTrend();
+            //check if there is a trend with the current stock price
+            getCalculator().calculateTrend(currentPrice);
 
-            //calculate rsi
+            //calculate the momentum for each period
+            getCalculator().calculateMomentum(currentPrice);
+
+            //calculate calculator
             this.rsiCurrent = getCalculator().getRsiCurrent(currentPrice);
 
-            //what is the rsi
+            //what is the calculator
             displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
 
             //if we don't have a pending order
@@ -247,184 +255,27 @@ public class Agent {
             transaction.update(this, order);
 
             //display wins and losses
-            displayMessage(getDescWins(), true);
-            displayMessage(getDescLost(), true);
+            displayMessage(TransactionHelper.getDescWins(this), true);
+            displayMessage(TransactionHelper.getDescLost(this), true);
 
             //display average transaction time
-            displayMessage(getAverageDurationDesc(), true);
+            displayMessage(TransactionHelper.getAverageDurationDesc(this), true);
 
             //display the total $ amount invested in stocks
-            displayMessage(getStockInvestmentDesc(), true);
+            displayMessage(AgentHelper.getStockInvestmentDesc(this), true);
 
             //display the count for each buying reason for when we win
-            displayBuyingReasonCount(Result.Win);
+            TransactionHelper.displayBuyingReasonCount(this, Result.Win);
 
             //display the count for each selling reason for when we win
-            displaySellingReasonCount(Result.Win);
+            TransactionHelper.displaySellingReasonCount(this, Result.Win);
 
             //display the count for each buying reason for when we lose
-            displayBuyingReasonCount(Result.Lose);
+            TransactionHelper.displayBuyingReasonCount(this, Result.Lose);
 
             //display the count for each selling reason for when we lose
-            displaySellingReasonCount(Result.Lose);
+            TransactionHelper.displaySellingReasonCount(this, Result.Lose);
         }
-    }
-
-    private void displayBuyingReasonCount(Result result) {
-
-        //check each reason
-        for (ReasonBuy buy : ReasonBuy.values()) {
-
-            //keep track of the count
-            int count = 0;
-
-            //keep track of the money involved
-            double amount = 0;
-
-            //look at each transaction
-            for (Transaction transaction : transactions) {
-
-                //skip if no match
-                if (transaction.getResult() == null || transaction.getResult() != result)
-                    continue;
-
-                //if there is a match increase the count
-                if (transaction.getReasonBuy() == buy) {
-                    count++;
-                    amount += transaction.getAmount();
-                }
-            }
-
-            //display the count and description
-            displayMessage(result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + AgentHelper.formatValue(amount) + ". " + buy.getDescription(), true);
-        }
-    }
-
-    private void displaySellingReasonCount(Result result) {
-
-        //check each reason
-        for (ReasonSell sell : ReasonSell.values()) {
-
-            //keep track of the count
-            int count = 0;
-
-            //keep track of the money involved
-            double amount = 0;
-
-            //look at each transaction
-            for (Transaction transaction : transactions) {
-
-                //skip if no match
-                if (transaction.getResult() == null || transaction.getResult() != result)
-                    continue;
-
-                //if there is a match increase the count
-                if (transaction.getReasonSell() == sell) {
-                    count++;
-                    amount += transaction.getAmount();
-                }
-            }
-
-            //display the count and description
-            displayMessage(result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + AgentHelper.formatValue(amount) + ". " + sell.getDescription(), true);
-        }
-    }
-
-    public String getDescLost() {
-        return "Lost :" + getCount(Result.Lose) + ", $" + AgentHelper.formatValue(getAmount(Result.Lose));
-    }
-
-    public String getDescWins() {
-        return "Wins :" + getCount(Result.Win) + ", $" + AgentHelper.formatValue(getAmount(Result.Win));
-    }
-
-    public String getStockInvestmentDesc() {
-        return "Owned Stock: " + AgentHelper.formatValue(getWallet().getQuantity());
-    }
-
-    public String getAverageDurationDesc() {
-        return "Avg time: " + Transaction.getDurationDesc(getAverageDuration(), TIME_FORMAT_AVG);
-    }
-
-    private long getAverageDuration() {
-
-        //how many transactions
-        int count = 0;
-
-        //total duration
-        long duration = 0;
-
-        //if empty return 0
-        if (transactions.isEmpty())
-            return 0;
-
-        //check every transaction
-        for (Transaction transaction : transactions) {
-
-            if (transaction.getResult() == null)
-                continue;
-
-            //keep track of total transactions
-            count++;
-
-            //add total duration
-            duration += transaction.getDuration();
-        }
-
-        //if nothing, return 0
-        if (count == 0)
-            return 0;
-
-        //return the average duration
-        return (duration / count);
-    }
-
-    /**
-     * Get the total count of our transactions
-     * @param result Do we want to check for wins or losses?
-     * @return The total count of the specified result
-     */
-    public int getCount(Result result) {
-
-        int count = 0;
-
-        //check every transaction
-        for (Transaction transaction : transactions) {
-
-            if (transaction.getResult() == null)
-                continue;
-
-            //if there is a match keep track
-            if (transaction.getResult() == result)
-                count++;
-        }
-
-        //return our result
-        return count;
-    }
-
-    /**
-     * Get the total $ amount for our transaction
-     * @param result Do we want to check for wins or losses?
-     * @return The total $ amount of the specified result
-     */
-    public double getAmount(Result result) {
-
-        double amount = 0;
-
-        //check every transaction
-        for (Transaction transaction : transactions) {
-
-            if (transaction.getResult() == null)
-                continue;
-
-            //if there is a match keep track
-            if (transaction.getResult() == result)
-                amount += transaction.getAmount();
-        }
-
-        //return our result
-        return amount;
     }
 
     public String getProductId() {
@@ -444,7 +295,7 @@ public class Agent {
      * @return The total funds available + the quantity of stock we currently own @ the current stock price
      */
     public double getAssets() {
-        return getWallet().getCurrentAssets();
+        return (getWallet().getQuantity() * getCurrentPrice()) + getWallet().getFunds();
     }
 
     protected Calculator getCalculator() {
@@ -497,5 +348,17 @@ public class Agent {
 
     public ReasonSell getReasonSell() {
         return this.reasonSell;
+    }
+
+    public List<Transaction> getTransactions() {
+        return this.transactions;
+    }
+
+    public void setCurrentPrice(final double currentPrice) {
+        this.currentPrice = currentPrice;
+    }
+
+    public double getCurrentPrice() {
+        return this.currentPrice;
     }
 }

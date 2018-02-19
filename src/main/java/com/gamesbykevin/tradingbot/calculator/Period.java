@@ -1,4 +1,4 @@
-package com.gamesbykevin.tradingbot.rsi;
+package com.gamesbykevin.tradingbot.calculator;
 
 public class Period {
     public long time;
