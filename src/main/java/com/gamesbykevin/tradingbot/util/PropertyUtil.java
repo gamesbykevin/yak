@@ -5,7 +5,9 @@ import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
+import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.util.Calendar;
 import java.util.Properties;
 
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
@@ -102,7 +104,14 @@ public class PropertyUtil {
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 
         //how many periods to we use to calculate calculator
-        Calculator.PERIODS = Integer.parseInt(getProperties().getProperty("periods"));
+        Calculator.PERIODS_RSI = Integer.parseInt(getProperties().getProperty("periodsRsi"));
+
+        //get the number of periods for our long ema calculation
+        Calculator.PERIODS_EMA_LONG = Integer.parseInt(getProperties().getProperty("periodsEmaLong"));
+
+        //get the number of periods for our extended ema calculation
+        Calculator.PERIODS_EMA_SHORT = Integer.parseInt(getProperties().getProperty("periodsEmaShort"));
+
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

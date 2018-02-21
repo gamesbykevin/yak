@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.NOTIFICATION_EVERY_TRANSACTION;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -35,18 +36,6 @@ public class Transaction {
 
     //the amount of the transaction
     private double amount;
-
-    public static final String TIME_FORMAT_BOT_DURATION = "mm:ss";
-
-    /**
-     * Our time format so we can see the time duration
-     */
-    public static final String TIME_FORMAT = "mm:ss.SSS";
-
-    /**
-     * Time format when displaying the average time
-     */
-    public static final String TIME_FORMAT_AVG = "mm:ss";
 
     //the reason why we bought
     private TransactionHelper.ReasonBuy reasonBuy;
@@ -98,8 +87,8 @@ public class Transaction {
 
     public void update(final Agent agent, final Order order) {
 
-        //our notification message
-        String subject = null, text = null;
+        //our notification messages
+        String subject = null, text = null, summary = "";
 
         //get the purchase price from the order
         BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
@@ -183,18 +172,17 @@ public class Transaction {
             //the transaction description
             text = "Sell " + agent.getProductId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + agent.getWallet().getPurchasePrice() + ", remaining funds $" + agent.getWallet().getFunds();
 
+            //include the duration description
+            summary = getDurationSummaryDesc(getDuration());
+            agent.displayMessage(summary, true);
+
         } else {
             throw new RuntimeException("Side not handled here: " + order.getSide());
         }
 
-        //include the duration description
-        final String summary = getDurationSummaryDesc(getDuration());
-
         //display and write to log
         agent.displayMessage(subject, true);
         agent.displayMessage(text, true);
-        agent.displayMessage(summary, true);
-        agent.displayMessage(getDurationSummaryDesc(getDuration()), true);
 
         //are we going to notify every transaction?
         if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
@@ -208,13 +196,17 @@ public class Transaction {
     private String getDurationSummaryDesc(final long duration) {
 
         //display the time it took to sell the stock
-        return "Duration of the order from buy to sell: " + getDurationDesc(duration, TIME_FORMAT) + " (" + TIME_FORMAT + ")";
+        return "Duration of the order from buy to sell: " + getDurationDesc(duration);
     }
 
-    public static String getDurationDesc(final long duration, final String format) {
+    public static String getDurationDesc(final long duration) {
 
-        //return our formatted time
-        return new SimpleDateFormat(format).format(new Date(duration));
+        return String.format(
+            "%02d:%02d:%02d",
+            TimeUnit.MILLISECONDS.toHours(duration),
+            TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
+            TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+        );
     }
 
     private void setReasonBuy(ReasonBuy reasonBuy) {

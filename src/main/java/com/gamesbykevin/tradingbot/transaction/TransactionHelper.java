@@ -5,7 +5,6 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.formatValue;
-import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT_AVG;
 
 public class TransactionHelper {
 
@@ -15,7 +14,9 @@ public class TransactionHelper {
     public enum ReasonBuy {
 
         Reason_1("We see a divergence in the downtrend"),
-        Reason_2("There is a constant upward trend so we will buy");
+        Reason_2("There is a constant upward trend so we will buy"),
+        Reason_3("There is a swing detected in the EMA")
+        ;
 
         private final String description;
 
@@ -35,7 +36,9 @@ public class TransactionHelper {
 
         Reason_1("We see a divergence in the uptrend"),
         Reason_2("The stock price has exceeded our price gain ratio"),
-        Reason_3("We have lost too much, sell now");
+        Reason_3("We have lost too much, sell now"),
+        Reason_4("There is a swing detected in the EMA")
+        ;
 
         private final String description;
 
@@ -49,7 +52,7 @@ public class TransactionHelper {
     }
 
     public static String getAverageDurationDesc(Agent agent) {
-        return "Avg time: " + Transaction.getDurationDesc(getAverageDuration(agent), TIME_FORMAT_AVG);
+        return "Avg time: " + Transaction.getDurationDesc(getAverageDuration(agent));
     }
 
     public static long getAverageDuration(Agent agent) {

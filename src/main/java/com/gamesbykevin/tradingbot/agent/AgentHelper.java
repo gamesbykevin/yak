@@ -3,11 +3,15 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.calculator.Calculator.SwingResult;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_LONG;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_SHORT;
 
 public class AgentHelper {
 
@@ -106,22 +110,38 @@ public class AgentHelper {
         //do we sell the stock
         agent.setReasonSell(null);
 
+        if (agent.getRsiCurrent() >= RESISTANCE_LINE && agent.getCurrentPrice() > priceHigh) {
+
+            //if we are above the resistance line and the long ema is now greater than the short ema
+            if (agent.getEmaLong() > agent.getEmaShort()) {
+
+                //also make sure the ema values just switched!!!!!!
+                if (agent.getEmaLongPrevious() < agent.getEmaShortPrevious())
+                    agent.setReasonSell(ReasonSell.Reason_4);
+            }
+        }
+
+        //if no reason to sell yet, check these
+        if (agent.getReasonSell() == null) {
+            if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent())) {
+                agent.setReasonSell(ReasonSell.Reason_1);
+            } else if (agent.getCurrentPrice() >= priceGain) {
+                agent.setReasonSell(ReasonSell.Reason_2);
+            } else if (agent.getCurrentPrice() <= priceLow) {
+                agent.setReasonSell(ReasonSell.Reason_3);
+            }
+        }
+
+        /*
         //if the stock is worth more than what we paid, and we are above the resistance and we see a divergence sell quickly
         if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent())) {
-
-            //assign our reason and print
             agent.setReasonSell(ReasonSell.Reason_1);
-
         } else if (agent.getCurrentPrice() >= priceGain) {
-
-            //assign our reason and print
             agent.setReasonSell(ReasonSell.Reason_2);
-
         } else if (agent.getCurrentPrice() <= priceLow) {
-
-            //assign our reason and print
             agent.setReasonSell(ReasonSell.Reason_3);
         }
+        */
 
         //if there is a reason then we will sell
         if (agent.getReasonSell() != null) {
@@ -144,6 +164,18 @@ public class AgentHelper {
         //check for reasons first
         agent.setReasonBuy(null);
 
+        if (agent.getRsiCurrent() <= SUPPORT_LINE) {
+
+            //if we are below the support line and the short ema is now greater than long
+            if (agent.getEmaShort() > agent.getEmaLong()) {
+
+                //make sure the previous period was the reverse, so we know it just switched!!!!
+                if (agent.getEmaShortPrevious() < agent.getEmaLongPrevious())
+                    agent.setReasonBuy(ReasonBuy.Reason_3);
+            }
+        }
+
+        /*
         //if we are at or below the support line, let's check if we are in a good place to buy
         if (agent.getRsiCurrent() < SUPPORT_LINE) {
 
@@ -171,6 +203,7 @@ public class AgentHelper {
                     agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
                 }
         }
+        */
 
         //we will buy if there is a reason
         if (agent.getReasonBuy() != null) {

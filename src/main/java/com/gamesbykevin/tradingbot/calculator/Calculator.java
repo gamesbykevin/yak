@@ -16,13 +16,20 @@ public class Calculator {
     //keep a historical list of the calculator so we can check for divergence
     private List<Float> rsi;
 
-    //the momentum of each period
-    private List<Double> momentum;
+    /**
+     * How many periods to calculate rsi
+     */
+    public static int PERIODS_RSI;
 
     /**
-     * How many periods to calculate calculator
+     * How many periods to calculate long ema
      */
-    public static int PERIODS;
+    public static int PERIODS_EMA_LONG;
+
+    /**
+     * How many periods to calculate short ema
+     */
+    public static int PERIODS_EMA_SHORT;
 
     //endpoint to get the history
     public static final String ENDPOINT_HISTORIC = ENDPOINT + "/products/%s/candles?granularity=%s";
@@ -62,11 +69,15 @@ public class Calculator {
         }
     }
 
+    public enum SwingResult {
+        ShortEmaGreater,
+        LongEmaGreater
+    }
+
     public Calculator(final String productId) {
         this.productId = productId;
         this.history = new ArrayList<>();
         this.rsi = new ArrayList<>();
-        this.momentum = new ArrayList<>();
     }
 
     public synchronized void update(Duration key) {
@@ -78,7 +89,7 @@ public class Calculator {
         double[][] data = GSon.getGson().fromJson(json, double[][].class);
 
         //make sure we have data before we update
-        if (data != null) {
+        if (data != null && data.length > 0) {
 
             //clear the current list
             this.history.clear();
@@ -101,6 +112,11 @@ public class Calculator {
 
             //calculate the calculator for all our specified periods now that we have new data
             calculateRsi();
+
+        } else {
+
+            //throw exception if we didn't receive our data
+            throw new RuntimeException("Error retrieving historical data: " + productId);
         }
     }
 
@@ -127,11 +143,11 @@ public class Calculator {
         setBreaks(0);
 
         //if not large enough skip, this shouldn't happen
-        if (history.size() < PERIODS || history.isEmpty())
+        if (history.size() < PERIODS_RSI || history.isEmpty())
             return;
 
         //we want to start here
-        Period begin = history.get(history.size() - PERIODS);
+        Period begin = history.get(history.size() - PERIODS_RSI);
 
         //are we checking an upward trend?
         if (begin.close < currentPrice) {
@@ -144,7 +160,7 @@ public class Calculator {
         }
 
         //our coordinates to calculate slope
-        final double x1 = 0, y1, x2 = PERIODS, y2;
+        final double x1 = 0, y1, x2 = PERIODS_RSI, y2;
 
         //are we detecting and upward or downward trend?
         switch (getTrend()) {
@@ -170,13 +186,13 @@ public class Calculator {
         final double slope = (y2 - y1) / (x2 - x1);
 
         //check and see if every period is above the slope indicating an upward trend
-        for (int i = history.size() - PERIODS; i < history.size(); i++) {
+        for (int i = history.size() - PERIODS_RSI; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);
 
             //the current x-coordinate
-            final double x = i - (history.size() - PERIODS);
+            final double x = i - (history.size() - PERIODS_RSI);
 
             //calculate the y-coordinate
             final double y = (slope * x) + yIntercept;
@@ -207,7 +223,7 @@ public class Calculator {
         boolean betterPrice = true;
 
         //check all recent periods
-        for (int i = history.size() - PERIODS; i < history.size(); i++) {
+        for (int i = history.size() - PERIODS_RSI; i < history.size(); i++) {
 
             //get the current period
             Period period = history.get(i);
@@ -267,28 +283,48 @@ public class Calculator {
         return (betterPrice && !betterRsi);
     }
 
-    public synchronized void calculateMomentum(final double currentPrice) {
+    /**
+     * Calculate the SMA (simple moving average)
+     * @param currentPeriod The desired period of the SMA we want
+     * @param periods The number of periods to check
+     * @return The average of the sum of closing prices within the specified period
+     */
+    public double calculateSMA(final int currentPeriod, final int periods) {
 
-        //if not large enough skip, this shouldn't happen
-        if (history.size() < PERIODS || history.isEmpty())
-            return;
+        //the total sum
+        double sum = 0;
 
-        //clear the list
-        this.momentum.clear();
+        //number of prices we add together
+        int count = 0;
 
-        //calculate the momentum for each recent period
-        for (int i = history.size() - PERIODS; i < history.size(); i++) {
+        //check every period
+        for (int i = currentPeriod - periods; i < currentPeriod; i++) {
 
-            //obtain the previous period and current
-            Period earlier = history.get(i - PERIODS);
-            Period current = history.get(i);
+            //add to the total sum
+            sum += history.get(i).close;
 
-            //the momentum is the current closing price - first closing price in our period range
-            momentum.add(current.close - earlier.close);
+            //keep track of how many we add
+            count++;
         }
 
-        //add the current price to our momentum list
-        momentum.add(currentPrice - history.get(history.size() - PERIODS).close);
+        //return the average of the sum
+        return (sum / count);
+    }
+
+    public double calculateEMA(final int periods, final double closingPrice) {
+
+        //calculate simple moving average
+        final double sma = calculateSMA(history.size() - 1, periods);
+
+        //what is our multiplier
+        final float multiplier = (2 / (periods + 1));
+
+        //get the most recent period
+        final Period recent = history.get(history.size() - 1);
+
+        //calculate the ema and return our result
+        //return ((closingPrice - sma) * multiplier) + sma;
+        return ((recent.close - sma) * multiplier) + sma;
     }
 
     /**
@@ -300,13 +336,13 @@ public class Calculator {
         this.rsi.clear();
 
         //calculate the calculator for each period
-        for (int i = PERIODS; i >= 0; i--) {
+        for (int i = PERIODS_RSI; i >= 0; i--) {
 
             //we need to go back the desired number of periods
-            final int startIndex = history.size() - (PERIODS + i);
+            final int startIndex = history.size() - (PERIODS_RSI + i);
 
             //we only go the length of the desired periods
-            final int endIndex = startIndex + PERIODS;
+            final int endIndex = startIndex + PERIODS_RSI;
 
             //get the calculator for this period
             final float rsi = calculateRsi(startIndex, endIndex, false, 0);
@@ -367,7 +403,7 @@ public class Calculator {
             final float rs = avgGain / avgLoss;
 
             //calculate relative strength index
-            final float rsi = 100 - (100 / (1 + rs));
+            float rsi = 100 - (100 / (1 + rs));
 
             //return our calculator value
             return rsi;
@@ -399,6 +435,6 @@ public class Calculator {
     }
 
     public float getRsiCurrent(final double currentPrice) {
-        return calculateRsi(history.size() - PERIODS, history.size(),true, currentPrice);
+        return calculateRsi(history.size() - PERIODS_RSI, history.size(),true, currentPrice);
     }
 }

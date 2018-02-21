@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
-import static com.gamesbykevin.tradingbot.transaction.Transaction.TIME_FORMAT_BOT_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
@@ -57,7 +56,7 @@ public class Main implements Runnable {
     private PrintWriter writer;
 
     //how long do we sleep the thread for
-    public static final long DELAY = 335L;
+    public static final long DELAY = 400L;
 
     //how long until we send an overall update
     public static long NOTIFICATION_DELAY;
@@ -86,6 +85,11 @@ public class Main implements Runnable {
 
     //how long has the bot been running
     private final long start;
+
+    /**
+     * Warn the user before we actually start (no paper trading)
+     */
+    public static long DELAY_STARTUP = 15000L;
 
     public static void main(String[] args) {
 
@@ -126,6 +130,23 @@ public class Main implements Runnable {
 
         //create the main log file
         this.writer = LogFile.getPrintWriter("main-" + getFileDateDesc() + ".log");
+
+        //display message of bot starting
+        if (PAPER_TRADING) {
+            displayMessage("INFO: No real money used", true, writer);
+        } else {
+
+            //display message and pause if using real money
+            displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", true, writer);
+            displayMessage("Stop this process if this is incorrect!!!!!!!", false, null);
+
+            try {
+                //sleep for a short period before we actually start
+                Thread.sleep(DELAY_STARTUP);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         //load our products we will be trading
         loadProducts();
@@ -260,11 +281,7 @@ public class Main implements Runnable {
         text = text + "Started with $" + FUNDS + "\n";
 
         //how long has the bot been running
-        text = text + "Bot Running: " +
-            Transaction.getDurationDesc(
-                    (System.currentTimeMillis() - start),
-                    TIME_FORMAT_BOT_DURATION
-            ) + "\n\n";
+        text = text + "Bot Running: " + Transaction.getDurationDesc(System.currentTimeMillis() - start) + "\n\n";
 
         double total = 0;
 
@@ -318,7 +335,7 @@ public class Main implements Runnable {
             final long duration = NOTIFICATION_DELAY - (System.currentTimeMillis() - previous);
 
             //show when the next notification message will be sent
-            displayMessage("Next notification message in " + Transaction.getDurationDesc(duration, TIME_FORMAT_BOT_DURATION), false, null);
+            displayMessage("Next notification message in " + Transaction.getDurationDesc(duration), false, null);
         }
     }
 
