@@ -315,6 +315,7 @@ public class Calculator {
 
     public double calculateEMA(final int periods, final double currentPrice, final double previousEMA) {
 
+        /*
         //the total sum
         double sum = 0;
 
@@ -337,8 +338,8 @@ public class Calculator {
 
         //return the average of the sum
         return (sum / (double)count);
+        */
 
-        /*
         //what is our multiplier
         final float multiplier = (2 / (periods + 1));
 
@@ -358,7 +359,6 @@ public class Calculator {
 
         //return our result
         return ema;
-        */
     }
 
     /**
