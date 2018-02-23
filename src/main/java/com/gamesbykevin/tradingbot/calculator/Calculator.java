@@ -69,21 +69,19 @@ public class Calculator {
         }
     }
 
-    public enum SwingResult {
-        ShortEmaGreater,
-        LongEmaGreater
-    }
-
     public Calculator(final String productId) {
         this.productId = productId;
         this.history = new ArrayList<>();
         this.rsi = new ArrayList<>();
     }
 
-    public synchronized void update(Duration key) {
+    public synchronized boolean update(Duration key) {
+
+        //were we successful
+        boolean result = false;
 
         //make our rest call and get the json response
-        final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
+        final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, 60));//key.duration));
 
         //convert json text to multi array
         double[][] data = GSon.getGson().fromJson(json, double[][].class);
@@ -113,11 +111,15 @@ public class Calculator {
             //calculate the calculator for all our specified periods now that we have new data
             calculateRsi();
 
-        } else {
+            //we are successful
+            result = true;
 
-            //throw exception if we didn't receive our data
-            throw new RuntimeException("Error retrieving historical data: " + productId);
+        } else {
+            result = false;
         }
+
+        //return our result
+        return result;
     }
 
     private void setTrend(final Trend trend) {
@@ -308,23 +310,55 @@ public class Calculator {
         }
 
         //return the average of the sum
-        return (sum / count);
+        return (sum / (double)count);
     }
 
-    public double calculateEMA(final int periods, final double closingPrice) {
+    public double calculateEMA(final int periods, final double currentPrice, final double previousEMA) {
 
-        //calculate simple moving average
-        final double sma = calculateSMA(history.size() - 1, periods);
+        //the total sum
+        double sum = 0;
 
+        //number of prices we add together
+        int count = 0;
+
+        //check every period
+        for (int i = history.size() - periods + 1; i < history.size(); i++) {
+
+            //add to the total sum
+            sum += history.get(i).close;
+
+            //keep track of how many we add
+            count++;
+        }
+
+        //include current price
+        sum += currentPrice;
+        count++;
+
+        //return the average of the sum
+        return (sum / (double)count);
+
+        /*
         //what is our multiplier
         final float multiplier = (2 / (periods + 1));
 
-        //get the most recent period
-        final Period recent = history.get(history.size() - 1);
+        //what is our ema value
+        final double ema;
 
-        //calculate the ema and return our result
-        //return ((closingPrice - sma) * multiplier) + sma;
-        return ((recent.close - sma) * multiplier) + sma;
+        //calculate ema
+        if (previousEMA == 0) {
+
+            //calculate simple moving average
+            final double sma = calculateSMA(history.size(), periods);
+
+            ema = ((currentPrice - sma) * multiplier) + sma;
+        } else {
+            ema = ((currentPrice - previousEMA) * multiplier) + previousEMA;
+        }
+
+        //return our result
+        return ema;
+        */
     }
 
     /**

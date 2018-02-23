@@ -56,7 +56,7 @@ public class Main implements Runnable {
     private PrintWriter writer;
 
     //how long do we sleep the thread for
-    public static final long DELAY = 400L;
+    public static final long DELAY = 375L;
 
     //how long until we send an overall update
     public static long NOTIFICATION_DELAY;

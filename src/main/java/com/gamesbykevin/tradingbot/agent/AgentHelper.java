@@ -3,15 +3,11 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.calculator.Calculator.SwingResult;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_SHORT;
 
 public class AgentHelper {
 
@@ -110,7 +106,7 @@ public class AgentHelper {
         //do we sell the stock
         agent.setReasonSell(null);
 
-        if (agent.getRsiCurrent() >= RESISTANCE_LINE && agent.getCurrentPrice() > priceHigh) {
+        if (agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
             //if we are above the resistance line and the long ema is now greater than the short ema
             if (agent.getEmaLong() > agent.getEmaShort()) {
@@ -123,9 +119,7 @@ public class AgentHelper {
 
         //if no reason to sell yet, check these
         if (agent.getReasonSell() == null) {
-            if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent())) {
-                agent.setReasonSell(ReasonSell.Reason_1);
-            } else if (agent.getCurrentPrice() >= priceGain) {
+            if (agent.getCurrentPrice() >= priceGain) {
                 agent.setReasonSell(ReasonSell.Reason_2);
             } else if (agent.getCurrentPrice() <= priceLow) {
                 agent.setReasonSell(ReasonSell.Reason_3);

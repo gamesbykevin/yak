@@ -116,57 +116,74 @@ public class Agent {
             //keep track of the current price
             setCurrentPrice(currentPrice);
 
-            //if we don't have an active order look at the market data for a chance to buy
-            if (getOrder() == null) {
+            //we don't need to update every second
+            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 6) * 1000) {
 
-                //we don't need to update every second
-                if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 15) * 1000) {
+                //display message as sometimes the call is not successful
+                displayMessage("Making rest call to retrieve history " + getProductId(), true);
 
-                    //the current values will now be the previous
-                    setEmaShortPrevious(getEmaShort());
-                    setEmaLongPrevious(getEmaLong());
+                //update our historical data and update the last update
+                boolean success = getCalculator().update(Duration.OneMinute);
 
-                    //display message as sometimes the call is not successful
-                    displayMessage("Making rest call to retrieve history " + getProductId(), true);
-
-                    //update our historical data and update the last update
-                    getCalculator().update(Duration.OneMinute);
+                if (success) {
                     this.previous = System.currentTimeMillis();
 
                     //rest call is successful
                     displayMessage("Rest call successful.", true);
+                } else {
 
-                    //calculate our new ema values
-                    setEmaShort(getCalculator().calculateEMA(PERIODS_EMA_SHORT, getCurrentPrice()));
-                    setEmaLong(getCalculator().calculateEMA(PERIODS_EMA_LONG, getCurrentPrice()));
-
-                    //display our current ema values
-                    displayMessage(PERIODS_EMA_SHORT + " period EMA: " + AgentHelper.formatValue(getEmaShort()), true);
-                    displayMessage(PERIODS_EMA_LONG + " period EMA: " + AgentHelper.formatValue(getEmaLong()), true);
-
-                    //check if there is a trend with the current stock price
-                    getCalculator().calculateTrend(currentPrice);
-
-                    //calculate the current rsi
-                    setRsiCurrent(getCalculator().getRsiCurrent(currentPrice));
-
-                    //what is the calculator
-                    displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
-
-                    if (getWallet().getQuantity() > 0) {
-
-                        //we have quantity let's see if we can sell it
-                        checkSell(this);
-
-                    } else {
-
-                        //we don't have any quantity so let's see if we can buy
-                        checkBuy(this);
-                    }
-
-                    //reset our attempts counter, which is used when we create a limit order
-                    setAttempts(0);
+                    //rest call isn't successful
+                    displayMessage("Rest call is NOT successful.", true);
                 }
+
+                //reset values
+                //setEmaLongPrevious(0);
+                //setEmaShortPrevious(0);
+                //setEmaLong(0);
+                //setEmaShort(0);
+
+            }
+
+            //if we don't have an active order look at the market data for a chance to buy
+            if (getOrder() == null) {
+
+                //create tmp reference for previous values
+                final double previousEmaShort = getEmaShortPrevious();
+                final double previousEmaLong = getEmaLongPrevious();
+
+                //the current values will now be the previous
+                setEmaShortPrevious(getEmaShort());
+                setEmaLongPrevious(getEmaLong());
+
+                //calculate our new ema values based on the previous
+                setEmaShort(getCalculator().calculateEMA(PERIODS_EMA_SHORT, getCurrentPrice(), previousEmaShort));
+                setEmaLong(getCalculator().calculateEMA(PERIODS_EMA_LONG, getCurrentPrice(), previousEmaLong));
+
+                displayMessage(PERIODS_EMA_SHORT + " period EMA: " + getEmaShort(), true);
+                displayMessage(PERIODS_EMA_LONG + " period EMA: " + getEmaLong(), true);
+
+                //check if there is a trend with the current stock price
+                getCalculator().calculateTrend(currentPrice);
+
+                //calculate the current rsi
+                setRsiCurrent(getCalculator().getRsiCurrent(currentPrice));
+
+                //what is the calculator
+                displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
+
+                if (getWallet().getQuantity() > 0) {
+
+                    //we have quantity let's see if we can sell it
+                    checkSell(this);
+
+                } else {
+
+                    //we don't have any quantity so let's see if we can buy
+                    checkBuy(this);
+                }
+
+                //reset our attempts counter, which is used when we create a limit order
+                setAttempts(0);
 
             } else {
 
