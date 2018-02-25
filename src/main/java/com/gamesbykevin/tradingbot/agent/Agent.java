@@ -117,7 +117,7 @@ public class Agent {
             setCurrentPrice(currentPrice);
 
             //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 8) * 1000) {
+            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 4) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), true);
@@ -126,22 +126,17 @@ public class Agent {
                 boolean success = getCalculator().update(Duration.OneMinute);
 
                 if (success) {
-                    this.previous = System.currentTimeMillis();
 
                     //rest call is successful
                     displayMessage("Rest call successful.", true);
+
                 } else {
 
                     //rest call isn't successful
                     displayMessage("Rest call is NOT successful.", true);
                 }
 
-                //reset values
-                //setEmaLongPrevious(0);
-                //setEmaShortPrevious(0);
-                //setEmaLong(0);
-                //setEmaShort(0);
-
+                this.previous = System.currentTimeMillis();
             }
 
             //if we don't have an active order look at the market data for a chance to buy
@@ -159,8 +154,8 @@ public class Agent {
                 setEmaShort(getCalculator().calculateEMA(PERIODS_EMA_SHORT, getCurrentPrice(), previousEmaShort));
                 setEmaLong(getCalculator().calculateEMA(PERIODS_EMA_LONG, getCurrentPrice(), previousEmaLong));
 
-                displayMessage(PERIODS_EMA_SHORT + " period EMA: " + getEmaShort(), true);
-                displayMessage(PERIODS_EMA_LONG + " period EMA: " + getEmaLong(), true);
+                displayMessage(getProductId() + " - " + PERIODS_EMA_SHORT + " period EMA: " + getEmaShort(), true);
+                displayMessage(getProductId() + " - " + PERIODS_EMA_LONG + " period EMA: " + getEmaLong(), true);
 
                 //check if there is a trend with the current stock price
                 getCalculator().calculateTrend(currentPrice);

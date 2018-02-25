@@ -56,7 +56,7 @@ public class Main implements Runnable {
     private PrintWriter writer;
 
     //how long do we sleep the thread for
-    public static final long DELAY = 375L;
+    public static long THREAD_DELAY;
 
     //how long until we send an overall update
     public static long NOTIFICATION_DELAY;
@@ -209,7 +209,7 @@ public class Main implements Runnable {
                         websocketFeed.subscribe(subscribe);
 
                         //sleep for a second
-                        Thread.sleep(DELAY);
+                        Thread.sleep(THREAD_DELAY);
 
                         //display total assets update
                         manageStatusUpdate();
@@ -251,7 +251,7 @@ public class Main implements Runnable {
                                 agent.update(ticker.price);
 
                             //sleep for a second
-                            Thread.sleep(DELAY);
+                            Thread.sleep(THREAD_DELAY);
 
                             //display total assets update
                             manageStatusUpdate();
@@ -362,7 +362,7 @@ public class Main implements Runnable {
                 displayMessage("Agent created - " + product.getId(), true, writer);
 
                 //sleep for a few seconds
-                Thread.sleep(DELAY * 2);
+                Thread.sleep(THREAD_DELAY * 3);
 
             } catch (Exception e) {
                 e.printStackTrace();

@@ -81,7 +81,7 @@ public class Calculator {
         boolean result = false;
 
         //make our rest call and get the json response
-        final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, 60));//key.duration));
+        final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
 
         //convert json text to multi array
         double[][] data = GSon.getGson().fromJson(json, double[][].class);
@@ -315,49 +315,16 @@ public class Calculator {
 
     public double calculateEMA(int periods, double currentPrice, double previousEMA) {
 
-        /*
-        //the total sum
-        double sum = 0;
-
-        //number of prices we add together
-        int count = 0;
-
-        //check every period
-        for (int i = history.size() - periods + 1; i < history.size(); i++) {
-
-            //add to the total sum
-            sum += history.get(i).close;
-
-            //keep track of how many we add
-            count++;
-        }
-
-        //include current price
-        sum += currentPrice;
-        count++;
-
-        //return the average of the sum
-        return (sum / (double)count);
-        */
-
         //what is our multiplier
         final float multiplier = (2 / (periods + 1));
 
-        //what is our ema value
-        final double ema;
+        //calculate simple moving average
+        final double sma = calculateSMA(history.size() - 1, periods);
 
-        //calculate ema
-        if (previousEMA == 0 || 1 == 1) {
+        currentPrice = history.get(history.size() - 1).close;
 
-            //calculate simple moving average
-            final double sma = calculateSMA(history.size() - 1, periods);
-
-            currentPrice = history.get(history.size() - 1).close;
-
-            ema = ((currentPrice - sma) * multiplier) + sma;
-        } else {
-            ema = ((currentPrice - previousEMA) * multiplier) + previousEMA;
-        }
+        //calculate our ema
+        final double ema = ((currentPrice - sma) * multiplier) + sma;
 
         //return our result
         return ema;

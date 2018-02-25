@@ -56,6 +56,9 @@ public class PropertyUtil {
         //is the websocket enabled?
         Main.WEBSOCKET_ENABLED = Boolean.parseBoolean(getProperties().getProperty("websocketEnabled"));
 
+        //how long is each thread
+        Main.THREAD_DELAY = Long.parseLong(getProperties().getProperty("threadDelay"));
+
         //grab the email address from our config
         Email.EMAIL_NOTIFICATION_ADDRESS = getProperties().getProperty("emailNotification");
 
