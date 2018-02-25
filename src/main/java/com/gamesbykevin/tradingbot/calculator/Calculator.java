@@ -313,7 +313,7 @@ public class Calculator {
         return (sum / (double)count);
     }
 
-    public double calculateEMA(final int periods, final double currentPrice, final double previousEMA) {
+    public double calculateEMA(int periods, double currentPrice, double previousEMA) {
 
         /*
         //the total sum
@@ -347,10 +347,12 @@ public class Calculator {
         final double ema;
 
         //calculate ema
-        if (previousEMA == 0) {
+        if (previousEMA == 0 || 1 == 1) {
 
             //calculate simple moving average
-            final double sma = calculateSMA(history.size(), periods);
+            final double sma = calculateSMA(history.size() - 1, periods);
+
+            currentPrice = history.get(history.size() - 1).close;
 
             ema = ((currentPrice - sma) * multiplier) + sma;
         } else {

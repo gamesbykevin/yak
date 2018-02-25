@@ -117,7 +117,7 @@ public class Agent {
             setCurrentPrice(currentPrice);
 
             //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 6) * 1000) {
+            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 8) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), true);
