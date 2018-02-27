@@ -319,9 +319,10 @@ public class Calculator {
         final float multiplier = (2 / (periods + 1));
 
         //calculate simple moving average
-        final double sma = calculateSMA(history.size() - 1, periods);
+        //final double sma = calculateSMA(history.size() - 1, periods);
+        final double sma = calculateSMA(history.size(), periods);
 
-        currentPrice = history.get(history.size() - 1).close;
+        //currentPrice = history.get(history.size() - 1).close;
 
         //calculate our ema
         final double ema = ((currentPrice - sma) * multiplier) + sma;
@@ -357,7 +358,7 @@ public class Calculator {
 
     /**
      * Calcuate the calculator value for the specified range
-     * @param startIndex Begining period
+     * @param startIndex Beginning period
      * @param endIndex Ending period
      * @param current Are we calculating the current calculator? if false we just want the historical calculator
      * @param currentPrice The current price when calculating the current calculator, otherwise this field is not used

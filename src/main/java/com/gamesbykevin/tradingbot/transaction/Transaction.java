@@ -37,6 +37,9 @@ public class Transaction {
     //the amount of the transaction
     private double amount;
 
+    //the current rsi values at buy and sell
+    private float rsiBuy, rsiSell;
+
     //the reason why we bought
     private TransactionHelper.ReasonBuy reasonBuy;
 
@@ -103,6 +106,9 @@ public class Transaction {
             //assign our buy order
             setBuy(order);
 
+            //store rsi for the buy transaction
+            setRsiBuy(agent.getRsiCurrent());
+
             //assign our reason for buying
             setReasonBuy(agent.getReasonBuy());
 
@@ -126,6 +132,9 @@ public class Transaction {
 
             //assign our sell order
             setSell(order);
+
+            //store rsi for the sell transaction
+            setRsiSell(agent.getRsiCurrent());
 
             //assign our reason for selling
             setReasonSell(agent.getReasonSell());
@@ -183,6 +192,7 @@ public class Transaction {
         //display and write to log
         agent.displayMessage(subject, true);
         agent.displayMessage(text, true);
+        agent.displayMessage("RSI: Buy - " + getRsiBuy() + ", Sell - " + getRsiSell(), true);
 
         //are we going to notify every transaction?
         if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
@@ -215,6 +225,22 @@ public class Transaction {
 
     private void setReasonSell(ReasonSell reasonSell) {
         this.reasonSell = reasonSell;
+    }
+
+    private void setRsiBuy(final float rsiBuy) {
+        this.rsiBuy = rsiBuy;
+    }
+
+    private void setRsiSell(final float rsiSell) {
+        this.rsiSell = rsiSell;
+    }
+
+    public float getRsiBuy() {
+        return this.rsiBuy;
+    }
+
+    public float getRsiSell() {
+        return this.rsiSell;
     }
 
     public ReasonSell getReasonSell() {

@@ -117,7 +117,7 @@ public class Agent {
             setCurrentPrice(currentPrice);
 
             //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 4) * 1000) {
+            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 6) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), true);
@@ -249,7 +249,7 @@ public class Agent {
                     displayMessage(text1,true);
                     displayMessage(text2,true);
 
-                    //send email
+                    //send email notification
                     Email.sendEmail(subject, text1 + "\n" + text2);
                 }
             }
@@ -261,14 +261,6 @@ public class Agent {
 
         //flag that we are no longer working
         working = false;
-    }
-
-    private void setRsiCurrent(final float rsiCurrent) {
-        this.rsiCurrent = rsiCurrent;
-    }
-
-    public float getRsiCurrent() {
-        return this.rsiCurrent;
     }
 
     private void fillOrder(final Order order) {
@@ -432,4 +424,11 @@ public class Agent {
         this.emaShortPrevious = emaShortPrevious;
     }
 
+    private void setRsiCurrent(final float rsiCurrent) {
+        this.rsiCurrent = rsiCurrent;
+    }
+
+    public float getRsiCurrent() {
+        return this.rsiCurrent;
+    }
 }
