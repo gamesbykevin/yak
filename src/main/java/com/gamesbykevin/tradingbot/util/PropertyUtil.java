@@ -115,6 +115,11 @@ public class PropertyUtil {
         //get the number of periods for our extended ema calculation
         Calculator.PERIODS_EMA_SHORT = Integer.parseInt(getProperties().getProperty("periodsEmaShort"));
 
+        //how long is each candle?
+        Calculator.PERIOD_DURATION = Integer.parseInt(getProperties().getProperty("periodDuration"));
+
+        //how long to calculate moving average volume?
+        Calculator.PERIODS_MAV = Integer.parseInt(getProperties().getProperty("periodsMAV"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

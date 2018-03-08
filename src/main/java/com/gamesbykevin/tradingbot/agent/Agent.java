@@ -74,7 +74,13 @@ public class Agent {
 
     private double emaShortPrevious = 0, emaLongPrevious = 0;
 
-    public Agent(final Product product, final double funds) {
+    //the duration of data we are checking
+    private final Duration myDuration;
+
+    public Agent(final Product product, final double funds, final Duration myDuration) {
+
+        //store our duration
+        this.myDuration = myDuration;
 
         //store the product this agent is trading
         this.product = product;
@@ -89,7 +95,7 @@ public class Agent {
         this.calculator = new Calculator(product.getId());
 
         //update the previous run time, so it runs immediately since we don't have data yet
-        this.previous = System.currentTimeMillis() - (Duration.OneMinute.duration * 1000);
+        this.previous = System.currentTimeMillis() - (myDuration.duration * 1000);
 
         //create a wallet so we can track our investments
         this.wallet = new Wallet(funds);
@@ -117,13 +123,13 @@ public class Agent {
             setCurrentPrice(currentPrice);
 
             //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (Duration.OneMinute.duration / 6) * 1000) {
+            if (System.currentTimeMillis() - previous >= (myDuration.duration / 6) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), true);
 
                 //update our historical data and update the last update
-                boolean success = getCalculator().update(Duration.OneMinute);
+                boolean success = getCalculator().update(myDuration);
 
                 if (success) {
 

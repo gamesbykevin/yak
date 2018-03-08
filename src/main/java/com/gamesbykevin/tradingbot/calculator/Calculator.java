@@ -31,6 +31,11 @@ public class Calculator {
      */
     public static int PERIODS_EMA_SHORT;
 
+    /**
+     * How many periods to calculate the moving average volume
+     */
+    public static int PERIODS_MAV;
+
     //endpoint to get the history
     public static final String ENDPOINT_HISTORIC = ENDPOINT + "/products/%s/candles?granularity=%s";
 
@@ -50,17 +55,19 @@ public class Calculator {
     //total number of breaks
     private int breaks = 0;
 
+    /**
+     * How long is each period?
+     */
+    public static int PERIOD_DURATION = 0;
+
     public enum Duration {
 
-        OneMinute(60);
-
-        /*
+        OneMinute(60),
         FiveMinutes(300),
         FifteenMinutes(900),
         OneHour(3600),
         SixHours(21600),
         TwentyFourHours(86400);
-        */
 
         public final long duration;
 
@@ -283,6 +290,28 @@ public class Calculator {
 
         //if the price is better but the calculator isn't that means we have a divergence
         return (betterPrice && !betterRsi);
+    }
+
+    public double calculateMAV(final int currentPeriod, final int periods) {
+
+        //the total sum
+        double sum = 0;
+
+        //number of prices we add together
+        int count = 0;
+
+        //check every period
+        for (int i = currentPeriod - periods; i < currentPeriod; i++) {
+
+            //add to the total sum
+            sum += history.get(i).volume;
+
+            //keep track of how many we add
+            count++;
+        }
+
+        //return the average of the sum
+        return (sum / (double)count);
     }
 
     /**

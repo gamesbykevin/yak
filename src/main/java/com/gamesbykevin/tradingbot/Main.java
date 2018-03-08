@@ -8,6 +8,7 @@ import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
@@ -15,6 +16,7 @@ import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
+import com.sun.deploy.security.DeployURLClassLoader;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -26,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIOD_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
@@ -109,9 +112,6 @@ public class Main implements Runnable {
             Thread thread = new Thread(app);
             thread.start();
 
-            //send notification our bot is starting
-            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On" : "Off"));
-
         } catch (Exception e) {
             displayMessage("Trading bot not started...", false, null);
             e.printStackTrace();
@@ -189,66 +189,29 @@ public class Main implements Runnable {
     @Override
     public void run() {
 
-        //initialize
-        init();
+        try {
 
-        //only need to create subscription once
-        Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
+            //initialize
+            init();
 
-        while(true) {
+            //only need to create subscription once
+            Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
 
-            try {
+            //send notification our bot is starting
+            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On" : "Off"));
 
-                //if not null we are using the web socket connection
-                if (websocketFeed != null) {
+            while (true) {
 
-                    //if we have a connection and aren't currently trying to connect
-                    if (websocketFeed.hasConnection() && !websocketFeed.isConnecting()) {
+                try {
 
-                        //subscribe to get the updated information
-                        websocketFeed.subscribe(subscribe);
+                    //if not null we are using the web socket connection
+                    if (websocketFeed != null) {
 
-                        //sleep for a second
-                        Thread.sleep(THREAD_DELAY);
+                        //if we have a connection and aren't currently trying to connect
+                        if (websocketFeed.hasConnection() && !websocketFeed.isConnecting()) {
 
-                        //display total assets update
-                        manageStatusUpdate();
-
-                    } else {
-
-                        //if we don't have a connection and we aren't trying to connect, let's start connecting
-                        if (!websocketFeed.isConnecting()) {
-
-                            displayMessage("Lost connection, attempting to re-connect", true, writer);
-                            websocketFeed.connect();
-
-                        } else {
-
-                            //we are trying to connect and just need to be patient
-                            displayMessage("Waiting to connect...", true, writer);
-                        }
-                    }
-
-                } else {
-
-                    //we aren't using web socket since it is null
-                    for (Agent agent : agents.values()) {
-
-                        try {
-
-                            //skip if we aren't trading with this agent
-                            if (agent.hasStopTrading())
-                                continue;
-
-                            //get json response from ticker
-                            final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agent.getProductId()));
-
-                            //convert to pojo
-                            Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
-
-                            //sometimes we don't get a successful response so let's check for null
-                            if (ticker != null)
-                                agent.update(ticker.price);
+                            //subscribe to get the updated information
+                            websocketFeed.subscribe(subscribe);
 
                             //sleep for a second
                             Thread.sleep(THREAD_DELAY);
@@ -256,19 +219,66 @@ public class Main implements Runnable {
                             //display total assets update
                             manageStatusUpdate();
 
-                        } catch (Exception e1) {
+                        } else {
 
-                            e1.printStackTrace();
-                            displayMessage(e1, true, writer);
+                            //if we don't have a connection and we aren't trying to connect, let's start connecting
+                            if (!websocketFeed.isConnecting()) {
+
+                                displayMessage("Lost connection, attempting to re-connect", true, writer);
+                                websocketFeed.connect();
+
+                            } else {
+
+                                //we are trying to connect and just need to be patient
+                                displayMessage("Waiting to connect...", true, writer);
+                            }
+                        }
+
+                    } else {
+
+                        //we aren't using web socket since it is null
+                        for (Agent agent : agents.values()) {
+
+                            try {
+
+                                //skip if we aren't trading with this agent
+                                if (agent.hasStopTrading())
+                                    continue;
+
+                                //get json response from ticker
+                                final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agent.getProductId()));
+
+                                //convert to pojo
+                                Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
+
+                                //sometimes we don't get a successful response so let's check for null
+                                if (ticker != null)
+                                    agent.update(ticker.price);
+
+                                //sleep for a second
+                                Thread.sleep(THREAD_DELAY);
+
+                                //display total assets update
+                                manageStatusUpdate();
+
+                            } catch (Exception e1) {
+
+                                e1.printStackTrace();
+                                displayMessage(e1, true, writer);
+                            }
                         }
                     }
+
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+                    displayMessage(e, true, writer);
                 }
-
-            } catch (Exception e) {
-
-                e.printStackTrace();
-                displayMessage(e, true, writer);
             }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            displayMessage(ex, true, writer);
         }
     }
 
@@ -347,13 +357,30 @@ public class Main implements Runnable {
         //create new hash map of agents
         this.agents = new HashMap<>();
 
+        //identify our duration
+        Calculator.Duration duration = null;
+
+        //search for the desired duration
+        for (Calculator.Duration tmpDuration : Calculator.Duration.values()) {
+
+            //if the numbers match we found it
+            if (tmpDuration.duration == PERIOD_DURATION) {
+                duration = tmpDuration;
+                break;
+            }
+        }
+
+        //we can't start until we find our duration
+        if (duration == null)
+            throw new RuntimeException("Desired duration doesn't match: " + PERIOD_DURATION);
+
         //add an agent for each product we are trading
         for (Product product : products) {
 
             try {
 
                 //create new agent
-                Agent agent = new Agent(product, funds);
+                Agent agent = new Agent(product, funds, duration);
 
                 //add to list
                 this.agents.put(product.getId(), agent);

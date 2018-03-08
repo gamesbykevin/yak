@@ -21,7 +21,6 @@ public class AgentHelper {
      */
     public static final int ROUND_DECIMALS_QUANTITY = 2;
 
-
     /**
      * Every order will be a limit order
      */
