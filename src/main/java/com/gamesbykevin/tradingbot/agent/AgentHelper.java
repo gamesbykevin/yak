@@ -116,6 +116,10 @@ public class AgentHelper {
             }
         }
 
+        //if the price is higher than what we paid and we start to see a divergence, sell the stock
+        if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent(), agent.getObvCurrent()))
+            agent.setReasonSell(ReasonSell.Reason_1);
+
         //if no reason to sell yet, check these
         if (agent.getReasonSell() == null) {
             if (agent.getCurrentPrice() >= priceGain) {
@@ -163,8 +167,12 @@ public class AgentHelper {
             if (agent.getEmaShort() > agent.getEmaLong()) {
 
                 //make sure the previous period was the reverse, so we know it just switched!!!!
-                if (agent.getEmaShortPrevious() < agent.getEmaLongPrevious())
-                    agent.setReasonBuy(ReasonBuy.Reason_3);
+                if (agent.getEmaShortPrevious() < agent.getEmaLongPrevious()) {
+
+                    //let's also just confirm a divergence before we buy
+                    if (agent.getCalculator().hasDivergence(false, agent.getCurrentPrice(), agent.getRsiCurrent(), agent.getObvCurrent()))
+                        agent.setReasonBuy(ReasonBuy.Reason_3);
+                }
             }
         }
 

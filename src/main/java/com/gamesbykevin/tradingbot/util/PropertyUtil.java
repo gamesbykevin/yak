@@ -119,7 +119,7 @@ public class PropertyUtil {
         Calculator.PERIOD_DURATION = Integer.parseInt(getProperties().getProperty("periodDuration"));
 
         //how long to calculate moving average volume?
-        Calculator.PERIODS_MAV = Integer.parseInt(getProperties().getProperty("periodsMAV"));
+        Calculator.PERIODS_OBV = Integer.parseInt(getProperties().getProperty("periodsOBV"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

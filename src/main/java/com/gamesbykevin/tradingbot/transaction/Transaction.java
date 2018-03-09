@@ -38,7 +38,7 @@ public class Transaction {
     private double amount;
 
     //the current rsi values at buy and sell
-    private float rsiBuy, rsiSell;
+    private double rsiBuy, rsiSell;
 
     //the reason why we bought
     private TransactionHelper.ReasonBuy reasonBuy;
@@ -227,19 +227,19 @@ public class Transaction {
         this.reasonSell = reasonSell;
     }
 
-    private void setRsiBuy(final float rsiBuy) {
+    private void setRsiBuy(final double rsiBuy) {
         this.rsiBuy = rsiBuy;
     }
 
-    private void setRsiSell(final float rsiSell) {
+    private void setRsiSell(final double rsiSell) {
         this.rsiSell = rsiSell;
     }
 
-    public float getRsiBuy() {
+    public double getRsiBuy() {
         return this.rsiBuy;
     }
 
-    public float getRsiSell() {
+    public double getRsiSell() {
         return this.rsiSell;
     }
 

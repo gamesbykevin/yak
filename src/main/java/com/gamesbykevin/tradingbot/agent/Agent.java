@@ -58,7 +58,7 @@ public class Agent {
     private int attempts = 0;
 
     //what is the current calculator value
-    private float rsiCurrent;
+    private double rsiCurrent;
 
     //the reason why we are buying
     private ReasonBuy reasonBuy;
@@ -169,8 +169,8 @@ public class Agent {
                 //calculate the current rsi
                 setRsiCurrent(getCalculator().getRsiCurrent(currentPrice));
 
-                //what is the calculator
-                displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
+                //display typical info
+                displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", OBV = " + getObvCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
 
                 if (getWallet().getQuantity() > 0) {
 
@@ -430,11 +430,15 @@ public class Agent {
         this.emaShortPrevious = emaShortPrevious;
     }
 
-    private void setRsiCurrent(final float rsiCurrent) {
+    private void setRsiCurrent(final double rsiCurrent) {
         this.rsiCurrent = rsiCurrent;
     }
 
-    public float getRsiCurrent() {
+    public double getRsiCurrent() {
         return this.rsiCurrent;
+    }
+
+    public double getObvCurrent() {
+        return getCalculator().getObvCurrent();
     }
 }

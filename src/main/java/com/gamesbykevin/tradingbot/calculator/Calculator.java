@@ -13,8 +13,11 @@ public class Calculator {
     //keep a list of our periods
     private List<Period> history;
 
-    //keep a historical list of the calculator so we can check for divergence
-    private List<Float> rsi;
+    //keep a historical list of the rsi so we can check for divergence
+    private List<Double> rsi;
+
+    //keep a historical list of the volume so we can check for divergence
+    private List<Double> volume;
 
     /**
      * How many periods to calculate rsi
@@ -32,9 +35,9 @@ public class Calculator {
     public static int PERIODS_EMA_SHORT;
 
     /**
-     * How many periods to calculate the moving average volume
+     * How many periods to calculate the on balance volume
      */
-    public static int PERIODS_MAV;
+    public static int PERIODS_OBV;
 
     //endpoint to get the history
     public static final String ENDPOINT_HISTORIC = ENDPOINT + "/products/%s/candles?granularity=%s";
@@ -80,6 +83,7 @@ public class Calculator {
         this.productId = productId;
         this.history = new ArrayList<>();
         this.rsi = new ArrayList<>();
+        this.volume = new ArrayList<>();
     }
 
     public synchronized boolean update(Duration key) {
@@ -115,8 +119,11 @@ public class Calculator {
                 this.history.add(period);
             }
 
-            //calculate the calculator for all our specified periods now that we have new data
+            //calculate the rsi for all our specified periods now that we have new data
             calculateRsi();
+
+            //calculate the on balance volume for all our specified periods now that we have new data
+            calculateOBV();
 
             //we are successful
             result = true;
@@ -226,13 +233,13 @@ public class Calculator {
         }
     }
 
-    public synchronized boolean hasDivergence(final boolean uptrend, final double currentPrice, final float currentRsi) {
+    public synchronized boolean hasDivergence(final boolean uptrend, final double currentPrice, final double currentRsi, final double currentVolume) {
 
         //flag we will use to track if the price is following the desired trend
         boolean betterPrice = true;
 
         //check all recent periods
-        for (int i = history.size() - PERIODS_RSI; i < history.size(); i++) {
+        for (int i = history.size() - PERIODS_OBV; i < history.size(); i++) {
 
             //get the current period
             Period period = history.get(i);
@@ -259,59 +266,69 @@ public class Calculator {
         if (!betterPrice)
             return false;
 
-        //now that the price is good, let's look at the calculator
-        boolean betterRsi = true;
+        //is the current volume the best whether it's an up or down trend?
+        final boolean betterVolume = isCurrentBest(volume, currentVolume, uptrend);
 
-        //look at all our calculator periods
-        for (int i = 0; i < rsi.size(); i++) {
+        //if the price is better but the volume isn't that means we have a divergence
+        return (betterPrice && !betterVolume);
+
+        /*
+        //is the current RSI the best whether it's an up or down trend?
+        final boolean betterRsi = isCurrentBest(rsi, currentRsi, uptrend);
+
+        //if the price is better but the RSI isn't that means we have a divergence
+        return (betterPrice && !betterRsi);
+        */
+    }
+
+    private boolean isCurrentBest(List<Double> list, double currentValue, boolean uptrend) {
+
+        //look at all our volume periods
+        for (int i = 0; i < list.size(); i++) {
 
             if (uptrend) {
 
-                //if checking uptrend we don't want any calculator values higher
-                if (rsi.get(i) > currentRsi) {
-                    betterRsi = false;
-                    break;
-                }
+                //if checking uptrend we don't want any values higher
+                if (list.get(i) > currentValue)
+                    return false;
 
             } else {
 
-                //if checking downtrend we don't want any calculator values lower
-                if (rsi.get(i) < currentRsi) {
-                    betterRsi = false;
-                    break;
-                }
-
+                //if checking downtrend we don't want any values lower
+                if (list.get(i) < currentValue)
+                    return false;
             }
         }
 
-        //at this point we don't have a divergence in the uptrend
-        if (betterRsi)
-            return false;
-
-        //if the price is better but the calculator isn't that means we have a divergence
-        return (betterPrice && !betterRsi);
+        //yep the current value is the best
+        return true;
     }
 
-    public double calculateMAV(final int currentPeriod, final int periods) {
+    public double calculateOBV(final int currentPeriod, final int periods) {
 
         //the total sum
         double sum = 0;
 
-        //number of prices we add together
-        int count = 0;
-
         //check every period
-        for (int i = currentPeriod - periods; i < currentPeriod; i++) {
+        for (int i = currentPeriod - periods; i < currentPeriod - 1; i++) {
 
-            //add to the total sum
-            sum += history.get(i).volume;
+            Period prev = history.get(i);
+            Period next = history.get(i + 1);
 
-            //keep track of how many we add
-            count++;
+            if (next.close > prev.close) {
+
+                //add to the total volume
+                sum = sum + history.get(i).volume;
+
+            } else if (next.close < prev.close) {
+
+                //subtract from the total volume
+                sum = sum - history.get(i).volume;
+            }
         }
 
-        //return the average of the sum
-        return (sum / (double)count);
+        //return the on balance volume
+        return sum;
     }
 
     /**
@@ -363,6 +380,28 @@ public class Calculator {
     /**
      * Calculate the calculator values for each period
      */
+    private void calculateOBV() {
+
+        //clear our historical list
+        this.volume.clear();
+
+        //calculate the obv for each period
+        for (int i = PERIODS_OBV; i >= 0; i--) {
+
+            //we need to go back the desired number of periods
+            final int startIndex = history.size() - (PERIODS_OBV + i);
+
+            //get the obv for this period
+            final double volume = calculateOBV(startIndex, PERIODS_OBV);
+
+            //add the obv calculation to the list
+            this.volume.add(volume);
+        }
+    }
+
+    /**
+     * Calculate the calculator values for each period
+     */
     private void calculateRsi() {
 
         //clear our historical calculator list
@@ -378,7 +417,7 @@ public class Calculator {
             final int endIndex = startIndex + PERIODS_RSI;
 
             //get the calculator for this period
-            final float rsi = calculateRsi(startIndex, endIndex, false, 0);
+            final double rsi = calculateRsi(startIndex, endIndex, false, 0);
 
             //add the calculator calculation to the list
             this.rsi.add(rsi);
@@ -467,7 +506,11 @@ public class Calculator {
         }
     }
 
-    public float getRsiCurrent(final double currentPrice) {
+    public double getRsiCurrent(final double currentPrice) {
         return calculateRsi(history.size() - PERIODS_RSI, history.size(),true, currentPrice);
+    }
+
+    public double getObvCurrent() {
+        return volume.get(volume.size() - 1);
     }
 }
