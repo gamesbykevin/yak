@@ -147,8 +147,8 @@ public class Agent {
                 //calculate the current rsi
                 setRsiCurrent(getCalculator().getRsiCurrent(currentPrice));
 
-                //display typical info
-                displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", OBV = " + getObvCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), true);
+                //display info to console but only write to log when we have quantity
+                displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", OBV = " + getObvCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), getWallet().getQuantity() > 0);
 
                 if (getWallet().getQuantity() > 0) {
 

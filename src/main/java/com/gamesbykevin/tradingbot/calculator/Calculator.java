@@ -103,48 +103,56 @@ public class Calculator {
         //were we successful
         boolean result = false;
 
-        //make our rest call and get the json response
-        final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
+        try {
+            //make our rest call and get the json response
+            final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
 
-        //convert json text to multi array
-        double[][] data = GSon.getGson().fromJson(json, double[][].class);
+            //convert json text to multi array
+            double[][] data = GSon.getGson().fromJson(json, double[][].class);
 
-        //make sure we have data before we update
-        if (data != null && data.length > 0) {
+            //make sure we have data before we update
+            if (data != null && data.length > 0) {
 
-            //clear the current list
-            this.history.clear();
+                //clear the current list
+                this.history.clear();
 
-            //parse each period from the data
-            for (int row = data.length - 1; row >= 0; row--) {
+                //parse each period from the data
+                for (int row = data.length - 1; row >= 0; row--) {
 
-                //create and populate our period
-                Period period = new Period();
-                period.time = (long) data[row][0];
-                period.low = data[row][1];
-                period.high = data[row][2];
-                period.open = data[row][3];
-                period.close = data[row][4];
-                period.volume = data[row][5];
+                    //create and populate our period
+                    Period period = new Period();
+                    period.time = (long) data[row][0];
+                    period.low = data[row][1];
+                    period.high = data[row][2];
+                    period.open = data[row][3];
+                    period.close = data[row][4];
+                    period.volume = data[row][5];
 
-                //add to array list
-                this.history.add(period);
+                    //add to array list
+                    this.history.add(period);
+                }
+
+                //calculate the rsi for all our specified periods now that we have new data
+                calculateRsi(history, rsi);
+
+                //calculate the on balance volume for all our specified periods now that we have new data
+                calculateOBV(history, volume);
+
+                //calculate the ema for the long period now that we have new data
+                calculateEMA(history, emaLong, PERIODS_EMA_LONG);
+
+                //calculate the ema for the short period now that we have new data
+                calculateEMA(history, emaShort, PERIODS_EMA_SHORT);
+
+                //we are successful
+                result = true;
+
+            } else {
+                result = false;
             }
 
-            //calculate the rsi for all our specified periods now that we have new data
-            calculateRsi(history, rsi);
-
-            //calculate the on balance volume for all our specified periods now that we have new data
-            calculateOBV(history, volume);
-
-            //calculate the ema for all specified periods now that we have new data
-            calculateEMA(history, emaLong, emaShort);
-
-            //we are successful
-            result = true;
-
-        } else {
-            result = false;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         //return our result
@@ -346,6 +354,22 @@ public class Calculator {
                         return false;
                 }
 
+                //lets also make sure the ema short line is constantly increasing
+                for (int index = emaShort.size() - 1; index >= emaShort.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is greater return false
+                    if (emaShort.get(index) < emaShort.get(index - 1))
+                        return false;
+                }
+
+                //lets also make sure the ema long line is constantly decreasing
+                for (int index = emaLong.size() - 1; index >= emaLong.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is less return false
+                    if (emaLong.get(index) > emaLong.get(index - 1))
+                        return false;
+                }
+
                 //we found everything as expected
                 return true;
             }
@@ -363,10 +387,25 @@ public class Calculator {
                         return false;
                 }
 
+                //lets also make sure the ema short line is constantly decreasing
+                for (int index = emaShort.size() - 1; index >= emaShort.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is less return false
+                    if (emaShort.get(index) > emaShort.get(index - 1))
+                        return false;
+                }
+
+                //lets also make sure the ema long line is constantly increasing
+                for (int index = emaLong.size() - 1; index >= emaLong.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is greater return false
+                    if (emaLong.get(index) < emaLong.get(index - 1))
+                        return false;
+                }
+
                 //we found everything as expected
                 return true;
             }
-
         }
 
         //no crossover detected

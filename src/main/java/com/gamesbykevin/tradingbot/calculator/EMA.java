@@ -53,32 +53,20 @@ public class EMA {
         return ema;
     }
 
-    protected static void calculateEMA(List<Period> history, List<Double> emaLong, List<Double> emaShort) {
+    protected static void calculateEMA(List<Period> history, List<Double> emaList, int periods) {
 
         //clear our list
-        emaLong.clear();
+        emaList.clear();
 
         //populate the list
-        for (int i = 0; i < PERIODS_EMA_LONG; i++) {
+        for (int i = 0; i < periods; i++) {
 
             //calculate the ema
-            final double ema = calculateEMA(history, history.size() - PERIODS_EMA_LONG - i, PERIODS_EMA_LONG);
+            final double ema = calculateEMA(history, history.size() - periods - i, periods);
 
             //add it to the list
-            emaLong.add(ema);
-        }
-
-        //clear our list
-        emaShort.clear();
-
-        //populate the list
-        for (int i = 0; i < PERIODS_EMA_SHORT; i++) {
-
-            //calculate the ema
-            final double ema = calculateEMA(history, history.size() - PERIODS_EMA_SHORT - i, PERIODS_EMA_SHORT);
-
-            //add it to the list
-            emaShort.add(ema);
+            emaList.add(ema);
         }
     }
+
 }

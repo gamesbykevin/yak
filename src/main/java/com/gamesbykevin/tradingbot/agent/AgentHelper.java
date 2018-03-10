@@ -109,7 +109,7 @@ public class AgentHelper {
 
             //if we have a bearish crossover, we expect price to go down
             if (agent.getCalculator().hasEmaCrossover(false))
-                agent.setReasonSell(ReasonSell.Reason_4);
+                agent.setReasonSell(ReasonSell.Reason_3);
         }
 
         /*
@@ -121,9 +121,9 @@ public class AgentHelper {
         //if no reason to sell yet, check these
         if (agent.getReasonSell() == null) {
             if (agent.getCurrentPrice() >= priceGain) {
-                agent.setReasonSell(ReasonSell.Reason_2);
+                agent.setReasonSell(ReasonSell.Reason_1);
             } else if (agent.getCurrentPrice() <= priceLow) {
-                agent.setReasonSell(ReasonSell.Reason_3);
+                agent.setReasonSell(ReasonSell.Reason_2);
             }
         }
 
@@ -163,7 +163,7 @@ public class AgentHelper {
 
             //if we have a bullish crossover, we expect price to go up
             if (agent.getCalculator().hasEmaCrossover(true))
-                agent.setReasonBuy(ReasonBuy.Reason_3);
+                agent.setReasonBuy(ReasonBuy.Reason_1);
         }
 
         /*

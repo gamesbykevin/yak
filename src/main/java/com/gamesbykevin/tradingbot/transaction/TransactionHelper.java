@@ -13,9 +13,7 @@ public class TransactionHelper {
      */
     public enum ReasonBuy {
 
-        Reason_1("We see a divergence in the downtrend"),
-        Reason_2("There is a constant upward trend so we will buy"),
-        Reason_3("There is a swing detected in the EMA")
+        Reason_1("There is a swing detected in the EMA")
         ;
 
         private final String description;
@@ -34,10 +32,9 @@ public class TransactionHelper {
      */
     public enum ReasonSell {
 
-        Reason_1("We see a divergence in the uptrend"),
-        Reason_2("The stock price has exceeded our price gain ratio"),
-        Reason_3("We have lost too much, sell now"),
-        Reason_4("There is a swing detected in the EMA")
+        Reason_1("The stock price has exceeded our price gain ratio"),
+        Reason_2("We have lost too much, sell now"),
+        Reason_3("There is a swing detected in the EMA")
         ;
 
         private final String description;
