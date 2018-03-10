@@ -64,16 +64,18 @@ public class EMA {
         //clear our list
         emaList.clear();
 
-        //populate the list
-        for (int i = 0; i < periods; i++) {
+        //for an accurate ema we want to calculate as many data points as possible
+        for (int i = 0; i < history.size(); i++) {
 
-            final double ema;
+            //skip if we can't go back far enough
+            if (i <= periods)
+                continue;
 
-            if (i == 0) {
-                ema = calculateEMA(history, history.size() - periods - i, periods, 0);
-            } else {
-                ema = calculateEMA(history, history.size() - periods - i, periods, emaList.get(emaList.size() - 1));
-            }
+            //either the ema will be 0 or we get the most recent
+            final double previousEma = (emaList.isEmpty()) ? 0 : emaList.get(emaList.size() - 1);
+
+            //calculate the ema for the current period
+            final double ema = calculateEMA(history, i, periods, previousEma);
 
             //add it to the list
             emaList.add(ema);
