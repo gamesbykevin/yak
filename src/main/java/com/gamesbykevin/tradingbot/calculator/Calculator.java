@@ -104,6 +104,7 @@ public class Calculator {
         boolean result = false;
 
         try {
+
             //make our rest call and get the json response
             final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
 
@@ -410,5 +411,13 @@ public class Calculator {
 
         //no crossover detected
         return false;
+    }
+
+    public List<Double> getEmaShort() {
+        return this.emaShort;
+    }
+
+    public List<Double> getEmaLong() {
+        return this.emaLong;
     }
 }

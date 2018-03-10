@@ -208,7 +208,7 @@ public class AgentHelper {
         } else {
 
             //we are still waiting
-            agent.displayMessage("Waiting. Product " + agent.getProductId() + ", Available funds $" + agent.getWallet().getFunds(), true);
+            agent.displayMessage("Waiting. Product " + agent.getProductId() + ", Available funds $" + agent.getWallet().getFunds(), false);
         }
     }
 

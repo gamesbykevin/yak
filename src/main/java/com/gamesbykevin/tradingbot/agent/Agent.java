@@ -119,7 +119,7 @@ public class Agent {
             if (System.currentTimeMillis() - previous >= (myDuration.duration / 6) * 1000) {
 
                 //display message as sometimes the call is not successful
-                displayMessage("Making rest call to retrieve history " + getProductId(), true);
+                displayMessage("Making rest call to retrieve history " + getProductId(), false);
 
                 //update our historical data and update the last update
                 boolean success = getCalculator().update(myDuration, getProductId());
@@ -127,7 +127,7 @@ public class Agent {
                 if (success) {
 
                     //rest call is successful
-                    displayMessage("Rest call successful.", true);
+                    displayMessage("Rest call successful.", false);
 
                 } else {
 

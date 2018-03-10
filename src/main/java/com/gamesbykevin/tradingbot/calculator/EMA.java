@@ -35,10 +35,10 @@ public class EMA {
         return (sum / (double)count);
     }
 
-    private static double calculateEMA(List<Period> history, int current, int periods) {
+    private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
 
         //what is our multiplier
-        final float multiplier = (2 / (periods + 1));
+        final float multiplier = ((float)2 / ((float)periods + 1));
 
         //calculate simple moving average
         final double sma = calculateSMA(history, current - 1, periods);
@@ -47,7 +47,13 @@ public class EMA {
         final double currentPrice = history.get(current).close;
 
         //calculate our ema
-        final double ema = ((currentPrice - sma) * multiplier) + sma;
+        final double ema;
+
+        if (emaPrevious != 0) {
+            ema = ((currentPrice - emaPrevious) * multiplier) + emaPrevious;
+        } else {
+            ema = ((currentPrice - sma) * multiplier) + sma;
+        }
 
         //return our result
         return ema;
@@ -61,12 +67,16 @@ public class EMA {
         //populate the list
         for (int i = 0; i < periods; i++) {
 
-            //calculate the ema
-            final double ema = calculateEMA(history, history.size() - periods - i, periods);
+            final double ema;
+
+            if (i == 0) {
+                ema = calculateEMA(history, history.size() - periods - i, periods, 0);
+            } else {
+                ema = calculateEMA(history, history.size() - periods - i, periods, emaList.get(emaList.size() - 1));
+            }
 
             //add it to the list
             emaList.add(ema);
         }
     }
-
 }
