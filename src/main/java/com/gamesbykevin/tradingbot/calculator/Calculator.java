@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
+import static com.gamesbykevin.tradingbot.calculator.EMA.calculateEMA;
+import static com.gamesbykevin.tradingbot.calculator.OBV.calculateOBV;
+import static com.gamesbykevin.tradingbot.calculator.RSI.calculateRsi;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
@@ -18,6 +21,12 @@ public class Calculator {
 
     //keep a historical list of the volume so we can check for divergence
     private List<Double> volume;
+
+    //list of ema values for our long period
+    private List<Double> emaLong;
+
+    //list of ema values for our short period
+    private List<Double> emaShort;
 
     /**
      * How many periods to calculate rsi
@@ -39,14 +48,16 @@ public class Calculator {
      */
     public static int PERIODS_OBV;
 
+    /**
+     * How many periods do we check to confirm a crossover?
+     */
+    public static int EMA_CROSSOVER;
+
     //endpoint to get the history
     public static final String ENDPOINT_HISTORIC = ENDPOINT + "/products/%s/candles?granularity=%s";
 
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
-
-    //the product we are tracking
-    private String productId;
 
     public enum Trend {
         Upward, Downward, None
@@ -79,14 +90,15 @@ public class Calculator {
         }
     }
 
-    public Calculator(final String productId) {
-        this.productId = productId;
+    public Calculator() {
         this.history = new ArrayList<>();
         this.rsi = new ArrayList<>();
         this.volume = new ArrayList<>();
+        this.emaShort = new ArrayList<>();
+        this.emaLong = new ArrayList<>();
     }
 
-    public synchronized boolean update(Duration key) {
+    public synchronized boolean update(Duration key, String productId) {
 
         //were we successful
         boolean result = false;
@@ -120,10 +132,13 @@ public class Calculator {
             }
 
             //calculate the rsi for all our specified periods now that we have new data
-            calculateRsi();
+            calculateRsi(history, rsi);
 
             //calculate the on balance volume for all our specified periods now that we have new data
-            calculateOBV();
+            calculateOBV(history, volume);
+
+            //calculate the ema for all specified periods now that we have new data
+            calculateEMA(history, emaLong, emaShort);
 
             //we are successful
             result = true;
@@ -304,213 +319,57 @@ public class Calculator {
         return true;
     }
 
-    public double calculateOBV(final int currentPeriod, final int periods) {
+    public double getObvCurrent() {
+        return volume.get(volume.size() - 1);
+    }
 
-        //the total sum
-        double sum = 0;
+    public double getRsiCurrent(double currentPrice) {
+        return calculateRsi(history, history.size() - PERIODS_RSI, history.size(), true, currentPrice);
+    }
 
-        //check every period
-        for (int i = currentPeriod - periods; i < currentPeriod - 1; i++) {
+    public boolean hasEmaCrossover(boolean bullish) {
 
-            Period prev = history.get(i);
-            Period next = history.get(i + 1);
+        //where do we start checking
+        int start = EMA_CROSSOVER + 1;
 
-            if (next.close > prev.close) {
+        //if we are checking bullish the long is greater then the short is greater
+        if (bullish) {
 
-                //add to the total volume
-                sum = sum + history.get(i).volume;
+            //to start we want the long to be greater than the short
+            if (emaLong.get(emaLong.size() - start) > emaShort.get(emaShort.size() - start)) {
 
-            } else if (next.close < prev.close) {
+                //now we want the short to be greater than the long
+                for (int index = start - 1; index > 0; index--) {
 
-                //subtract from the total volume
-                sum = sum - history.get(i).volume;
+                    //if the short is less, we can't confirm a crossover
+                    if (emaShort.get(emaShort.size() - index) < emaLong.get(emaLong.size() - index))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
             }
-        }
-
-        //return the on balance volume
-        return sum;
-    }
-
-    /**
-     * Calculate the SMA (simple moving average)
-     * @param currentPeriod The desired period of the SMA we want
-     * @param periods The number of periods to check
-     * @return The average of the sum of closing prices within the specified period
-     */
-    public double calculateSMA(final int currentPeriod, final int periods) {
-
-        //the total sum
-        double sum = 0;
-
-        //number of prices we add together
-        int count = 0;
-
-        //check every period
-        for (int i = currentPeriod - periods; i < currentPeriod; i++) {
-
-            //add to the total sum
-            sum += history.get(i).close;
-
-            //keep track of how many we add
-            count++;
-        }
-
-        //return the average of the sum
-        return (sum / (double)count);
-    }
-
-    public double calculateEMA(int periods, double currentPrice, double previousEMA) {
-
-        //what is our multiplier
-        final float multiplier = (2 / (periods + 1));
-
-        //calculate simple moving average
-        //final double sma = calculateSMA(history.size() - 1, periods);
-        final double sma = calculateSMA(history.size(), periods);
-
-        //currentPrice = history.get(history.size() - 1).close;
-
-        //calculate our ema
-        final double ema = ((currentPrice - sma) * multiplier) + sma;
-
-        //return our result
-        return ema;
-    }
-
-    /**
-     * Calculate the calculator values for each period
-     */
-    private void calculateOBV() {
-
-        //clear our historical list
-        this.volume.clear();
-
-        //calculate the obv for each period
-        for (int i = PERIODS_OBV; i >= 0; i--) {
-
-            //we need to go back the desired number of periods
-            final int startIndex = history.size() - (PERIODS_OBV + i);
-
-            //get the obv for this period
-            final double volume = calculateOBV(startIndex, PERIODS_OBV);
-
-            //add the obv calculation to the list
-            this.volume.add(volume);
-        }
-    }
-
-    /**
-     * Calculate the calculator values for each period
-     */
-    private void calculateRsi() {
-
-        //clear our historical calculator list
-        this.rsi.clear();
-
-        //calculate the calculator for each period
-        for (int i = PERIODS_RSI; i >= 0; i--) {
-
-            //we need to go back the desired number of periods
-            final int startIndex = history.size() - (PERIODS_RSI + i);
-
-            //we only go the length of the desired periods
-            final int endIndex = startIndex + PERIODS_RSI;
-
-            //get the calculator for this period
-            final double rsi = calculateRsi(startIndex, endIndex, false, 0);
-
-            //add the calculator calculation to the list
-            this.rsi.add(rsi);
-        }
-    }
-
-    /**
-     * Calcuate the calculator value for the specified range
-     * @param startIndex Beginning period
-     * @param endIndex Ending period
-     * @param current Are we calculating the current calculator? if false we just want the historical calculator
-     * @param currentPrice The current price when calculating the current calculator, otherwise this field is not used
-     * @return The calculator value
-     */
-    private float calculateRsi(final int startIndex, final int endIndex, final boolean current, final double currentPrice) {
-
-        //the length of our calculation
-        final int size = endIndex - startIndex;
-
-        //track total gains and losses
-        float gain = 0, loss = 0;
-        float gainCurrent = 0, lossCurrent = 0;
-
-        //go through the periods to calculate calculator
-        for (int i = startIndex; i < endIndex - 1; i++) {
-
-            //prevent index out of bounds exception
-            if (i + 1 >= endIndex)
-                break;
-
-            //get the next and previous prices
-            double previous = history.get(i).close;
-            double next     = history.get(i + 1).close;
-
-            if (next > previous) {
-
-                //here we have a gain
-                gain += (next - previous);
-
-            } else {
-
-                //here we have a loss
-                loss += (previous - next);
-            }
-        }
-
-        //calculate the average gain and loss
-        float avgGain = (gain / size);
-        float avgLoss = (loss / size);
-
-        //if we don't want the current calculator we can do simple moving average (SMA)
-        if (!current) {
-
-            //calculate relative strength
-            final float rs = avgGain / avgLoss;
-
-            //calculate relative strength index
-            float rsi = 100 - (100 / (1 + rs));
-
-            //return our calculator value
-            return rsi;
 
         } else {
 
-            //get the latest price in our list so we can compare to the current price
-            final double recentPrice = history.get(endIndex - 1).close;
+            //to start we want the short to be greater than the long
+            if (emaLong.get(emaLong.size() - start) < emaShort.get(emaShort.size() - start)) {
 
-            //check if the current price is a gain or loss
-            if (currentPrice > recentPrice) {
-                gainCurrent = (float)(currentPrice - recentPrice);
-            } else {
-                lossCurrent = (float)(recentPrice - currentPrice);
+                //now we want the long to be greater than the short
+                for (int index = start - 1; index > 0; index--) {
+
+                    //if the long is less, we can't confirm a crossover
+                    if (emaShort.get(emaShort.size() - index) > emaLong.get(emaLong.size() - index))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
             }
 
-            //smothered calculator including current gain loss
-            float smotheredRS =
-                (((avgGain * (size - 1)) + gainCurrent) / size)
-                /
-                (((avgLoss * (size - 1)) + lossCurrent) / size);
-
-            //calculate our calculator value
-            final float rsi = 100 - (100 / (1 + smotheredRS));
-
-            //return our calculator value
-            return rsi;
         }
-    }
 
-    public double getRsiCurrent(final double currentPrice) {
-        return calculateRsi(history.size() - PERIODS_RSI, history.size(),true, currentPrice);
-    }
-
-    public double getObvCurrent() {
-        return volume.get(volume.size() - 1);
+        //no crossover detected
+        return false;
     }
 }

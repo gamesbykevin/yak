@@ -16,7 +16,6 @@ import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
-import com.sun.deploy.security.DeployURLClassLoader;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;

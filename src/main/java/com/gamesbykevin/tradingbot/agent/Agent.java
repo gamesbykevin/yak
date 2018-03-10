@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_SHORT;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
@@ -69,11 +67,6 @@ public class Agent {
     //current price of stock
     private double currentPrice = 0;
 
-    //the ema for our short period and long period
-    private double emaShort = 0, emaLong = 0;
-
-    private double emaShortPrevious = 0, emaLongPrevious = 0;
-
     //the duration of data we are checking
     private final Duration myDuration;
 
@@ -92,7 +85,7 @@ public class Agent {
         this.writer = LogFile.getPrintWriter(product.getId() + "-" + getFileDateDesc() + ".log");
 
         //create our calculator
-        this.calculator = new Calculator(product.getId());
+        this.calculator = new Calculator();
 
         //update the previous run time, so it runs immediately since we don't have data yet
         this.previous = System.currentTimeMillis() - (myDuration.duration * 1000);
@@ -129,7 +122,7 @@ public class Agent {
                 displayMessage("Making rest call to retrieve history " + getProductId(), true);
 
                 //update our historical data and update the last update
-                boolean success = getCalculator().update(myDuration);
+                boolean success = getCalculator().update(myDuration, getProductId());
 
                 if (success) {
 
@@ -147,21 +140,6 @@ public class Agent {
 
             //if we don't have an active order look at the market data for a chance to buy
             if (getOrder() == null) {
-
-                //create tmp reference for previous values
-                final double previousEmaShort = getEmaShortPrevious();
-                final double previousEmaLong = getEmaLongPrevious();
-
-                //the current values will now be the previous
-                setEmaShortPrevious(getEmaShort());
-                setEmaLongPrevious(getEmaLong());
-
-                //calculate our new ema values based on the previous
-                setEmaShort(getCalculator().calculateEMA(PERIODS_EMA_SHORT, getCurrentPrice(), previousEmaShort));
-                setEmaLong(getCalculator().calculateEMA(PERIODS_EMA_LONG, getCurrentPrice(), previousEmaLong));
-
-                displayMessage(getProductId() + " - " + PERIODS_EMA_SHORT + " period EMA: " + getEmaShort(), true);
-                displayMessage(getProductId() + " - " + PERIODS_EMA_LONG + " period EMA: " + getEmaLong(), true);
 
                 //check if there is a trend with the current stock price
                 getCalculator().calculateTrend(currentPrice);
@@ -396,38 +374,6 @@ public class Agent {
 
     public double getCurrentPrice() {
         return this.currentPrice;
-    }
-
-    public double getEmaLong() {
-        return this.emaLong;
-    }
-
-    public double getEmaShort() {
-        return this.emaShort;
-    }
-
-    public void setEmaLong(double emaLong) {
-        this.emaLong = emaLong;
-    }
-
-    public void setEmaShort(double emaShort) {
-        this.emaShort = emaShort;
-    }
-
-    public double getEmaLongPrevious() {
-        return this.emaLongPrevious;
-    }
-
-    public double getEmaShortPrevious() {
-        return this.emaShortPrevious;
-    }
-
-    public void setEmaLongPrevious(double emaLongPrevious) {
-        this.emaLongPrevious = emaLongPrevious;
-    }
-
-    public void setEmaShortPrevious(double emaShortPrevious) {
-        this.emaShortPrevious = emaShortPrevious;
     }
 
     private void setRsiCurrent(final double rsiCurrent) {

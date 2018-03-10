@@ -107,18 +107,16 @@ public class AgentHelper {
 
         if (agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
-            //if we are above the resistance line and the long ema is now greater than the short ema
-            if (agent.getEmaLong() > agent.getEmaShort()) {
-
-                //also make sure the ema values just switched!!!!!!
-                if (agent.getEmaLongPrevious() < agent.getEmaShortPrevious())
-                    agent.setReasonSell(ReasonSell.Reason_4);
-            }
+            //if we have a bearish crossover, we expect price to go down
+            if (agent.getCalculator().hasEmaCrossover(false))
+                agent.setReasonSell(ReasonSell.Reason_4);
         }
 
+        /*
         //if the price is higher than what we paid and we start to see a divergence, sell the stock
         if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent(), agent.getObvCurrent()))
             agent.setReasonSell(ReasonSell.Reason_1);
+        */
 
         //if no reason to sell yet, check these
         if (agent.getReasonSell() == null) {
@@ -163,17 +161,9 @@ public class AgentHelper {
 
         if (agent.getRsiCurrent() <= SUPPORT_LINE) {
 
-            //if we are below the support line and the short ema is now greater than long
-            if (agent.getEmaShort() > agent.getEmaLong()) {
-
-                //make sure the previous period was the reverse, so we know it just switched!!!!
-                if (agent.getEmaShortPrevious() < agent.getEmaLongPrevious()) {
-
-                    //let's also just confirm a divergence before we buy
-                    if (agent.getCalculator().hasDivergence(false, agent.getCurrentPrice(), agent.getRsiCurrent(), agent.getObvCurrent()))
-                        agent.setReasonBuy(ReasonBuy.Reason_3);
-                }
-            }
+            //if we have a bullish crossover, we expect price to go up
+            if (agent.getCalculator().hasEmaCrossover(true))
+                agent.setReasonBuy(ReasonBuy.Reason_3);
         }
 
         /*

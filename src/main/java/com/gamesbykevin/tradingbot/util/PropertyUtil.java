@@ -120,6 +120,9 @@ public class PropertyUtil {
 
         //how long to calculate moving average volume?
         Calculator.PERIODS_OBV = Integer.parseInt(getProperties().getProperty("periodsOBV"));
+
+        //how many periods do we check to confirm crossover
+        Calculator.EMA_CROSSOVER = Integer.parseInt(getProperties().getProperty("emaCrossoverLength"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {
