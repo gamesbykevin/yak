@@ -1,9 +1,11 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.agent.AgentHelper;
+
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_SHORT;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.EMA_CROSSOVER;
 
 public class EMA {
 
@@ -80,5 +82,137 @@ public class EMA {
             //add it to the list
             emaList.add(ema);
         }
+    }
+
+    protected static boolean hasEmaCrossover(boolean bullish, List<Double> emaShort, List<Double> emaLong) {
+
+        //where do we start checking
+        int start = EMA_CROSSOVER + 1;
+
+        //if we are checking bullish the long is greater then the short is greater
+        if (bullish) {
+
+            //to start we want the long to be greater than the short
+            if (emaLong.get(emaLong.size() - start) > emaShort.get(emaShort.size() - start)) {
+
+                //now we want the short to be greater than the long
+                for (int index = start - 1; index > 0; index--) {
+
+                    //if the short is less, we can't confirm a crossover
+                    if (emaShort.get(emaShort.size() - index) < emaLong.get(emaLong.size() - index))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
+            }
+
+        } else {
+
+            //to start we want the short to be greater than the long
+            if (emaLong.get(emaLong.size() - start) < emaShort.get(emaShort.size() - start)) {
+
+                //now we want the long to be greater than the short
+                for (int index = start - 1; index > 0; index--) {
+
+                    //if the long is less, we can't confirm a crossover
+                    if (emaShort.get(emaShort.size() - index) > emaLong.get(emaLong.size() - index))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
+            }
+        }
+
+        /*
+        //where do we start checking
+        int start = EMA_CROSSOVER + 1;
+
+        //if we are checking bullish the long is greater then the short is greater
+        if (bullish) {
+
+            //to start we want the long to be greater than the short
+            if (emaLong.get(emaLong.size() - start) > emaShort.get(emaShort.size() - start)) {
+
+                //now we want the short to be greater than the long
+                for (int index = start - 1; index > 0; index--) {
+
+                    //if the short is less, we can't confirm a crossover
+                    if (emaShort.get(emaShort.size() - index) < emaLong.get(emaLong.size() - index))
+                        return false;
+                }
+
+                //lets also make sure the ema short line is constantly increasing
+                for (int index = emaShort.size() - 1; index >= emaShort.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is greater return false
+                    if (emaShort.get(index) < emaShort.get(index - 1))
+                        return false;
+                }
+
+                //lets also make sure the ema long line is constantly decreasing
+                for (int index = emaLong.size() - 1; index >= emaLong.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is less return false
+                    if (emaLong.get(index) > emaLong.get(index - 1))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
+            }
+
+        } else {
+
+            //to start we want the short to be greater than the long
+            if (emaLong.get(emaLong.size() - start) < emaShort.get(emaShort.size() - start)) {
+
+                //now we want the long to be greater than the short
+                for (int index = start - 1; index > 0; index--) {
+
+                    //if the long is less, we can't confirm a crossover
+                    if (emaShort.get(emaShort.size() - index) > emaLong.get(emaLong.size() - index))
+                        return false;
+                }
+
+                //lets also make sure the ema short line is constantly decreasing
+                for (int index = emaShort.size() - 1; index >= emaShort.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is less return false
+                    if (emaShort.get(index) > emaShort.get(index - 1))
+                        return false;
+                }
+
+                //lets also make sure the ema long line is constantly increasing
+                for (int index = emaLong.size() - 1; index >= emaLong.size() - EMA_CROSSOVER + 1; index--) {
+
+                    //if the previous ema value is greater return false
+                    if (emaLong.get(index) < emaLong.get(index - 1))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
+            }
+        }
+        */
+
+        //no crossover detected
+        return false;
+    }
+
+    public static void displayEma(Agent agent, String desc, List<Double> emaList, boolean write) {
+
+        String info = "";
+        for (int i = emaList.size() - (EMA_CROSSOVER + 1); i < emaList.size(); i++) {
+
+            if (info != null && info.length() > 0)
+                info += ", ";
+
+            info += AgentHelper.formatValue(2, emaList.get(i));
+        }
+
+        agent.displayMessage(desc + info, write);
     }
 }

@@ -5,6 +5,7 @@ import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
+import com.gamesbykevin.tradingbot.calculator.EMA;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.EMA_CROSSOVER;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
@@ -129,6 +131,10 @@ public class Agent {
                     //rest call is successful
                     displayMessage("Rest call successful.", false);
 
+                    //display the recent ema values which we use as a buy signal
+                    EMA.displayEma(this, "EMA Short: ", getCalculator().getEmaShort(), true);
+                    EMA.displayEma(this, "EMA Long: ", getCalculator().getEmaLong(), true);
+
                 } else {
 
                     //rest call isn't successful
@@ -159,6 +165,7 @@ public class Agent {
 
                     //we don't have any quantity so let's see if we can buy
                     checkBuy(this);
+
                 }
 
                 //reset our attempts counter, which is used when we create a limit order
