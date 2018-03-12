@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.calculator.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -162,8 +163,15 @@ public class AgentHelper {
         if (agent.getRsiCurrent() <= SUPPORT_LINE) {
 
             //if we have a bullish crossover, we expect price to go up
-            if (agent.getCalculator().hasEmaCrossover(true))
+            if (agent.getCalculator().hasEmaCrossover(true)) {
+
+                //display the recent ema values which we use as a buy signal
+                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), true);
+                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), true);
+
+                //assign our reason for buying
                 agent.setReasonBuy(ReasonBuy.Reason_1);
+            }
         }
 
         /*

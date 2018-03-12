@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.checkHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
 import static com.gamesbykevin.tradingbot.calculator.EMA.calculateEMA;
 import static com.gamesbykevin.tradingbot.calculator.OBV.calculateOBV;
 import static com.gamesbykevin.tradingbot.calculator.RSI.calculateRsi;
@@ -114,9 +116,6 @@ public class Calculator {
             //make sure we have data before we update
             if (data != null && data.length > 0) {
 
-                //clear the current list
-                this.history.clear();
-
                 //parse each period from the data
                 for (int row = data.length - 1; row >= 0; row--) {
 
@@ -129,31 +128,34 @@ public class Calculator {
                     period.close = data[row][4];
                     period.volume = data[row][5];
 
-                    //add to array list
-                    this.history.add(period);
+                    //check this period against our history and add if missing
+                    checkHistory(getHistory(), period);
                 }
 
+                //sort the history
+                sortHistory(getHistory());
+
                 //make sure the history is long enough
-                if (history.size() < PERIODS_OBV)
+                if (getHistory().size() < PERIODS_OBV)
                     throw new RuntimeException("History not long enough to calculate OBV");
-                if (history.size() < PERIODS_RSI)
+                if (getHistory().size() < PERIODS_RSI)
                     throw new RuntimeException("History not long enough to calculate RSI");
-                if (history.size() < PERIODS_EMA_SHORT)
+                if (getHistory().size() < PERIODS_EMA_SHORT)
                     throw new RuntimeException("History not long enough to calculate EMA (short)");
-                if (history.size() < PERIODS_EMA_LONG)
+                if (getHistory().size() < PERIODS_EMA_LONG)
                     throw new RuntimeException("History not long enough to calculate EMA (long)");
 
                 //calculate the rsi for all our specified periods now that we have new data
-                calculateRsi(history, rsi);
+                calculateRsi(getHistory(), getRsi());
 
                 //calculate the on balance volume for all our specified periods now that we have new data
-                calculateOBV(history, volume);
+                calculateOBV(getHistory(), getVolume());
 
                 //calculate the ema for the long period now that we have new data
-                calculateEMA(history, emaLong, PERIODS_EMA_LONG);
+                calculateEMA(getHistory(), getEmaLong(), PERIODS_EMA_LONG);
 
                 //calculate the ema for the short period now that we have new data
-                calculateEMA(history, emaShort, PERIODS_EMA_SHORT);
+                calculateEMA(getHistory(), getEmaShort(), PERIODS_EMA_SHORT);
 
                 //we are successful
                 result = true;
@@ -193,11 +195,11 @@ public class Calculator {
         setBreaks(0);
 
         //if not large enough skip, this shouldn't happen
-        if (history.size() < PERIODS_RSI || history.isEmpty())
+        if (getHistory().size() < PERIODS_RSI || getHistory().isEmpty())
             return;
 
         //we want to start here
-        Period begin = history.get(history.size() - PERIODS_RSI);
+        Period begin = getHistory().get(getHistory().size() - PERIODS_RSI);
 
         //are we checking an upward trend?
         if (begin.close < currentPrice) {
@@ -236,13 +238,13 @@ public class Calculator {
         final double slope = (y2 - y1) / (x2 - x1);
 
         //check and see if every period is above the slope indicating an upward trend
-        for (int i = history.size() - PERIODS_RSI; i < history.size(); i++) {
+        for (int i = getHistory().size() - PERIODS_RSI; i < getHistory().size(); i++) {
 
             //get the current period
-            Period current = history.get(i);
+            Period current = getHistory().get(i);
 
             //the current x-coordinate
-            final double x = i - (history.size() - PERIODS_RSI);
+            final double x = i - (getHistory().size() - PERIODS_RSI);
 
             //calculate the y-coordinate
             final double y = (slope * x) + yIntercept;
@@ -273,10 +275,10 @@ public class Calculator {
         boolean betterPrice = true;
 
         //check all recent periods
-        for (int i = history.size() - PERIODS_OBV; i < history.size(); i++) {
+        for (int i = getHistory().size() - PERIODS_OBV; i < getHistory().size(); i++) {
 
             //get the current period
-            Period period = history.get(i);
+            Period period = getHistory().get(i);
 
             if (uptrend) {
 
@@ -301,7 +303,7 @@ public class Calculator {
             return false;
 
         //is the current volume the best whether it's an up or down trend?
-        final boolean betterVolume = isCurrentBest(volume, currentVolume, uptrend);
+        final boolean betterVolume = isCurrentBest(getVolume(), currentVolume, uptrend);
 
         //if the price is better but the volume isn't that means we have a divergence
         return (betterPrice && !betterVolume);
@@ -339,15 +341,15 @@ public class Calculator {
     }
 
     public double getObvCurrent() {
-        return volume.get(volume.size() - 1);
+        return getVolume().get(getVolume().size() - 1);
     }
 
     public double getRsiCurrent(double currentPrice) {
-        return calculateRsi(history, history.size() - PERIODS_RSI, history.size(), true, currentPrice);
+        return calculateRsi(getHistory(), getHistory().size() - PERIODS_RSI, getHistory().size(), true, currentPrice);
     }
 
     public boolean hasEmaCrossover(boolean bullish) {
-        return EMA.hasEmaCrossover(bullish, emaShort, emaLong);
+        return EMA.hasEmaCrossover(bullish, getEmaShort(), getEmaLong());
     }
 
     public List<Double> getEmaShort() {
@@ -356,5 +358,17 @@ public class Calculator {
 
     public List<Double> getEmaLong() {
         return this.emaLong;
+    }
+
+    public List<Period> getHistory() {
+        return this.history;
+    }
+
+    protected List<Double> getVolume() {
+        return this.volume;
+    }
+
+    protected List<Double> getRsi() {
+        return this.rsi;
     }
 }

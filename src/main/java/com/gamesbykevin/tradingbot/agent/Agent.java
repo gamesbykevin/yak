@@ -90,7 +90,7 @@ public class Agent {
         this.calculator = new Calculator();
 
         //update the previous run time, so it runs immediately since we don't have data yet
-        this.previous = System.currentTimeMillis() - (myDuration.duration * 1000);
+        this.previous = System.currentTimeMillis() - (getMyDuration().duration * 1000);
 
         //create a wallet so we can track our investments
         this.wallet = new Wallet(funds);
@@ -118,22 +118,24 @@ public class Agent {
             setCurrentPrice(currentPrice);
 
             //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (myDuration.duration / 6) * 1000) {
+            if (System.currentTimeMillis() - previous >= (getMyDuration().duration / 6) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), false);
 
+                //get the size of the history
+                final int size = getCalculator().getHistory().size();
+
                 //update our historical data and update the last update
-                boolean success = getCalculator().update(myDuration, getProductId());
+                boolean success = getCalculator().update(getMyDuration(), getProductId());
+
+                //get the new size for comparison
+                final int sizeNew = getCalculator().getHistory().size();
 
                 if (success) {
 
                     //rest call is successful
-                    displayMessage("Rest call successful.", false);
-
-                    //display the recent ema values which we use as a buy signal
-                    EMA.displayEma(this, "EMA Short: ", getCalculator().getEmaShort(), true);
-                    EMA.displayEma(this, "EMA Long: ", getCalculator().getEmaLong(), true);
+                    displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew));
 
                 } else {
 
@@ -393,5 +395,9 @@ public class Agent {
 
     public double getObvCurrent() {
         return getCalculator().getObvCurrent();
+    }
+
+    public Duration getMyDuration() {
+        return this.myDuration;
     }
 }

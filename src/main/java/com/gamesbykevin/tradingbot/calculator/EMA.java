@@ -109,6 +109,15 @@ public class EMA {
 
         } else {
 
+            //for bearish crossover we just need to check for a single switch from (short > long) to (short < long)
+            if (emaShort.get(emaShort.size() - 2) >= emaLong.get(emaLong.size() - 2)) {
+
+                //if the values flipped we have a bearish crossover
+                if (emaShort.get(emaShort.size() - 1) <= emaLong.get(emaLong.size() - 1))
+                    return true;
+            }
+
+            /*
             //to start we want the short to be greater than the long
             if (emaLong.get(emaLong.size() - start) < emaShort.get(emaShort.size() - start)) {
 
@@ -123,6 +132,7 @@ public class EMA {
                 //we found everything as expected
                 return true;
             }
+            */
         }
 
         /*
