@@ -125,6 +125,9 @@ public class PropertyUtil {
 
         //how many periods do we check to confirm crossover
         Calculator.EMA_CROSSOVER = Integer.parseInt(getProperties().getProperty("emaCrossoverLength"));
+
+        //how many periods do we need in our history to start trading?
+        Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

@@ -55,6 +55,11 @@ public class Calculator {
      */
     public static int EMA_CROSSOVER;
 
+    /**
+     * How many historical periods do we need in order to start trading
+     */
+    public static int HISTORICAL_PERIODS_MINIMUM;
+
     //endpoint to get the history
     public static final String ENDPOINT_HISTORIC = ENDPOINT + "/products/%s/candles?granularity=%s";
 
