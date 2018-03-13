@@ -106,12 +106,42 @@ public class AgentHelper {
         //do we sell the stock
         agent.setReasonSell(null);
 
+        //if we have a bearish crossover, we expect price to go down
+        if (agent.getCalculator().hasMacdCrossover(false)) {
+
+            agent.setReasonSell(ReasonSell.Reason_4);
+
+            //display the recent ema values which we use as a signal
+            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), true);
+            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), true);
+
+        } else {
+
+            //display the recent ema values which we use as a signal
+            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), false);
+            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), false);
+        }
+
+        /*
         if (agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
             //if we have a bearish crossover, we expect price to go down
-            if (agent.getCalculator().hasEmaCrossover(false))
+            if (agent.getCalculator().hasEmaCrossover(false)) {
+
                 agent.setReasonSell(ReasonSell.Reason_3);
+
+                //display the recent ema values which we use as a signal
+                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), true);
+                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), true);
+
+            } else {
+
+                //display the recent ema values which we use as a signal
+                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), false);
+                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), false);
+            }
         }
+        */
 
         /*
         //if the price is higher than what we paid and we start to see a divergence, sell the stock
@@ -160,19 +190,43 @@ public class AgentHelper {
         //check for reasons first
         agent.setReasonBuy(null);
 
+        if (agent.getCalculator().hasMacdCrossover(true)) {
+
+            //display the recent ema values which we use as a signal
+            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), true);
+            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), true);
+
+            agent.setReasonBuy(ReasonBuy.Reason_2);
+
+        } else {
+
+            //display the recent ema values which we use as a signal
+            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), false);
+            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), false);
+        }
+
+
+        /*
         if (agent.getRsiCurrent() <= SUPPORT_LINE) {
 
             //if we have a bullish crossover, we expect price to go up
             if (agent.getCalculator().hasEmaCrossover(true)) {
 
-                //display the recent ema values which we use as a buy signal
+                //display the recent ema values which we use as a signal
                 EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), true);
                 EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), true);
 
                 //assign our reason for buying
                 agent.setReasonBuy(ReasonBuy.Reason_1);
+
+            } else {
+
+                //display the recent ema values which we use as a signal
+                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), false);
+                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), false);
             }
         }
+        */
 
         /*
         //if we are at or below the support line, let's check if we are in a good place to buy

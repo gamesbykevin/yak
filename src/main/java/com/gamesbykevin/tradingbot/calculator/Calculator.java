@@ -9,6 +9,8 @@ import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.checkHistory;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
 import static com.gamesbykevin.tradingbot.calculator.EMA.calculateEMA;
+import static com.gamesbykevin.tradingbot.calculator.MACD.calculateMacdLine;
+import static com.gamesbykevin.tradingbot.calculator.MACD.calculateSignalLine;
 import static com.gamesbykevin.tradingbot.calculator.OBV.calculateOBV;
 import static com.gamesbykevin.tradingbot.calculator.RSI.calculateRsi;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
@@ -30,6 +32,12 @@ public class Calculator {
     //list of ema values for our short period
     private List<Double> emaShort;
 
+    //macdLine values
+    private List<Double> macdLine;
+
+    //list of ema values from the macd line
+    private List<Double> signalLine;
+
     /**
      * How many periods to calculate rsi
      */
@@ -49,6 +57,11 @@ public class Calculator {
      * How many periods to calculate the on balance volume
      */
     public static int PERIODS_OBV;
+
+    /**
+     * How many periods do we calculate ema from macd line
+     */
+    public static int PERIODS_MACD;
 
     /**
      * How many periods do we check to confirm a crossover?
@@ -103,6 +116,8 @@ public class Calculator {
         this.volume = new ArrayList<>();
         this.emaShort = new ArrayList<>();
         this.emaLong = new ArrayList<>();
+        this.macdLine = new ArrayList<>();
+        this.signalLine = new ArrayList<>();
     }
 
     public synchronized boolean update(Duration key, String productId) {
@@ -161,6 +176,12 @@ public class Calculator {
 
                 //calculate the ema for the short period now that we have new data
                 calculateEMA(getHistory(), getEmaShort(), PERIODS_EMA_SHORT);
+
+                //calculate the macd line
+                calculateMacdLine(getMacdLine(), getEmaShort(), getEmaLong());
+
+                //calculate the signal line
+                calculateSignalLine(getSignalLine(), getMacdLine());
 
                 //we are successful
                 result = true;
@@ -357,6 +378,10 @@ public class Calculator {
         return EMA.hasEmaCrossover(bullish, getEmaShort(), getEmaLong());
     }
 
+    public boolean hasMacdCrossover(boolean bullish) {
+        return MACD.hasMacdCrossover(bullish, getSignalLine(), getMacdLine());
+    }
+
     public List<Double> getEmaShort() {
         return this.emaShort;
     }
@@ -375,5 +400,13 @@ public class Calculator {
 
     protected List<Double> getRsi() {
         return this.rsi;
+    }
+
+    public List<Double> getMacdLine() {
+        return this.macdLine;
+    }
+
+    public List<Double> getSignalLine() {
+        return this.signalLine;
     }
 }

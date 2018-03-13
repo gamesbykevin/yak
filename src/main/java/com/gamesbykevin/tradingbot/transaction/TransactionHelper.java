@@ -13,7 +13,8 @@ public class TransactionHelper {
      */
     public enum ReasonBuy {
 
-        Reason_1("There is a swing detected in the EMA")
+        Reason_1("There is a swing detected in the EMA"),
+        Reason_2("MACD Indicator is showing a swing")
         ;
 
         private final String description;
@@ -34,7 +35,8 @@ public class TransactionHelper {
 
         Reason_1("The stock price has exceeded our price gain ratio"),
         Reason_2("We have lost too much, sell now"),
-        Reason_3("There is a swing detected in the EMA")
+        Reason_3("There is a swing detected in the EMA"),
+        Reason_4("MACD Indicator is showing a swing")
         ;
 
         private final String description;

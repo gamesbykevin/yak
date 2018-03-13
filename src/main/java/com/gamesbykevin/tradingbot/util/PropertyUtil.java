@@ -128,6 +128,9 @@ public class PropertyUtil {
 
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));
+
+        //how many periods do we calculate ema from macd line
+        Calculator.PERIODS_MACD = Integer.parseInt(getProperties().getProperty("periodsEmaMacd"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

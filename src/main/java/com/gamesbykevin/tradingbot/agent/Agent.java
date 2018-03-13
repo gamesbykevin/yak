@@ -147,6 +147,7 @@ public class Agent {
                 this.previous = System.currentTimeMillis();
             }
 
+            //make sure we have enough data before we start trading
             if (getCalculator().getHistory().size() >= HISTORICAL_PERIODS_MINIMUM) {
 
                 //if we don't have an active order look at the market data for a chance to buy
