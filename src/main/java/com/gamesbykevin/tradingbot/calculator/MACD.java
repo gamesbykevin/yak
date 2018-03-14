@@ -70,6 +70,17 @@ public class MACD {
 
     protected static boolean hasMacdCrossover(boolean bullish, List<Double> signalLine, List<Double> macdLine) {
 
+        if (bullish) {
+
+            //if we cross above 0 this is good signal
+            if (macdLine.get(macdLine.size() - 2) < 0 && macdLine.get(macdLine.size() - 1) > 0)
+                return true;
+
+            return false;
+        }
+
+
+        /*
         //where do we start checking
         int start = EMA_CROSSOVER + 1;
 
@@ -82,8 +93,8 @@ public class MACD {
                 //now we want the macd line to be greater than the signal line
                 for (int index = start - 1; index > 0; index--) {
 
-                    //if the macd line is smaller, we can't confirm a crossover
-                    if (macdLine.get(macdLine.size() - index) < signalLine.get(signalLine.size() - index))
+                    //if the macd line is the same or smaller, we can't confirm a crossover
+                    if (macdLine.get(macdLine.size() - index) <= signalLine.get(signalLine.size() - index))
                         return false;
                 }
 
@@ -93,14 +104,22 @@ public class MACD {
 
         } else {
 
-            //for bearish crossover the macd line is less than the signal line
-            if (macdLine.get(macdLine.size() - 2) >= signalLine.get(signalLine.size() - 2)) {
+            //for bearish crossover the macd line needs to be less than the signal line
+            if (macdLine.get(macdLine.size() - start) > signalLine.get(signalLine.size() - start)) {
 
-                //if the values flipped we have a bearish crossover
-                if (macdLine.get(macdLine.size() - 1) <= signalLine.get(signalLine.size() - 1))
-                    return true;
+                //now we want the macd line to be greater than the signal line
+                for (int index = start - 1; index > 0; index--) {
+
+                    //if the macd line is the same or greater, we can't confirm a crossover
+                    if (macdLine.get(macdLine.size() - index) >= signalLine.get(signalLine.size() - index))
+                        return false;
+                }
+
+                //we found everything as expected
+                return true;
             }
         }
+        */
 
         //no crossover detected
         return false;

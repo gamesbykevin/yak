@@ -36,7 +36,8 @@ public class TransactionHelper {
         Reason_1("The stock price has exceeded our price gain ratio"),
         Reason_2("We have lost too much, sell now"),
         Reason_3("There is a swing detected in the EMA"),
-        Reason_4("MACD Indicator is showing a swing")
+        Reason_4("MACD Indicator is showing a swing"),
+        Reason_5("The current price is below both short and long ema");
         ;
 
         private final String description;

@@ -122,6 +122,22 @@ public class AgentHelper {
             EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), false);
         }
 
+        //get the current ema long and short values
+        double emaLong = agent.getCalculator().getEmaLong().get(agent.getCalculator().getEmaLong().size() - 1);
+        double emaShort = agent.getCalculator().getEmaShort().get(agent.getCalculator().getEmaShort().size() - 1);
+
+        //if the current price went below the ema long and short values, we need to exit
+        if (agent.getCurrentPrice() < emaLong && agent.getCurrentPrice() < emaShort) {
+
+            //display values
+            EMA.displayEma(agent, "EMA Short", agent.getCalculator().getEmaShort(), true);
+            EMA.displayEma(agent, "EMA Long", agent.getCalculator().getEmaLong(), true);
+            agent.displayMessage("Current price: $" + agent.getCurrentPrice(), true);
+
+            //assign our reason to sell
+            agent.setReasonSell(ReasonSell.Reason_5);
+        }
+
         /*
         if (agent.getRsiCurrent() >= RESISTANCE_LINE) {
 
