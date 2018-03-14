@@ -70,17 +70,6 @@ public class MACD {
 
     protected static boolean hasMacdCrossover(boolean bullish, List<Double> signalLine, List<Double> macdLine) {
 
-        if (bullish) {
-
-            //if we cross above 0 this is good signal
-            if (macdLine.get(macdLine.size() - 2) < 0 && macdLine.get(macdLine.size() - 1) > 0)
-                return true;
-
-            return false;
-        }
-
-
-        /*
         //where do we start checking
         int start = EMA_CROSSOVER + 1;
 
@@ -98,12 +87,17 @@ public class MACD {
                         return false;
                 }
 
+                //we also want the macd line to be above 0 or else it is considered a risky move
+                if (macdLine.get(macdLine.size() - 1) < 0)
+                    return false;
+
                 //we found everything as expected
                 return true;
             }
 
         } else {
 
+            /*
             //for bearish crossover the macd line needs to be less than the signal line
             if (macdLine.get(macdLine.size() - start) > signalLine.get(signalLine.size() - start)) {
 
@@ -118,8 +112,8 @@ public class MACD {
                 //we found everything as expected
                 return true;
             }
+            */
         }
-        */
 
         //no crossover detected
         return false;
