@@ -84,6 +84,6 @@ public class Email implements Runnable {
     }
 
     public static String getFileDateDesc() {
-        return new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date());
+        return new SimpleDateFormat("yyyy-MM-dd HH-mm-ss.SSS").format(new Date());
     }
 }

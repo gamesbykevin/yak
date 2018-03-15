@@ -4,8 +4,6 @@ import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
-import com.gamesbykevin.tradingbot.calculator.EMA;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
@@ -13,38 +11,24 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
-import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.EMA_CROSSOVER;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
-import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent {
-
-    //our reference to calculate calculator
-    private final Calculator calculator;
 
     //list of wallet for each product we are investing
     private final Wallet wallet;
 
     //object used to write to a text file
     private final PrintWriter writer;
-
-    //the product we are trading
-    private final Product product;
-
-    //when is the last time we loaded historical data
-    private long previous;
-
-    //are we updating the agent?
-    private boolean working = false;
 
     //do we have an order?
     private Order order = null;
@@ -58,215 +42,141 @@ public class Agent {
     //number of attempts we try to verify the order
     private int attempts = 0;
 
-    //what is the current calculator value
-    private double rsiCurrent;
-
     //the reason why we are buying
     private ReasonBuy reasonBuy;
 
     //the reason why we are selling
     private ReasonSell reasonSell;
 
-    //current price of stock
-    private double currentPrice = 0;
+    //what is our trading strategy
+    private final TradingStrategy strategy;
 
-    //the duration of data we are checking
-    private final Duration myDuration;
+    protected Agent(TradingStrategy strategy, double funds, String productId, String fileName) {
 
-    public Agent(final Product product, final double funds, final Duration myDuration) {
-
-        //store our duration
-        this.myDuration = myDuration;
-
-        //store the product this agent is trading
-        this.product = product;
+        //save the trading strategy we want to implement
+        this.strategy = strategy;
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
 
         //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter(product.getId() + "-" + getFileDateDesc() + ".log");
-
-        //create our calculator
-        this.calculator = new Calculator();
-
-        //update the previous run time, so it runs immediately since we don't have data yet
-        this.previous = System.currentTimeMillis() - (getMyDuration().duration * 1000);
+        this.writer = LogFile.getPrintWriter(fileName);
 
         //create a wallet so we can track our investments
         this.wallet = new Wallet(funds);
 
         //display message and write to file
-        displayMessage("Product: " + product.getId() + ", Starting $" + funds, true);
+        displayMessage("Starting $" + funds, true, getWriter());
     }
 
-    public synchronized void update(final double currentPrice) {
+    public TradingStrategy getStrategy() {
+        return this.strategy;
+    }
 
-        //don't continue if we are currently working
-        if (working)
+    protected synchronized void update(Calculator calculator, Product product, double currentPrice) {
+
+        //skip if we lost too much $
+        if (hasStopTrading())
             return;
 
-        //flag that this agent is working
-        working = true;
+        //if we don't have an active order look at the market data for a chance to buy
+        if (getOrder() == null) {
 
-        try {
+            if (getWallet().getQuantity() > 0) {
 
-            //skip if we are no longer trading this coin
-            if (hasStopTrading())
-                return;
-
-            //keep track of the current price
-            setCurrentPrice(currentPrice);
-
-            //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (getMyDuration().duration / 6) * 1000) {
-
-                //display message as sometimes the call is not successful
-                displayMessage("Making rest call to retrieve history " + getProductId(), false);
-
-                //get the size of the history
-                final int size = getCalculator().getHistory().size();
-
-                //update our historical data and update the last update
-                boolean success = getCalculator().update(getMyDuration(), getProductId());
-
-                //get the new size for comparison
-                final int sizeNew = getCalculator().getHistory().size();
-
-                if (success) {
-
-                    //rest call is successful
-                    displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew));
-
-                } else {
-
-                    //rest call isn't successful
-                    displayMessage("Rest call is NOT successful.", true);
-                }
-
-                this.previous = System.currentTimeMillis();
-            }
-
-            //make sure we have enough data before we start trading
-            if (getCalculator().getHistory().size() >= HISTORICAL_PERIODS_MINIMUM) {
-
-                //if we don't have an active order look at the market data for a chance to buy
-                if (getOrder() == null) {
-
-                    //check if there is a trend with the current stock price
-                    getCalculator().calculateTrend(currentPrice);
-
-                    //calculate the current rsi
-                    setRsiCurrent(getCalculator().getRsiCurrent(currentPrice));
-
-                    //display info to console but only write to log when we have quantity
-                    displayMessage("Product (" + getProductId() + ") RSI = " + getRsiCurrent() + ", OBV = " + getObvCurrent() + ", Stock Price $" + AgentHelper.formatValue(currentPrice), getWallet().getQuantity() > 0);
-
-                    if (getWallet().getQuantity() > 0) {
-
-                        //we have quantity let's see if we can sell it
-                        checkSell(this);
-
-                    } else {
-
-                        //we don't have any quantity so let's see if we can buy
-                        checkBuy(this);
-
-                    }
-
-                    //reset our attempts counter, which is used when we create a limit order
-                    setAttempts(0);
-
-                } else {
-
-                    //what is the status of our order
-                    AgentHelper.Status status = null;
-
-                    if (Main.PAPER_TRADING) {
-
-                        //if we are paper trading assume the order has been completed
-                        status = AgentHelper.Status.Filled;
-
-                    } else {
-
-                        //let's check if our order is complete
-                        status = updateLimitOrder(this, getOrder().getId());
-                    }
-
-                    //so what do we do now
-                    switch (status) {
-
-                        case Filled:
-
-                            //update our wallet with the order info
-                            fillOrder(getOrder());
-
-                            //now that the order has been filled, remove it
-                            setOrder(null);
-                            break;
-
-                        case Rejected:
-                        case Cancelled:
-
-                            //if the order has been rejected or cancelled we will remove it
-                            setOrder(null);
-                            break;
-
-                        case Open:
-                        case Pending:
-                        case Done:
-
-                            //do nothing
-                            break;
-                    }
-
-                    //if we lost too much money and have no quantity pending, we will stop trading
-                    if (getWallet().getFunds() < (STOP_TRADING_RATIO * getWallet().getStartingFunds()) && getWallet().getQuantity() <= 0)
-                        setStopTrading(true);
-
-                    //if our money has gone up, increase the stop trading limit
-                    if (getWallet().getFunds() > getWallet().getStartingFunds()) {
-
-                        final double oldRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                        getWallet().setStartingFunds(getWallet().getFunds());
-                        final double newRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                        displayMessage("Good news, stop trading limit has increased", true);
-                        displayMessage("    Funds $" + AgentHelper.formatValue(getWallet().getFunds()), true);
-                        displayMessage("Old limit $" + AgentHelper.formatValue(oldRatio), true);
-                        displayMessage("New limit $" + AgentHelper.formatValue(newRatio), true);
-                        displayMessage("If your funds fall below the new limit we will stop trading", true);
-                    }
-
-                    //notify if this agent has stopped trading
-                    if (hasStopTrading()) {
-                        String subject = "We stopped trading: " + getProductId();
-                        String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
-                        String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                        displayMessage(subject, true);
-                        displayMessage(text1, true);
-                        displayMessage(text2, true);
-
-                        //send email notification
-                        Email.sendEmail(subject, text1 + "\n" + text2);
-                    }
-                }
+                //we have quantity let's see if we can sell it
+                checkSell(this, calculator, product, currentPrice);
 
             } else {
 
-                //we are not ready to trade yet
-                displayMessage(getProductId() + ": Not enough periods to trade yet - " + getCalculator().getHistory().size() + " < " + HISTORICAL_PERIODS_MINIMUM, false);
+                //we don't have any quantity so let's see if we can buy
+                checkBuy(this, calculator, product, currentPrice);
+
             }
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            displayMessage(ex, true);
-        }
+            //reset our attempts counter, which is used when we create a limit order
+            setAttempts(0);
 
-        //flag that we are no longer working
-        working = false;
+        } else {
+
+            //what is the status of our order
+            AgentHelper.Status status = null;
+
+            if (Main.PAPER_TRADING) {
+
+                //if we are paper trading assume the order has been completed
+                status = AgentHelper.Status.Filled;
+
+            } else {
+
+                //let's check if our order is complete
+                status = updateLimitOrder(this, getOrder().getId());
+            }
+
+            //so what do we do now
+            switch (status) {
+
+                case Filled:
+
+                    //update our wallet with the order info
+                    fillOrder(getOrder(), product);
+
+                    //now that the order has been filled, remove it
+                    setOrder(null);
+                    break;
+
+                case Rejected:
+                case Cancelled:
+
+                    //if the order has been rejected or cancelled we will remove it
+                    setOrder(null);
+                    break;
+
+                case Open:
+                case Pending:
+                case Done:
+
+                    //do nothing
+                    break;
+            }
+
+            //if we lost too much money and have no quantity pending, we will stop trading
+            if (getWallet().getFunds() < (STOP_TRADING_RATIO * getWallet().getStartingFunds()) && getWallet().getQuantity() <= 0)
+                setStopTrading(true);
+
+            //if our money has gone up, increase the stop trading limit
+            if (getWallet().getFunds() > getWallet().getStartingFunds()) {
+
+                final double oldRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                getWallet().setStartingFunds(getWallet().getFunds());
+                final double newRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                displayMessage("Good news, stop trading limit has increased", true, getWriter());
+                displayMessage("    Funds $" + AgentHelper.formatValue(getWallet().getFunds()), true, getWriter());
+                displayMessage("Old limit $" + AgentHelper.formatValue(oldRatio), true, getWriter());
+                displayMessage("New limit $" + AgentHelper.formatValue(newRatio), true, getWriter());
+                displayMessage("If your funds fall below the new limit we will stop trading", true, getWriter());
+            }
+
+            //notify if this agent has stopped trading
+            if (hasStopTrading()) {
+                String subject = "We stopped trading";
+                String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
+                String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                displayMessage(subject, true, getWriter());
+                displayMessage(text1, true, getWriter());
+                displayMessage(text2, true, getWriter());
+
+                //send email notification
+                Email.sendEmail(subject, text1 + "\n" + text2);
+            }
+        }
     }
 
-    private void fillOrder(final Order order) {
+    public PrintWriter getWriter() {
+        return this.writer;
+    }
+
+    private void fillOrder(final Order order, final Product product) {
 
         if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription())) {
 
@@ -274,7 +184,7 @@ public class Agent {
             Transaction transaction = new Transaction();
 
             //update our transaction
-            transaction.update(this, order);
+            transaction.update(this, product, order);
 
             //add to our list
             this.transactions.add(transaction);
@@ -285,17 +195,17 @@ public class Agent {
             Transaction transaction = transactions.get(transactions.size() - 1);
 
             //update our transaction
-            transaction.update(this, order);
+            transaction.update(this, product, order);
 
             //display wins and losses
-            displayMessage(TransactionHelper.getDescWins(this), true);
-            displayMessage(TransactionHelper.getDescLost(this), true);
+            displayMessage(TransactionHelper.getDescWins(this), true, getWriter());
+            displayMessage(TransactionHelper.getDescLost(this), true, getWriter());
 
             //display average transaction time
-            displayMessage(TransactionHelper.getAverageDurationDesc(this), true);
+            displayMessage(TransactionHelper.getAverageDurationDesc(this), true, getWriter());
 
             //display the total $ amount invested in stocks
-            displayMessage(AgentHelper.getStockInvestmentDesc(this), true);
+            displayMessage(AgentHelper.getStockInvestmentDesc(this), true, getWriter());
 
             //display the count for each buying reason for when we win
             TransactionHelper.displayBuyingReasonCount(this, Result.Win);
@@ -311,10 +221,6 @@ public class Agent {
         }
     }
 
-    public String getProductId() {
-        return this.product.getId();
-    }
-
     public void setOrder(final Order order) {
         this.order = order;
     }
@@ -323,24 +229,8 @@ public class Agent {
         return this.order;
     }
 
-    /**
-     * Get the total assets
-     * @return The total funds available + the quantity of stock we currently own @ the current stock price
-     */
-    public double getAssets() {
-        return (getWallet().getQuantity() * getCurrentPrice()) + getWallet().getFunds();
-    }
-
-    protected Calculator getCalculator() {
-        return this.calculator;
-    }
-
     public Wallet getWallet() {
         return this.wallet;
-    }
-
-    public Product getProduct() {
-        return this.product;
     }
 
     public void setStopTrading(boolean stopTrading) {
@@ -357,14 +247,6 @@ public class Agent {
 
     protected int getAttempts() {
         return this.attempts;
-    }
-
-    public void displayMessage(Exception e, boolean write) {
-        PropertyUtil.displayMessage(e, write, writer);
-    }
-
-    public void displayMessage(String message, boolean write) {
-        PropertyUtil.displayMessage(message, write, writer);
     }
 
     public void setReasonBuy(final ReasonBuy reasonBuy) {
@@ -385,29 +267,5 @@ public class Agent {
 
     public List<Transaction> getTransactions() {
         return this.transactions;
-    }
-
-    public void setCurrentPrice(final double currentPrice) {
-        this.currentPrice = currentPrice;
-    }
-
-    public double getCurrentPrice() {
-        return this.currentPrice;
-    }
-
-    private void setRsiCurrent(final double rsiCurrent) {
-        this.rsiCurrent = rsiCurrent;
-    }
-
-    public double getRsiCurrent() {
-        return this.rsiCurrent;
-    }
-
-    public double getObvCurrent() {
-        return getCalculator().getObvCurrent();
-    }
-
-    public Duration getMyDuration() {
-        return this.myDuration;
     }
 }

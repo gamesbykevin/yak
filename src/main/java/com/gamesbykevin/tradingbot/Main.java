@@ -6,8 +6,8 @@ import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
-import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
+import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
@@ -46,7 +46,7 @@ public class Main implements Runnable {
     private MyWebsocketFeed websocketFeed;
 
     //list of agents trading for each coin
-    private HashMap<String, Agent> agents;
+    private HashMap<String, AgentManager> agentManagers;
 
     //Our end point to the apis
     public static String ENDPOINT;
@@ -115,7 +115,6 @@ public class Main implements Runnable {
             displayMessage("Trading bot not started...", false, null);
             e.printStackTrace();
         }
-
     }
 
     private Main(ConfigurableApplicationContext context) {
@@ -236,23 +235,19 @@ public class Main implements Runnable {
                     } else {
 
                         //we aren't using web socket since it is null
-                        for (Agent agent : agents.values()) {
+                        for (AgentManager agentManager : agentManagers.values()) {
 
                             try {
 
-                                //skip if we aren't trading with this agent
-                                if (agent.hasStopTrading())
-                                    continue;
-
                                 //get json response from ticker
-                                final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agent.getProductId()));
+                                final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agentManager.getProductId()));
 
                                 //convert to pojo
                                 Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
                                 //sometimes we don't get a successful response so let's check for null
                                 if (ticker != null)
-                                    agent.update(ticker.price);
+                                    agentManager.update(ticker.price);
 
                                 //sleep for a second
                                 Thread.sleep(THREAD_DELAY);
@@ -294,28 +289,16 @@ public class Main implements Runnable {
 
         double total = 0;
 
-        for (Agent agent : agents.values()) {
+        for (AgentManager agentManager : agentManagers.values()) {
 
             //get the total assets for the current product
-            final double assets = agent.getAssets();
+            final double assets = agentManager.getAssets();
 
             //add to our total
             total += assets;
 
             //add to our details
-            text = text + agent.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
-
-            //summary of our winning transactions
-            text = text + TransactionHelper.getDescWins(agent) + "\n";
-
-            //summary of our losing transactions
-            text = text + TransactionHelper.getDescLost(agent) + "\n";
-
-            //average transaction duration
-            text = text + TransactionHelper.getAverageDurationDesc(agent) + "\n";
-
-            //currently holding in stock
-            text = text + AgentHelper.getStockInvestmentDesc(agent) + "\n";
+            text = text + agentManager.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
 
             //add line break in the end
             text = text + "\n";
@@ -354,7 +337,7 @@ public class Main implements Runnable {
         final double funds = FUNDS / (double)products.size();
 
         //create new hash map of agents
-        this.agents = new HashMap<>();
+        this.agentManagers = new HashMap<>();
 
         //identify our duration
         Calculator.Duration duration = null;
@@ -378,11 +361,11 @@ public class Main implements Runnable {
 
             try {
 
-                //create new agent
-                Agent agent = new Agent(product, funds, duration);
+                //create new manager agent
+                AgentManager agentManager = new AgentManager(product, funds, duration);
 
-                //add to list
-                this.agents.put(product.getId(), agent);
+                //add manager to list
+                this.agentManagers.put(product.getId(), agentManager);
 
                 //display agent is created
                 displayMessage("Agent created - " + product.getId(), true, writer);
@@ -401,11 +384,11 @@ public class Main implements Runnable {
             displayMessage("Connected via websocket...", true, writer);
 
             websocketFeed = new MyWebsocketFeed(
-                    PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
-                    PropertyUtil.getProperties().getProperty("gdax.key"),
-                    PropertyUtil.getProperties().getProperty("gdax.passphrase"),
-                    new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
-                    this.agents
+                PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
+                PropertyUtil.getProperties().getProperty("gdax.key"),
+                PropertyUtil.getProperties().getProperty("gdax.passphrase"),
+                new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
+                this.agentManagers
             );
 
         } else {

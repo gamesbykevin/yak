@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.websocket;
 import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.websocketfeed.message.*;
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.google.gson.Gson;
@@ -30,7 +31,7 @@ public class MyWebsocketFeed {
     private String passphrase;
     private String key;
     private final String websocketUrl;
-    private final HashMap<String, Agent> agents;
+    private final HashMap<String, AgentManager> agentManagers;
     private boolean connecting = false;
 
     @Autowired
@@ -39,13 +40,13 @@ public class MyWebsocketFeed {
             @Value("${gdax.key}") String key,
             @Value("${gdax.passphrase}") String passphrase,
             Signature signature,
-            HashMap<String, Agent> agents) {
+            HashMap<String, AgentManager> agentManagers) {
 
         this.websocketUrl = websocketUrl;
         this.key = key;
         this.passphrase = passphrase;
         this.signature = signature;
-        this.agents = agents;
+        this.agentManagers = agentManagers;
 
         //connect to server
         connect();
@@ -142,7 +143,7 @@ public class MyWebsocketFeed {
                     Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
                     //update the appropriate agent with the current stock price
-                    agents.get(ticker.product_id).update(ticker.price);
+                    agentManagers.get(ticker.product_id).update(ticker.price);
 
                     return null;
                 }

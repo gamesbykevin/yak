@@ -38,6 +38,10 @@ public class Calculator {
     //list of ema values from the macd line
     private List<Double> signalLine;
 
+    //what is the current calculator value
+    private double rsiCurrent;
+
+
     /**
      * How many periods to calculate rsi
      */
@@ -295,13 +299,21 @@ public class Calculator {
         }
     }
 
-    public synchronized boolean hasDivergence(final boolean uptrend, final double currentPrice, final double currentRsi, final double currentVolume) {
+    public synchronized boolean hasDivergenceRsi(boolean uptrend, double currentPrice) {
+        return hasDivergence(uptrend, currentPrice, PERIODS_RSI, getRsi(), getRsiCurrent());
+    }
+
+    public synchronized boolean hasDivergenceObv(boolean uptrend, double currentPrice) {
+        return hasDivergence(uptrend, currentPrice, PERIODS_OBV, getVolume(), getObvCurrent());
+    }
+
+    private synchronized boolean hasDivergence(boolean uptrend, double currentPrice, int periods, List<Double> values, double currentValue) {
 
         //flag we will use to track if the price is following the desired trend
         boolean betterPrice = true;
 
         //check all recent periods
-        for (int i = getHistory().size() - PERIODS_OBV; i < getHistory().size(); i++) {
+        for (int i = getHistory().size() - periods; i < getHistory().size(); i++) {
 
             //get the current period
             Period period = getHistory().get(i);
@@ -328,24 +340,16 @@ public class Calculator {
         if (!betterPrice)
             return false;
 
-        //is the current volume the best whether it's an up or down trend?
-        final boolean betterVolume = isCurrentBest(getVolume(), currentVolume, uptrend);
+        //is the current value the best whether it's an up or down trend?
+        final boolean betterValue = isCurrentBest(values, currentValue, uptrend);
 
-        //if the price is better but the volume isn't that means we have a divergence
-        return (betterPrice && !betterVolume);
-
-        /*
-        //is the current RSI the best whether it's an up or down trend?
-        final boolean betterRsi = isCurrentBest(rsi, currentRsi, uptrend);
-
-        //if the price is better but the RSI isn't that means we have a divergence
-        return (betterPrice && !betterRsi);
-        */
+        //if the price is better but the value isn't that means we have a divergence
+        return (betterPrice && !betterValue);
     }
 
     private boolean isCurrentBest(List<Double> list, double currentValue, boolean uptrend) {
 
-        //look at all our volume periods
+        //look at all our periods
         for (int i = 0; i < list.size(); i++) {
 
             if (uptrend) {
@@ -370,8 +374,8 @@ public class Calculator {
         return getVolume().get(getVolume().size() - 1);
     }
 
-    public double getRsiCurrent(double currentPrice) {
-        return calculateRsi(getHistory(), getHistory().size() - PERIODS_RSI, getHistory().size(), true, currentPrice);
+    public void calculateCurrentRsi(double currentPrice) {
+        setRsiCurrent(calculateRsi(getHistory(), getHistory().size() - PERIODS_RSI, getHistory().size(), true, currentPrice));
     }
 
     public boolean hasEmaCrossover(boolean bullish) {
@@ -408,5 +412,13 @@ public class Calculator {
 
     public List<Double> getSignalLine() {
         return this.signalLine;
+    }
+
+    private void setRsiCurrent(final double rsiCurrent) {
+        this.rsiCurrent = rsiCurrent;
+    }
+
+    public double getRsiCurrent() {
+        return this.rsiCurrent;
     }
 }

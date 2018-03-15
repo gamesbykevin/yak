@@ -2,9 +2,11 @@ package com.gamesbykevin.tradingbot.transaction;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 
+import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.formatValue;
+import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 
 public class TransactionHelper {
 
@@ -14,7 +16,9 @@ public class TransactionHelper {
     public enum ReasonBuy {
 
         Reason_1("There is a swing detected in the EMA"),
-        Reason_2("MACD Indicator is showing a swing")
+        Reason_2("MACD Indicator is showing a swing"),
+        Reason_3("There is a divergence in the RSI"),
+        Reason_4("Volume has a divergence"),
         ;
 
         private final String description;
@@ -37,7 +41,9 @@ public class TransactionHelper {
         Reason_2("We have lost too much, sell now"),
         Reason_3("There is a swing detected in the EMA"),
         Reason_4("MACD Indicator is showing a swing"),
-        Reason_5("The current price is below both short and long ema");
+        Reason_5("The current stock price is below both short and long emas"),
+        Reason_6("There is a divergence in the RSI"),
+        Reason_7("Volume has a divergence"),
         ;
 
         private final String description;
@@ -114,7 +120,7 @@ public class TransactionHelper {
             }
 
             //display the count and description
-            agent.displayMessage(result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true);
+            displayMessage(result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true, agent.getWriter());
         }
     }
 
@@ -144,7 +150,7 @@ public class TransactionHelper {
             }
 
             //display the count and description
-            agent.displayMessage(result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true);
+            displayMessage(result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true, agent.getWriter());
         }
     }
 

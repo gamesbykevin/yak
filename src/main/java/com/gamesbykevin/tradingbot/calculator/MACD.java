@@ -87,17 +87,12 @@ public class MACD {
                         return false;
                 }
 
-                //we also want the macd line to be above 0 or else it is considered a risky move
-                if (macdLine.get(macdLine.size() - 1) < 0)
-                    return false;
-
                 //we found everything as expected
                 return true;
             }
 
         } else {
 
-            /*
             //for bearish crossover the macd line needs to be less than the signal line
             if (macdLine.get(macdLine.size() - start) > signalLine.get(signalLine.size() - start)) {
 
@@ -112,7 +107,6 @@ public class MACD {
                 //we found everything as expected
                 return true;
             }
-            */
         }
 
         //no crossover detected

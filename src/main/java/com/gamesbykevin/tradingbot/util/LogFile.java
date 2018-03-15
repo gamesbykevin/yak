@@ -1,5 +1,6 @@
 package com.gamesbykevin.tradingbot.util;
 
+import java.io.File;
 import java.io.PrintWriter;
 
 public class LogFile {

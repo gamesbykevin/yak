@@ -1,14 +1,19 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
+import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
+import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_RSI;
 
 public class AgentHelper {
 
@@ -97,7 +102,7 @@ public class AgentHelper {
      */
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
-    protected static void checkSell(final Agent agent) {
+    protected static void checkSell(Agent agent, Calculator calculator, Product product, double currentPrice) {
 
         final double priceHigh = agent.getWallet().getPurchasePrice();
         final double priceGain = agent.getWallet().getPurchasePrice() + (agent.getWallet().getPurchasePrice() * SELL_GAIN_RATIO);
@@ -106,187 +111,197 @@ public class AgentHelper {
         //do we sell the stock
         agent.setReasonSell(null);
 
-        //if we have a bearish crossover, we expect price to go down
-        if (agent.getCalculator().hasMacdCrossover(false)) {
+        //our strategy will determine how we trade
+        switch (agent.getStrategy()) {
 
-            agent.setReasonSell(ReasonSell.Reason_4);
+            case EMA:
 
-            //display the recent ema values which we use as a signal
-            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), true);
-            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), true);
+                //if we have a bearish crossover, we expect price to go down
+                if (calculator.hasEmaCrossover(false)) {
 
-        } else {
+                    agent.setReasonSell(ReasonSell.Reason_3);
 
-            //display the recent ema values which we use as a signal
-            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), false);
-            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), false);
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), true);
+                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), true);
+
+                } else {
+
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), false);
+                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), false);
+                }
+                break;
+
+            case OBV:
+
+                //if volume has a divergence let's sell
+                if (calculator.hasDivergenceObv(true, calculator.getObvCurrent()))
+                    agent.setReasonSell(ReasonSell.Reason_7);
+
+                break;
+
+            case RSI:
+
+                //let's see if we are above resistance line before selling
+                if (calculator.getRsiCurrent() >= RESISTANCE_LINE) {
+
+                    //if the price is higher than purchase and there is a rsi divergence
+                    if (currentPrice > priceHigh && calculator.hasDivergenceRsi(true, currentPrice))
+                        agent.setReasonSell(ReasonSell.Reason_6);
+                }
+                break;
+
+            case MACD:
+
+                //if we have a bearish crossover, we expect price to go down
+                if (calculator.hasMacdCrossover(false)) {
+
+                    agent.setReasonSell(ReasonSell.Reason_4);
+
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), true);
+                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), true);
+
+                } else {
+
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), false);
+                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), false);
+                }
+
+                //if no reason to sell yet, check if the price drops below the ema values
+                if (agent.getReasonSell() == null) {
+
+                    //get the current ema long and short values
+                    double emaLong = calculator.getEmaLong().get(calculator.getEmaLong().size() - 1);
+                    double emaShort = calculator.getEmaShort().get(calculator.getEmaShort().size() - 1);
+
+                    //if the current price went below the ema long and short values, we need to exit
+                    if (currentPrice < emaLong && currentPrice < emaShort) {
+
+                        //display values
+                        EMA.displayEma(agent, "EMA Short", calculator.getEmaShort(), true);
+                        EMA.displayEma(agent, "EMA Long", calculator.getEmaLong(), true);
+                        displayMessage("Current price: $" + currentPrice, true, agent.getWriter());
+
+                        //assign our reason to sell
+                        agent.setReasonSell(ReasonSell.Reason_5);
+                    }
+                }
+                break;
+
+            default:
+                throw new RuntimeException("Strategy not found: " + agent.getStrategy());
         }
 
-        //get the current ema long and short values
-        double emaLong = agent.getCalculator().getEmaLong().get(agent.getCalculator().getEmaLong().size() - 1);
-        double emaShort = agent.getCalculator().getEmaShort().get(agent.getCalculator().getEmaShort().size() - 1);
-
-        //if the current price went below the ema long and short values, we need to exit
-        if (agent.getCurrentPrice() < emaLong && agent.getCurrentPrice() < emaShort) {
-
-            //display values
-            EMA.displayEma(agent, "EMA Short", agent.getCalculator().getEmaShort(), true);
-            EMA.displayEma(agent, "EMA Long", agent.getCalculator().getEmaLong(), true);
-            agent.displayMessage("Current price: $" + agent.getCurrentPrice(), true);
-
-            //assign our reason to sell
-            agent.setReasonSell(ReasonSell.Reason_5);
-        }
-
-        /*
-        if (agent.getRsiCurrent() >= RESISTANCE_LINE) {
-
-            //if we have a bearish crossover, we expect price to go down
-            if (agent.getCalculator().hasEmaCrossover(false)) {
-
-                agent.setReasonSell(ReasonSell.Reason_3);
-
-                //display the recent ema values which we use as a signal
-                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), true);
-                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), true);
-
-            } else {
-
-                //display the recent ema values which we use as a signal
-                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), false);
-                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), false);
-            }
-        }
-        */
-
-        /*
-        //if the price is higher than what we paid and we start to see a divergence, sell the stock
-        if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent(), agent.getObvCurrent()))
-            agent.setReasonSell(ReasonSell.Reason_1);
-        */
-
-        //if no reason to sell yet, check these
+        //if no reason to sell yet, check these to see if we made enough money or lost enough
         if (agent.getReasonSell() == null) {
-            if (agent.getCurrentPrice() >= priceGain) {
+            if (currentPrice >= priceGain) {
                 agent.setReasonSell(ReasonSell.Reason_1);
-            } else if (agent.getCurrentPrice() <= priceLow) {
+            } else if (currentPrice <= priceLow) {
                 agent.setReasonSell(ReasonSell.Reason_2);
             }
         }
-
-        /*
-        //if the stock is worth more than what we paid, and we are above the resistance and we see a divergence sell quickly
-        if (agent.getCurrentPrice() > priceHigh && agent.getCalculator().hasDivergence(true, agent.getCurrentPrice(), agent.getRsiCurrent())) {
-            agent.setReasonSell(ReasonSell.Reason_1);
-        } else if (agent.getCurrentPrice() >= priceGain) {
-            agent.setReasonSell(ReasonSell.Reason_2);
-        } else if (agent.getCurrentPrice() <= priceLow) {
-            agent.setReasonSell(ReasonSell.Reason_3);
-        }
-        */
 
         //if there is a reason then we will sell
         if (agent.getReasonSell() != null) {
 
             //if there is a reason, display message
-            agent.displayMessage(agent.getReasonSell().getDescription(), true);
+            displayMessage(agent.getReasonSell().getDescription(), true, agent.getWriter());
 
             //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Sell));
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
 
         } else {
 
             //we are still waiting
-            agent.displayMessage("Waiting. Product " + agent.getProductId() + " Current $" + agent.getCurrentPrice() + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true);
+            displayMessage("Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true, agent.getWriter());
         }
     }
 
-    protected static void checkBuy(final Agent agent) {
+    protected static void checkBuy(Agent agent, Calculator calculator, Product product, double currentPrice) {
 
         //check for reasons first
         agent.setReasonBuy(null);
 
-        if (agent.getCalculator().hasMacdCrossover(true)) {
+        //our strategy will determine how we trade
+        switch (agent.getStrategy()) {
 
-            //display the recent ema values which we use as a signal
-            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), true);
-            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), true);
+            case EMA:
 
-            agent.setReasonBuy(ReasonBuy.Reason_2);
+                //if we have a bullish crossover, we expect price to go up
+                if (calculator.hasEmaCrossover(true)) {
 
-        } else {
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), true);
+                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), true);
 
-            //display the recent ema values which we use as a signal
-            EMA.displayEma(agent, "MACD Line: ", agent.getCalculator().getMacdLine(), false);
-            EMA.displayEma(agent, "Signal Line: ", agent.getCalculator().getSignalLine(), false);
-        }
+                    //assign our reason for buying
+                    agent.setReasonBuy(ReasonBuy.Reason_1);
 
+                } else {
 
-        /*
-        if (agent.getRsiCurrent() <= SUPPORT_LINE) {
-
-            //if we have a bullish crossover, we expect price to go up
-            if (agent.getCalculator().hasEmaCrossover(true)) {
-
-                //display the recent ema values which we use as a signal
-                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), true);
-                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), true);
-
-                //assign our reason for buying
-                agent.setReasonBuy(ReasonBuy.Reason_1);
-
-            } else {
-
-                //display the recent ema values which we use as a signal
-                EMA.displayEma(agent, "EMA Short: ", agent.getCalculator().getEmaShort(), false);
-                EMA.displayEma(agent, "EMA Long: ", agent.getCalculator().getEmaLong(), false);
-            }
-        }
-        */
-
-        /*
-        //if we are at or below the support line, let's check if we are in a good place to buy
-        if (agent.getRsiCurrent() < SUPPORT_LINE) {
-
-            //if we have a divergence in our downtrend, let's buy
-            if (agent.getCalculator().hasDivergence(false, agent.getCurrentPrice(), agent.getRsiCurrent()))
-                agent.setReasonBuy(ReasonBuy.Reason_1);
-        }
-
-        switch (agent.getCalculator().getTrend()) {
-
-            //if there is a constant uptrend we will buy regardless of calculator or divergence
-            case Upward:
-
-                //if there are no breaks it is constant
-                if (agent.getCalculator().getBreaks() < 1)
-                    agent.setReasonBuy(ReasonBuy.Reason_2);
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), false);
+                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), false);
+                }
                 break;
 
-            //if there is a constant downward trend, let's wait before buying
-            case Downward:
+            case OBV:
 
-                //if there are no breaks it is constant
-                if (agent.getCalculator().getBreaks() < 1) {
-                    agent.setReasonBuy(null);
-                    agent.displayMessage("There is a constant downward trend with no breaks so we will wait a little longer to buy", true);
+                //if volume has a divergence let's buy
+                if (calculator.hasDivergenceObv(false, calculator.getObvCurrent()))
+                    agent.setReasonBuy(ReasonBuy.Reason_4);
+
+                break;
+
+            case RSI:
+
+                //if we are at or below the support line, let's check if we are in a good place to buy
+                if (calculator.getRsiCurrent() <= SUPPORT_LINE) {
+
+                    //if we have a divergence in our downtrend, let's buy
+                    if (calculator.hasDivergenceRsi(false, currentPrice))
+                        agent.setReasonBuy(ReasonBuy.Reason_3);
                 }
+                break;
+
+            case MACD:
+
+                if (calculator.hasMacdCrossover(true)) {
+
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), true);
+                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), true);
+
+                    agent.setReasonBuy(ReasonBuy.Reason_2);
+
+                } else {
+
+                    //display the recent ema values which we use as a signal
+                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), false);
+                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), false);
+                }
+                break;
+
+            default:
+                throw new RuntimeException("Strategy not found: " + agent.getStrategy());
         }
-        */
 
         //we will buy if there is a reason
         if (agent.getReasonBuy() != null) {
 
             //if there is a reason display it
-            agent.displayMessage(agent.getReasonBuy().getDescription(), true);
+            displayMessage(agent.getReasonBuy().getDescription(), true, agent.getWriter());
 
             //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Buy));
+            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
 
         } else {
 
             //we are still waiting
-            agent.displayMessage("Waiting. Product " + agent.getProductId() + ", Available funds $" + agent.getWallet().getFunds(), false);
+            displayMessage("Waiting. Available funds $" + agent.getWallet().getFunds(), false, agent.getWriter());
         }
     }
 
@@ -303,7 +318,7 @@ public class AgentHelper {
         agent.setAttempts(agent.getAttempts() + 1);
 
         //write order status to log
-        agent.displayMessage("Checking order status: " + order.getStatus() + ", settled: " + order.getSettled() + ", attempt(s): " + agent.getAttempts(), true);
+        displayMessage("Checking order status: " + order.getStatus() + ", settled: " + order.getSettled() + ", attempt(s): " + agent.getAttempts(), true, agent.getWriter());
 
         if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription())) {
             return Status.Filled;
@@ -328,23 +343,23 @@ public class AgentHelper {
         if (agent.getAttempts() >= FAILURE_LIMIT && !order.getSettled()) {
 
             //we are now going to cancel the order
-            agent.displayMessage("Canceling order: " + orderId, true);
+            displayMessage("Canceling order: " + orderId, true, agent.getWriter());
 
             //cancel the order
             Main.getOrderService().cancelOrder(orderId);
 
             //notify we sent the message
-            agent.displayMessage("Cancel order message sent", true);
+            displayMessage("Cancel order message sent", true, agent.getWriter());
         }
 
         //let's say that we are still pending so we continue to wait until we have confirmation of something
         return Status.Pending;
     }
 
-    private static synchronized Order createLimitOrder(final Agent agent, final Action action) {
+    private static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
 
         //the price we want to buy/sell
-        BigDecimal price = new BigDecimal(agent.getCurrentPrice());
+        BigDecimal price = new BigDecimal(currentPrice);
 
         //what is the quantity that we are buying/selling
         final double quantity;
@@ -360,7 +375,7 @@ public class AgentHelper {
                 //price.add(penny);
 
                 //see how much we can buy
-                quantity = (agent.getWallet().getFunds() / agent.getCurrentPrice());
+                quantity = (agent.getWallet().getFunds() / currentPrice);
                 break;
 
             case Sell:
@@ -383,8 +398,8 @@ public class AgentHelper {
         BigDecimal size = new BigDecimal(quantity).setScale(ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
 
         //make sure we have enough quantity to buy or else we can't continue
-        if (size.doubleValue() < agent.getProduct().getBase_min_size()) {
-            agent.displayMessage("Not enough quantity: " + size.doubleValue() + ", min: " + agent.getProduct().getBase_min_size(), true);
+        if (size.doubleValue() < product.getBase_min_size()) {
+            displayMessage("Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size(), true, agent.getWriter());
             return null;
         }
 
@@ -392,7 +407,7 @@ public class AgentHelper {
         NewLimitOrderSingle limitOrder = new NewLimitOrderSingle();
 
         //which coin we are trading
-        limitOrder.setProduct_id(agent.getProduct().getId());
+        limitOrder.setProduct_id(product.getId());
 
         //set to post only to avoid fees
         limitOrder.setPost_only(true);
@@ -410,7 +425,7 @@ public class AgentHelper {
         limitOrder.setSize(size);
 
         //write limit order to log
-        agent.displayMessage("Creating limit order (" + agent.getProductId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
+        displayMessage("Creating limit order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true, agent.getWriter());
 
         //our market order
         Order order = null;
@@ -424,7 +439,7 @@ public class AgentHelper {
             order = new Order();
             order.setPrice(price.toString());
             order.setSize(size.toString());
-            order.setProduct_id(agent.getProductId());
+            order.setProduct_id(product.getId());
             order.setStatus(Status.Done.getDescription());
             order.setSide(action.getDescription());
             order.setType(ORDER_DESC);
@@ -438,7 +453,7 @@ public class AgentHelper {
                 attempts++;
 
                 //notify user we are trying to create the limit order
-                agent.displayMessage("Creating limit order attempt: " + attempts, true);
+                displayMessage("Creating limit order attempt: " + attempts, true, agent.getWriter());
 
                 try {
 
@@ -452,7 +467,7 @@ public class AgentHelper {
                 } catch (Exception e) {
 
                     //keep track of any errors
-                    agent.displayMessage(e, true);
+                    displayMessage(e, true, agent.getWriter());
                 }
 
                 //if we reach our limit, just stop
@@ -470,9 +485,9 @@ public class AgentHelper {
 
         //write order result to log
         if (order != null) {
-            agent.displayMessage("Order created status: " + order.getStatus() + ", id: " + order.getId(), true);
+            displayMessage("Order created status: " + order.getStatus() + ", id: " + order.getId(), true, agent.getWriter());
         } else {
-            agent.displayMessage("Order NOT created", true);
+            displayMessage("Order NOT created", true, agent.getWriter());
         }
 
         //return our order

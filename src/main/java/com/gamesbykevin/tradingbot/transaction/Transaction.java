@@ -1,5 +1,6 @@
 package com.gamesbykevin.tradingbot.transaction;
 
+import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.NOTIFICATION_EVERY_TRANSACTION;
+import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 
 public class Transaction {
@@ -36,9 +38,6 @@ public class Transaction {
 
     //the amount of the transaction
     private double amount;
-
-    //the current rsi values at buy and sell
-    private double rsiBuy, rsiSell;
 
     //the reason why we bought
     private TransactionHelper.ReasonBuy reasonBuy;
@@ -88,7 +87,7 @@ public class Transaction {
         return this.amount;
     }
 
-    public void update(final Agent agent, final Order order) {
+    public void update(final Agent agent, final Product product, final Order order) {
 
         //our notification messages
         String subject = null, text = null, summary = "";
@@ -106,9 +105,6 @@ public class Transaction {
             //assign our buy order
             setBuy(order);
 
-            //store rsi for the buy transaction
-            setRsiBuy(agent.getRsiCurrent());
-
             //assign our reason for buying
             setReasonBuy(agent.getReasonBuy());
 
@@ -122,19 +118,16 @@ public class Transaction {
             agent.getWallet().setQuantity(agent.getWallet().getQuantity() + quantity.doubleValue());
 
             //setup our notification message
-            subject = "Purchase " + agent.getProductId();
-            text = "Buy " + agent.getProductId() + " quantity: " + quantity + " @ $" + agent.getWallet().getPurchasePrice();
+            subject = "Purchase " + product.getId();
+            text = "Buy " + product.getId() + " quantity: " + quantity + " @ $" + agent.getWallet().getPurchasePrice();
 
             //display the transaction
-            agent.displayMessage(text, true);
+            displayMessage(text, true, agent.getWriter());
 
         } else if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Sell.getDescription())) {
 
             //assign our sell order
             setSell(order);
-
-            //store rsi for the sell transaction
-            setRsiSell(agent.getRsiCurrent());
 
             //assign our reason for selling
             setReasonSell(agent.getReasonSell());
@@ -151,8 +144,8 @@ public class Transaction {
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
 
-            agent.displayMessage("Reason buy: " + agent.getReasonBuy().getDescription(), true);
-            agent.displayMessage("Reason sell: " + agent.getReasonSell().getDescription(), true);
+            displayMessage("Reason buy: " + agent.getReasonBuy().getDescription(), true, agent.getWriter());
+            displayMessage("Reason sell: " + agent.getReasonSell().getDescription(), true, agent.getWriter());
 
             //did we win or lose?
             if (bought > sold) {
@@ -179,20 +172,19 @@ public class Transaction {
             }
 
             //the transaction description
-            text = "Sell " + agent.getProductId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + agent.getWallet().getPurchasePrice() + ", remaining funds $" + agent.getWallet().getFunds();
+            text = "Sell " + product.getId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + agent.getWallet().getPurchasePrice() + ", remaining funds $" + agent.getWallet().getFunds();
 
             //include the duration description
             summary = getDurationSummaryDesc(getDuration());
-            agent.displayMessage(summary, true);
+            displayMessage(summary, true, agent.getWriter());
 
         } else {
             throw new RuntimeException("Side not handled here: " + order.getSide());
         }
 
         //display and write to log
-        agent.displayMessage(subject, true);
-        agent.displayMessage(text, true);
-        agent.displayMessage("RSI: Buy - " + getRsiBuy() + ", Sell - " + getRsiSell(), true);
+        displayMessage(subject, true, agent.getWriter());
+        displayMessage(text, true, agent.getWriter());
 
         //are we going to notify every transaction?
         if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
@@ -225,22 +217,6 @@ public class Transaction {
 
     private void setReasonSell(ReasonSell reasonSell) {
         this.reasonSell = reasonSell;
-    }
-
-    private void setRsiBuy(final double rsiBuy) {
-        this.rsiBuy = rsiBuy;
-    }
-
-    private void setRsiSell(final double rsiSell) {
-        this.rsiSell = rsiSell;
-    }
-
-    public double getRsiBuy() {
-        return this.rsiBuy;
-    }
-
-    public double getRsiSell() {
-        return this.rsiSell;
     }
 
     public ReasonSell getReasonSell() {
