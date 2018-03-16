@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_MACD;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_RSI;
 
 public class AgentHelper {
@@ -114,6 +115,17 @@ public class AgentHelper {
         //our strategy will determine how we trade
         switch (agent.getStrategy()) {
 
+            case RSI_MACD:
+
+                //let's see if we are above resistance line before selling
+                if (calculator.getCurrentRsi() >= RESISTANCE_LINE) {
+
+                    //if we are showing a downward divergence
+                    if (calculator.hasMacdConvergenceDivergence(false, PERIODS_MACD, currentPrice))
+                        agent.setReasonSell(ReasonSell.Reason_8);
+                }
+                break;
+
             case EMA:
 
                 //if we have a bearish crossover, we expect price to go down
@@ -136,7 +148,7 @@ public class AgentHelper {
             case OBV:
 
                 //if volume has a divergence let's sell
-                if (calculator.hasDivergenceObv(true, calculator.getObvCurrent()))
+                if (calculator.hasDivergenceObv(true))
                     agent.setReasonSell(ReasonSell.Reason_7);
 
                 break;
@@ -144,12 +156,15 @@ public class AgentHelper {
             case RSI:
 
                 //let's see if we are above resistance line before selling
-                if (calculator.getRsiCurrent() >= RESISTANCE_LINE) {
+                if (calculator.getCurrentRsi() >= RESISTANCE_LINE) {
 
                     //if the price is higher than purchase and there is a rsi divergence
-                    if (currentPrice > priceHigh && calculator.hasDivergenceRsi(true, currentPrice))
+                    if (currentPrice > priceHigh && calculator.hasDivergenceRsi(true))
                         agent.setReasonSell(ReasonSell.Reason_6);
                 }
+
+                //display rsi value
+                displayMessage("RSI: " + calculator.getCurrentRsi(), true, agent.getWriter());
                 break;
 
             case MACD:
@@ -228,6 +243,17 @@ public class AgentHelper {
         //our strategy will determine how we trade
         switch (agent.getStrategy()) {
 
+            case RSI_MACD:
+
+                //let's see if we are below support line before buying
+                if (calculator.getCurrentRsi() <= SUPPORT_LINE) {
+
+                    //if we are showing an upward divergence
+                    if (calculator.hasMacdConvergenceDivergence(true, PERIODS_MACD, currentPrice))
+                        agent.setReasonBuy(ReasonBuy.Reason_5);
+                }
+                break;
+
             case EMA:
 
                 //if we have a bullish crossover, we expect price to go up
@@ -251,7 +277,7 @@ public class AgentHelper {
             case OBV:
 
                 //if volume has a divergence let's buy
-                if (calculator.hasDivergenceObv(false, calculator.getObvCurrent()))
+                if (calculator.hasDivergenceObv(false))
                     agent.setReasonBuy(ReasonBuy.Reason_4);
 
                 break;
@@ -259,12 +285,15 @@ public class AgentHelper {
             case RSI:
 
                 //if we are at or below the support line, let's check if we are in a good place to buy
-                if (calculator.getRsiCurrent() <= SUPPORT_LINE) {
+                if (calculator.getCurrentRsi() <= SUPPORT_LINE) {
 
                     //if we have a divergence in our downtrend, let's buy
-                    if (calculator.hasDivergenceRsi(false, currentPrice))
+                    if (calculator.hasDivergenceRsi(false))
                         agent.setReasonBuy(ReasonBuy.Reason_3);
                 }
+
+                //display rsi value
+                displayMessage("RSI: " + calculator.getCurrentRsi(), (agent.getReasonBuy() != null), agent.getWriter());
                 break;
 
             case MACD:

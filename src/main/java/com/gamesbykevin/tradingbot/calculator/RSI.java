@@ -7,33 +7,27 @@ import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_RSI;
 public class RSI {
 
     /**
-     * Calcuate the calculator value for the specified range
+     * Calcuate the rsi value for the specified range
      * @param history Our historical data
      * @param startIndex Beginning period
      * @param endIndex Ending period
-     * @param current Are we calculating the current calculator? if false we just want the historical calculator
-     * @param currentPrice The current price when calculating the current calculator, otherwise this field is not used
-     * @return The calculator value
+     * @return The rsi value
      */
-    protected static double calculateRsi(List<Period> history, int startIndex, int endIndex, boolean current, double currentPrice) {
-
-        //the length of our calculation
-        final int size = endIndex - startIndex;
+    protected static double calculateRsi(List<Period> history, int startIndex, int endIndex) {
 
         //track total gains and losses
         float gain = 0, loss = 0;
         float gainCurrent = 0, lossCurrent = 0;
 
-        //go through the periods to calculate calculator
-        for (int i = startIndex; i < endIndex - 1; i++) {
+        //count the periods
+        final int size = (endIndex - startIndex) - 1;
 
-            //prevent index out of bounds exception
-            if (i + 1 >= endIndex)
-                break;
+        //go through the periods to calculate rsi
+        for (int i = startIndex; i < endIndex; i++) {
 
-            //get the next and previous prices
-            double previous = history.get(i).close;
-            double next     = history.get(i + 1).close;
+            //get the close prices to compare
+            double previous = history.get(i - 1).close;
+            double next     = history.get(i).close;
 
             if (next > previous) {
 
@@ -51,65 +45,56 @@ public class RSI {
         float avgGain = (gain / size);
         float avgLoss = (loss / size);
 
-        //if we don't want the current calculator we can do simple moving average (SMA)
-        if (!current) {
+        //get the latest price in our list so we can compare to the current price
+        final double recentPrice = history.get(endIndex - 1).close;
 
-            //calculate relative strength
-            final float rs = avgGain / avgLoss;
+        //the recent period will be the current price
+        final double currentPrice = history.get(endIndex).close;
 
-            //calculate relative strength index
-            float rsi = 100 - (100 / (1 + rs));
-
-            //return our calculator value
-            return rsi;
-
+        //check if the current price is a gain or loss
+        if (currentPrice > recentPrice) {
+            gainCurrent = (float)(currentPrice - recentPrice);
         } else {
-
-            //get the latest price in our list so we can compare to the current price
-            final double recentPrice = history.get(endIndex - 1).close;
-
-            //check if the current price is a gain or loss
-            if (currentPrice > recentPrice) {
-                gainCurrent = (float)(currentPrice - recentPrice);
-            } else {
-                lossCurrent = (float)(recentPrice - currentPrice);
-            }
-
-            //smothered calculator including current gain loss
-            float smotheredRS =
-                    (((avgGain * (size - 1)) + gainCurrent) / size)
-                            /
-                            (((avgLoss * (size - 1)) + lossCurrent) / size);
-
-            //calculate our calculator value
-            final float rsi = 100 - (100 / (1 + smotheredRS));
-
-            //return our calculator value
-            return rsi;
+            lossCurrent = (float)(recentPrice - currentPrice);
         }
+
+        //smothered rsi including current gain loss
+        float smotheredRS = (
+                ((avgGain * size) + gainCurrent) / (size + 1)
+        ) / (
+                ((avgLoss * size) + lossCurrent) / (size + 1)
+        );
+
+        //calculate our rsi value
+        final float rsi = 100 - (100 / (1 + smotheredRS));
+
+        //return our rsi value
+        return rsi;
     }
 
     /**
-     * Calculate the calculator values for each period
+     * Calculate the rsi values for each period
      */
     protected static void calculateRsi(List<Period> history, List<Double> rsi) {
 
-        //clear our historical calculator list
+        //clear our historical rsi list
         rsi.clear();
 
-        //calculate the calculator for each period
-        for (int i = PERIODS_RSI; i >= 0; i--) {
+        //calculate as many periods as we can
+        for (int i = 0; i < history.size() - PERIODS_RSI; i++) {
 
-            //we need to go back the desired number of periods
-            final int startIndex = history.size() - (PERIODS_RSI + i);
+            //skip if we don't have enough data
+            if (i <= PERIODS_RSI)
+                continue;
 
-            //we only go the length of the desired periods
-            final int endIndex = startIndex + PERIODS_RSI;
+            //find the start and end periods
+            final int start = i;
+            final int end = start + PERIODS_RSI;
 
-            //get the calculator for this period
-            final double tmpRsi = calculateRsi(history, startIndex, endIndex, false, 0);
+            //calculate the rsi for the given periods
+            final double tmpRsi = calculateRsi(history, start, end);
 
-            //add the calculator calculation to the list
+            //add the rsi value to our list
             rsi.add(tmpRsi);
         }
     }

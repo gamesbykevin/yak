@@ -11,7 +11,6 @@ import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
@@ -282,7 +281,7 @@ public class Main implements Runnable {
         String subject = "", text = "\n";
 
         //how much did we start with
-        text = text + "Started with $" + FUNDS + "\n";
+        //text = text + "Started with $" + FUNDS + "\n";
 
         //how long has the bot been running
         text = text + "Bot Running: " + Transaction.getDurationDesc(System.currentTimeMillis() - start) + "\n\n";

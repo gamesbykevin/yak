@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_RSI;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
 public class AgentManager {
@@ -42,7 +43,8 @@ public class AgentManager {
      * Different trading strategies
      */
     public enum TradingStrategy {
-        RSI, MACD, OBV, EMA
+        RSI, MACD, OBV, EMA,
+        RSI_MACD
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -122,12 +124,6 @@ public class AgentManager {
 
             } else {
 
-                //check if there is a trend with the current stock price
-                getCalculator().calculateTrend(getCurrentPrice());
-
-                //calculate the current rsi
-                getCalculator().calculateCurrentRsi(getCurrentPrice());
-
                 //update each agent trading this specific product with their own trading strategy
                 for (Agent agent : getAgents()) {
                     agent.update(getCalculator(), getProduct(), getCurrentPrice());
@@ -169,10 +165,6 @@ public class AgentManager {
 
     public Product getProduct() {
         return this.product;
-    }
-
-    public double getObvCurrent() {
-        return getCalculator().getObvCurrent();
     }
 
     /**

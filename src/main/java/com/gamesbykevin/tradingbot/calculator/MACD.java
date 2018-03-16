@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.calculator;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 
+import javax.rmi.PortableRemoteObject;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.Calculator.EMA_CROSSOVER;
@@ -111,5 +112,61 @@ public class MACD {
 
         //no crossover detected
         return false;
+    }
+
+    protected static boolean hasConvergenceDivergenceTrend(boolean uptrend, List<Double> macdLine, int periods) {
+
+        //if not large enough skip, this shouldn't happen
+        if (macdLine.size() < periods || macdLine.isEmpty())
+            return false;
+
+        //do a quick check to see if there is a trend
+        if (uptrend) {
+
+            //if the first value is greater than current, return false
+            if (macdLine.get(macdLine.size() - periods) > macdLine.get(macdLine.size() - 1))
+                return false;
+
+        } else {
+
+            //if the first value is less than current, return false
+            if (macdLine.get(macdLine.size() - periods) < macdLine.get(macdLine.size() - 1))
+                return false;
+        }
+
+        //our coordinates to calculate slope
+        final double x1 = 0, y1 = macdLine.get(macdLine.size() - periods), x2 = periods, y2 = macdLine.get(macdLine.size() - 1);
+
+        //the value of y when x = 0
+        final double yIntercept = y1;
+
+        //calculate slope
+        final double slope = (y2 - y1) / (x2 - x1);
+
+        //check every specified period
+        for (int i = macdLine.size() - periods; i < macdLine.size(); i++) {
+
+            //the current x-coordinate
+            final double x = i - (macdLine.size() - periods);
+
+            //calculate the y-coordinate
+            final double y = (slope * x) + yIntercept;
+
+            if (uptrend) {
+
+                //if less than the slope there is no uptrend
+                if (macdLine.get(i) < y)
+                    return false;
+
+            } else {
+
+                //if greater than the slope there is no uptrend
+                if (macdLine.get(i) > y)
+                    return false;
+            }
+        }
+
+        //we confirmed trend
+        return true;
     }
 }

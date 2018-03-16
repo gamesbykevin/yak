@@ -6,8 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.checkHistory;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.calculator.EMA.calculateEMA;
 import static com.gamesbykevin.tradingbot.calculator.MACD.calculateMacdLine;
 import static com.gamesbykevin.tradingbot.calculator.MACD.calculateSignalLine;
@@ -37,10 +36,6 @@ public class Calculator {
 
     //list of ema values from the macd line
     private List<Double> signalLine;
-
-    //what is the current calculator value
-    private double rsiCurrent;
-
 
     /**
      * How many periods to calculate rsi
@@ -86,12 +81,6 @@ public class Calculator {
     public enum Trend {
         Upward, Downward, None
     }
-
-    //what is the current trend?
-    private Trend trend = Trend.None;
-
-    //total number of breaks
-    private int breaks = 0;
 
     /**
      * How long is each period?
@@ -202,180 +191,12 @@ public class Calculator {
         return result;
     }
 
-    private void setTrend(final Trend trend) {
-        this.trend = trend;
+    public synchronized boolean hasDivergenceRsi(boolean uptrend) {
+        return hasDivergence(getHistory(), uptrend, PERIODS_RSI, getRsi(), getRsi().get(getRsi().size() - 1));
     }
 
-    private void setBreaks(final int breaks) {
-        this.breaks = breaks;
-    }
-
-    public Trend getTrend() {
-        return this.trend;
-    }
-
-    public int getBreaks() {
-        return this.breaks;
-    }
-
-    public synchronized void calculateTrend(final double currentPrice) {
-
-        //reset values
-        setTrend(Trend.None);
-        setBreaks(0);
-
-        //if not large enough skip, this shouldn't happen
-        if (getHistory().size() < PERIODS_RSI || getHistory().isEmpty())
-            return;
-
-        //we want to start here
-        Period begin = getHistory().get(getHistory().size() - PERIODS_RSI);
-
-        //are we checking an upward trend?
-        if (begin.close < currentPrice) {
-            setTrend(Trend.Upward);
-        } else if (begin.close > currentPrice) {
-            setTrend(Trend.Downward);
-        } else {
-            //no difference
-            return;
-        }
-
-        //our coordinates to calculate slope
-        final double x1 = 0, y1, x2 = PERIODS_RSI, y2;
-
-        //are we detecting and upward or downward trend?
-        switch (getTrend()) {
-            case Upward:
-                y1 = begin.low;
-                y2 = currentPrice;
-                break;
-
-            case Downward:
-                y1 = begin.high;
-                y2 = currentPrice;
-                break;
-
-            case None:
-            default:
-                return;
-        }
-
-        //the value of y when x = 0
-        final double yIntercept = y1;
-
-        //calculate slope
-        final double slope = (y2 - y1) / (x2 - x1);
-
-        //check and see if every period is above the slope indicating an upward trend
-        for (int i = getHistory().size() - PERIODS_RSI; i < getHistory().size(); i++) {
-
-            //get the current period
-            Period current = getHistory().get(i);
-
-            //the current x-coordinate
-            final double x = i - (getHistory().size() - PERIODS_RSI);
-
-            //calculate the y-coordinate
-            final double y = (slope * x) + yIntercept;
-
-            //are we checking for an upward trend
-            switch (getTrend()) {
-
-                case Upward:
-
-                    //if the current low is below the calculated y-coordinate slope we have a break
-                    if (current.low < y)
-                        setBreaks(getBreaks() + 1);
-                    break;
-
-                case Downward:
-
-                    //if the current high is above the calculated y-coordinate slope we have a break
-                    if (current.high > y)
-                        setBreaks(getBreaks() + 1);
-                    break;
-            }
-        }
-    }
-
-    public synchronized boolean hasDivergenceRsi(boolean uptrend, double currentPrice) {
-        return hasDivergence(uptrend, currentPrice, PERIODS_RSI, getRsi(), getRsiCurrent());
-    }
-
-    public synchronized boolean hasDivergenceObv(boolean uptrend, double currentPrice) {
-        return hasDivergence(uptrend, currentPrice, PERIODS_OBV, getVolume(), getObvCurrent());
-    }
-
-    private synchronized boolean hasDivergence(boolean uptrend, double currentPrice, int periods, List<Double> values, double currentValue) {
-
-        //flag we will use to track if the price is following the desired trend
-        boolean betterPrice = true;
-
-        //check all recent periods
-        for (int i = getHistory().size() - periods; i < getHistory().size(); i++) {
-
-            //get the current period
-            Period period = getHistory().get(i);
-
-            if (uptrend) {
-
-                //if we are checking for an uptrend we don't want any "high" price higher than our current price
-                if (period.high > currentPrice) {
-                    betterPrice = false;
-                    break;
-                }
-
-            } else {
-
-                //if we are checking for a downtrend we don't want any "low" price lower than our current price
-                if (period.low < currentPrice) {
-                    betterPrice = false;
-                    break;
-                }
-            }
-        }
-
-        //if we don't have a better price, we don't have a divergence
-        if (!betterPrice)
-            return false;
-
-        //is the current value the best whether it's an up or down trend?
-        final boolean betterValue = isCurrentBest(values, currentValue, uptrend);
-
-        //if the price is better but the value isn't that means we have a divergence
-        return (betterPrice && !betterValue);
-    }
-
-    private boolean isCurrentBest(List<Double> list, double currentValue, boolean uptrend) {
-
-        //look at all our periods
-        for (int i = 0; i < list.size(); i++) {
-
-            if (uptrend) {
-
-                //if checking uptrend we don't want any values higher
-                if (list.get(i) > currentValue)
-                    return false;
-
-            } else {
-
-                //if checking downtrend we don't want any values lower
-                if (list.get(i) < currentValue)
-                    return false;
-            }
-        }
-
-        //yep the current value is the best
-        return true;
-    }
-
-    public double getObvCurrent() {
-        return getVolume().get(getVolume().size() - 1);
-    }
-
-    public void calculateCurrentRsi(double currentPrice) {
-        setRsiCurrent(calculateRsi(getHistory(), getHistory().size() - PERIODS_RSI, getHistory().size(), true, currentPrice));
+    public synchronized boolean hasDivergenceObv(boolean uptrend) {
+        return hasDivergence(getHistory(), uptrend, PERIODS_OBV, getVolume(), getVolume().get(getVolume().size() - 1));
     }
 
     public boolean hasEmaCrossover(boolean bullish) {
@@ -384,6 +205,21 @@ public class Calculator {
 
     public boolean hasMacdCrossover(boolean bullish) {
         return MACD.hasMacdCrossover(bullish, getSignalLine(), getMacdLine());
+    }
+
+    public boolean hasMacdConvergenceDivergence(boolean uptrend, int periods, double currentPrice) {
+
+        //if uptrend price is in downtrend, and macd line is uptrend
+        if (uptrend) {
+
+            //if the price is in a downtrend, but the macd line is in uptrend
+            return (getTrend(getHistory(), currentPrice, periods) == Trend.Downward) && MACD.hasConvergenceDivergenceTrend(true, getMacdLine(), periods);
+
+        } else {
+
+            //if the price is in uptrend, but the macd line is in downtrend
+            return (getTrend(getHistory(), currentPrice, periods) == Trend.Upward) && MACD.hasConvergenceDivergenceTrend(false, getMacdLine(), periods);
+        }
     }
 
     public List<Double> getEmaShort() {
@@ -414,11 +250,7 @@ public class Calculator {
         return this.signalLine;
     }
 
-    private void setRsiCurrent(final double rsiCurrent) {
-        this.rsiCurrent = rsiCurrent;
-    }
-
-    public double getRsiCurrent() {
-        return this.rsiCurrent;
+    public double getCurrentRsi() {
+        return getRsi().get(getRsi().size() - 1);
     }
 }
