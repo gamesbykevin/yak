@@ -19,7 +19,8 @@ public class TransactionHelper {
         Reason_2("MACD Indicator is showing a swing"),
         Reason_3("There is a divergence in the RSI"),
         Reason_4("Volume has a divergence"),
-        Reason_5("RSI_MACD has a divergence")
+        Reason_5("RSI_MACD has a divergence"),
+        Reason_6("ADX is trending and +DI has crossed above -DI")
         ;
 
         private final String description;
@@ -46,6 +47,7 @@ public class TransactionHelper {
         Reason_6("There is a divergence in the RSI"),
         Reason_7("Volume has a divergence"),
         Reason_8("RSI_MACD has a divergence"),
+        Reason_9("-DI has crossed below +DI")
         ;
 
         private final String description;

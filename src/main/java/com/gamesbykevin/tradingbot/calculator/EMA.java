@@ -129,18 +129,4 @@ public class EMA {
         //no crossover detected
         return false;
     }
-
-    public static void displayEma(Agent agent, String desc, List<Double> emaList, boolean write) {
-
-        String info = "";
-        for (int i = emaList.size() - (EMA_CROSSOVER + 1); i < emaList.size(); i++) {
-
-            if (info != null && info.length() > 0)
-                info += ", ";
-
-            info += AgentHelper.formatValue(2, emaList.get(i));
-        }
-
-        displayMessage(agent, desc + info, write);
-    }
 }

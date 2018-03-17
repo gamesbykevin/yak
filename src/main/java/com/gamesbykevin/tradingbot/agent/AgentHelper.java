@@ -4,17 +4,17 @@ import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.calculator.ADX;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.calculator.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_MACD;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_RSI;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.*;
 
 public class AgentHelper {
 
@@ -115,6 +115,22 @@ public class AgentHelper {
         //our strategy will determine how we trade
         switch (agent.getStrategy()) {
 
+            case ADX:
+
+                //if the price is greater than what we paid
+                if (currentPrice > priceHigh) {
+
+                    //if the minus has crossed below the plus that is our signal to sell
+                    if (ADX.hasCrossover(false, calculator.getDmPlusIndicator(), calculator.getDmMinusIndicator()))
+                        agent.setReasonSell(ReasonSell.Reason_9);
+
+                    //display the recent values which we use as a signal
+                    display(agent, "+DI: ", calculator.getDmPlusIndicator(), agent.getReasonSell() != null);
+                    display(agent, "-DI: ", calculator.getDmMinusIndicator(), agent.getReasonSell() != null);
+                    displayMessage(agent, "ADX: " + calculator.getAdx().get(calculator.getAdx().size() - 1), agent.getReasonSell() != null);
+                }
+                break;
+
             case RSI_MACD:
 
                 //let's see if we are above resistance line before selling
@@ -129,20 +145,12 @@ public class AgentHelper {
             case EMA:
 
                 //if the price is greater than what we paid and  we have a bearish crossover, we expect price to go down
-                if (currentPrice > priceHigh && calculator.hasEmaCrossover(false)) {
-
+                if (currentPrice > priceHigh && calculator.hasEmaCrossover(false))
                     agent.setReasonSell(ReasonSell.Reason_3);
 
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), true);
-                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), true);
-
-                } else {
-
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), false);
-                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), false);
-                }
+                //display the recent ema values which we use as a signal
+                display(agent, "EMA Short: ", calculator.getEmaShort(), agent.getReasonSell() != null);
+                display(agent, "EMA Long: ", calculator.getEmaLong(), agent.getReasonSell() != null);
                 break;
 
             case OBV:
@@ -170,20 +178,12 @@ public class AgentHelper {
             case MACD:
 
                 //if the price is higher than purchase and we have a bearish crossover, we expect price to go down
-                if (currentPrice > priceHigh && calculator.hasMacdCrossover(false)) {
-
+                if (currentPrice > priceHigh && calculator.hasMacdCrossover(false))
                     agent.setReasonSell(ReasonSell.Reason_4);
 
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), true);
-                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), true);
-
-                } else {
-
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), false);
-                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), false);
-                }
+                //display the recent ema values which we use as a signal
+                display(agent, "MACD Line: ", calculator.getMacdLine(), agent.getReasonSell() != null);
+                display(agent, "Signal Line: ", calculator.getSignalLine(), agent.getReasonSell() != null);
 
                 //if no reason to sell yet, check if the price drops below the ema values
                 if (agent.getReasonSell() == null) {
@@ -193,16 +193,13 @@ public class AgentHelper {
                     double emaShort = calculator.getEmaShort().get(calculator.getEmaShort().size() - 1);
 
                     //if the current price went below the ema long and short values, we need to exit
-                    if (currentPrice < emaLong && currentPrice < emaShort) {
-
-                        //display values
-                        EMA.displayEma(agent, "EMA Short", calculator.getEmaShort(), true);
-                        EMA.displayEma(agent, "EMA Long", calculator.getEmaLong(), true);
-                        displayMessage(agent, "Current price: $" + currentPrice, true);
-
-                        //assign our reason to sell
+                    if (currentPrice < emaLong && currentPrice < emaShort)
                         agent.setReasonSell(ReasonSell.Reason_5);
-                    }
+
+                    //display values
+                    display(agent, "EMA Short", calculator.getEmaShort(), agent.getReasonSell() != null);
+                    display(agent, "EMA Long", calculator.getEmaLong(), agent.getReasonSell() != null);
+                    displayMessage(agent, "Current price: $" + currentPrice, agent.getReasonSell() != null);
                 }
                 break;
 
@@ -243,6 +240,25 @@ public class AgentHelper {
         //our strategy will determine how we trade
         switch (agent.getStrategy()) {
 
+            case ADX:
+
+                //get the most recent adx value
+                double adx = calculator.getAdx().get(calculator.getAdx().size() - 1);
+
+                //check the most recent adx to see if there is a trend in price
+                if (adx >= TREND_ADX) {
+
+                    //if dm plus crosses above dm minus, that is our signal to buy
+                    if (ADX.hasCrossover(true, calculator.getDmPlusIndicator(), calculator.getDmMinusIndicator()))
+                        agent.setReasonBuy(ReasonBuy.Reason_6);
+                }
+
+                //display the recent values which we use as a signal
+                display(agent, "+DI: ", calculator.getDmPlusIndicator(), agent.getReasonBuy() != null);
+                display(agent, "-DI: ", calculator.getDmMinusIndicator(), agent.getReasonBuy() != null);
+                displayMessage(agent, "ADX: " + adx, agent.getReasonBuy() != null);
+                break;
+
             case RSI_MACD:
 
                 //let's see if we are below support line before buying
@@ -257,21 +273,12 @@ public class AgentHelper {
             case EMA:
 
                 //if we have a bullish crossover, we expect price to go up
-                if (calculator.hasEmaCrossover(true)) {
-
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), true);
-                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), true);
-
-                    //assign our reason for buying
+                if (calculator.hasEmaCrossover(true))
                     agent.setReasonBuy(ReasonBuy.Reason_1);
 
-                } else {
-
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "EMA Short: ", calculator.getEmaShort(), false);
-                    EMA.displayEma(agent, "EMA Long: ", calculator.getEmaLong(), false);
-                }
+                //display the recent ema values which we use as a signal
+                display(agent, "EMA Short: ", calculator.getEmaShort(), agent.getReasonBuy() != null);
+                display(agent, "EMA Long: ", calculator.getEmaLong(), agent.getReasonBuy() != null);
                 break;
 
             case OBV:
@@ -298,20 +305,12 @@ public class AgentHelper {
 
             case MACD:
 
-                if (calculator.hasMacdCrossover(true)) {
-
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), true);
-                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), true);
-
+                if (calculator.hasMacdCrossover(true))
                     agent.setReasonBuy(ReasonBuy.Reason_2);
 
-                } else {
-
-                    //display the recent ema values which we use as a signal
-                    EMA.displayEma(agent, "MACD Line: ", calculator.getMacdLine(), false);
-                    EMA.displayEma(agent, "Signal Line: ", calculator.getSignalLine(), false);
-                }
+                //display the recent ema values which we use as a signal
+                display(agent, "MACD Line: ", calculator.getMacdLine(), agent.getReasonBuy() != null);
+                display(agent, "Signal Line: ", calculator.getSignalLine(), agent.getReasonBuy() != null);
                 break;
 
             default:
@@ -534,5 +533,19 @@ public class AgentHelper {
 
     public static String getStockInvestmentDesc(Agent agent) {
         return "Owned Stock: " + formatValue(agent.getWallet().getQuantity());
+    }
+
+    public static void display(Agent agent, String desc, List<Double> emaList, boolean write) {
+
+        String info = "";
+        for (int i = emaList.size() - (EMA_CROSSOVER + 1); i < emaList.size(); i++) {
+
+            if (info != null && info.length() > 0)
+                info += ", ";
+
+            info += AgentHelper.formatValue(2, emaList.get(i));
+        }
+
+        displayMessage(agent, desc + info, write);
     }
 }
