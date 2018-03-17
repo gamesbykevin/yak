@@ -131,6 +131,12 @@ public class PropertyUtil {
 
         //how many periods do we calculate ema from macd line
         Calculator.PERIODS_MACD = Integer.parseInt(getProperties().getProperty("periodsEmaMacd"));
+
+        //how many periods do we calculate the average directional index
+        Calculator.PERIODS_ADX = Integer.parseInt(getProperties().getProperty("periodsADX"));
+
+        //what is the minimum value to determine that a price trend is occurring?
+        Calculator.TREND_ADX = Double.parseDouble(getProperties().getProperty("trendADX"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

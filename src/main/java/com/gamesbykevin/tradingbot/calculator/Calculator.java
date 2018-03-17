@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
+import static com.gamesbykevin.tradingbot.calculator.ADX.calculateADX;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.calculator.EMA.calculateEMA;
 import static com.gamesbykevin.tradingbot.calculator.MACD.calculateMacdLine;
@@ -37,6 +38,13 @@ public class Calculator {
     //list of ema values from the macd line
     private List<Double> signalLine;
 
+    //the average directional index
+    private List<Double> adx;
+
+    //our +- indicators to calculate adx and signal trades
+    private List<Double> dmPlusIndicator;
+    private List<Double> dmMinusIndicator;
+
     /**
      * How many periods to calculate rsi
      */
@@ -66,6 +74,16 @@ public class Calculator {
      * How many periods do we check to confirm a crossover?
      */
     public static int EMA_CROSSOVER;
+
+    /**
+     * How many periods do we calculate the average directional index
+     */
+    public static int PERIODS_ADX;
+
+    /**
+     * The minimum value to determine there is a price trend
+     */
+    public static double TREND_ADX;
 
     /**
      * How many historical periods do we need in order to start trading
@@ -107,6 +125,9 @@ public class Calculator {
         this.emaLong = new ArrayList<>();
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
+        this.adx = new ArrayList<>();
+        this.dmMinusIndicator = new ArrayList<>();
+        this.dmPlusIndicator = new ArrayList<>();
     }
 
     public synchronized boolean update(Duration key, String productId) {
@@ -153,6 +174,8 @@ public class Calculator {
                     throw new RuntimeException("History not long enough to calculate EMA (short)");
                 if (getHistory().size() < PERIODS_EMA_LONG)
                     throw new RuntimeException("History not long enough to calculate EMA (long)");
+                if (getHistory().size() < PERIODS_ADX)
+                    throw new RuntimeException("History not long enough to calculate ADX");
 
                 //calculate the rsi for all our specified periods now that we have new data
                 calculateRsi(getHistory(), getRsi());
@@ -172,10 +195,14 @@ public class Calculator {
                 //calculate the signal line
                 calculateSignalLine(getSignalLine(), getMacdLine());
 
+                //calculate the average directional index
+                calculateADX(getHistory(), getAdx(),getDmPlusIndicator(), getDmMinusIndicator(), PERIODS_ADX);
+
                 //we are successful
                 result = true;
 
             } else {
+
                 result = false;
             }
 
@@ -248,5 +275,17 @@ public class Calculator {
 
     public double getCurrentRsi() {
         return getRsi().get(getRsi().size() - 1);
+    }
+
+    public List<Double> getAdx() {
+        return this.adx;
+    }
+
+    public List<Double> getDmMinusIndicator() {
+        return this.dmMinusIndicator;
+    }
+
+    public List<Double> getDmPlusIndicator() {
+        return this.dmPlusIndicator;
     }
 }
