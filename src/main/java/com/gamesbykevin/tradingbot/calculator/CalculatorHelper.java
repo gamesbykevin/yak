@@ -68,28 +68,34 @@ public class CalculatorHelper {
 
     /**
      * Get the current trend
+     * @param upwardTrend Are we checking for an upward trend
      * @param history Arraylist of historical periods
      * @param currentPrice Current price
      * @param periods Number of periods to check
      * @return If price is constantly upward "Trend.Upward", if price is constantly downward "Trend.Downward", else "Trend.None"
      */
-    protected static Calculator.Trend getTrend(List<Period> history, double currentPrice, int periods) {
+    protected static boolean hasTrend(boolean upwardTrend, List<Period> history, double currentPrice, int periods) {
 
         //if not large enough skip, this shouldn't happen
         if (history.size() < periods || history.isEmpty())
-            return Calculator.Trend.None;
+            return false;
 
         //we want to start here
         Period begin = history.get(history.size() - periods);
 
-        //are we checking an upward trend?
-        final boolean upward = (begin.close < currentPrice);
+        //if the first price is greater than the current price, there is no uptrend
+        if (upwardTrend && begin.close > currentPrice)
+            return false;
+
+        //if the first price is less than the current price, there is no downtrend
+        if (!upwardTrend && begin.close < currentPrice)
+            return false;
 
         //our coordinates to calculate slope
         final double x1 = 0, y1, x2 = periods, y2;
 
         //are we detecting and upward or downward trend?
-        if (upward) {
+        if (upwardTrend) {
             y1 = begin.low;
             y2 = currentPrice;
         } else {
@@ -116,22 +122,22 @@ public class CalculatorHelper {
             final double y = (slope * x) + yIntercept;
 
             //are we checking for an upward trend
-            if (upward) {
+            if (upwardTrend) {
 
                 //if the current low is below the calculated y-coordinate slope we have a break
                 if (current.low < y)
-                    return Calculator.Trend.None;
+                    return false;
 
             } else {
 
                 //if the current high is above the calculated y-coordinate slope we have a break
                 if (current.high > y)
-                    return Calculator.Trend.None;
+                    return false;
             }
         }
 
-        //return our result
-        return (upward) ? Calculator.Trend.Upward : Calculator.Trend.Downward;
+        //we have a trend
+        return true;
     }
 
     protected static synchronized boolean hasDivergence(List<Period> history, boolean uptrend, int periods, List<Double> values, double currentValue) {

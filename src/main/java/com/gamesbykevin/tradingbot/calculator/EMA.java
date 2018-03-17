@@ -141,6 +141,6 @@ public class EMA {
             info += AgentHelper.formatValue(2, emaList.get(i));
         }
 
-        displayMessage(desc + info, write, agent.getWriter());
+        displayMessage(agent, desc + info, write);
     }
 }

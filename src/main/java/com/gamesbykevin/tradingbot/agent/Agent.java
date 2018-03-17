@@ -51,6 +51,9 @@ public class Agent {
     //what is our trading strategy
     private final TradingStrategy strategy;
 
+    //the product we are trading
+    private final String productId;
+
     protected Agent(TradingStrategy strategy, double funds, String productId, String fileName) {
 
         //save the trading strategy we want to implement
@@ -58,6 +61,9 @@ public class Agent {
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
+
+        //store the product reference
+        this.productId = productId;
 
         //create our object to write to a text file
         this.writer = LogFile.getPrintWriter(fileName);
@@ -71,6 +77,10 @@ public class Agent {
 
     public TradingStrategy getStrategy() {
         return this.strategy;
+    }
+
+    public String getProductId() {
+        return this.productId;
     }
 
     protected synchronized void update(Calculator calculator, Product product, double currentPrice) {

@@ -122,7 +122,7 @@ public class Transaction {
             text = "Buy " + product.getId() + " quantity: " + quantity + " @ $" + agent.getWallet().getPurchasePrice();
 
             //display the transaction
-            displayMessage(text, true, agent.getWriter());
+            displayMessage(agent, text, true);
 
         } else if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Sell.getDescription())) {
 
@@ -144,8 +144,8 @@ public class Transaction {
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
 
-            displayMessage("Reason buy: " + agent.getReasonBuy().getDescription(), true, agent.getWriter());
-            displayMessage("Reason sell: " + agent.getReasonSell().getDescription(), true, agent.getWriter());
+            displayMessage(agent, "Reason buy: " + agent.getReasonBuy().getDescription(), true);
+            displayMessage(agent, "Reason sell: " + agent.getReasonSell().getDescription(), true);
 
             //did we win or lose?
             if (bought > sold) {
@@ -176,15 +176,15 @@ public class Transaction {
 
             //include the duration description
             summary = getDurationSummaryDesc(getDuration());
-            displayMessage(summary, true, agent.getWriter());
+            displayMessage(agent, summary, true);
 
         } else {
             throw new RuntimeException("Side not handled here: " + order.getSide());
         }
 
         //display and write to log
-        displayMessage(subject, true, agent.getWriter());
-        displayMessage(text, true, agent.getWriter());
+        displayMessage(agent, subject, true);
+        displayMessage(agent, text, true);
 
         //are we going to notify every transaction?
         if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)

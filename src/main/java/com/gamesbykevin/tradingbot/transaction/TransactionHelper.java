@@ -122,7 +122,7 @@ public class TransactionHelper {
             }
 
             //display the count and description
-            displayMessage(result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true, agent.getWriter());
+            displayMessage(agent, result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true);
         }
     }
 
@@ -152,7 +152,7 @@ public class TransactionHelper {
             }
 
             //display the count and description
-            displayMessage(result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true, agent.getWriter());
+            displayMessage(agent, result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true);
         }
     }
 

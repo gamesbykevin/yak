@@ -67,9 +67,12 @@ public class AgentManager {
         //create new list of agents
         this.agents = new ArrayList<>();
 
+        //how many funds does each agent get?
+        double fundsPerAgent = funds / (double)TradingStrategy.values().length;
+
         //create an agent for every trading strategy
         for (TradingStrategy strategy : TradingStrategy.values()) {
-            this.agents.add(new Agent(strategy, funds, product.getId(), getFileName(strategy)));
+            this.agents.add(new Agent(strategy, fundsPerAgent, product.getId(), getFileName(strategy)));
         }
     }
 
@@ -185,12 +188,16 @@ public class AgentManager {
         return amount;
     }
 
+    private static void displayMessage(String message, boolean write, PrintWriter writer) {
+        PropertyUtil.displayMessage(message, write, writer);
+    }
+
     public static void displayMessage(Exception e, boolean write, PrintWriter writer) {
         PropertyUtil.displayMessage(e, write, writer);
     }
 
-    public static void displayMessage(String message, boolean write, PrintWriter writer) {
-        PropertyUtil.displayMessage(message, write, writer);
+    public static void displayMessage(Agent agent, String message, boolean write) {
+        displayMessage(agent.getProductId() + "-" + agent.getStrategy() + " " + message, write, agent.getWriter());
     }
 
     protected String getFileName(TradingStrategy strategy) {

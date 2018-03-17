@@ -120,16 +120,16 @@ public class AgentHelper {
                 //let's see if we are above resistance line before selling
                 if (calculator.getCurrentRsi() >= RESISTANCE_LINE) {
 
-                    //if we are showing a downward divergence
-                    if (calculator.hasMacdConvergenceDivergence(false, PERIODS_MACD, currentPrice))
+                    //if the price is greater than what we paid and we are showing a downward divergence
+                    if (currentPrice > priceHigh && calculator.hasMacdConvergenceDivergence(false, PERIODS_MACD, currentPrice))
                         agent.setReasonSell(ReasonSell.Reason_8);
                 }
                 break;
 
             case EMA:
 
-                //if we have a bearish crossover, we expect price to go down
-                if (calculator.hasEmaCrossover(false)) {
+                //if the price is greater than what we paid and  we have a bearish crossover, we expect price to go down
+                if (currentPrice > priceHigh && calculator.hasEmaCrossover(false)) {
 
                     agent.setReasonSell(ReasonSell.Reason_3);
 
@@ -147,8 +147,8 @@ public class AgentHelper {
 
             case OBV:
 
-                //if volume has a divergence let's sell
-                if (calculator.hasDivergenceObv(true))
+                //if the price is greater than what we paid and the volume has a divergence let's sell
+                if (currentPrice > priceHigh && calculator.hasDivergenceObv(true))
                     agent.setReasonSell(ReasonSell.Reason_7);
 
                 break;
@@ -164,13 +164,13 @@ public class AgentHelper {
                 }
 
                 //display rsi value
-                displayMessage("RSI: " + calculator.getCurrentRsi(), true, agent.getWriter());
+                displayMessage(agent, "RSI: " + calculator.getCurrentRsi(), true);
                 break;
 
             case MACD:
 
-                //if we have a bearish crossover, we expect price to go down
-                if (calculator.hasMacdCrossover(false)) {
+                //if the price is higher than purchase and we have a bearish crossover, we expect price to go down
+                if (currentPrice > priceHigh && calculator.hasMacdCrossover(false)) {
 
                     agent.setReasonSell(ReasonSell.Reason_4);
 
@@ -198,7 +198,7 @@ public class AgentHelper {
                         //display values
                         EMA.displayEma(agent, "EMA Short", calculator.getEmaShort(), true);
                         EMA.displayEma(agent, "EMA Long", calculator.getEmaLong(), true);
-                        displayMessage("Current price: $" + currentPrice, true, agent.getWriter());
+                        displayMessage(agent, "Current price: $" + currentPrice, true);
 
                         //assign our reason to sell
                         agent.setReasonSell(ReasonSell.Reason_5);
@@ -223,7 +223,7 @@ public class AgentHelper {
         if (agent.getReasonSell() != null) {
 
             //if there is a reason, display message
-            displayMessage(agent.getReasonSell().getDescription(), true, agent.getWriter());
+            displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
@@ -231,7 +231,7 @@ public class AgentHelper {
         } else {
 
             //we are still waiting
-            displayMessage("Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true, agent.getWriter());
+            displayMessage(agent, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true);
         }
     }
 
@@ -293,7 +293,7 @@ public class AgentHelper {
                 }
 
                 //display rsi value
-                displayMessage("RSI: " + calculator.getCurrentRsi(), (agent.getReasonBuy() != null), agent.getWriter());
+                displayMessage(agent, "RSI: " + calculator.getCurrentRsi(), (agent.getReasonBuy() != null));
                 break;
 
             case MACD:
@@ -322,7 +322,7 @@ public class AgentHelper {
         if (agent.getReasonBuy() != null) {
 
             //if there is a reason display it
-            displayMessage(agent.getReasonBuy().getDescription(), true, agent.getWriter());
+            displayMessage(agent, agent.getReasonBuy().getDescription(), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
@@ -330,7 +330,7 @@ public class AgentHelper {
         } else {
 
             //we are still waiting
-            displayMessage("Waiting. Available funds $" + agent.getWallet().getFunds(), false, agent.getWriter());
+            displayMessage(agent, "Waiting. Available funds $" + agent.getWallet().getFunds(), false);
         }
     }
 
@@ -347,7 +347,7 @@ public class AgentHelper {
         agent.setAttempts(agent.getAttempts() + 1);
 
         //write order status to log
-        displayMessage("Checking order status: " + order.getStatus() + ", settled: " + order.getSettled() + ", attempt(s): " + agent.getAttempts(), true, agent.getWriter());
+        displayMessage(agent, "Checking order status: " + order.getStatus() + ", settled: " + order.getSettled() + ", attempt(s): " + agent.getAttempts(), true);
 
         if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription())) {
             return Status.Filled;
@@ -372,13 +372,13 @@ public class AgentHelper {
         if (agent.getAttempts() >= FAILURE_LIMIT && !order.getSettled()) {
 
             //we are now going to cancel the order
-            displayMessage("Canceling order: " + orderId, true, agent.getWriter());
+            displayMessage(agent, "Canceling order: " + orderId, true);
 
             //cancel the order
             Main.getOrderService().cancelOrder(orderId);
 
             //notify we sent the message
-            displayMessage("Cancel order message sent", true, agent.getWriter());
+            displayMessage(agent, "Cancel order message sent", true);
         }
 
         //let's say that we are still pending so we continue to wait until we have confirmation of something
@@ -428,7 +428,7 @@ public class AgentHelper {
 
         //make sure we have enough quantity to buy or else we can't continue
         if (size.doubleValue() < product.getBase_min_size()) {
-            displayMessage("Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size(), true, agent.getWriter());
+            displayMessage(agent, "Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size(), true);
             return null;
         }
 
@@ -454,7 +454,7 @@ public class AgentHelper {
         limitOrder.setSize(size);
 
         //write limit order to log
-        displayMessage("Creating limit order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true, agent.getWriter());
+        displayMessage(agent, "Creating limit order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
 
         //our market order
         Order order = null;
@@ -482,7 +482,7 @@ public class AgentHelper {
                 attempts++;
 
                 //notify user we are trying to create the limit order
-                displayMessage("Creating limit order attempt: " + attempts, true, agent.getWriter());
+                displayMessage(agent, "Creating limit order attempt: " + attempts, true);
 
                 try {
 
@@ -514,9 +514,9 @@ public class AgentHelper {
 
         //write order result to log
         if (order != null) {
-            displayMessage("Order created status: " + order.getStatus() + ", id: " + order.getId(), true, agent.getWriter());
+            displayMessage(agent, "Order created status: " + order.getStatus() + ", id: " + order.getId(), true);
         } else {
-            displayMessage("Order NOT created", true, agent.getWriter());
+            displayMessage(agent, "Order NOT created", true);
         }
 
         //return our order

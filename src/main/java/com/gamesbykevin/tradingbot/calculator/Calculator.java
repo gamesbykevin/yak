@@ -78,10 +78,6 @@ public class Calculator {
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
 
-    public enum Trend {
-        Upward, Downward, None
-    }
-
     /**
      * How long is each period?
      */
@@ -213,12 +209,12 @@ public class Calculator {
         if (uptrend) {
 
             //if the price is in a downtrend, but the macd line is in uptrend
-            return (getTrend(getHistory(), currentPrice, periods) == Trend.Downward) && MACD.hasConvergenceDivergenceTrend(true, getMacdLine(), periods);
+            return hasTrend(false, getHistory(), currentPrice, periods) && MACD.hasConvergenceDivergenceTrend(true, getMacdLine(), periods);
 
         } else {
 
             //if the price is in uptrend, but the macd line is in downtrend
-            return (getTrend(getHistory(), currentPrice, periods) == Trend.Upward) && MACD.hasConvergenceDivergenceTrend(false, getMacdLine(), periods);
+            return hasTrend(true, getHistory(), currentPrice, periods) && MACD.hasConvergenceDivergenceTrend(false, getMacdLine(), periods);
         }
     }
 
