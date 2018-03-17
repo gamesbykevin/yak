@@ -19,7 +19,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
-import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent {
@@ -72,7 +72,7 @@ public class Agent {
         this.wallet = new Wallet(funds);
 
         //display message and write to file
-        displayMessage("Starting $" + funds, true, getWriter());
+        displayMessage(this, "Starting $" + funds, true);
     }
 
     public TradingStrategy getStrategy() {
@@ -160,11 +160,11 @@ public class Agent {
                 final double oldRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
                 getWallet().setStartingFunds(getWallet().getFunds());
                 final double newRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                displayMessage("Good news, stop trading limit has increased", true, getWriter());
-                displayMessage("    Funds $" + AgentHelper.formatValue(getWallet().getFunds()), true, getWriter());
-                displayMessage("Old limit $" + AgentHelper.formatValue(oldRatio), true, getWriter());
-                displayMessage("New limit $" + AgentHelper.formatValue(newRatio), true, getWriter());
-                displayMessage("If your funds fall below the new limit we will stop trading", true, getWriter());
+                displayMessage(this, "Good news, stop trading limit has increased", true);
+                displayMessage(this, "    Funds $" + AgentHelper.formatValue(getWallet().getFunds()), true);
+                displayMessage(this, "Old limit $" + AgentHelper.formatValue(oldRatio), true);
+                displayMessage(this, "New limit $" + AgentHelper.formatValue(newRatio), true);
+                displayMessage(this, "If your funds fall below the new limit we will stop trading", true);
             }
 
             //notify if this agent has stopped trading
@@ -172,9 +172,9 @@ public class Agent {
                 String subject = "We stopped trading";
                 String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
                 String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                displayMessage(subject, true, getWriter());
-                displayMessage(text1, true, getWriter());
-                displayMessage(text2, true, getWriter());
+                displayMessage(this, subject, true);
+                displayMessage(this, text1, true);
+                displayMessage(this, text2, true);
 
                 //send email notification
                 Email.sendEmail(subject, text1 + "\n" + text2);
@@ -208,14 +208,14 @@ public class Agent {
             transaction.update(this, product, order);
 
             //display wins and losses
-            displayMessage(TransactionHelper.getDescWins(this), true, getWriter());
-            displayMessage(TransactionHelper.getDescLost(this), true, getWriter());
+            displayMessage(this, TransactionHelper.getDescWins(this), true);
+            displayMessage(this, TransactionHelper.getDescLost(this), true);
 
             //display average transaction time
-            displayMessage(TransactionHelper.getAverageDurationDesc(this), true, getWriter());
+            displayMessage(this, TransactionHelper.getAverageDurationDesc(this), true);
 
             //display the total $ amount invested in stocks
-            displayMessage(AgentHelper.getStockInvestmentDesc(this), true, getWriter());
+            displayMessage(this, AgentHelper.getStockInvestmentDesc(this), true);
 
             //display the count for each buying reason for when we win
             TransactionHelper.displayBuyingReasonCount(this, Result.Win);

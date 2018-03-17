@@ -153,7 +153,7 @@ public class ADX {
             double currentSum = 0;
 
             //calculate the sum of the current period
-            for (int x = i - periods + 1; x <= periods; x++) {
+            for (int x = i - periods + 1; x <= i; x++) {
                 currentSum += tmp.get(x);
             }
 
