@@ -28,6 +28,8 @@ public class EMA extends Indicator {
     public static int PERIODS_EMA_SHORT;
 
     public EMA() {
+
+        //call parent
         super(0);
 
         this.emaLong = new ArrayList<>();

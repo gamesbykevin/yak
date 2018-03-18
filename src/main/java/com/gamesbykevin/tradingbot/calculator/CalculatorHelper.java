@@ -140,29 +140,48 @@ public class CalculatorHelper {
         return true;
     }
 
+    /**
+     * Do we have divergence?
+     *
+     * What we do to detect bullish divergence:
+     * a) The first period the price is highest and the last period is the lowest (new low)
+     * b) The first period the data is lowest and the last period is the highest (new high)
+     *
+     * What we do to detect bearish divergence:
+     * a) The first period the price is the lowest and the last period is the highest (new high)
+     * b) The first period the data is the highest and the last period is the lowest (new low)
+     *
+     * @param history Stock price history
+     * @param periods How many periods do we check
+     * @param bullish Are we looking for a bullish sign of divergence, if false we are looking for bearish
+     * @param data Array data of our indicator
+     * @return true if divergence is found, false otherwise
+     */
     protected static synchronized boolean hasDivergence(List<Period> history, int periods, boolean bullish, List<Double> data) {
-
-        //get the recent closing price when checking both bullish and bearish divergence
-        double price = history.get(history.size() - 1).close;
-
-        //get the indicator values of the start and end periods
-        double start = data.get(data.size() - periods);
 
         if (bullish) {
 
             //now check the previous x periods to see if this is a new low
             for (int i = history.size() - periods; i < history.size() - 1; i++) {
 
+                //at this point we want prices that are lower than the starting price
+                if (history.get(i).close > history.get(history.size() - periods).close)
+                    return false;
+
                 //if this current closing price is <= our latest price, we don't have a new low
-                if (history.get(i).close <= price)
+                if (history.get(i).close <= history.get(history.size() - 1).close)
                     return false;
             }
 
             //lets make sure the indicator data is higher than the start period
             for (int i = data.size() - periods; i < data.size(); i++) {
 
-                //none of periods can be less than the start
-                if (data.get(i) < start)
+                //at this point we want every data point to be larger than the first
+                if (data.get(i) < data.get(data.size() - periods))
+                    return false;
+
+                //and we want every data point to be smaller than the last
+                if (data.get(i) > data.get(data.size() - 1))
                     return false;
             }
 
@@ -172,18 +191,26 @@ public class CalculatorHelper {
         } else {
 
             //now check the previous x periods to see if this is a new high
-            for (int i = history.size() - (periods + 1); i < history.size() - 1; i++) {
+            for (int i = history.size() - periods; i < history.size() - 1; i++) {
+
+                //at this point we want prices that are higher than the starting price
+                if (history.get(i).close < history.get(history.size() - periods).close)
+                    return false;
 
                 //if this current closing price is >= our latest price, we don't have a new high
-                if (history.get(i).close >= price)
+                if (history.get(i).close >= history.get(history.size() - 1).close)
                     return false;
             }
 
             //lets make sure the indicator data is lower than the start period
             for (int i = data.size() - periods; i < data.size(); i++) {
 
-                //none of periods can be greater than the start
-                if (data.get(i) > start)
+                //at this point we want every data point to be smaller than the first
+                if (data.get(i) > data.get(data.size() - periods))
+                    return false;
+
+                //and we want every data point to be larger than the last
+                if (data.get(i) < data.get(data.size() - 1))
                     return false;
             }
 
@@ -192,74 +219,22 @@ public class CalculatorHelper {
         }
     }
 
-    /*
-    protected static synchronized boolean hasDivergence(List<Period> history, boolean uptrend, int periods, List<Double> values, double currentValue) {
-
-        //flag we will use to track if the price is following the desired trend
-        boolean betterPrice = true;
-
-        //the current price is the most recent closing price from our history
-        double currentPrice = history.get(history.size() - 1).close;
-
-        //check all recent periods
-        for (int i = history.size() - (periods + 1); i < history.size() - 1; i++) {
-
-            //get the current period
-            Period period = history.get(i);
-
-            if (uptrend) {
-
-                //if we are checking for an uptrend we don't want any "high" price higher than our current price
-                if (period.high > currentPrice) {
-                    betterPrice = false;
-                    break;
-                }
-
-            } else {
-
-                //if we are checking for a downtrend we don't want any "low" price lower than our current price
-                if (period.low < currentPrice) {
-                    betterPrice = false;
-                    break;
-                }
-            }
-        }
-
-        //if we don't have a better price, we don't have a divergence
-        if (!betterPrice)
-            return false;
-
-        //is the current value the best whether it's an up or down trend?
-        final boolean betterValue = isCurrentBest(values, periods, currentValue, uptrend);
-
-        //if the price is better but the value isn't that means we have a divergence
-        return (betterPrice && !betterValue);
-    }
-
-    private static boolean isCurrentBest(List<Double> list, int periods, double currentValue, boolean uptrend) {
-
-        //look at all our periods
-        for (int i = list.size() - periods; i < list.size(); i++) {
-
-            if (uptrend) {
-
-                //if checking uptrend we don't want any values higher
-                if (list.get(i) > currentValue)
-                    return false;
-
-            } else {
-
-                //if checking downtrend we don't want any values lower
-                if (list.get(i) < currentValue)
-                    return false;
-            }
-        }
-
-        //yep the current value is the best
-        return true;
-    }
-    */
-
+    /**
+     * Do we have crossover?
+     *
+     * If bullish we look for this:
+     * a) We check the previous data where fast < slow
+     * b) Then we check the current data where fast > slow
+     *
+     * If bearish we look for this:
+     * a) We check the previous data where slow < fast
+     * b) Then we check the current data where slow > fast
+     *
+     * @param bullish Are we checking bullish? if false we are checking bearish
+     * @param fast Array of fast moving data
+     * @param slow Array of slow moving data
+     * @return true if crossover, false otherwise
+     */
     protected static boolean hasCrossover(boolean bullish, List<Double> fast, List<Double> slow) {
 
         //our previous slow and fast values

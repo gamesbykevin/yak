@@ -10,6 +10,7 @@ import com.gamesbykevin.tradingbot.calculator.EMA;
 import com.gamesbykevin.tradingbot.calculator.ADX;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
@@ -93,11 +94,14 @@ public class PropertyUtil {
             Main.NOTIFICATION_DELAY = Main.NOTIFICATION_DELAY * MILLISECONDS_PER_MINUTE;
         }
 
-        //what is the support line
+        //what is the rsi support line
         RSI.SUPPORT_LINE = Float.parseFloat(getProperties().getProperty("supportLine"));
 
-        //what is the resistance line
+        //what is the rsi resistance line
         RSI.RESISTANCE_LINE = Float.parseFloat(getProperties().getProperty("resistanceLine"));
+
+        //how many periods to we use to calculate rsi
+        RSI.PERIODS_RSI = Integer.parseInt(getProperties().getProperty("periodsRsi"));
 
         //how long do we hold onto stock until we sell to cut our losses
         AgentHelper.SELL_LOSS_RATIO = Float.parseFloat(getProperties().getProperty("sellLossRatio"));
@@ -110,9 +114,6 @@ public class PropertyUtil {
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
-
-        //how many periods to we use to calculate calculator
-        RSI.PERIODS_RSI = Integer.parseInt(getProperties().getProperty("periodsRsi"));
 
         //get the number of periods for our long ema calculation
         EMA.PERIODS_EMA_LONG = Integer.parseInt(getProperties().getProperty("periodsEmaLong"));
