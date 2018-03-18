@@ -82,8 +82,8 @@ public class RSI extends Indicator {
     @Override
     public void displayData(Agent agent, boolean write) {
 
-        //display rsi value
-        displayMessage(agent, "RSI: " + getRsi().get(getRsi().size() - 1), write);
+        //display the volume
+        display(agent, "RSI: ", getRsi(), getPeriods(), write);
     }
 
     @Override

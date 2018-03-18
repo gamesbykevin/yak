@@ -42,7 +42,7 @@ public class AgentManager {
      * Different trading strategies
      */
     public enum TradingStrategy {
-        RSI, MACD, OBV, EMA, ADX
+        RSI, MACD, OBV, EMA, ADX, MACS
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {

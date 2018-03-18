@@ -19,6 +19,7 @@ public class TransactionHelper {
         Reason_2("MACD Indicator is showing a swing"),
         Reason_3("There is a divergence in the RSI"),
         Reason_4("Volume has a divergence"),
+        Reason_5("MACS crossover and above trend line"),
         Reason_6("ADX is trending and +DI has crossed above -DI")
         ;
 
@@ -45,6 +46,7 @@ public class TransactionHelper {
         Reason_5("The current stock price is below both short and long emas"),
         Reason_6("There is a divergence in the RSI"),
         Reason_7("Volume has a divergence"),
+        Reason_8("MACS crossover and below trend line"),
         Reason_9("-DI has crossed below +DI")
         ;
 

@@ -88,6 +88,10 @@ public class Calculator {
                     indicator = new EMA();
                     break;
 
+                case MACS:
+                    indicator = new MACS();
+                    break;
+
                 default:
                     throw new RuntimeException("Strategy not found: " + strategy);
             }

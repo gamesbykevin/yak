@@ -2,12 +2,7 @@ package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.calculator.RSI;
-import com.gamesbykevin.tradingbot.calculator.OBV;
-import com.gamesbykevin.tradingbot.calculator.MACD;
-import com.gamesbykevin.tradingbot.calculator.EMA;
-import com.gamesbykevin.tradingbot.calculator.ADX;
+import com.gamesbykevin.tradingbot.calculator.*;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.FileInputStream;
@@ -138,6 +133,15 @@ public class PropertyUtil {
 
         //what is the minimum value to determine that a price trend is occurring?
         ADX.TREND_ADX = Double.parseDouble(getProperties().getProperty("trendADX"));
+
+        //how many periods do we calculate fast data for our moving average crossover strategy
+        MACS.PERIODS_MACS_FAST = Integer.parseInt(getProperties().getProperty("periodsMacsFast"));
+
+        //how many periods do we calculate slow data for our moving average crossover strategy
+        MACS.PERIODS_MACS_SLOW = Integer.parseInt(getProperties().getProperty("periodsMacsSlow"));
+
+        //how many periods do we calculate trending data for our moving average crossover strategy
+        MACS.PERIODS_MACS_TREND = Integer.parseInt(getProperties().getProperty("periodsMacsTrend"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {
