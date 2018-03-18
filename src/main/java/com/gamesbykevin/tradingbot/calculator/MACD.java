@@ -1,122 +1,177 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_MACD;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_LONG;
+import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_SHORT;
 
-public class MACD {
+public class MACD extends Indicator {
 
-    protected static void calculateMacdLine(List<Double> macdLine, List<Double> emaShort, List<Double> emaLong) {
+    //macdLine values
+    private List<Double> macdLine;
+
+    //list of ema values from the macd line
+    private List<Double> signalLine;
+
+    //list of ema values for our long period
+    private List<Double> emaLong;
+
+    //list of ema values for our short period
+    private List<Double> emaShort;
+
+    /**
+     * How many periods do we calculate ema from macd line
+     */
+    public static int PERIODS_MACD;
+
+    public MACD() {
+
+        //call parent
+        super(PERIODS_MACD);
+
+        this.macdLine = new ArrayList<>();
+        this.signalLine = new ArrayList<>();
+        this.emaLong = new ArrayList<>();
+        this.emaShort = new ArrayList<>();
+    }
+
+    private List<Double> getEmaShort() {
+        return this.emaShort;
+    }
+
+    private List<Double> getEmaLong() {
+        return this.emaLong;
+    }
+
+    private List<Double> getMacdLine() {
+        return this.macdLine;
+    }
+
+    private List<Double> getSignalLine() {
+        return this.signalLine;
+    }
+
+    @Override
+    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        if (hasCrossover(true, getMacdLine(), getSignalLine()))
+            agent.setReasonBuy(ReasonBuy.Reason_2);
+
+        //display our data
+        displayData(agent, agent.getReasonBuy() != null);
+    }
+
+    @Override
+    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if we have a bearish crossover, we expect price to go down
+        if (hasCrossover(false, getMacdLine(), getSignalLine()))
+            agent.setReasonSell(ReasonSell.Reason_4);
+
+        //if no reason to sell yet, check if the price drops below the ema values
+        if (agent.getReasonSell() == null) {
+
+            //get the current ema long and short values
+            double emaLong = getEmaLong().get(getEmaLong().size() - 1);
+            double emaShort = getEmaShort().get(getEmaShort().size() - 1);
+
+            //if the current price went below the ema long and short values, we need to exit
+            if (currentPrice < emaLong && currentPrice < emaShort)
+                agent.setReasonSell(ReasonSell.Reason_5);
+
+        }
+
+        //display our data
+        displayData(agent, agent.getReasonSell() != null);
+    }
+
+    @Override
+    public void displayData(Agent agent, boolean write) {
+
+        //display the recent MACD values which we use as a signal
+        display(agent, "MACD Line: ", getMacdLine(), getPeriods(), write);
+        display(agent, "Signal Line: ", getSignalLine(), getPeriods(), write);
+
+        //display values
+        display(agent, "EMA Short", getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
+        display(agent, "EMA Long", getEmaLong(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
+    }
+
+    @Override
+    public void calculate(List<Period> history) {
+
+        //calculate our short and long ema values first
+        EMA.calculateEMA(history, getEmaShort(), PERIODS_EMA_SHORT);
+        EMA.calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
+
+        //now we can calculate our macd line
+        calculateMacdLine();
+
+        //then we can calculate our signal line
+        calculateSignalLine();
+    }
+
+    private void calculateMacdLine() {
 
         //clear the list
-        macdLine.clear();
+        getMacdLine().clear();
 
         //we need to start at the right index
-        int difference = emaShort.size() - emaLong.size();
+        int difference = getEmaShort().size() - getEmaLong().size();
 
         //calculate for every value possible
-        for (int i = 0; i < emaLong.size(); i++) {
+        for (int i = 0; i < getEmaLong().size(); i++) {
 
             //the macd line is the 12 day ema - 26 day ema
-            macdLine.add(emaShort.get(difference + i) - emaLong.get(i));
+            getMacdLine().add(getEmaShort().get(difference + i) - getEmaLong().get(i));
         }
     }
 
-    protected static void calculateSignalLine(List<Double> signalLine, List<Double> macdLine) {
+    private void calculateSignalLine() {
 
         //clear list
-        signalLine.clear();
+        getSignalLine().clear();
 
         //we add the sum to get the sma (simple moving average)
         double sum = 0;
 
         //calculate sma first
-        for (int i = 0; i < PERIODS_MACD; i++) {
-            sum += macdLine.get(i);
+        for (int i = 0; i < getPeriods(); i++) {
+            sum += getMacdLine().get(i);
         }
 
         //we now have the sma as a start
-        final double sma = sum / (float)PERIODS_MACD;
+        final double sma = sum / (float)getPeriods();
 
         //here is our multiplier
-        final double multiplier = ((float)2 / ((float)PERIODS_MACD + 1));
+        final double multiplier = ((float)2 / ((float)getPeriods() + 1));
 
         //calculate our first ema
-        final double ema = ((macdLine.get(PERIODS_MACD - 1) - sma) * multiplier) + sma;
+        final double ema = ((getMacdLine().get(getPeriods() - 1) - sma) * multiplier) + sma;
 
         //add the 9 day ema to our list
-        signalLine.add(ema);
+        getSignalLine().add(ema);
 
         //now let's calculate the remaining periods for ema
-        for (int i = PERIODS_MACD; i < macdLine.size(); i++) {
+        for (int i = getPeriods(); i < getMacdLine().size(); i++) {
 
             //get our previous ema
-            final double previousEma = signalLine.get(signalLine.size() - 1);
+            final double previousEma = getSignalLine().get(getSignalLine().size() - 1);
 
             //get our close value
-            final double close = macdLine.get(i);
+            final double close = getMacdLine().get(i);
 
             //calculate our new ema
             final double newEma = ((close - previousEma) * multiplier) + previousEma;
 
             //add our new ema value to the list
-            signalLine.add(newEma);
+            getSignalLine().add(newEma);
         }
-    }
-
-    protected static boolean hasConvergenceDivergenceTrend(boolean uptrend, List<Double> macdLine, int periods) {
-
-        //if not large enough skip, this shouldn't happen
-        if (macdLine.size() < periods || macdLine.isEmpty())
-            return false;
-
-        //do a quick check to see if there is a trend
-        if (uptrend) {
-
-            //if the first value is greater than current, return false
-            if (macdLine.get(macdLine.size() - periods) > macdLine.get(macdLine.size() - 1))
-                return false;
-
-        } else {
-
-            //if the first value is less than current, return false
-            if (macdLine.get(macdLine.size() - periods) < macdLine.get(macdLine.size() - 1))
-                return false;
-        }
-
-        //our coordinates to calculate slope
-        final double x1 = 0, y1 = macdLine.get(macdLine.size() - periods), x2 = periods, y2 = macdLine.get(macdLine.size() - 1);
-
-        //the value of y when x = 0
-        final double yIntercept = y1;
-
-        //calculate slope
-        final double slope = (y2 - y1) / (x2 - x1);
-
-        //check every specified period
-        for (int i = macdLine.size() - periods; i < macdLine.size(); i++) {
-
-            //the current x-coordinate
-            final double x = i - (macdLine.size() - periods);
-
-            //calculate the y-coordinate
-            final double y = (slope * x) + yIntercept;
-
-            if (uptrend) {
-
-                //if less than the slope there is no uptrend
-                if (macdLine.get(i) < y)
-                    return false;
-
-            } else {
-
-                //if greater than the slope there is no uptrend
-                if (macdLine.get(i) > y)
-                    return false;
-            }
-        }
-
-        //we confirmed trend
-        return true;
     }
 }

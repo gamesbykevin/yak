@@ -1,8 +1,84 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class EMA {
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+
+public class EMA extends Indicator {
+
+    //list of ema values for our long period
+    private List<Double> emaLong;
+
+    //list of ema values for our short period
+    private List<Double> emaShort;
+
+    /**
+     * How many periods to calculate long ema
+     */
+    public static int PERIODS_EMA_LONG;
+
+    /**
+     * How many periods to calculate short ema
+     */
+    public static int PERIODS_EMA_SHORT;
+
+    public EMA() {
+        super(0);
+
+        this.emaLong = new ArrayList<>();
+        this.emaShort = new ArrayList<>();
+    }
+
+    private List<Double> getEmaShort() {
+        return this.emaShort;
+    }
+
+    private List<Double> getEmaLong() {
+        return this.emaLong;
+    }
+
+    @Override
+    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if we have a bullish crossover, we expect price to go up
+        if (hasCrossover(true, getEmaShort(), getEmaLong()))
+            agent.setReasonBuy(ReasonBuy.Reason_1);
+
+        //display data
+        displayData(agent, agent.getReasonBuy() != null);
+    }
+
+    @Override
+    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if we have a bearish crossover, we expect price to go down
+        if (hasCrossover(false, getEmaShort(), getEmaLong()))
+            agent.setReasonSell(ReasonSell.Reason_3);
+
+        //display data
+        displayData(agent, agent.getReasonSell() != null);
+    }
+
+    @Override
+    protected void displayData(Agent agent, boolean write) {
+
+        //display the recent ema values which we use as a signal
+        display(agent, "EMA Short: ", getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonBuy() != null);
+        display(agent, "EMA Long: ", getEmaLong(), PERIODS_EMA_SHORT,agent.getReasonBuy() != null);
+    }
+
+    @Override
+    public void calculate(List<Period> history) {
+
+        //calculate ema for short and long periods
+        calculateEMA(history, getEmaShort(), PERIODS_EMA_SHORT);
+        calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
+    }
 
     /**
      * Calculate the SMA (simple moving average)
@@ -37,9 +113,6 @@ public class EMA {
         //what is our multiplier
         final float multiplier = ((float)2 / ((float)periods + 1));
 
-        //calculate simple moving average
-        final double sma = calculateSMA(history, current - 1, periods);
-
         //this close price is the current price
         final double currentPrice = history.get(current).close;
 
@@ -47,8 +120,14 @@ public class EMA {
         final double ema;
 
         if (emaPrevious != 0) {
+
             ema = ((currentPrice - emaPrevious) * multiplier) + emaPrevious;
+
         } else {
+
+            //calculate simple moving average since there is no previous ema
+            final double sma = calculateSMA(history, current - 1, periods);
+
             ema = ((currentPrice - sma) * multiplier) + sma;
         }
 

@@ -3,11 +3,14 @@ package com.gamesbykevin.tradingbot.util;
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.RSI;
+import com.gamesbykevin.tradingbot.calculator.OBV;
+import com.gamesbykevin.tradingbot.calculator.MACD;
+import com.gamesbykevin.tradingbot.calculator.EMA;
+import com.gamesbykevin.tradingbot.calculator.ADX;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
-import java.io.FileInputStream;
 import java.io.PrintWriter;
-import java.util.Calendar;
 import java.util.Properties;
 
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
@@ -91,10 +94,10 @@ public class PropertyUtil {
         }
 
         //what is the support line
-        AgentHelper.SUPPORT_LINE = Float.parseFloat(getProperties().getProperty("supportLine"));
+        RSI.SUPPORT_LINE = Float.parseFloat(getProperties().getProperty("supportLine"));
 
         //what is the resistance line
-        AgentHelper.RESISTANCE_LINE = Float.parseFloat(getProperties().getProperty("resistanceLine"));
+        RSI.RESISTANCE_LINE = Float.parseFloat(getProperties().getProperty("resistanceLine"));
 
         //how long do we hold onto stock until we sell to cut our losses
         AgentHelper.SELL_LOSS_RATIO = Float.parseFloat(getProperties().getProperty("sellLossRatio"));
@@ -109,31 +112,31 @@ public class PropertyUtil {
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 
         //how many periods to we use to calculate calculator
-        Calculator.PERIODS_RSI = Integer.parseInt(getProperties().getProperty("periodsRsi"));
+        RSI.PERIODS_RSI = Integer.parseInt(getProperties().getProperty("periodsRsi"));
 
         //get the number of periods for our long ema calculation
-        Calculator.PERIODS_EMA_LONG = Integer.parseInt(getProperties().getProperty("periodsEmaLong"));
+        EMA.PERIODS_EMA_LONG = Integer.parseInt(getProperties().getProperty("periodsEmaLong"));
 
         //get the number of periods for our extended ema calculation
-        Calculator.PERIODS_EMA_SHORT = Integer.parseInt(getProperties().getProperty("periodsEmaShort"));
+        EMA.PERIODS_EMA_SHORT = Integer.parseInt(getProperties().getProperty("periodsEmaShort"));
 
         //how long is each candle?
         Calculator.PERIOD_DURATION = Integer.parseInt(getProperties().getProperty("periodDuration"));
 
         //how long to calculate moving average volume?
-        Calculator.PERIODS_OBV = Integer.parseInt(getProperties().getProperty("periodsOBV"));
+        OBV.PERIODS_OBV = Integer.parseInt(getProperties().getProperty("periodsOBV"));
 
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));
 
         //how many periods do we calculate ema from macd line
-        Calculator.PERIODS_MACD = Integer.parseInt(getProperties().getProperty("periodsEmaMacd"));
+        MACD.PERIODS_MACD = Integer.parseInt(getProperties().getProperty("periodsEmaMacd"));
 
         //how many periods do we calculate the average directional index
-        Calculator.PERIODS_ADX = Integer.parseInt(getProperties().getProperty("periodsADX"));
+        ADX.PERIODS_ADX = Integer.parseInt(getProperties().getProperty("periodsADX"));
 
         //what is the minimum value to determine that a price trend is occurring?
-        Calculator.TREND_ADX = Double.parseDouble(getProperties().getProperty("trendADX"));
+        ADX.TREND_ADX = Double.parseDouble(getProperties().getProperty("trendADX"));
     }
 
     public static synchronized void displayMessage(final String message, final boolean write, PrintWriter writer) {

@@ -1,11 +1,101 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class ADX {
+import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 
-    protected static void calculateADX(List<Period> history, List<Double> adx, List<Double> dmPlusIndicator, List<Double> dmMinusIndicator, int periods) {
+public class ADX extends Indicator {
+
+    //the average directional index
+    private List<Double> adx;
+
+    //our +- indicators to calculate adx and signal trades
+    private List<Double> dmPlusIndicator;
+    private List<Double> dmMinusIndicator;
+
+    /**
+     * How many periods do we calculate the average directional index
+     */
+    public static int PERIODS_ADX;
+
+    /**
+     * The minimum value to determine there is a price trend
+     */
+    public static double TREND_ADX;
+
+    public ADX() {
+
+        //call parent
+        super(PERIODS_ADX);
+
+        this.adx = new ArrayList<>();
+        this.dmPlusIndicator = new ArrayList<>();
+        this.dmMinusIndicator = new ArrayList<>();
+    }
+
+    private List<Double> getAdx() {
+        return this.adx;
+    }
+
+    private List<Double> getDmPlusIndicator() {
+        return this.dmPlusIndicator;
+    }
+
+    private List<Double> getDmMinusIndicator() {
+        return this.dmMinusIndicator;
+    }
+
+    @Override
+    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //get the most recent adx value
+        double adx = getAdx().get(getAdx().size() - 1);
+
+        //check the most recent adx to see if there is a trend in price
+        if (adx >= TREND_ADX) {
+
+            //if dm plus crosses above dm minus, that is our signal to buy
+            if (hasCrossover(true, getDmPlusIndicator(), getDmMinusIndicator()))
+                agent.setReasonBuy(TransactionHelper.ReasonBuy.Reason_6);
+        }
+
+        //display data
+        displayData(agent, agent.getReasonBuy() != null);
+    }
+
+    @Override
+    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //get the most recent adx value
+        double adx = getAdx().get(getAdx().size() - 1);
+
+        if (adx >= TREND_ADX) {
+
+            //if the minus has crossed below the plus that is our signal to sell
+            if (hasCrossover(false, getDmPlusIndicator(), getDmMinusIndicator()))
+                agent.setReasonSell(TransactionHelper.ReasonSell.Reason_9);
+        }
+
+        //display data
+        displayData(agent, agent.getReasonSell() != null);
+    }
+
+    @Override
+    protected void displayData(Agent agent, boolean write) {
+
+        //display the recent values which we use as a signal
+        display(agent, "+DI: ", getDmPlusIndicator(), getPeriods(), write);
+        display(agent, "-DI: ", getDmMinusIndicator(), getPeriods(), write);
+        displayMessage(agent, "ADX: " + getAdx().get(getAdx().size() - 1), write);
+    }
+
+    @Override
+    public void calculate(List<Period> history) {
 
         //clear the list(s) before we calculate
         adx.clear();
@@ -80,9 +170,9 @@ public class ADX {
         List<Double> trueRange = new ArrayList<>();
 
         //smooth the values
-        smooth(tmpDmMinus, dmMinus, periods);
-        smooth(tmpDmPlus, dmPlus, periods);
-        smooth(tmpTrueRange, trueRange, periods);
+        smooth(tmpDmMinus, dmMinus);
+        smooth(tmpDmPlus, dmPlus);
+        smooth(tmpTrueRange, trueRange);
 
         for (int i = 0; i < dmPlus.size(); i++) {
 
@@ -108,21 +198,21 @@ public class ADX {
         double sum = 0;
 
         //get the average for the first value
-        for (int i = 0; i < periods; i++) {
+        for (int i = 0; i < getPeriods(); i++) {
             sum += dmIndex.get(i);
         }
 
         //our first value is the average
-        adx.add(sum / (double)periods);
+        adx.add(sum / (double)getPeriods());
 
         //calculate the remaining average directional index values
-        for (int i = periods; i < dmIndex.size(); i++) {
+        for (int i = getPeriods(); i < dmIndex.size(); i++) {
 
             //get the most recent adx
             double previousAdx = adx.get(adx.size() - 1);
 
             //calculate the new adx value
-            double newAdx = ((previousAdx * (double)(periods - 1)) + dmIndex.get(i)) / (double)periods;
+            double newAdx = ((previousAdx * (double)(getPeriods() - 1)) + dmIndex.get(i)) / (double)getPeriods();
 
             //add new value to our list
             adx.add(newAdx);
@@ -134,12 +224,12 @@ public class ADX {
      * @param tmp Our temp list of values
      * @param result Our final result of smoothed values
      */
-    private static void smooth(List<Double> tmp, List<Double> result, int periods) {
+    private void smooth(List<Double> tmp, List<Double> result) {
 
         double sum = 0;
 
         //add the sum of the first x periods to get the first value
-        for (int i = 0; i < periods; i++) {
+        for (int i = 0; i < getPeriods(); i++) {
             sum += tmp.get(i);
         }
 
@@ -147,13 +237,13 @@ public class ADX {
         result.add(sum);
 
         //now lets smooth the values for the remaining
-        for (int i = periods; i < tmp.size(); i++) {
+        for (int i = getPeriods(); i < tmp.size(); i++) {
 
             //calculate our current
             double currentSum = 0;
 
             //calculate the sum of the current period
-            for (int x = i - periods + 1; x <= i; x++) {
+            for (int x = i - getPeriods() + 1; x <= i; x++) {
                 currentSum += tmp.get(x);
             }
 
@@ -161,7 +251,7 @@ public class ADX {
             double previousValue = result.get(result.size() - 1);
 
             //calculate the new smoothed value
-            double newValue = previousValue - (previousValue / (double)periods) + currentSum;
+            double newValue = previousValue - (previousValue / (double)getPeriods()) + currentSum;
 
             //add the smoothed value to our list
             result.add(newValue);

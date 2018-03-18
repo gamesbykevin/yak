@@ -1,84 +1,26 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.AgentManager;
+import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.util.GSon;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.calculator.ADX.calculateADX;
+import static com.gamesbykevin.tradingbot.calculator.ADX.PERIODS_ADX;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.EMA.calculateEMA;
-import static com.gamesbykevin.tradingbot.calculator.MACD.calculateMacdLine;
-import static com.gamesbykevin.tradingbot.calculator.MACD.calculateSignalLine;
-import static com.gamesbykevin.tradingbot.calculator.OBV.calculateOBV;
-import static com.gamesbykevin.tradingbot.calculator.RSI.calculateRsi;
+import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_LONG;
+import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_SHORT;
+import static com.gamesbykevin.tradingbot.calculator.OBV.PERIODS_OBV;
+import static com.gamesbykevin.tradingbot.calculator.RSI.PERIODS_RSI;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
 
     //keep a list of our periods
     private List<Period> history;
-
-    //keep a historical list of the rsi so we can check for divergence
-    private List<Double> rsi;
-
-    //keep a historical list of the volume so we can check for divergence
-    private List<Double> volume;
-
-    //list of ema values for our long period
-    private List<Double> emaLong;
-
-    //list of ema values for our short period
-    private List<Double> emaShort;
-
-    //macdLine values
-    private List<Double> macdLine;
-
-    //list of ema values from the macd line
-    private List<Double> signalLine;
-
-    //the average directional index
-    private List<Double> adx;
-
-    //our +- indicators to calculate adx and signal trades
-    private List<Double> dmPlusIndicator;
-    private List<Double> dmMinusIndicator;
-
-    /**
-     * How many periods to calculate rsi
-     */
-    public static int PERIODS_RSI;
-
-    /**
-     * How many periods to calculate long ema
-     */
-    public static int PERIODS_EMA_LONG;
-
-    /**
-     * How many periods to calculate short ema
-     */
-    public static int PERIODS_EMA_SHORT;
-
-    /**
-     * How many periods to calculate the on balance volume
-     */
-    public static int PERIODS_OBV;
-
-    /**
-     * How many periods do we calculate ema from macd line
-     */
-    public static int PERIODS_MACD;
-
-    /**
-     * How many periods do we calculate the average directional index
-     */
-    public static int PERIODS_ADX;
-
-    /**
-     * The minimum value to determine there is a price trend
-     */
-    public static double TREND_ADX;
 
     /**
      * How many historical periods do we need in order to start trading
@@ -90,6 +32,9 @@ public class Calculator {
 
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
+
+    //create an indicator class for each trading strategy
+    private HashMap<TradingStrategy, Indicator> indicators;
 
     /**
      * How long is each period?
@@ -114,15 +59,42 @@ public class Calculator {
 
     public Calculator() {
         this.history = new ArrayList<>();
-        this.rsi = new ArrayList<>();
-        this.volume = new ArrayList<>();
-        this.emaShort = new ArrayList<>();
-        this.emaLong = new ArrayList<>();
-        this.macdLine = new ArrayList<>();
-        this.signalLine = new ArrayList<>();
-        this.adx = new ArrayList<>();
-        this.dmMinusIndicator = new ArrayList<>();
-        this.dmPlusIndicator = new ArrayList<>();
+        this.indicators = new HashMap<>();
+
+        //create an object for each strategy
+        for (TradingStrategy strategy : TradingStrategy.values()) {
+
+            Indicator indicator = null;
+
+            switch (strategy) {
+
+                case ADX:
+                    indicator = new ADX();
+                    break;
+
+                case MACD:
+                    indicator = new MACD();
+                    break;
+
+                case RSI:
+                    indicator = new RSI();
+                    break;
+
+                case OBV:
+                    indicator = new OBV();
+                    break;
+
+                case EMA:
+                    indicator = new EMA();
+                    break;
+
+                default:
+                    throw new RuntimeException("Strategy not found: " + strategy);
+            }
+
+            //add to hash map
+            getIndicators().put(strategy, indicator);
+        }
     }
 
     public synchronized boolean update(Duration key, String productId) {
@@ -172,26 +144,10 @@ public class Calculator {
                 if (getHistory().size() < PERIODS_ADX)
                     throw new RuntimeException("History not long enough to calculate ADX");
 
-                //calculate the rsi for all our specified periods now that we have new data
-                calculateRsi(getHistory(), getRsi());
-
-                //calculate the on balance volume for all our specified periods now that we have new data
-                calculateOBV(getHistory(), getVolume());
-
-                //calculate the ema for the long period now that we have new data
-                calculateEMA(getHistory(), getEmaLong(), PERIODS_EMA_LONG);
-
-                //calculate the ema for the short period now that we have new data
-                calculateEMA(getHistory(), getEmaShort(), PERIODS_EMA_SHORT);
-
-                //calculate the macd line
-                calculateMacdLine(getMacdLine(), getEmaShort(), getEmaLong());
-
-                //calculate the signal line
-                calculateSignalLine(getSignalLine(), getMacdLine());
-
-                //calculate the average directional index
-                calculateADX(getHistory(), getAdx(),getDmPlusIndicator(), getDmMinusIndicator(), PERIODS_ADX);
+                //now do all indicator calculations
+                for (Indicator indicator : getIndicators().values()) {
+                    indicator.calculate(getHistory());
+                }
 
                 //we are successful
                 result = true;
@@ -209,78 +165,15 @@ public class Calculator {
         return result;
     }
 
-    public synchronized boolean hasDivergenceRsi(boolean uptrend) {
-        return hasDivergence(getHistory(), PERIODS_RSI, uptrend, getRsi());
-    }
-
-    public synchronized boolean hasDivergenceObv(boolean uptrend) {
-        return hasDivergence(getHistory(), PERIODS_OBV, uptrend, getVolume());
-    }
-
-    public boolean hasEmaCrossover(boolean bullish) {
-        return hasCrossover(bullish, getEmaShort(), getEmaLong());
-    }
-
-    public boolean hasMacdCrossover(boolean bullish) {
-        return hasCrossover(bullish, getMacdLine(), getSignalLine());
-    }
-
-    public boolean hasAdxCrossover(boolean bullish) {
-        return hasCrossover(bullish, getDmPlusIndicator(), getDmMinusIndicator());
-    }
-
-    public boolean hasMacdConvergenceDivergence(boolean uptrend, int periods, double currentPrice) {
-
-        //if uptrend price is in downtrend, and macd line is uptrend
-        if (uptrend) {
-
-            //if the price is in a downtrend, but the macd line is in uptrend
-            return hasTrend(false, getHistory(), currentPrice, periods) && MACD.hasConvergenceDivergenceTrend(true, getMacdLine(), periods);
-
-        } else {
-
-            //if the price is in uptrend, but the macd line is in downtrend
-            return hasTrend(true, getHistory(), currentPrice, periods) && MACD.hasConvergenceDivergenceTrend(false, getMacdLine(), periods);
-        }
-    }
-
-    public List<Double> getEmaShort() {
-        return this.emaShort;
-    }
-
-    public List<Double> getEmaLong() {
-        return this.emaLong;
-    }
-
     public List<Period> getHistory() {
         return this.history;
     }
 
-    public List<Double> getVolume() {
-        return this.volume;
+    private HashMap<TradingStrategy, Indicator> getIndicators() {
+        return this.indicators;
     }
 
-    public List<Double> getRsi() {
-        return this.rsi;
-    }
-
-    public List<Double> getMacdLine() {
-        return this.macdLine;
-    }
-
-    public List<Double> getSignalLine() {
-        return this.signalLine;
-    }
-
-    public List<Double> getAdx() {
-        return this.adx;
-    }
-
-    public List<Double> getDmMinusIndicator() {
-        return this.dmMinusIndicator;
-    }
-
-    public List<Double> getDmPlusIndicator() {
-        return this.dmPlusIndicator;
+    public Indicator getIndicator(TradingStrategy strategy) {
+        return getIndicators().get(strategy);
     }
 }

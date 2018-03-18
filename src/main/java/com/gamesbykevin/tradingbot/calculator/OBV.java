@@ -1,42 +1,93 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_OBV;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
 
-public class OBV {
+public class OBV extends Indicator {
 
     /**
-     * Calculate the calculator values for each period
+     * How many periods to calculate the on balance volume
      */
-    protected static void calculateOBV(List<Period> history, List<Double> volume) {
+    public static int PERIODS_OBV;
+
+    //keep a historical list of the volume so we can check for divergence
+    private List<Double> volume;
+
+    public OBV() {
+
+        //call parent
+        super(PERIODS_OBV);
+
+        this.volume = new ArrayList<>();
+    }
+
+    private List<Double> getVolume() {
+        return this.volume;
+    }
+
+    @Override
+    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if there is a bullish divergence let's buy
+        if (hasDivergence(history, getPeriods(), true, getVolume()))
+            agent.setReasonBuy(ReasonBuy.Reason_4);
+
+        //display our data
+        displayData(agent, agent.getReasonBuy() != null);
+    }
+
+    @Override
+    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if there is a bearish divergence let's sell
+        if (hasDivergence(history, getPeriods(), false, getVolume()))
+            agent.setReasonSell(ReasonSell.Reason_7);
+
+        //display our data
+        displayData(agent, agent.getReasonSell() != null);
+    }
+
+    @Override
+    public void displayData(Agent agent, boolean write) {
+
+        //display the volume
+        display(agent, "OBV: ", getVolume(), PERIODS_OBV, write);
+    }
+
+    @Override
+    public void calculate(List<Period> history) {
 
         //clear our historical list
-        volume.clear();
+        getVolume().clear();
 
         //calculate the obv for each period
         for (int i = 0; i < history.size(); i++) {
 
             //skip if not enough info
-            if (i <= PERIODS_OBV)
+            if (i <= getPeriods())
                 continue;
 
             //get the obv for this period
-            final double tmpVolume = calculateOBV(history, i, PERIODS_OBV);
+            final double tmpVolume = calculateOBV(history, i);
 
             //add the obv calculation to the list
-            volume.add(tmpVolume);
+            getVolume().add(tmpVolume);
         }
     }
 
-    private static double calculateOBV(List<Period> history, int currentPeriod, int periods) {
+    private double calculateOBV(List<Period> history, int currentPeriod) {
 
         //the total sum
         double sum = 0;
 
         //check every period
-        for (int i = currentPeriod - periods; i < currentPeriod - 1; i++) {
+        for (int i = currentPeriod - getPeriods(); i < currentPeriod - 1; i++) {
 
             Period prev = history.get(i);
             Period next = history.get(i + 1);

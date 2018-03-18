@@ -4,9 +4,7 @@ import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.calculator.ADX;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
@@ -32,16 +30,6 @@ public class AgentHelper {
      * Every order will be a limit order
      */
     private static final String ORDER_DESC = "limit";
-
-    /**
-     * The support line meaning the stock is oversold
-     */
-    public static float SUPPORT_LINE;
-
-    /**
-     * The resistance line meaning the stock is overbought
-     */
-    public static float RESISTANCE_LINE;
 
     /**
      * The starting ratio point to sell if the stock drops too much to stop the bleeding
@@ -111,115 +99,8 @@ public class AgentHelper {
         //do we sell the stock
         agent.setReasonSell(null);
 
-        //our strategy will determine how we trade
-        switch (agent.getStrategy()) {
-
-            case ADX:
-
-                //get the most recent adx value
-                double adx = calculator.getAdx().get(calculator.getAdx().size() - 1);
-
-                if (adx >= TREND_ADX) {
-
-                    //if the minus has crossed below the plus that is our signal to sell
-                    if (calculator.hasAdxCrossover(false))
-                        agent.setReasonSell(ReasonSell.Reason_9);
-                }
-
-                //display the recent values which we use as a signal
-                display(agent, "+DI: ", calculator.getDmPlusIndicator(), PERIODS_ADX, agent.getReasonSell() != null);
-                display(agent, "-DI: ", calculator.getDmMinusIndicator(), PERIODS_ADX, agent.getReasonSell() != null);
-                displayMessage(agent, "ADX: " + adx, agent.getReasonSell() != null);
-                break;
-
-            case RSI_MACD:
-
-                double rsi = calculator.getRsi().get(calculator.getRsi().size() - 1);
-
-                //let's see if we are above resistance line before selling
-                if (rsi >= RESISTANCE_LINE) {
-
-                    //if we are showing a downward divergence
-                    if (calculator.hasMacdConvergenceDivergence(false, PERIODS_MACD, currentPrice))
-                        agent.setReasonSell(ReasonSell.Reason_8);
-                }
-
-                //display rsi value
-                displayMessage(agent, "RSI: " + rsi, (agent.getReasonSell() != null));
-
-                //display the recent MACD values which we use as a signal
-                display(agent, "MACD Line: ", calculator.getMacdLine(), PERIODS_MACD, agent.getReasonSell() != null);
-                display(agent, "Signal Line: ", calculator.getSignalLine(), PERIODS_MACD, agent.getReasonSell() != null);
-                break;
-
-            case EMA:
-
-                //if we have a bearish crossover, we expect price to go down
-                if (calculator.hasEmaCrossover(false))
-                    agent.setReasonSell(ReasonSell.Reason_3);
-
-                //display the recent ema values which we use as a signal
-                display(agent, "EMA Short: ", calculator.getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
-                display(agent, "EMA Long: ", calculator.getEmaLong(), PERIODS_EMA_LONG, agent.getReasonSell() != null);
-                break;
-
-            case OBV:
-
-                //if there is a bearish divergence let's sell
-                if (calculator.hasDivergenceObv(false))
-                    agent.setReasonSell(ReasonSell.Reason_7);
-
-                //display the volume
-                display(agent, "OBV: ", calculator.getVolume(), PERIODS_OBV, agent.getReasonSell() != null);
-                break;
-
-            case RSI:
-
-                rsi = calculator.getRsi().get(calculator.getRsi().size() - 1);
-
-                //let's see if we are above resistance line before selling
-                if (rsi >= RESISTANCE_LINE) {
-
-                    //if there is a divergence
-                    if (calculator.hasDivergenceRsi(true))
-                        agent.setReasonSell(ReasonSell.Reason_6);
-                }
-
-                //display rsi value
-                displayMessage(agent, "RSI: " + rsi, agent.getReasonSell() != null);
-                break;
-
-            case MACD:
-
-                //if we have a bearish crossover, we expect price to go down
-                if (calculator.hasMacdCrossover(false))
-                    agent.setReasonSell(ReasonSell.Reason_4);
-
-                //display the recent ema values which we use as a signal
-                display(agent, "MACD Line: ", calculator.getMacdLine(), PERIODS_MACD, agent.getReasonSell() != null);
-                display(agent, "Signal Line: ", calculator.getSignalLine(), PERIODS_MACD, agent.getReasonSell() != null);
-
-                //if no reason to sell yet, check if the price drops below the ema values
-                if (agent.getReasonSell() == null) {
-
-                    //get the current ema long and short values
-                    double emaLong = calculator.getEmaLong().get(calculator.getEmaLong().size() - 1);
-                    double emaShort = calculator.getEmaShort().get(calculator.getEmaShort().size() - 1);
-
-                    //if the current price went below the ema long and short values, we need to exit
-                    if (currentPrice < emaLong && currentPrice < emaShort)
-                        agent.setReasonSell(ReasonSell.Reason_5);
-
-                    //display values
-                    display(agent, "EMA Short", calculator.getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
-                    display(agent, "EMA Long", calculator.getEmaLong(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
-                    displayMessage(agent, "Current price: $" + currentPrice, agent.getReasonSell() != null);
-                }
-                break;
-
-            default:
-                throw new RuntimeException("Strategy not found: " + agent.getStrategy());
-        }
+        //check for a sell signal
+        calculator.getIndicator(agent.getStrategy()).checkSellSignal(agent, calculator.getHistory(), currentPrice);
 
         //if the current stock price is less than what we paid, we shouldn't sell or else we will lose money
         if (currentPrice < agent.getWallet().getPurchasePrice())
@@ -237,7 +118,6 @@ public class AgentHelper {
 
                 //if we lost too much money we will sell
                 agent.setReasonSell(ReasonSell.Reason_2);
-
             }
         }
 
@@ -262,100 +142,8 @@ public class AgentHelper {
         //check for reasons first
         agent.setReasonBuy(null);
 
-        //our strategy will determine how we trade
-        switch (agent.getStrategy()) {
-
-            case ADX:
-
-                //get the most recent adx value
-                double adx = calculator.getAdx().get(calculator.getAdx().size() - 1);
-
-                //check the most recent adx to see if there is a trend in price
-                if (adx >= TREND_ADX) {
-
-                    //if dm plus crosses above dm minus, that is our signal to buy
-                    if (calculator.hasAdxCrossover(true))
-                        agent.setReasonBuy(ReasonBuy.Reason_6);
-                }
-
-                //display the recent values which we use as a signal
-                display(agent, "+DI: ", calculator.getDmPlusIndicator(), PERIODS_ADX, agent.getReasonBuy() != null);
-                display(agent, "-DI: ", calculator.getDmMinusIndicator(), PERIODS_ADX, agent.getReasonBuy() != null);
-                displayMessage(agent, "ADX: " + adx, agent.getReasonBuy() != null);
-                break;
-
-            case RSI_MACD:
-
-                //get the most recent rsi value
-                double rsi = calculator.getRsi().get(calculator.getRsi().size() - 1);
-
-                //let's see if we are below support line before buying
-                if (rsi <= SUPPORT_LINE) {
-
-                    //if we are showing an upward divergence
-                    if (calculator.hasMacdConvergenceDivergence(true, PERIODS_MACD, currentPrice))
-                        agent.setReasonBuy(ReasonBuy.Reason_5);
-                }
-
-                //display rsi value
-                displayMessage(agent, "RSI: " + rsi, (agent.getReasonBuy() != null));
-
-                //display the recent MACD values which we use as a signal
-                display(agent, "MACD Line: ", calculator.getMacdLine(), PERIODS_MACD, agent.getReasonBuy() != null);
-                display(agent, "Signal Line: ", calculator.getSignalLine(), PERIODS_MACD, agent.getReasonBuy() != null);
-                break;
-
-            case EMA:
-
-                //if we have a bullish crossover, we expect price to go up
-                if (calculator.hasEmaCrossover(true))
-                    agent.setReasonBuy(ReasonBuy.Reason_1);
-
-                //display the recent ema values which we use as a signal
-                display(agent, "EMA Short: ", calculator.getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonBuy() != null);
-                display(agent, "EMA Long: ", calculator.getEmaLong(), PERIODS_EMA_SHORT,agent.getReasonBuy() != null);
-                break;
-
-            case OBV:
-
-                //if there is a bullish divergence let's buy
-                if (calculator.hasDivergenceObv(true))
-                    agent.setReasonBuy(ReasonBuy.Reason_4);
-
-                //display the volume
-                display(agent, "OBV: ", calculator.getVolume(), PERIODS_OBV, agent.getReasonBuy() != null);
-                break;
-
-            case RSI:
-
-                //get the most recent rsi value
-                rsi = calculator.getRsi().get(calculator.getRsi().size() - 1);
-
-                //if we are at or below the support line, let's check if we are in a good place to buy
-                if (rsi <= SUPPORT_LINE) {
-
-                    //if we have a divergence in our downtrend, let's buy
-                    if (calculator.hasDivergenceRsi(false))
-                        agent.setReasonBuy(ReasonBuy.Reason_3);
-                }
-
-                //display rsi value
-                displayMessage(agent, "RSI: " + rsi, (agent.getReasonBuy() != null));
-                break;
-
-            case MACD:
-
-                if (calculator.hasMacdCrossover(true))
-                    agent.setReasonBuy(ReasonBuy.Reason_2);
-
-                //display the recent MACD values which we use as a signal
-                display(agent, "MACD Line: ", calculator.getMacdLine(), PERIODS_MACD, agent.getReasonBuy() != null);
-                display(agent, "Signal Line: ", calculator.getSignalLine(), PERIODS_MACD, agent.getReasonBuy() != null);
-                break;
-
-            default:
-                throw new RuntimeException("Strategy not found: " + agent.getStrategy());
-        }
+        //check for a buy signal
+        calculator.getIndicator(agent.getStrategy()).checkBuySignal(agent, calculator.getHistory(), currentPrice);
 
         //we will buy if there is a reason
         if (agent.getReasonBuy() != null) {
@@ -573,19 +361,5 @@ public class AgentHelper {
 
     public static String getStockInvestmentDesc(Agent agent) {
         return "Owned Stock: " + formatValue(agent.getWallet().getQuantity());
-    }
-
-    public static void display(Agent agent, String desc, List<Double> emaList, int periods, boolean write) {
-
-        String info = "";
-        for (int i = emaList.size() - periods; i < emaList.size(); i++) {
-
-            if (info != null && info.length() > 0)
-                info += ", ";
-
-            info += AgentHelper.formatValue(4, emaList.get(i));
-        }
-
-        displayMessage(agent, desc + info, write);
     }
 }
