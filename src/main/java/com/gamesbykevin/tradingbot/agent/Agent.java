@@ -177,7 +177,7 @@ public class Agent {
                 displayMessage(this, text2, true);
 
                 //send email notification
-                Email.sendEmail(subject, text1 + "\n" + text2);
+                Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", text1 + "\n" + text2);
             }
         }
     }
