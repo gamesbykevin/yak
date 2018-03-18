@@ -140,6 +140,59 @@ public class CalculatorHelper {
         return true;
     }
 
+    protected static synchronized boolean hasDivergence(List<Period> history, int periods, boolean bullish, List<Double> data) {
+
+        //get the recent closing price when checking both bullish and bearish divergence
+        double price = history.get(history.size() - 1).close;
+
+        //get the indicator values of the start and end periods
+        double start = data.get(data.size() - periods);
+
+        if (bullish) {
+
+            //now check the previous x periods to see if this is a new low
+            for (int i = history.size() - periods; i < history.size() - 1; i++) {
+
+                //if this current closing price is <= our latest price, we don't have a new low
+                if (history.get(i).close <= price)
+                    return false;
+            }
+
+            //lets make sure the indicator data is higher than the start period
+            for (int i = data.size() - periods; i < data.size(); i++) {
+
+                //none of periods can be less than the start
+                if (data.get(i) < start)
+                    return false;
+            }
+
+            //the current price is a new low, and the indicator data is increasing, we have a bullish divergence
+            return true;
+
+        } else {
+
+            //now check the previous x periods to see if this is a new high
+            for (int i = history.size() - (periods + 1); i < history.size() - 1; i++) {
+
+                //if this current closing price is >= our latest price, we don't have a new high
+                if (history.get(i).close >= price)
+                    return false;
+            }
+
+            //lets make sure the indicator data is lower than the start period
+            for (int i = data.size() - periods; i < data.size(); i++) {
+
+                //none of periods can be greater than the start
+                if (data.get(i) > start)
+                    return false;
+            }
+
+            //the current price is a new high, and the indicator data is decreasing, we have a bearish divergence
+            return true;
+        }
+    }
+
+    /*
     protected static synchronized boolean hasDivergence(List<Period> history, boolean uptrend, int periods, List<Double> values, double currentValue) {
 
         //flag we will use to track if the price is following the desired trend
@@ -204,5 +257,43 @@ public class CalculatorHelper {
 
         //yep the current value is the best
         return true;
+    }
+    */
+
+    protected static boolean hasCrossover(boolean bullish, List<Double> fast, List<Double> slow) {
+
+        //our previous slow and fast values
+        double previousSlow = slow.get(slow.size() - 2);
+        double previousFast = fast.get(fast.size() - 2);
+
+        //our current slow and fast values
+        double currentSlow = slow.get(slow.size() - 1);
+        double currentFast = fast.get(fast.size() - 1);
+
+        //if we are checking bullish the long is greater then the short is greater
+        if (bullish) {
+
+            //to start we want the previous slow to be greater than the previous fast
+            if (previousSlow > previousFast) {
+
+                //now we want the current fast to be greater than the current slow
+                if (currentFast > currentSlow)
+                    return true;
+            }
+
+        } else {
+
+            //to start we want the previous fast to be greater than the previous slow
+            if (previousFast > previousSlow) {
+
+                //now we want the current slow to be greater than the current fast
+                if (currentSlow > currentFast)
+                    return true;
+            }
+
+        }
+
+        //no crossover detected
+        return false;
     }
 }

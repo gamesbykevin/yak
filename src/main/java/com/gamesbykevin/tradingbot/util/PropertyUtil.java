@@ -123,9 +123,6 @@ public class PropertyUtil {
         //how long to calculate moving average volume?
         Calculator.PERIODS_OBV = Integer.parseInt(getProperties().getProperty("periodsOBV"));
 
-        //how many periods do we check to confirm crossover
-        Calculator.EMA_CROSSOVER = Integer.parseInt(getProperties().getProperty("emaCrossoverLength"));
-
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));
 

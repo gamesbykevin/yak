@@ -71,11 +71,6 @@ public class Calculator {
     public static int PERIODS_MACD;
 
     /**
-     * How many periods do we check to confirm a crossover?
-     */
-    public static int EMA_CROSSOVER;
-
-    /**
      * How many periods do we calculate the average directional index
      */
     public static int PERIODS_ADX;
@@ -215,19 +210,23 @@ public class Calculator {
     }
 
     public synchronized boolean hasDivergenceRsi(boolean uptrend) {
-        return hasDivergence(getHistory(), uptrend, PERIODS_RSI, getRsi(), getRsi().get(getRsi().size() - 1));
+        return hasDivergence(getHistory(), PERIODS_RSI, uptrend, getRsi());
     }
 
     public synchronized boolean hasDivergenceObv(boolean uptrend) {
-        return hasDivergence(getHistory(), uptrend, PERIODS_OBV, getVolume(), getVolume().get(getVolume().size() - 1));
+        return hasDivergence(getHistory(), PERIODS_OBV, uptrend, getVolume());
     }
 
     public boolean hasEmaCrossover(boolean bullish) {
-        return EMA.hasEmaCrossover(bullish, getEmaShort(), getEmaLong());
+        return hasCrossover(bullish, getEmaShort(), getEmaLong());
     }
 
     public boolean hasMacdCrossover(boolean bullish) {
-        return MACD.hasMacdCrossover(bullish, getSignalLine(), getMacdLine());
+        return hasCrossover(bullish, getMacdLine(), getSignalLine());
+    }
+
+    public boolean hasAdxCrossover(boolean bullish) {
+        return hasCrossover(bullish, getDmPlusIndicator(), getDmMinusIndicator());
     }
 
     public boolean hasMacdConvergenceDivergence(boolean uptrend, int periods, double currentPrice) {
@@ -257,11 +256,11 @@ public class Calculator {
         return this.history;
     }
 
-    protected List<Double> getVolume() {
+    public List<Double> getVolume() {
         return this.volume;
     }
 
-    protected List<Double> getRsi() {
+    public List<Double> getRsi() {
         return this.rsi;
     }
 
@@ -271,10 +270,6 @@ public class Calculator {
 
     public List<Double> getSignalLine() {
         return this.signalLine;
-    }
-
-    public double getCurrentRsi() {
-        return getRsi().get(getRsi().size() - 1);
     }
 
     public List<Double> getAdx() {

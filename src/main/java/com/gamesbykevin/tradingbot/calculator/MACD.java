@@ -1,12 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.agent.AgentHelper;
-
-import javax.rmi.PortableRemoteObject;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.Calculator.EMA_CROSSOVER;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_MACD;
 
 public class MACD {
@@ -67,51 +62,6 @@ public class MACD {
             //add our new ema value to the list
             signalLine.add(newEma);
         }
-    }
-
-    protected static boolean hasMacdCrossover(boolean bullish, List<Double> signalLine, List<Double> macdLine) {
-
-        //where do we start checking
-        int start = EMA_CROSSOVER + 1;
-
-        //if we are checking bullish the macdLine is greater then the signal line
-        if (bullish) {
-
-            //to start we want the signal line to be greater than the macd line
-            if (signalLine.get(signalLine.size() - start) > macdLine.get(macdLine.size() - start)) {
-
-                //now we want the macd line to be greater than the signal line
-                for (int index = start - 1; index > 0; index--) {
-
-                    //if the macd line is the same or smaller, we can't confirm a crossover
-                    if (macdLine.get(macdLine.size() - index) <= signalLine.get(signalLine.size() - index))
-                        return false;
-                }
-
-                //we found everything as expected
-                return true;
-            }
-
-        } else {
-
-            //for bearish crossover the macd line needs to be less than the signal line
-            if (macdLine.get(macdLine.size() - start) > signalLine.get(signalLine.size() - start)) {
-
-                //now we want the macd line to be greater than the signal line
-                for (int index = start - 1; index > 0; index--) {
-
-                    //if the macd line is the same or greater, we can't confirm a crossover
-                    if (macdLine.get(macdLine.size() - index) >= signalLine.get(signalLine.size() - index))
-                        return false;
-                }
-
-                //we found everything as expected
-                return true;
-            }
-        }
-
-        //no crossover detected
-        return false;
     }
 
     protected static boolean hasConvergenceDivergenceTrend(boolean uptrend, List<Double> macdLine, int periods) {

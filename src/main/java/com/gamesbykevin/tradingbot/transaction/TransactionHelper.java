@@ -123,8 +123,9 @@ public class TransactionHelper {
                 }
             }
 
-            //display the count and description
-            displayMessage(agent, result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true);
+            //display the count if greater than 0
+            if (count > 0)
+                displayMessage(agent, result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true);
         }
     }
 
@@ -153,8 +154,9 @@ public class TransactionHelper {
                 }
             }
 
-            //display the count and description
-            displayMessage(agent, result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true);
+            //display the count if greater than 0
+            if (count > 0)
+                displayMessage(agent, result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true);
         }
     }
 

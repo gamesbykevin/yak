@@ -1,12 +1,6 @@
 package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.agent.AgentHelper;
-
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.EMA_CROSSOVER;
 
 public class EMA {
 
@@ -83,50 +77,5 @@ public class EMA {
             //add it to the list
             emaList.add(ema);
         }
-    }
-
-    protected static boolean hasEmaCrossover(boolean bullish, List<Double> emaShort, List<Double> emaLong) {
-
-        //where do we start checking
-        int start = EMA_CROSSOVER + 1;
-
-        //if we are checking bullish the long is greater then the short is greater
-        if (bullish) {
-
-            //to start we want the long to be greater than the short
-            if (emaLong.get(emaLong.size() - start) > emaShort.get(emaShort.size() - start)) {
-
-                //now we want the short to be greater than the long
-                for (int index = start - 1; index > 0; index--) {
-
-                    //if the short is less, we can't confirm a crossover
-                    if (emaShort.get(emaShort.size() - index) <= emaLong.get(emaLong.size() - index))
-                        return false;
-                }
-
-                //we found everything as expected
-                return true;
-            }
-
-        } else {
-
-            //to start we want the short to be greater than the long
-            if (emaLong.get(emaLong.size() - start) < emaShort.get(emaShort.size() - start)) {
-
-                //now we want the long to be greater than the short
-                for (int index = start - 1; index > 0; index--) {
-
-                    //if the long is less, we can't confirm a crossover
-                    if (emaShort.get(emaShort.size() - index) >= emaLong.get(emaLong.size() - index))
-                        return false;
-                }
-
-                //we found everything as expected
-                return true;
-            }
-        }
-
-        //no crossover detected
-        return false;
     }
 }

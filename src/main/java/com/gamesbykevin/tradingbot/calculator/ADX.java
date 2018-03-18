@@ -167,29 +167,4 @@ public class ADX {
             result.add(newValue);
         }
     }
-
-    public static boolean hasCrossover(boolean bullish, List<Double> dmPlusIndicator, List<Double> dmMinusIndicator) {
-
-        double previousValuePlus = dmPlusIndicator.get(dmPlusIndicator.size() - 2);
-        double previousValueMinus = dmMinusIndicator.get(dmMinusIndicator.size() - 2);
-
-        double currentValuePlus = dmPlusIndicator.get(dmPlusIndicator.size() - 1);
-        double currentValueMinus = dmMinusIndicator.get(dmMinusIndicator.size() - 1);
-
-        if (bullish) {
-
-            //if we are checking bullish, the plus needs to be less than minus, then cross over
-            if (previousValuePlus < previousValueMinus && currentValuePlus > currentValueMinus)
-                return true;
-
-        } else {
-
-            //if we are checking bearish, the minus needs to be less than plus, then cross over
-            if (previousValuePlus > previousValueMinus && currentValuePlus < currentValueMinus)
-                return true;
-        }
-
-        //we did not find a crossover
-        return false;
-    }
 }
