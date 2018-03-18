@@ -105,7 +105,6 @@ public class AgentHelper {
 
     protected static void checkSell(Agent agent, Calculator calculator, Product product, double currentPrice) {
 
-        final double priceHigh = agent.getWallet().getPurchasePrice();
         final double priceGain = agent.getWallet().getPurchasePrice() + (agent.getWallet().getPurchasePrice() * SELL_GAIN_RATIO);
         final double priceLoss = agent.getWallet().getPurchasePrice() - (agent.getWallet().getPurchasePrice() * SELL_LOSS_RATIO);
 
@@ -122,8 +121,8 @@ public class AgentHelper {
 
                 if (adx >= TREND_ADX) {
 
-                    //if the price is greater than what we paid and the minus has crossed below the plus that is our signal to sell
-                    if (currentPrice > priceHigh && calculator.hasAdxCrossover(false))
+                    //if the minus has crossed below the plus that is our signal to sell
+                    if (calculator.hasAdxCrossover(false))
                         agent.setReasonSell(ReasonSell.Reason_9);
                 }
 
@@ -140,8 +139,8 @@ public class AgentHelper {
                 //let's see if we are above resistance line before selling
                 if (rsi >= RESISTANCE_LINE) {
 
-                    //if the price is greater than what we paid and we are showing a downward divergence
-                    if (currentPrice > priceHigh && calculator.hasMacdConvergenceDivergence(false, PERIODS_MACD, currentPrice))
+                    //if we are showing a downward divergence
+                    if (calculator.hasMacdConvergenceDivergence(false, PERIODS_MACD, currentPrice))
                         agent.setReasonSell(ReasonSell.Reason_8);
                 }
 
@@ -155,8 +154,8 @@ public class AgentHelper {
 
             case EMA:
 
-                //if the price is greater than what we paid and  we have a bearish crossover, we expect price to go down
-                if (currentPrice > priceHigh && calculator.hasEmaCrossover(false))
+                //if we have a bearish crossover, we expect price to go down
+                if (calculator.hasEmaCrossover(false))
                     agent.setReasonSell(ReasonSell.Reason_3);
 
                 //display the recent ema values which we use as a signal
@@ -166,8 +165,8 @@ public class AgentHelper {
 
             case OBV:
 
-                //if the price is greater than what we paid and there is a bearish divergence let's sell
-                if (currentPrice > priceHigh && calculator.hasDivergenceObv(false))
+                //if there is a bearish divergence let's sell
+                if (calculator.hasDivergenceObv(false))
                     agent.setReasonSell(ReasonSell.Reason_7);
 
                 //display the volume
@@ -181,8 +180,8 @@ public class AgentHelper {
                 //let's see if we are above resistance line before selling
                 if (rsi >= RESISTANCE_LINE) {
 
-                    //if the price is higher than purchase and there is a divergence
-                    if (currentPrice > priceHigh && calculator.hasDivergenceRsi(true))
+                    //if there is a divergence
+                    if (calculator.hasDivergenceRsi(true))
                         agent.setReasonSell(ReasonSell.Reason_6);
                 }
 
@@ -192,8 +191,8 @@ public class AgentHelper {
 
             case MACD:
 
-                //if the price is higher than purchase and we have a bearish crossover, we expect price to go down
-                if (currentPrice > priceHigh && calculator.hasMacdCrossover(false))
+                //if we have a bearish crossover, we expect price to go down
+                if (calculator.hasMacdCrossover(false))
                     agent.setReasonSell(ReasonSell.Reason_4);
 
                 //display the recent ema values which we use as a signal
@@ -213,7 +212,7 @@ public class AgentHelper {
 
                     //display values
                     display(agent, "EMA Short", calculator.getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
-                    display(agent, "EMA Long", calculator.getEmaLong(), PERIODS_EMA_LONG, agent.getReasonSell() != null);
+                    display(agent, "EMA Long", calculator.getEmaLong(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
                     displayMessage(agent, "Current price: $" + currentPrice, agent.getReasonSell() != null);
                 }
                 break;
@@ -222,12 +221,23 @@ public class AgentHelper {
                 throw new RuntimeException("Strategy not found: " + agent.getStrategy());
         }
 
-        //if no reason to sell yet, check these to see if we made enough money or lost enough
+        //if the current stock price is less than what we paid, we shouldn't sell or else we will lose money
+        if (currentPrice < agent.getWallet().getPurchasePrice())
+            agent.setReasonSell(null);
+
+        //if no reason to sell yet
         if (agent.getReasonSell() == null) {
+
             if (currentPrice >= priceGain) {
+
+                //if we made enough money we will sell
                 agent.setReasonSell(ReasonSell.Reason_1);
+
             } else if (currentPrice <= priceLoss) {
+
+                //if we lost too much money we will sell
                 agent.setReasonSell(ReasonSell.Reason_2);
+
             }
         }
 
@@ -303,7 +313,7 @@ public class AgentHelper {
 
                 //display the recent ema values which we use as a signal
                 display(agent, "EMA Short: ", calculator.getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonBuy() != null);
-                display(agent, "EMA Long: ", calculator.getEmaLong(), PERIODS_EMA_LONG,agent.getReasonBuy() != null);
+                display(agent, "EMA Long: ", calculator.getEmaLong(), PERIODS_EMA_SHORT,agent.getReasonBuy() != null);
                 break;
 
             case OBV:
