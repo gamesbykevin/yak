@@ -94,8 +94,8 @@ public class CalculatorHelper {
                 if (history.get(i).close > history.get(history.size() - periods).close)
                     return false;
 
-                //if this current closing price is <= our latest price, we don't have a new low
-                if (history.get(i).close <= history.get(history.size() - 1).close)
+                //if this current closing price is < our latest price, we don't have a new low
+                if (history.get(i).close < history.get(history.size() - 1).close)
                     return false;
             }
 
@@ -123,8 +123,8 @@ public class CalculatorHelper {
                 if (history.get(i).close < history.get(history.size() - periods).close)
                     return false;
 
-                //if this current closing price is >= our latest price, we don't have a new high
-                if (history.get(i).close >= history.get(history.size() - 1).close)
+                //if this current closing price is > our latest price, we don't have a new high
+                if (history.get(i).close > history.get(history.size() - 1).close)
                     return false;
             }
 

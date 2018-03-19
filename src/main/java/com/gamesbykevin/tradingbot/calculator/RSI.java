@@ -88,26 +88,30 @@ public class RSI extends Indicator {
 
     @Override
     public void calculate(List<Period> history) {
+        calculateRsi(history, getRsi(), getPeriods());
+    }
+
+    protected static void calculateRsi(List<Period> history, List<Double> rsi, int periods) {
 
         //clear our historical rsi list
-        getRsi().clear();
+        rsi.clear();
 
         //calculate as many periods as we can
-        for (int i = 0; i < history.size() - getPeriods(); i++) {
+        for (int i = 0; i < history.size(); i++) {
 
             //skip if we don't have enough data
-            if (i <= getPeriods())
+            if (i <= periods)
                 continue;
 
             //find the start and end periods
-            final int start = i;
-            final int end = start + getPeriods();
+            final int start = i - periods;
+            final int end = i;
 
             //calculate the rsi for the given periods
             final double tmpRsi = calculateRsi(history, start, end);
 
             //add the rsi value to our list
-            getRsi().add(tmpRsi);
+            rsi.add(tmpRsi);
         }
     }
 
@@ -118,7 +122,7 @@ public class RSI extends Indicator {
      * @param endIndex Ending period
      * @return The rsi value
      */
-    private double calculateRsi(List<Period> history, int startIndex, int endIndex) {
+    private static double calculateRsi(List<Period> history, int startIndex, int endIndex) {
 
         //track total gains and losses
         float gain = 0, loss = 0;
@@ -165,9 +169,9 @@ public class RSI extends Indicator {
 
         //smothered rsi including current gain loss
         float smotheredRS = (
-                ((avgGain * size) + gainCurrent) / (size + 1)
+            ((avgGain * size) + gainCurrent) / (size + 1)
         ) / (
-                ((avgLoss * size) + lossCurrent) / (size + 1)
+            ((avgLoss * size) + lossCurrent) / (size + 1)
         );
 
         //calculate our rsi value

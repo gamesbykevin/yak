@@ -81,8 +81,11 @@ public class MACD extends Indicator {
             double emaLong = getEmaLong().get(getEmaLong().size() - 1);
             double emaShort = getEmaShort().get(getEmaShort().size() - 1);
 
-            //if the current price went below the ema long and short values, we need to exit
-            if (currentPrice < emaLong && currentPrice < emaShort)
+            //get the low of the most recent period
+            double recentLow = history.get(history.size() - 1).low;
+
+            //if the recent low price is less than both the long/short ema values, we need to exit our trade
+            if (recentLow < emaLong && recentLow < emaShort)
                 agent.setReasonSell(ReasonSell.Reason_5);
 
         }

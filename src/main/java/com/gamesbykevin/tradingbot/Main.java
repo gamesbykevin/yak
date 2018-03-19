@@ -291,7 +291,7 @@ public class Main implements Runnable {
         for (AgentManager agentManager : agentManagers.values()) {
 
             //get the total assets for the current product
-            final double assets = agentManager.getAssets();
+            final double assets = agentManager.getTotalAssets();
 
             //add to our total
             total += assets;
@@ -299,8 +299,12 @@ public class Main implements Runnable {
             //add to our details
             text = text + agentManager.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
 
+            //display each agent's funds as well
+            text = text + agentManager.getAgentDetails();
+
             //add line break in the end
             text = text + "\n";
+
         }
 
         subject = "Total assets $" + AgentHelper.formatValue(total);
@@ -319,6 +323,13 @@ public class Main implements Runnable {
 
             //update the timer
             previous = System.currentTimeMillis();
+
+            //lets also write our info to the logs
+            for (AgentManager agentManager : agentManagers.values()) {
+
+                //write the details of each agent to a log file
+                agentManager.writeAgentDetails();
+            }
 
         } else {
 

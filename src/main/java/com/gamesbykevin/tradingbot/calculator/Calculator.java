@@ -58,6 +58,8 @@ public class Calculator {
     }
 
     public Calculator() {
+
+        //create new list(s)
         this.history = new ArrayList<>();
         this.indicators = new HashMap<>();
 
@@ -90,6 +92,14 @@ public class Calculator {
 
                 case MACS:
                     indicator = new MACS();
+                    break;
+
+                case RSI_2:
+                    indicator = new TWO_RSI();
+                    break;
+
+                case NR7:
+                    indicator = new NR7();
                     break;
 
                 default:

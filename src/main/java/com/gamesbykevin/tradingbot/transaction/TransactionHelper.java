@@ -20,7 +20,9 @@ public class TransactionHelper {
         Reason_3("There is a divergence in the RSI"),
         Reason_4("Volume has a divergence"),
         Reason_5("MACS crossover and above trend line"),
-        Reason_6("ADX is trending and +DI has crossed above -DI")
+        Reason_6("ADX is trending and +DI has crossed above -DI"),
+        Reason_7("2 period rsi is above 90"),
+        Reason_8("NR7 Price breakout"),
         ;
 
         private final String description;
@@ -47,7 +49,9 @@ public class TransactionHelper {
         Reason_6("There is a divergence in the RSI"),
         Reason_7("Volume has a divergence"),
         Reason_8("MACS crossover and below trend line"),
-        Reason_9("-DI has crossed below +DI")
+        Reason_9("-DI has crossed below +DI"),
+        Reason_10("2 period rsi is below 10"),
+        Reason_11("NR7 Period close is > purchase price"),
         ;
 
         private final String description;

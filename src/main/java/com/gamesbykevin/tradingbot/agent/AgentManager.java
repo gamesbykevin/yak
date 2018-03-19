@@ -42,7 +42,7 @@ public class AgentManager {
      * Different trading strategies
      */
     public enum TradingStrategy {
-        RSI, MACD, OBV, EMA, ADX, MACS
+        RSI, MACD, OBV, EMA, ADX, MACS, RSI_2, NR7
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -169,21 +169,45 @@ public class AgentManager {
     }
 
     /**
+     * Write the details of every agent in our list to our log file
+     */
+    public void writeAgentDetails() {
+        displayMessage(getAgentDetails(), true, getWriter());
+    }
+
+    public String getAgentDetails() {
+
+        //message with all agent totals
+        String result = "";
+
+        for (Agent agent : agents) {
+            result = result + getProductId() + " : " + agent.getStrategy() + " - $" + AgentHelper.formatValue(getAssets(agent)) +"\n";
+        }
+
+        //return our result
+        return result;
+    }
+
+    /**
      * Get the total assets
      * @return The total funds available + the quantity of stock we currently own @ the current stock price
      */
-    public double getAssets() {
+    public double getTotalAssets() {
 
         double amount = 0;
 
         for (Agent agent : agents) {
 
             //add the total amount
-            amount += (agent.getWallet().getQuantity() * getCurrentPrice()) + agent.getWallet().getFunds();
+            amount += getAssets(agent);
         }
 
         //return the total amount
         return amount;
+    }
+
+    private double getAssets(Agent agent) {
+        return (agent.getWallet().getQuantity() * getCurrentPrice()) + agent.getWallet().getFunds();
     }
 
     private static void displayMessage(String message, boolean write, PrintWriter writer) {
