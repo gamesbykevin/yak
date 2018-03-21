@@ -74,22 +74,6 @@ public class MACD extends Indicator {
         if (hasCrossover(false, getMacdLine(), getSignalLine()))
             agent.setReasonSell(ReasonSell.Reason_4);
 
-        //if no reason to sell yet, check if the price drops below the ema values
-        if (agent.getReasonSell() == null) {
-
-            //get the current ema long and short values
-            double emaLong = getEmaLong().get(getEmaLong().size() - 1);
-            double emaShort = getEmaShort().get(getEmaShort().size() - 1);
-
-            //get the low of the most recent period
-            double recentLow = history.get(history.size() - 1).low;
-
-            //if the recent low price is less than both the long/short ema values, we need to exit our trade
-            if (recentLow < emaLong && recentLow < emaShort)
-                agent.setReasonSell(ReasonSell.Reason_5);
-
-        }
-
         //display our data
         displayData(agent, agent.getReasonSell() != null);
     }
@@ -102,8 +86,8 @@ public class MACD extends Indicator {
         display(agent, "Signal Line: ", getSignalLine(), getPeriods(), write);
 
         //display values
-        display(agent, "EMA Short", getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
-        display(agent, "EMA Long", getEmaLong(), PERIODS_EMA_SHORT, agent.getReasonSell() != null);
+        display(agent, "EMA Short: ", getEmaShort(), PERIODS_EMA_SHORT / 2, write);
+        display(agent, "EMA Long: ", getEmaLong(), PERIODS_EMA_SHORT / 2, write);
     }
 
     @Override
@@ -114,67 +98,81 @@ public class MACD extends Indicator {
         EMA.calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
 
         //now we can calculate our macd line
-        calculateMacdLine();
+        calculateMacdLine(getEmaShort(), getEmaLong(), getMacdLine());
 
         //then we can calculate our signal line
-        calculateSignalLine();
+        calculateSignalLine(getSignalLine(), getMacdLine(), getPeriods());
     }
 
-    private void calculateMacdLine() {
+    protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {
 
         //clear the list
-        getMacdLine().clear();
+        macdLine.clear();
 
         //we need to start at the right index
-        int difference = getEmaShort().size() - getEmaLong().size();
+        int difference = emaShort.size() - emaLong.size();
 
         //calculate for every value possible
-        for (int i = 0; i < getEmaLong().size(); i++) {
+        for (int i = 0; i < emaLong.size(); i++) {
 
             //the macd line is the 12 day ema - 26 day ema
-            getMacdLine().add(getEmaShort().get(difference + i) - getEmaLong().get(i));
+            macdLine.add(emaShort.get(difference + i) - emaLong.get(i));
         }
     }
 
-    private void calculateSignalLine() {
+    protected static void calculateSignalLine(List<Double> signalLine, List<Double> macdLine, int periods) {
 
         //clear list
-        getSignalLine().clear();
+        signalLine.clear();
 
         //we add the sum to get the sma (simple moving average)
         double sum = 0;
 
         //calculate sma first
-        for (int i = 0; i < getPeriods(); i++) {
-            sum += getMacdLine().get(i);
+        for (int i = 0; i < periods; i++) {
+            sum += macdLine.get(i);
         }
 
         //we now have the sma as a start
-        final double sma = sum / (float)getPeriods();
+        final double sma = sum / (float)periods;
 
         //here is our multiplier
-        final double multiplier = ((float)2 / ((float)getPeriods() + 1));
+        final double multiplier = ((float)2 / ((float)periods + 1));
 
         //calculate our first ema
-        final double ema = ((getMacdLine().get(getPeriods() - 1) - sma) * multiplier) + sma;
+        final double ema = ((macdLine.get(periods - 1) - sma) * multiplier) + sma;
 
         //add the 9 day ema to our list
-        getSignalLine().add(ema);
+        signalLine.add(ema);
 
         //now let's calculate the remaining periods for ema
-        for (int i = getPeriods(); i < getMacdLine().size(); i++) {
+        for (int i = periods; i < macdLine.size(); i++) {
 
             //get our previous ema
-            final double previousEma = getSignalLine().get(getSignalLine().size() - 1);
+            final double previousEma = signalLine.get(signalLine.size() - 1);
 
             //get our close value
-            final double close = getMacdLine().get(i);
+            final double close = macdLine.get(i);
 
             //calculate our new ema
             final double newEma = ((close - previousEma) * multiplier) + previousEma;
 
             //add our new ema value to the list
-            getSignalLine().add(newEma);
+            signalLine.add(newEma);
+        }
+    }
+
+    protected static void calculateHistogram(List<Double> macdLine, List<Double> signalLine, List<Double> histogram) {
+
+        //clear list
+        histogram.clear();
+
+        //determine how long back we can calculate the histogram
+        int length = (macdLine.size() > signalLine.size()) ? signalLine.size() - 1 : macdLine.size() - 1;
+
+        //loop through and calculate the histogram
+        for (int i = length; i > 0; i--) {
+            histogram.add(macdLine.get(i) - signalLine.get(i));
         }
     }
 }

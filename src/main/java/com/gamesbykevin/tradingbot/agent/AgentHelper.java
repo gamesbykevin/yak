@@ -355,8 +355,14 @@ public class AgentHelper {
     }
 
     public static BigDecimal formatValue(final int decimals, final double value) {
-        BigDecimal result = BigDecimal.valueOf(value);
-        return result.setScale(decimals, RoundingMode.HALF_DOWN);
+        try {
+            BigDecimal result = BigDecimal.valueOf(value);
+            return result.setScale(decimals, RoundingMode.HALF_DOWN);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return BigDecimal.valueOf(0d);
     }
 
     public static String getStockInvestmentDesc(Agent agent) {

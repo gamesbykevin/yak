@@ -102,6 +102,18 @@ public class Calculator {
                     indicator = new NR7();
                     break;
 
+                case MACDD:
+                    indicator = new MACDDIV();
+                    break;
+
+                case HA:
+                    indicator = new HA();
+                    break;
+
+                case NR4:
+                    indicator = new NR4();
+                    break;
+
                 default:
                     throw new RuntimeException("Strategy not found: " + strategy);
             }

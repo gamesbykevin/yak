@@ -38,7 +38,11 @@ public abstract class Indicator {
             if (info != null && info.length() > 0)
                 info += ", ";
 
-            info += AgentHelper.formatValue(4, list.get(i));
+            if (list.get(i) == 0) {
+                info += "0";
+            } else {
+                info += list.get(i);
+            }
         }
 
         displayMessage(agent, desc + info, write);

@@ -88,15 +88,15 @@ public class CalculatorHelper {
         if (bullish) {
 
             //now check the previous x periods to see if this is a new low
-            for (int i = history.size() - periods; i < history.size() - 1; i++) {
+            for (int i = history.size() - periods; i < history.size(); i++) {
 
                 //at this point we want prices that are lower than the starting price
                 if (history.get(i).close > history.get(history.size() - periods).close)
                     return false;
 
                 //if this current closing price is < our latest price, we don't have a new low
-                if (history.get(i).close < history.get(history.size() - 1).close)
-                    return false;
+                //if (history.get(i).close < history.get(history.size() - 1).close)
+                //    return false;
             }
 
             //lets make sure the indicator data is higher than the start period
@@ -107,25 +107,25 @@ public class CalculatorHelper {
                     return false;
 
                 //and we want every data point to be smaller than the last
-                if (data.get(i) > data.get(data.size() - 1))
-                    return false;
+                //if (data.get(i) > data.get(data.size() - 1))
+                //    return false;
             }
 
-            //the current price is a new low, and the indicator data is increasing, we have a bullish divergence
+            //the price are all new lows, and the indicator data is setting new highs, we have a bullish divergence
             return true;
 
         } else {
 
             //now check the previous x periods to see if this is a new high
-            for (int i = history.size() - periods; i < history.size() - 1; i++) {
+            for (int i = history.size() - periods; i < history.size(); i++) {
 
                 //at this point we want prices that are higher than the starting price
                 if (history.get(i).close < history.get(history.size() - periods).close)
                     return false;
 
                 //if this current closing price is > our latest price, we don't have a new high
-                if (history.get(i).close > history.get(history.size() - 1).close)
-                    return false;
+                //if (history.get(i).close > history.get(history.size() - 1).close)
+                //    return false;
             }
 
             //lets make sure the indicator data is lower than the start period
@@ -136,11 +136,11 @@ public class CalculatorHelper {
                     return false;
 
                 //and we want every data point to be larger than the last
-                if (data.get(i) < data.get(data.size() - 1))
-                    return false;
+                //if (data.get(i) < data.get(data.size() - 1))
+                //    return false;
             }
 
-            //the current price is a new high, and the indicator data is decreasing, we have a bearish divergence
+            //the price are all new highs, and the indicator data is setting new lows, we have a bearish divergence
             return true;
         }
     }

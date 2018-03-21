@@ -288,6 +288,7 @@ public class Main implements Runnable {
 
         double total = 0;
 
+        //print the summary of each agent manager
         for (AgentManager agentManager : agentManagers.values()) {
 
             //get the total assets for the current product
@@ -307,6 +308,26 @@ public class Main implements Runnable {
 
         }
 
+        text = text + "\n";
+
+        String strategyDesc = "Strategy Summary\n";
+
+        //now show the total $ per trading strategy
+        for (AgentManager.TradingStrategy strategy : AgentManager.TradingStrategy.values()) {
+
+            double amount = 0;
+
+            //check each manager looking for the strategy
+            for (AgentManager agentManager : agentManagers.values()) {
+                amount += agentManager.getAssets(strategy);
+            }
+
+            strategyDesc = strategyDesc + strategy.toString() + " $" + AgentHelper.formatValue(amount) + "\n";
+        }
+
+        //add strategy description to the overall message
+        text = text + strategyDesc;
+
         subject = "Total assets $" + AgentHelper.formatValue(total);
 
         //print our total assets if they have changed
@@ -324,12 +345,8 @@ public class Main implements Runnable {
             //update the timer
             previous = System.currentTimeMillis();
 
-            //lets also write our info to the logs
-            for (AgentManager agentManager : agentManagers.values()) {
-
-                //write the details of each agent to a log file
-                agentManager.writeAgentDetails();
-            }
+            //write our agent manager summary to the main log file
+            displayMessage(strategyDesc, true, writer);
 
         } else {
 

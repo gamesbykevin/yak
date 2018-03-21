@@ -23,6 +23,9 @@ public class TransactionHelper {
         Reason_6("ADX is trending and +DI has crossed above -DI"),
         Reason_7("2 period rsi is above 90"),
         Reason_8("NR7 Price breakout"),
+        Reason_9("MACD Histogram/Price is showing divergence"),
+        Reason_10("Heikin-Ashi candles are now going bullish"),
+        Reason_11("NR4 Price breakout"),
         ;
 
         private final String description;
@@ -52,6 +55,9 @@ public class TransactionHelper {
         Reason_9("-DI has crossed below +DI"),
         Reason_10("2 period rsi is below 10"),
         Reason_11("NR7 Period close is > purchase price"),
+        Reason_12("MACD Histogram/Price is showing divergence"),
+        Reason_13("Heikin-Ashi candles are now going bearish"),
+        Reason_14("NR4 Period close is > purchase price"),
         ;
 
         private final String description;

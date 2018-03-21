@@ -62,6 +62,22 @@ public class EMA extends Indicator {
         if (hasCrossover(false, getEmaShort(), getEmaLong()))
             agent.setReasonSell(ReasonSell.Reason_3);
 
+        //if no reason to sell yet, check if the price drops below the ema values
+        if (agent.getReasonSell() == null) {
+
+            //get the current ema long and short values
+            double emaLong = getEmaLong().get(getEmaLong().size() - 1);
+            double emaShort = getEmaShort().get(getEmaShort().size() - 1);
+
+            //get the low of the most recent period
+            double recentLow = history.get(history.size() - 1).low;
+
+            //if the recent low price is less than both the long/short ema values, we need to exit our trade
+            if (recentLow < emaLong && recentLow < emaShort)
+                agent.setReasonSell(ReasonSell.Reason_5);
+
+        }
+
         //display data
         displayData(agent, agent.getReasonSell() != null);
     }
@@ -70,8 +86,8 @@ public class EMA extends Indicator {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short: ", getEmaShort(), PERIODS_EMA_SHORT, agent.getReasonBuy() != null);
-        display(agent, "EMA Long: ", getEmaLong(), PERIODS_EMA_SHORT,agent.getReasonBuy() != null);
+        display(agent, "EMA Short: ", getEmaShort(), PERIODS_EMA_SHORT / 2, agent.getReasonBuy() != null);
+        display(agent, "EMA Long: ", getEmaLong(), PERIODS_EMA_SHORT / 2,agent.getReasonBuy() != null);
     }
 
     @Override

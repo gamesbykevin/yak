@@ -169,6 +169,7 @@ public class Agent {
 
             //notify if this agent has stopped trading
             if (hasStopTrading()) {
+
                 String subject = "We stopped trading";
                 String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
                 String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
@@ -176,8 +177,16 @@ public class Agent {
                 displayMessage(this, text1, true);
                 displayMessage(this, text2, true);
 
+                //include the funds in our message
+                String message = text1 + "\n";
+                message = message + text2 + "\n";
+
+                //also include the summary of wins/losses
+                message = message + TransactionHelper.getDescWins(this) + "\n";
+                message = message + TransactionHelper.getDescLost(this) + "\n";
+
                 //send email notification
-                Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", text1 + "\n" + text2);
+                Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", message);
             }
         }
     }

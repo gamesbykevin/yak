@@ -42,7 +42,7 @@ public class AgentManager {
      * Different trading strategies
      */
     public enum TradingStrategy {
-        RSI, MACD, OBV, EMA, ADX, MACS, RSI_2, NR7
+        RSI, MACD, OBV, EMA, ADX, MACS, RSI_2, NR7, MACDD, HA, NR4
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -168,13 +168,6 @@ public class AgentManager {
         return this.product;
     }
 
-    /**
-     * Write the details of every agent in our list to our log file
-     */
-    public void writeAgentDetails() {
-        displayMessage(getAgentDetails(), true, getWriter());
-    }
-
     public String getAgentDetails() {
 
         //message with all agent totals
@@ -203,6 +196,20 @@ public class AgentManager {
         }
 
         //return the total amount
+        return amount;
+    }
+
+    public double getAssets(TradingStrategy strategy) {
+
+        double amount = 0;
+
+        //add the total for every agent with the matching strategy
+        for (Agent agent : getAgents()) {
+            if (agent.getStrategy() == strategy)
+                amount += getAssets(agent);
+        }
+
+        //return the result
         return amount;
     }
 
