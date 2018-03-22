@@ -36,11 +36,11 @@ public class EMA extends Indicator {
         this.emaShort = new ArrayList<>();
     }
 
-    private List<Double> getEmaShort() {
+    public List<Double> getEmaShort() {
         return this.emaShort;
     }
 
-    private List<Double> getEmaLong() {
+    public List<Double> getEmaLong() {
         return this.emaLong;
     }
 
@@ -86,8 +86,8 @@ public class EMA extends Indicator {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short: ", getEmaShort(), PERIODS_EMA_SHORT / 2, agent.getReasonBuy() != null);
-        display(agent, "EMA Long: ", getEmaLong(), PERIODS_EMA_SHORT / 2,agent.getReasonBuy() != null);
+        display(agent, "EMA Short: ", getEmaShort(), (PERIODS_EMA_SHORT / 2), agent.getReasonBuy() != null);
+        display(agent, "EMA Long: ", getEmaLong(), (PERIODS_EMA_SHORT / 2),agent.getReasonBuy() != null);
     }
 
     @Override

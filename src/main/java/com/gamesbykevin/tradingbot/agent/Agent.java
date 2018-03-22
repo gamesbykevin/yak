@@ -54,6 +54,9 @@ public class Agent {
     //the product we are trading
     private final String productId;
 
+    //what is our hard stop amount
+    private double hardStop = 0;
+
     protected Agent(TradingStrategy strategy, double funds, String productId, String fileName) {
 
         //save the trading strategy we want to implement
@@ -286,5 +289,13 @@ public class Agent {
 
     public List<Transaction> getTransactions() {
         return this.transactions;
+    }
+
+    public double getHardStop() {
+        return this.hardStop;
+    }
+
+    public void setHardStop(double hardStop) {
+        this.hardStop = hardStop;
     }
 }

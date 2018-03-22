@@ -41,6 +41,11 @@ public class AgentHelper {
      */
     public static float SELL_GAIN_RATIO;
 
+    /**
+     * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
+     */
+    public static float HARD_STOP_RATIO;
+
     public enum Action {
 
         Buy("buy"),
@@ -93,21 +98,41 @@ public class AgentHelper {
 
     protected static void checkSell(Agent agent, Calculator calculator, Product product, double currentPrice) {
 
-        final double priceGain = agent.getWallet().getPurchasePrice() + (agent.getWallet().getPurchasePrice() * SELL_GAIN_RATIO);
-        final double priceLoss = agent.getWallet().getPurchasePrice() - (agent.getWallet().getPurchasePrice() * SELL_LOSS_RATIO);
-
         //do we sell the stock
         agent.setReasonSell(null);
 
         //check for a sell signal
         calculator.getIndicator(agent.getStrategy()).checkSellSignal(agent, calculator.getHistory(), currentPrice);
 
-        //if the current stock price is less than what we paid, we shouldn't sell or else we will lose money
+        //if the current stock price is less than what we paid, we would lose money if we sold
         if (currentPrice < agent.getWallet().getPurchasePrice())
             agent.setReasonSell(null);
 
+        //what is the increase we check to see if we set a new hard stop amount
+        double increase = (agent.getWallet().getPurchasePrice() * HARD_STOP_RATIO);
+
+        //if the price has increased some more, let's set a new hard stop
+        if (currentPrice > agent.getHardStop() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
+
+            //set our new hard stop limit
+            agent.setHardStop(agent.getHardStop() + (increase));
+
+            //write hard stop amount to our log file
+            displayMessage(agent, "New hard stop $" + agent.getHardStop(), true);
+        }
+
+        //if the price dropped below our hard stop, we will sell to cut our losses
+        if (currentPrice <= agent.getHardStop())
+            agent.setReasonSell(ReasonSell.Reason_0);
+
         //if no reason to sell yet
         if (agent.getReasonSell() == null) {
+
+            //if we made too much money let's sell and not get too greedy
+            final double priceGain = agent.getWallet().getPurchasePrice() + (agent.getWallet().getPurchasePrice() * SELL_GAIN_RATIO);
+
+            //if we lost too much money, let's stop the bleeding
+            final double priceLoss = agent.getWallet().getPurchasePrice() - (agent.getWallet().getPurchasePrice() * SELL_LOSS_RATIO);
 
             if (currentPrice >= priceGain) {
 
@@ -142,14 +167,24 @@ public class AgentHelper {
         //check for reasons first
         agent.setReasonBuy(null);
 
+        //reset our hard stop until we actually buy
+        agent.setHardStop(0);
+
         //check for a buy signal
         calculator.getIndicator(agent.getStrategy()).checkBuySignal(agent, calculator.getHistory(), currentPrice);
 
         //we will buy if there is a reason
         if (agent.getReasonBuy() != null) {
 
+            //let's set our hard stop if it hasn't been set already
+            if (agent.getHardStop() == 0)
+                agent.setHardStop(currentPrice - (currentPrice * HARD_STOP_RATIO));
+
             //if there is a reason display it
             displayMessage(agent, agent.getReasonBuy().getDescription(), true);
+
+            //write hard stop amount to our log file
+            displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStop(), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));

@@ -20,11 +20,8 @@ public class MACDDIV extends Indicator {
     //list of ema values from the macd line
     private List<Double> signalLine;
 
-    //list of ema values for our long period
-    private List<Double> emaLong;
-
-    //list of ema values for our short period
-    private List<Double> emaShort;
+    //our ema object
+    private EMA emaObj;
 
     //our histogram (macdLine - signalLine)
     private List<Double> histogram;
@@ -36,21 +33,12 @@ public class MACDDIV extends Indicator {
 
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
-        this.emaLong = new ArrayList<>();
-        this.emaShort = new ArrayList<>();
+        this.emaObj = new EMA();
         this.histogram = new ArrayList<>();
     }
 
     private List<Double> getHistogram() {
         return this.histogram;
-    }
-
-    private List<Double> getEmaShort() {
-        return this.emaShort;
-    }
-
-    private List<Double> getEmaLong() {
-        return this.emaLong;
     }
 
     private List<Double> getMacdLine() {
@@ -92,19 +80,17 @@ public class MACDDIV extends Indicator {
         display(agent, "Histogram: ", getHistogram(), getPeriods(), write);
 
         //display values
-        display(agent, "EMA Short: ", getEmaShort(), PERIODS_EMA_SHORT / 2, write);
-        display(agent, "EMA Long: ", getEmaLong(), PERIODS_EMA_SHORT / 2, write);
+        this.emaObj.displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate our short and long ema values first
-        EMA.calculateEMA(history, getEmaShort(), PERIODS_EMA_SHORT);
-        EMA.calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
+        this.emaObj.calculate(history);
 
         //now we can calculate our macd line
-        calculateMacdLine(getEmaShort(), getEmaLong(), getMacdLine());
+        calculateMacdLine(this.emaObj.getEmaShort(), this.emaObj.getEmaLong(), getMacdLine());
 
         //then we can calculate our signal line
         calculateSignalLine(getSignalLine(), getMacdLine(), getPeriods());

@@ -39,7 +39,7 @@ public class RSI extends Indicator {
         this.rsi = new ArrayList<>();
     }
 
-    private List<Double> getRsi() {
+    public List<Double> getRsi() {
         return this.rsi;
     }
 

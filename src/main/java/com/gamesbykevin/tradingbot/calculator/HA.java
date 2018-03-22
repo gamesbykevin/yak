@@ -19,7 +19,7 @@ public class HA extends Indicator {
     /**
      * How many periods do we calculate Heikin-Ashi
      */
-    public static int PERIODS_HA = 7;
+    public final static int PERIODS_HA = 7;
 
     public HA() {
 

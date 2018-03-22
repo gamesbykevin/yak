@@ -104,6 +104,9 @@ public class PropertyUtil {
         //how long do we hold onto stock until we sell
         AgentHelper.SELL_GAIN_RATIO = Float.parseFloat(getProperties().getProperty("sellGainRatio"));
 
+        //what is our hard stop ratio, that we set as our purchased stock price rises
+        AgentHelper.HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
+
         //do we send a notification for every transaction?
         AgentHelper.NOTIFICATION_EVERY_TRANSACTION = Boolean.parseBoolean(getProperties().getProperty("notificationEveryTransaction"));
 

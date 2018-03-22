@@ -27,9 +27,15 @@ public class NR4 extends Indicator {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        /*
         //if the current $ breaks above high, we will buy
-        if (currentPrice > smallest.high)
+        if (currentPrice > smallest.high) {
             agent.setReasonBuy(ReasonBuy.Reason_11);
+
+            //set our hard stop amount
+            agent.setHardStop(smallest.low);
+        }
+        */
 
         //display our data
         displayData(agent, agent.getReasonBuy() != null);

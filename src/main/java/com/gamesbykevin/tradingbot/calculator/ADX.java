@@ -38,15 +38,15 @@ public class ADX extends Indicator {
         this.dmMinusIndicator = new ArrayList<>();
     }
 
-    private List<Double> getAdx() {
+    public List<Double> getAdx() {
         return this.adx;
     }
 
-    private List<Double> getDmPlusIndicator() {
+    public List<Double> getDmPlusIndicator() {
         return this.dmPlusIndicator;
     }
 
-    private List<Double> getDmMinusIndicator() {
+    public List<Double> getDmMinusIndicator() {
         return this.dmMinusIndicator;
     }
 
@@ -170,9 +170,9 @@ public class ADX extends Indicator {
         List<Double> trueRange = new ArrayList<>();
 
         //smooth the values
-        smooth(tmpDmMinus, dmMinus);
-        smooth(tmpDmPlus, dmPlus);
-        smooth(tmpTrueRange, trueRange);
+        smooth(tmpDmMinus, dmMinus, getPeriods());
+        smooth(tmpDmPlus, dmPlus, getPeriods());
+        smooth(tmpTrueRange, trueRange, getPeriods());
 
         for (int i = 0; i < dmPlus.size(); i++) {
 
@@ -224,12 +224,12 @@ public class ADX extends Indicator {
      * @param tmp Our temp list of values
      * @param result Our final result of smoothed values
      */
-    private void smooth(List<Double> tmp, List<Double> result) {
+    private static void smooth(List<Double> tmp, List<Double> result, int periods) {
 
         double sum = 0;
 
         //add the sum of the first x periods to get the first value
-        for (int i = 0; i < getPeriods(); i++) {
+        for (int i = 0; i < periods; i++) {
             sum += tmp.get(i);
         }
 
@@ -237,13 +237,13 @@ public class ADX extends Indicator {
         result.add(sum);
 
         //now lets smooth the values for the remaining
-        for (int i = getPeriods(); i < tmp.size(); i++) {
+        for (int i = periods; i < tmp.size(); i++) {
 
             //calculate our current
             double currentSum = 0;
 
             //calculate the sum of the current period
-            for (int x = i - getPeriods() + 1; x <= i; x++) {
+            for (int x = i - periods + 1; x <= i; x++) {
                 currentSum += tmp.get(x);
             }
 
@@ -251,7 +251,7 @@ public class ADX extends Indicator {
             double previousValue = result.get(result.size() - 1);
 
             //calculate the new smoothed value
-            double newValue = previousValue - (previousValue / (double)getPeriods()) + currentSum;
+            double newValue = previousValue - (previousValue / (double)periods) + currentSum;
 
             //add the smoothed value to our list
             result.add(newValue);

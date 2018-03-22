@@ -114,6 +114,14 @@ public class Calculator {
                     indicator = new NR4();
                     break;
 
+                case RSIA:
+                    indicator = new RSIA();
+                    break;
+
+                case RSIM:
+                    indicator = new RSIM();
+                    break;
+
                 default:
                     throw new RuntimeException("Strategy not found: " + strategy);
             }

@@ -26,6 +26,8 @@ public class TransactionHelper {
         Reason_9("MACD Histogram/Price is showing divergence"),
         Reason_10("Heikin-Ashi candles are now going bullish"),
         Reason_11("NR4 Price breakout"),
+        Reason_12("RSI is < support, ADX dm+ is above dm-"),
+        Reason_13("RSI is < support, macd has divergence"),
         ;
 
         private final String description;
@@ -44,6 +46,7 @@ public class TransactionHelper {
      */
     public enum ReasonSell {
 
+        Reason_0("We have hit our hard stop"),
         Reason_1("The stock price has exceeded our price gain ratio"),
         Reason_2("We have lost too much, sell now"),
         Reason_3("There is a swing detected in the EMA"),
@@ -58,6 +61,8 @@ public class TransactionHelper {
         Reason_12("MACD Histogram/Price is showing divergence"),
         Reason_13("Heikin-Ashi candles are now going bearish"),
         Reason_14("NR4 Period close is > purchase price"),
+        Reason_15("RSI is > resistance, ADX dm- is above dm+"),
+        Reason_16("RSI is > resistance, macd has divergence"),
         ;
 
         private final String description;
