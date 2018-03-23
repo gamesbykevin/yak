@@ -1,6 +1,7 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -12,7 +13,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 /**
  * Heikin-Ashi
  */
-public class HA extends Indicator {
+public class HA extends Strategy {
 
     private List<Period> haPeriods;
 
@@ -98,7 +99,7 @@ public class HA extends Indicator {
 
         //if we confirm bullish, let's sell
         if (confirmBearish)
-            agent.setReasonSell(ReasonSell.Reason_13);
+            agent.setReasonSell(ReasonSell.Reason_11);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

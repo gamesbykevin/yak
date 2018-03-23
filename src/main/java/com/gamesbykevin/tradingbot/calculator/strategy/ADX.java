@@ -1,6 +1,7 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 
-public class ADX extends Indicator {
+public class ADX extends Strategy {
 
     //the average directional index
     private List<Double> adx;
@@ -78,7 +79,7 @@ public class ADX extends Indicator {
 
             //if the minus has crossed below the plus that is our signal to sell
             if (hasCrossover(false, getDmPlusIndicator(), getDmMinusIndicator()))
-                agent.setReasonSell(TransactionHelper.ReasonSell.Reason_9);
+                agent.setReasonSell(TransactionHelper.ReasonSell.Reason_7);
         }
 
         //display data

@@ -83,7 +83,7 @@ public class CalculatorHelper {
      * @param data Array data of our indicator
      * @return true if divergence is found, false otherwise
      */
-    protected static synchronized boolean hasDivergence(List<Period> history, int periods, boolean bullish, List<Double> data) {
+    public static synchronized boolean hasDivergence(List<Period> history, int periods, boolean bullish, List<Double> data) {
 
         if (bullish) {
 
@@ -161,7 +161,7 @@ public class CalculatorHelper {
      * @param slow Array of slow moving data
      * @return true if crossover, false otherwise
      */
-    protected static boolean hasCrossover(boolean bullish, List<Double> fast, List<Double> slow) {
+    public static boolean hasCrossover(boolean bullish, List<Double> fast, List<Double> slow) {
 
         //our previous slow and fast values
         double previousSlow = slow.get(slow.size() - 2);

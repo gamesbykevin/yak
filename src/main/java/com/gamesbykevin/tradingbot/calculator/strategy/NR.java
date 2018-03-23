@@ -1,33 +1,25 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 
-public class NR7 extends Indicator {
-
-    /**
-     * Narrow Range 7 will always be 7 periods
-     */
-    public static final int PERIODS = 7;
+public abstract class NR extends Strategy {
 
     //the period with the smallest range
     private Period smallest;
 
-    public NR7() {
-
-        //call parent
-        super(PERIODS);
+    public NR(int periods) {
+        super(periods);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        /*
         //if the current $ breaks above high, we will buy
         if (currentPrice > smallest.high) {
 
@@ -35,9 +27,8 @@ public class NR7 extends Indicator {
             agent.setReasonBuy(ReasonBuy.Reason_8);
 
             //set our hard stop amount
-            agent.setHardStop(smallest.low);
+            //agent.setHardStop(smallest.low);
         }
-        */
 
         //display our data
         displayData(agent, agent.getReasonBuy() != null);
@@ -50,8 +41,8 @@ public class NR7 extends Indicator {
         if (currentPrice > agent.getWallet().getPurchasePrice()) {
 
             //if the next period closes above our purchase price, sell!!!!
-            if (history.get(history.size() - 1).close > agent.getWallet().getPurchasePrice())
-                agent.setReasonSell(ReasonSell.Reason_11);
+            //if (history.get(history.size() - 1).close > agent.getWallet().getPurchasePrice())
+            //    agent.setReasonSell(ReasonSell.Reason_9);
         }
 
         //display our data
@@ -62,7 +53,7 @@ public class NR7 extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        displayMessage(agent, "NR7: High $" + smallest.high + ", Low $" + smallest.low, write);
+        displayMessage(agent, "NR" + getPeriods() + ": High $" + smallest.high + ", Low $" + smallest.low, write);
     }
 
     @Override

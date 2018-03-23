@@ -1,6 +1,7 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -9,7 +10,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 
-public class EMA extends Indicator {
+public class EMA extends Strategy {
 
     //list of ema values for our long period
     private List<Double> emaLong;
@@ -32,6 +33,7 @@ public class EMA extends Indicator {
         //call parent
         super(0);
 
+        //create our lists
         this.emaLong = new ArrayList<>();
         this.emaShort = new ArrayList<>();
     }
@@ -60,7 +62,7 @@ public class EMA extends Indicator {
 
         //if we have a bearish crossover, we expect price to go down
         if (hasCrossover(false, getEmaShort(), getEmaLong()))
-            agent.setReasonSell(ReasonSell.Reason_3);
+            agent.setReasonSell(ReasonSell.Reason_1);
 
         //if no reason to sell yet, check if the price drops below the ema values
         if (agent.getReasonSell() == null) {
@@ -74,7 +76,7 @@ public class EMA extends Indicator {
 
             //if the recent low price is less than both the long/short ema values, we need to exit our trade
             if (recentLow < emaLong && recentLow < emaShort)
-                agent.setReasonSell(ReasonSell.Reason_5);
+                agent.setReasonSell(ReasonSell.Reason_3);
 
         }
 
@@ -104,26 +106,20 @@ public class EMA extends Indicator {
      * @param periods The number of periods to check
      * @return The average of the sum of closing prices within the specified period
      */
-    private static double calculateSMA(List<Period> history, int currentPeriod, int periods) {
+    protected static double calculateSMA(List<Period> history, int currentPeriod, int periods) {
 
         //the total sum
         double sum = 0;
-
-        //number of prices we add together
-        int count = 0;
 
         //check every period
         for (int i = currentPeriod - periods; i < currentPeriod; i++) {
 
             //add to the total sum
             sum += history.get(i).close;
-
-            //keep track of how many we add
-            count++;
         }
 
         //return the average of the sum
-        return (sum / (double)count);
+        return (sum / (double)periods);
     }
 
     private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {

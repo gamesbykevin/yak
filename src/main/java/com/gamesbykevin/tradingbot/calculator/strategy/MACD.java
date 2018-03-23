@@ -1,6 +1,7 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 
@@ -8,16 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_SHORT;
 
-public class MACD extends Indicator {
+public class MACD extends Strategy {
 
     //macdLine values
     private List<Double> macdLine;
 
     //list of ema values from the macd line
     private List<Double> signalLine;
+
+    //our histogram (macdLine - signalLine)
+    private List<Double> histogram;
 
     //our ema object
     private EMA emaObj;
@@ -28,13 +30,18 @@ public class MACD extends Indicator {
     public static int PERIODS_MACD;
 
     public MACD() {
+        this(PERIODS_MACD);
+    }
+
+    public MACD(int periods) {
 
         //call parent
-        super(PERIODS_MACD);
+        super(periods);
 
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
         this.emaObj = new EMA();
+        this.histogram = new ArrayList<>();
     }
 
     public List<Double> getMacdLine() {
@@ -43,6 +50,10 @@ public class MACD extends Indicator {
 
     public List<Double> getSignalLine() {
         return this.signalLine;
+    }
+
+    public List<Double> getHistogram() {
+        return this.histogram;
     }
 
     @Override
@@ -60,7 +71,7 @@ public class MACD extends Indicator {
 
         //if we have a bearish crossover, we expect price to go down
         if (hasCrossover(false, getMacdLine(), getSignalLine()))
-            agent.setReasonSell(ReasonSell.Reason_4);
+            agent.setReasonSell(ReasonSell.Reason_2);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -88,6 +99,9 @@ public class MACD extends Indicator {
 
         //then we can calculate our signal line
         calculateSignalLine(getSignalLine(), getMacdLine(), getPeriods());
+
+        //last we can calculate the histogram
+        calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {

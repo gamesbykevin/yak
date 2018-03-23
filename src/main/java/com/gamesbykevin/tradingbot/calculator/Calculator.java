@@ -1,7 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
+import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
 
 import java.util.ArrayList;
@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.calculator.ADX.PERIODS_ADX;
+import static com.gamesbykevin.tradingbot.calculator.strategy.ADX.PERIODS_ADX;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.EMA.PERIODS_EMA_SHORT;
-import static com.gamesbykevin.tradingbot.calculator.OBV.PERIODS_OBV;
-import static com.gamesbykevin.tradingbot.calculator.RSI.PERIODS_RSI;
+import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.PERIODS_EMA_LONG;
+import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.PERIODS_EMA_SHORT;
+import static com.gamesbykevin.tradingbot.calculator.strategy.OBV.PERIODS_OBV;
+import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.PERIODS_RSI;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
@@ -34,7 +34,7 @@ public class Calculator {
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
 
     //create an indicator class for each trading strategy
-    private HashMap<TradingStrategy, Indicator> indicators;
+    private HashMap<TradingStrategy, Strategy> strategies;
 
     /**
      * How long is each period?
@@ -61,73 +61,77 @@ public class Calculator {
 
         //create new list(s)
         this.history = new ArrayList<>();
-        this.indicators = new HashMap<>();
+        this.strategies = new HashMap<>();
 
         //create an object for each strategy
-        for (TradingStrategy strategy : TradingStrategy.values()) {
+        for (TradingStrategy tradingStrategy : TradingStrategy.values()) {
 
-            Indicator indicator = null;
+            Strategy strategy = null;
 
-            switch (strategy) {
+            switch (tradingStrategy) {
 
                 case ADX:
-                    indicator = new ADX();
+                    strategy = new ADX();
                     break;
 
                 case MACD:
-                    indicator = new MACD();
+                    strategy = new MACD();
                     break;
 
                 case RSI:
-                    indicator = new RSI();
+                    strategy = new RSI();
                     break;
 
                 case OBV:
-                    indicator = new OBV();
+                    strategy = new OBV();
                     break;
 
                 case EMA:
-                    indicator = new EMA();
+                    strategy = new EMA();
                     break;
 
                 case MACS:
-                    indicator = new MACS();
+                    strategy = new MACS();
                     break;
 
                 case RSI_2:
-                    indicator = new TWO_RSI();
+                    strategy = new TWO_RSI();
                     break;
 
                 case NR7:
-                    indicator = new NR7();
+                    strategy = new NR7();
                     break;
 
                 case MACDD:
-                    indicator = new MACDDIV();
+                    strategy = new MACDDIV();
                     break;
 
                 case HA:
-                    indicator = new HA();
+                    strategy = new HA();
                     break;
 
                 case NR4:
-                    indicator = new NR4();
+                    strategy = new NR4();
                     break;
 
                 case RSIA:
-                    indicator = new RSIA();
+                    strategy = new RSIA();
                     break;
 
                 case RSIM:
-                    indicator = new RSIM();
+                    strategy = new RSIM();
+                    break;
+
+                case BB:
+                    strategy = new BB();
                     break;
 
                 default:
-                    throw new RuntimeException("Strategy not found: " + strategy);
+                    throw new RuntimeException("Strategy not found: " + tradingStrategy);
             }
 
             //add to hash map
-            getIndicators().put(strategy, indicator);
+            getStrategies().put(tradingStrategy, strategy);
         }
     }
 
@@ -179,7 +183,7 @@ public class Calculator {
                     throw new RuntimeException("History not long enough to calculate ADX");
 
                 //now do all indicator calculations
-                for (Indicator indicator : getIndicators().values()) {
+                for (Strategy indicator : getStrategies().values()) {
                     indicator.calculate(getHistory());
                 }
 
@@ -203,11 +207,11 @@ public class Calculator {
         return this.history;
     }
 
-    private HashMap<TradingStrategy, Indicator> getIndicators() {
-        return this.indicators;
+    private HashMap<TradingStrategy, Strategy> getStrategies() {
+        return this.strategies;
     }
 
-    public Indicator getIndicator(TradingStrategy strategy) {
-        return getIndicators().get(strategy);
+    public Strategy getIndicator(TradingStrategy strategy) {
+        return getStrategies().get(strategy);
     }
 }

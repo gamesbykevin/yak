@@ -1,6 +1,7 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -10,7 +11,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
 
-public class RSI extends Indicator {
+public class RSI extends Strategy {
 
     //keep a historical list of the rsi so we can check for divergence
     private List<Double> rsi;
@@ -31,9 +32,13 @@ public class RSI extends Indicator {
     public static float RESISTANCE_LINE;
 
     public RSI() {
+        this(PERIODS_RSI);
+    }
+
+    public RSI(int periods) {
 
         //call parent
-        super(PERIODS_RSI);
+        super(periods);
 
         //create new list(s)
         this.rsi = new ArrayList<>();
@@ -72,7 +77,7 @@ public class RSI extends Indicator {
 
             //if there is a bearish divergence let's sell
             if (hasDivergence(history, getPeriods(), false, getRsi()))
-                agent.setReasonSell(ReasonSell.Reason_6);
+                agent.setReasonSell(ReasonSell.Reason_4);
         }
 
         //display our data

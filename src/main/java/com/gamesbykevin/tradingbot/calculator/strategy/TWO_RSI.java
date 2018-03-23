@@ -1,17 +1,16 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.RSI.calculateRsi;
+public class TWO_RSI extends Strategy {
 
-public class TWO_RSI extends Indicator {
-
-    private List<Double> rsi;
+    //our rsi object
+    private RSI rsiObj;
 
     /**
      * Minimum required rsi value
@@ -34,18 +33,14 @@ public class TWO_RSI extends Indicator {
         super(TWO_RSI);
 
         //create new list
-        this.rsi = new ArrayList<>();
-    }
-
-    private List<Double> getRsi() {
-        return this.rsi;
+        this.rsiObj = new RSI(TWO_RSI);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = getRsi().get(getRsi().size() - 1);
+        double rsi = rsiObj.getRsi().get(rsiObj.getRsi().size() - 1);
 
         //if above the max we have a buy signal
         if (rsi > MAX_RSI)
@@ -59,11 +54,11 @@ public class TWO_RSI extends Indicator {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = getRsi().get(getRsi().size() - 1);
+        double rsi = rsiObj.getRsi().get(rsiObj.getRsi().size() - 1);
 
         //if below the min we have a sell signal
         if (rsi < MIN_RSI)
-            agent.setReasonSell(ReasonSell.Reason_10);
+            agent.setReasonSell(ReasonSell.Reason_8);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -73,11 +68,11 @@ public class TWO_RSI extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "RSI: ", getRsi(), getPeriods(), write);
+        rsiObj.displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
-        calculateRsi(history, getRsi(), getPeriods());
+        rsiObj.calculate(history);
     }
 }

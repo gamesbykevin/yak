@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.util;
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.calculator.*;
+import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.FileInputStream;
@@ -33,10 +34,10 @@ public class PropertyUtil {
             try {
 
                 //call this when running the project in intellij
-                PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
+                //PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
 
                 //call this when you create an executable .jar and place the application.properties file in the same directory as the .jar
-                //PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
+                PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
 
             } catch(Exception ex) {
                 ex.printStackTrace();
@@ -97,12 +98,6 @@ public class PropertyUtil {
 
         //how many periods to we use to calculate rsi
         RSI.PERIODS_RSI = Integer.parseInt(getProperties().getProperty("periodsRsi"));
-
-        //how long do we hold onto stock until we sell to cut our losses
-        AgentHelper.SELL_LOSS_RATIO = Float.parseFloat(getProperties().getProperty("sellLossRatio"));
-
-        //how long do we hold onto stock until we sell
-        AgentHelper.SELL_GAIN_RATIO = Float.parseFloat(getProperties().getProperty("sellGainRatio"));
 
         //what is our hard stop ratio, that we set as our purchased stock price rises
         AgentHelper.HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));

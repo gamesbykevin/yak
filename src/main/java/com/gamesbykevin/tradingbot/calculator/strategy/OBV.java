@@ -1,6 +1,7 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -9,7 +10,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
 
-public class OBV extends Indicator {
+public class OBV extends Strategy {
 
     /**
      * How many periods to calculate the on balance volume
@@ -47,7 +48,7 @@ public class OBV extends Indicator {
 
         //if there is a bearish divergence let's sell
         if (hasDivergence(history, getPeriods(), false, getVolume()))
-            agent.setReasonSell(ReasonSell.Reason_7);
+            agent.setReasonSell(ReasonSell.Reason_5);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

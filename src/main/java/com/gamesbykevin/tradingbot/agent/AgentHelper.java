@@ -32,16 +32,6 @@ public class AgentHelper {
     private static final String ORDER_DESC = "limit";
 
     /**
-     * The starting ratio point to sell if the stock drops too much to stop the bleeding
-     */
-    public static float SELL_LOSS_RATIO;
-
-    /**
-     * If the stock increases enough we will sell regardless of calculator value
-     */
-    public static float SELL_GAIN_RATIO;
-
-    /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
      */
     public static float HARD_STOP_RATIO;
@@ -124,27 +114,6 @@ public class AgentHelper {
         //if the price dropped below our hard stop, we will sell to cut our losses
         if (currentPrice <= agent.getHardStop())
             agent.setReasonSell(ReasonSell.Reason_0);
-
-        //if no reason to sell yet
-        if (agent.getReasonSell() == null) {
-
-            //if we made too much money let's sell and not get too greedy
-            final double priceGain = agent.getWallet().getPurchasePrice() + (agent.getWallet().getPurchasePrice() * SELL_GAIN_RATIO);
-
-            //if we lost too much money, let's stop the bleeding
-            final double priceLoss = agent.getWallet().getPurchasePrice() - (agent.getWallet().getPurchasePrice() * SELL_LOSS_RATIO);
-
-            if (currentPrice >= priceGain) {
-
-                //if we made enough money we will sell
-                agent.setReasonSell(ReasonSell.Reason_1);
-
-            } else if (currentPrice <= priceLoss) {
-
-                //if we lost too much money we will sell
-                agent.setReasonSell(ReasonSell.Reason_2);
-            }
-        }
 
         //if there is a reason then we will sell
         if (agent.getReasonSell() != null) {

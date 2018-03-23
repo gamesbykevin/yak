@@ -1,19 +1,19 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import org.omg.CORBA.PRIVATE_MEMBER;
+import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy.Reason_5;
-import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell.Reason_8;
+import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 /**
  * Moving average crossover strategy
  */
-public class MACS extends Indicator {
+public class MACS extends Strategy {
 
     //our list of fast, slow, trending values
     private List<Double> emaFast, emaSlow, emaTrend;
@@ -52,7 +52,7 @@ public class MACS extends Indicator {
 
             //lets also check that the current price is above the trending data
             if (currentPrice > emaTrend.get(emaTrend.size() - 1))
-                agent.setReasonBuy(Reason_5);
+                agent.setReasonBuy(ReasonBuy.Reason_5);
         }
 
         //display our data for what it is worth
@@ -67,7 +67,7 @@ public class MACS extends Indicator {
 
             //lets also check that the current price is below the trending data
             if (currentPrice < emaTrend.get(emaTrend.size() - 1))
-                agent.setReasonSell(Reason_8);
+                agent.setReasonSell(ReasonSell.Reason_6);
         }
 
         //display our data for what it is worth

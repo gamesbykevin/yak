@@ -15,6 +15,7 @@ import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -83,6 +84,12 @@ public class Main implements Runnable {
 
     //our list of products
     private List<Product> products;
+
+    //how often do we display/write the strategy description to the log file (milliseconds)
+    private static final long STRATEGY_DELAY = 300000;
+
+    //when was the last time we displayed the strategy summary
+    private long previousRunStrategyDesc = 0;
 
     //how long has the bot been running
     private final long start;
@@ -305,27 +312,14 @@ public class Main implements Runnable {
 
             //add line break in the end
             text = text + "\n";
-
         }
 
         text = text + "\n";
 
-        String strategyDesc = "Strategy Summary\n";
+        //get our strategy summary
+        final String strategyDesc = getStrategySummary();
 
-        //now show the total $ per trading strategy
-        for (AgentManager.TradingStrategy strategy : AgentManager.TradingStrategy.values()) {
-
-            double amount = 0;
-
-            //check each manager looking for the strategy
-            for (AgentManager agentManager : agentManagers.values()) {
-                amount += agentManager.getAssets(strategy);
-            }
-
-            strategyDesc = strategyDesc + strategy.toString() + " $" + AgentHelper.formatValue(amount) + "\n";
-        }
-
-        //add strategy description to the overall message
+        //add strategy summary to the overall message
         text = text + strategyDesc;
 
         subject = "Total assets $" + AgentHelper.formatValue(total);
@@ -345,8 +339,8 @@ public class Main implements Runnable {
             //update the timer
             previous = System.currentTimeMillis();
 
-            //write our agent manager summary to the main log file
-            displayMessage(strategyDesc, true, writer);
+            //force our logic to write the strategy desc
+            previousRunStrategyDesc = System.currentTimeMillis() - STRATEGY_DELAY;
 
         } else {
 
@@ -356,6 +350,38 @@ public class Main implements Runnable {
             //show when the next notification message will be sent
             displayMessage("Next notification message in " + Transaction.getDurationDesc(duration), false, null);
         }
+
+
+        //we want to write this to log file periodically even if no notification message
+        if (System.currentTimeMillis() - previousRunStrategyDesc >= STRATEGY_DELAY) {
+
+            //write summary strategy to log file
+            displayMessage(strategyDesc, true, writer);
+
+            //update our timer
+            previousRunStrategyDesc = System.currentTimeMillis();
+        }
+    }
+
+    private String getStrategySummary() {
+
+        String strategyDesc = "Strategy Summary\n";
+
+        //now show the total $ per trading strategy
+        for (AgentManager.TradingStrategy strategy : AgentManager.TradingStrategy.values()) {
+
+            double amount = 0;
+
+            //check each manager looking for the strategy
+            for (AgentManager agentManager : agentManagers.values()) {
+                amount += agentManager.getAssets(strategy);
+            }
+
+            strategyDesc = strategyDesc + strategy.toString() + " $" + AgentHelper.formatValue(amount) + "\n";
+        }
+
+        //return our result
+        return strategyDesc;
     }
 
     private void init() {

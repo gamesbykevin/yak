@@ -1,22 +1,22 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
-import static com.gamesbykevin.tradingbot.calculator.MACD.PERIODS_MACD;
-import static com.gamesbykevin.tradingbot.calculator.RSI.PERIODS_RSI;
-import static com.gamesbykevin.tradingbot.calculator.RSI.RESISTANCE_LINE;
-import static com.gamesbykevin.tradingbot.calculator.RSI.SUPPORT_LINE;
+import static com.gamesbykevin.tradingbot.calculator.strategy.MACD.PERIODS_MACD;
+import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.PERIODS_RSI;
+import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.RESISTANCE_LINE;
+import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.SUPPORT_LINE;
 
 /**
  * RSI MACD
  */
-public class RSIM extends Indicator {
+public class RSIM extends Strategy {
 
     //our adx object reference
     private MACD macdObj;
@@ -30,8 +30,8 @@ public class RSIM extends Indicator {
         super(PERIODS_RSI);
 
         //create objects
-        this.macdObj = new MACD();
-        this.rsiObj = new RSI();
+        this.macdObj = new MACD(PERIODS_MACD);
+        this.rsiObj = new RSI(PERIODS_RSI);
     }
 
     @Override
@@ -44,8 +44,8 @@ public class RSIM extends Indicator {
         if (rsi <= SUPPORT_LINE) {
 
             //if bullish divergence in macd and price
-            if (hasDivergence(history, PERIODS_MACD, true, macdObj.getMacdLine()))
-                agent.setReasonBuy(ReasonBuy.Reason_13);
+            if (hasDivergence(history, macdObj.getPeriods(), true, macdObj.getMacdLine()))
+                agent.setReasonBuy(ReasonBuy.Reason_12);
         }
 
         //display our data
@@ -62,8 +62,8 @@ public class RSIM extends Indicator {
         if (rsi >= RESISTANCE_LINE) {
 
             //if bearish divergence in macd and price
-            if (hasDivergence(history, PERIODS_MACD, false, macdObj.getMacdLine()))
-                agent.setReasonSell(ReasonSell.Reason_16);
+            if (hasDivergence(history, macdObj.getPeriods(), false, macdObj.getMacdLine()))
+                agent.setReasonSell(ReasonSell.Reason_13);
         }
 
         //display our data
