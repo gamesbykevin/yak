@@ -52,7 +52,7 @@ public class RSI extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = getRsi().get(getRsi().size() - 1);
+        double rsi = getRecent(getRsi());
 
         //if we are at or below the support line, let's check if we are in a good place to buy
         if (rsi <= SUPPORT_LINE) {
@@ -70,7 +70,7 @@ public class RSI extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = getRsi().get(getRsi().size() - 1);
+        double rsi = getRecent(getRsi());
 
         //let's see if we are above resistance line before selling
         if (rsi >= RESISTANCE_LINE) {
@@ -88,7 +88,7 @@ public class RSI extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "RSI: ", getRsi(), getPeriods(), write);
+        display(agent, "RSI: ", getRsi(), getPeriods() / 2, write);
     }
 
     @Override

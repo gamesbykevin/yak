@@ -21,7 +21,8 @@ public class MACDDIV extends Strategy {
         //call parent
         super(PERIODS_MACD);
 
-        this.macdObj = new MACD();
+        //create obj
+        this.macdObj = new MACD(PERIODS_MACD);
     }
 
     @Override

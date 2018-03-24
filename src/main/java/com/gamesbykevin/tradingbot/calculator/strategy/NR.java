@@ -8,10 +8,20 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 
-public abstract class NR extends Strategy {
+public class NR extends Strategy {
 
     //the period with the smallest range
     private Period smallest;
+
+    /**
+     * Narrow range 4 will always be 4 periods
+     */
+    public static final int PERIODS_NR4 = 4;
+
+    /**
+     * Narrow range 7 will always be 7 periods
+     */
+    public static final int PERIODS_NR7 = 7;
 
     public NR(int periods) {
         super(periods);

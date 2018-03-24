@@ -48,4 +48,9 @@ public abstract class Strategy {
 
         displayMessage(agent, desc + info, write);
     }
+
+    protected double getRecent(List<Double> list) {
+        return list.get(list.size() - 1);
+    }
+
 }

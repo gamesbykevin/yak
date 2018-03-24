@@ -15,18 +15,24 @@ public class BB extends Strategy {
     /**
      * Typical # periods is 20
      */
-    private static final int PERIODS = 20;
+    public static final int PERIODS_BB = 20;
 
     //our lists
     private List<Double> middle, upper, lower;
 
-    public BB() {
+    public BB(int periods) {
 
-        super(PERIODS);
+        //call parent
+        super(periods);
 
+        //create our lists
         this.middle = new ArrayList<>();
         this.upper = new ArrayList<>();
         this.lower = new ArrayList<>();
+    }
+
+    public BB() {
+        this(PERIODS_BB);
     }
 
     public List<Double> getUpper() {
@@ -45,7 +51,7 @@ public class BB extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the current price goes below our lower line, let's buy
-        if (currentPrice < lower.get(lower.size() - 1))
+        if (currentPrice < getRecent(getLower()))
             agent.setReasonBuy(ReasonBuy.Reason_13);
 
         //display our data
@@ -56,7 +62,7 @@ public class BB extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the current price goes above our upper line, let's sell
-        if (currentPrice > upper.get(upper.size() - 1))
+        if (currentPrice > getRecent(getUpper()))
             agent.setReasonSell(ReasonSell.Reason_14);
 
         //display our data
@@ -67,9 +73,9 @@ public class BB extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Upper: ", getUpper(), PERIODS / 4, write);
-        display(agent, "Middle: ", getMiddle(), PERIODS / 4, write);
-        display(agent, "Lower: ", getLower(), PERIODS / 4, write);
+        display(agent, "Upper: ", getUpper(), getPeriods() / 4, write);
+        display(agent, "Middle: ", getMiddle(), getPeriods() / 4, write);
+        display(agent, "Lower: ", getLower(), getPeriods() / 4, write);
     }
 
     @Override

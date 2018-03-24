@@ -25,6 +25,7 @@ public class OBV extends Strategy {
         //call parent
         super(PERIODS_OBV);
 
+        //create list
         this.volume = new ArrayList<>();
     }
 
@@ -58,7 +59,7 @@ public class OBV extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "OBV: ", getVolume(), PERIODS_OBV, write);
+        display(agent, "OBV: ", getVolume(), (PERIODS_OBV / 2), write);
     }
 
     @Override

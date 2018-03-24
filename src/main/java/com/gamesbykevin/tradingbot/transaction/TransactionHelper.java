@@ -28,6 +28,10 @@ public class TransactionHelper {
         Reason_11("RSI is < support, ADX dm+ is above dm-"),
         Reason_12("RSI is < support, macd has divergence"),
         Reason_13("Price is below BB lower line"),
+        Reason_14("Price is below long ema line, bb middle line, and rsi is below 50"),
+        Reason_15("SO has a divergence"),
+        Reason_16("SO has a crossover"),
+        Reason_17("SO has EMA crossover and SO indicator < 50"),
         ;
 
         private final String description;
@@ -61,6 +65,10 @@ public class TransactionHelper {
         Reason_12("RSI is > resistance, ADX dm- is above dm+"),
         Reason_13("RSI is > resistance, macd has divergence"),
         Reason_14("Price is above BB upper line"),
+        Reason_15("Price is above long ema line, bb middle line, and rsi is above 50"),
+        Reason_16("SO has a divergence"),
+        Reason_17("SO has a crossover"),
+        Reason_18("SO has EMA crossover and SO indicator > 50"),
         ;
 
         private final String description;

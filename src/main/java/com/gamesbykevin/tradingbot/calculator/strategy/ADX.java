@@ -29,14 +29,19 @@ public class ADX extends Strategy {
      */
     public static double TREND_ADX;
 
-    public ADX() {
+    public ADX(int periods) {
 
         //call parent
-        super(PERIODS_ADX);
+        super(periods);
 
+        //create our lists
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();
         this.dmMinusIndicator = new ArrayList<>();
+    }
+
+    public ADX() {
+        this(PERIODS_ADX);
     }
 
     public List<Double> getAdx() {
@@ -55,7 +60,7 @@ public class ADX extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent adx value
-        double adx = getAdx().get(getAdx().size() - 1);
+        double adx = getRecent(getAdx());
 
         //check the most recent adx to see if there is a trend in price
         if (adx >= TREND_ADX) {
@@ -73,7 +78,7 @@ public class ADX extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent adx value
-        double adx = getAdx().get(getAdx().size() - 1);
+        double adx = getRecent(getAdx());
 
         if (adx >= TREND_ADX) {
 
@@ -90,18 +95,18 @@ public class ADX extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent values which we use as a signal
-        display(agent, "+DI: ", getDmPlusIndicator(), getPeriods(), write);
-        display(agent, "-DI: ", getDmMinusIndicator(), getPeriods(), write);
-        displayMessage(agent, "ADX: " + getAdx().get(getAdx().size() - 1), write);
+        display(agent, "+DI: ", getDmPlusIndicator(), getPeriods() / 2, write);
+        display(agent, "-DI: ", getDmMinusIndicator(), getPeriods() / 2, write);
+        displayMessage(agent, "ADX: " + getRecent(getAdx()), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //clear the list(s) before we calculate
-        adx.clear();
-        dmPlusIndicator.clear();
-        dmMinusIndicator.clear();
+        getAdx().clear();
+        getDmPlusIndicator().clear();
+        getDmMinusIndicator().clear();
 
         //our temp lists
         List<Double> tmpDmPlus = new ArrayList<>();
@@ -182,8 +187,8 @@ public class ADX extends Strategy {
             double newMinus = (dmMinus.get(i) / trueRange.get(i)) * 100.0d;
 
             //add it to the list
-            dmPlusIndicator.add(newPlus);
-            dmMinusIndicator.add(newMinus);
+            getDmPlusIndicator().add(newPlus);
+            getDmMinusIndicator().add(newMinus);
         }
 
         //directional movement index
@@ -191,8 +196,8 @@ public class ADX extends Strategy {
 
         //calculate each dm index
         for (int i = 0; i < dmPlus.size(); i++) {
-            double result1 = Math.abs(dmPlusIndicator.get(i) - dmMinusIndicator.get(i));
-            double result2 = dmPlusIndicator.get(i) + dmMinusIndicator.get(i);
+            double result1 = Math.abs(getDmPlusIndicator().get(i) - getDmMinusIndicator().get(i));
+            double result2 = getDmPlusIndicator().get(i) + getDmMinusIndicator().get(i);
             dmIndex.add((result1 / result2) * 100.0d);
         }
 
@@ -204,19 +209,19 @@ public class ADX extends Strategy {
         }
 
         //our first value is the average
-        adx.add(sum / (double)getPeriods());
+        getAdx().add(sum / (double)getPeriods());
 
         //calculate the remaining average directional index values
         for (int i = getPeriods(); i < dmIndex.size(); i++) {
 
             //get the most recent adx
-            double previousAdx = adx.get(adx.size() - 1);
+            double previousAdx = getRecent(getAdx());
 
             //calculate the new adx value
             double newAdx = ((previousAdx * (double)(getPeriods() - 1)) + dmIndex.get(i)) / (double)getPeriods();
 
             //add new value to our list
-            adx.add(newAdx);
+            getAdx().add(newAdx);
         }
     }
 

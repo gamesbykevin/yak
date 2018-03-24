@@ -38,7 +38,7 @@ public class RSIM extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = rsiObj.getRsi().get(rsiObj.getRsi().size() - 1);
+        double rsi = getRecent(rsiObj.getRsi());
 
         //if we are at or below the support line, let's check if we are in a good place to buy
         if (rsi <= SUPPORT_LINE) {
@@ -56,7 +56,7 @@ public class RSIM extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = rsiObj.getRsi().get(rsiObj.getRsi().size() - 1);
+        double rsi = getRecent(rsiObj.getRsi());
 
         //let's see if we are above resistance line before selling
         if (rsi >= RESISTANCE_LINE) {

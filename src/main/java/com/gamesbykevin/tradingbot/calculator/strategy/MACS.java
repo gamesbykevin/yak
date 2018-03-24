@@ -33,15 +33,32 @@ public class MACS extends Strategy {
      */
     public static int PERIODS_MACS_TREND;
 
-    public MACS() {
+    private final int periodsFast, periodsSlow, periodsTrend;
 
-        //call parent
+    public MACS(int periodsFast, int periodsSlow, int periodsTrend) {
+
+        //call parent with default volume
         super(0);
+
+        //make sure the periods are appropriate
+        if (periodsFast > periodsSlow || periodsFast > periodsTrend)
+            throw new RuntimeException("The fast periods have to be less than both the slow and trend periods");
+        if (periodsSlow > periodsTrend)
+            throw new RuntimeException("The slow period has to be less than the trend period");
+
+        //store our period counts
+        this.periodsFast = periodsFast;
+        this.periodsSlow = periodsSlow;
+        this.periodsTrend = periodsTrend;
 
         //create new list(s)
         this.emaFast = new ArrayList<>();
         this.emaSlow = new ArrayList<>();
         this.emaTrend = new ArrayList<>();
+    }
+
+    public MACS() {
+        this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND);
     }
 
     @Override
@@ -78,17 +95,17 @@ public class MACS extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display values
-        display(agent, "EMA Fast: ", emaFast, PERIODS_MACS_FAST, write);
-        display(agent, "EMA Slow: ", emaSlow, PERIODS_MACS_FAST, write);
-        display(agent, "EMA Trend: ", emaTrend, PERIODS_MACS_FAST, write);
+        display(agent, "EMA Fast: ", emaFast, periodsFast, write);
+        display(agent, "EMA Slow: ", emaSlow, periodsFast, write);
+        display(agent, "EMA Trend: ", emaTrend, periodsFast, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate the different ema values
-        EMA.calculateEMA(history, emaFast, PERIODS_MACS_FAST);
-        EMA.calculateEMA(history, emaSlow, PERIODS_MACS_SLOW);
-        EMA.calculateEMA(history, emaTrend, PERIODS_MACS_TREND);
+        EMA.calculateEMA(history, emaFast, periodsFast);
+        EMA.calculateEMA(history, emaSlow, periodsSlow);
+        EMA.calculateEMA(history, emaTrend, periodsTrend);
     }
 }

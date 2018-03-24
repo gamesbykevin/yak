@@ -4,6 +4,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import org.hibernate.validator.internal.constraintvalidators.bv.past.PastValidatorForReadableInstant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +29,29 @@ public class EMA extends Strategy {
      */
     public static int PERIODS_EMA_SHORT;
 
-    public EMA() {
+    //how many periods
+    private final int periodsLong, periodsShort;
 
-        //call parent
+    public EMA(int periodsLong, int periodsShort) {
+
+        //call parent with default value
         super(0);
+
+        //if long is less than short throw exception
+        if (periodsLong <= periodsShort)
+            throw new RuntimeException("The long periods are less than the short. L=" + periodsLong + ", S=" + periodsShort);
+
+        //store our periods
+        this.periodsLong = periodsLong;
+        this.periodsShort = periodsShort;
 
         //create our lists
         this.emaLong = new ArrayList<>();
         this.emaShort = new ArrayList<>();
+    }
+
+    public EMA() {
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
     }
 
     public List<Double> getEmaShort() {
@@ -68,8 +84,8 @@ public class EMA extends Strategy {
         if (agent.getReasonSell() == null) {
 
             //get the current ema long and short values
-            double emaLong = getEmaLong().get(getEmaLong().size() - 1);
-            double emaShort = getEmaShort().get(getEmaShort().size() - 1);
+            double emaLong = getRecent(getEmaLong());
+            double emaShort = getRecent(getEmaShort());
 
             //get the low of the most recent period
             double recentLow = history.get(history.size() - 1).low;
@@ -88,16 +104,16 @@ public class EMA extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short: ", getEmaShort(), (PERIODS_EMA_SHORT / 2), agent.getReasonBuy() != null);
-        display(agent, "EMA Long: ", getEmaLong(), (PERIODS_EMA_SHORT / 2),agent.getReasonBuy() != null);
+        display(agent, "EMA Short: ", getEmaShort(), (periodsShort / 2), agent.getReasonBuy() != null);
+        display(agent, "EMA Long: ", getEmaLong(), (periodsShort / 2),agent.getReasonBuy() != null);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate ema for short and long periods
-        calculateEMA(history, getEmaShort(), PERIODS_EMA_SHORT);
-        calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
+        calculateEMA(history, getEmaShort(), periodsShort);
+        calculateEMA(history, getEmaLong(), periodsLong);
     }
 
     /**

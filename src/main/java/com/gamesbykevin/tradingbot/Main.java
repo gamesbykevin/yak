@@ -8,6 +8,7 @@ import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
+import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
@@ -137,8 +138,19 @@ public class Main implements Runnable {
 
         //display message of bot starting
         if (PAPER_TRADING) {
+
+            //warning no real money used
             displayMessage("INFO: No real money used", true, writer);
+
         } else {
+
+            //we need at least
+            if (TradingStrategy.values().length != 0)
+                throw new RuntimeException("You have to pick a trading strategy");
+
+            //if we are using real money, let's only focus on 1 trading strategy
+            if (TradingStrategy.values().length != 1)
+                throw new RuntimeException("You should only focus on 1 trading strategy, this doesn't seem right.");
 
             //display message and pause if using real money
             displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", true, writer);

@@ -98,7 +98,7 @@ public class MACD extends Strategy {
         calculateMacdLine(this.emaObj.getEmaShort(), this.emaObj.getEmaLong(), getMacdLine());
 
         //then we can calculate our signal line
-        calculateSignalLine(getSignalLine(), getMacdLine(), getPeriods());
+        calculateEmaList(getSignalLine(), getMacdLine(), getPeriods());
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
@@ -120,17 +120,23 @@ public class MACD extends Strategy {
         }
     }
 
-    protected static void calculateSignalLine(List<Double> signalLine, List<Double> macdLine, int periods) {
+    /**
+     * Calculate ema and populate the provided emaList
+     * @param emaList Our result ema list that needs calculations
+     * @param valueList The list of values we will use to do the calculations
+     * @param periods The range of periods to make each calculation
+     */
+    protected static void calculateEmaList(List<Double> emaList, List<Double> valueList, int periods) {
 
         //clear list
-        signalLine.clear();
+        emaList.clear();
 
         //we add the sum to get the sma (simple moving average)
         double sum = 0;
 
         //calculate sma first
         for (int i = 0; i < periods; i++) {
-            sum += macdLine.get(i);
+            sum += valueList.get(i);
         }
 
         //we now have the sma as a start
@@ -140,25 +146,25 @@ public class MACD extends Strategy {
         final double multiplier = ((float)2 / ((float)periods + 1));
 
         //calculate our first ema
-        final double ema = ((macdLine.get(periods - 1) - sma) * multiplier) + sma;
+        final double ema = ((valueList.get(periods - 1) - sma) * multiplier) + sma;
 
-        //add the 9 day ema to our list
-        signalLine.add(ema);
+        //add the ema value to our list
+        emaList.add(ema);
 
         //now let's calculate the remaining periods for ema
-        for (int i = periods; i < macdLine.size(); i++) {
+        for (int i = periods; i < valueList.size(); i++) {
 
             //get our previous ema
-            final double previousEma = signalLine.get(signalLine.size() - 1);
+            final double previousEma = emaList.get(emaList.size() - 1);
 
             //get our close value
-            final double close = macdLine.get(i);
+            final double close = valueList.get(i);
 
             //calculate our new ema
             final double newEma = ((close - previousEma) * multiplier) + previousEma;
 
             //add our new ema value to the list
-            signalLine.add(newEma);
+            emaList.add(newEma);
         }
     }
 

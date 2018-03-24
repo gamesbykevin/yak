@@ -8,6 +8,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.ADX.PERIODS_ADX;
 import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.*;
 
 /**
@@ -27,7 +28,7 @@ public class RSIA extends Strategy {
         super(PERIODS_RSI);
 
         //create objects
-        this.adxObj = new ADX();
+        this.adxObj = new ADX(PERIODS_ADX);
         this.rsiObj = new RSI(PERIODS_RSI);
     }
 
@@ -35,7 +36,7 @@ public class RSIA extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = rsiObj.getRsi().get(rsiObj.getRsi().size() - 1);
+        double rsi = getRecent(rsiObj.getRsi());
 
         //if we are at or below the support line, let's check if we are in a good place to buy
         if (rsi <= SUPPORT_LINE) {
@@ -53,7 +54,7 @@ public class RSIA extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = rsiObj.getRsi().get(rsiObj.getRsi().size() - 1);
+        double rsi = getRecent(rsiObj.getRsi());
 
         //let's see if we are above resistance line before selling
         if (rsi >= RESISTANCE_LINE) {

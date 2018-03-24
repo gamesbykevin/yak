@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
@@ -44,7 +45,8 @@ public class AgentManager {
     public enum TradingStrategy {
         RSI, MACD, OBV, EMA, ADX,
         MACS, RSI_2, NR7, MACDD, HA,
-        NR4, RSIM, RSIA, BB
+        NR4, RSIM, RSIA, BB, BBER,
+        SOD, SOC, SOEMA,
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {

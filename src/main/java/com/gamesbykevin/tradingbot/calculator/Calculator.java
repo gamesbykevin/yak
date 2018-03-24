@@ -13,6 +13,8 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.ADX.PERIODS_ADX;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.PERIODS_EMA_LONG;
 import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.PERIODS_EMA_SHORT;
+import static com.gamesbykevin.tradingbot.calculator.strategy.NR.PERIODS_NR4;
+import static com.gamesbykevin.tradingbot.calculator.strategy.NR.PERIODS_NR7;
 import static com.gamesbykevin.tradingbot.calculator.strategy.OBV.PERIODS_OBV;
 import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.PERIODS_RSI;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
@@ -99,7 +101,7 @@ public class Calculator {
                     break;
 
                 case NR7:
-                    strategy = new NR7();
+                    strategy = new NR(PERIODS_NR7);
                     break;
 
                 case MACDD:
@@ -111,7 +113,7 @@ public class Calculator {
                     break;
 
                 case NR4:
-                    strategy = new NR4();
+                    strategy = new NR(PERIODS_NR4);
                     break;
 
                 case RSIA:
@@ -124,6 +126,22 @@ public class Calculator {
 
                 case BB:
                     strategy = new BB();
+                    break;
+
+                case BBER:
+                    strategy = new BBER();
+                    break;
+
+                case SOD:
+                    strategy = new SOD();
+                    break;
+
+                case SOC:
+                    strategy = new SOC();
+                    break;
+
+                case SOEMA:
+                    strategy = new SOEMA();
                     break;
 
                 default:
