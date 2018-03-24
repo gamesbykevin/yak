@@ -12,25 +12,19 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
 /**
  * Stochastic Oscillator crossover
  */
-public class SOC extends Strategy {
-
-    //our reference object
-    private SOD sodObj;
+public class SOC extends SO {
 
     public SOC() {
 
         //use default value
-        super(0);
-
-        //create new object
-        this.sodObj = new SOD();
+        super();
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish crossover, let's buy
-        if (hasCrossover(true, sodObj.getMarketRate(), sodObj.getStochasticOscillator()))
+        if (hasCrossover(true, getMarketRate(), getStochasticOscillator()))
             agent.setReasonBuy(ReasonBuy.Reason_16);
 
         //display our data
@@ -41,7 +35,7 @@ public class SOC extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish crossover, let's sell
-        if (hasCrossover(false, sodObj.getMarketRate(), sodObj.getStochasticOscillator()))
+        if (hasCrossover(false, getMarketRate(), getStochasticOscillator()))
             agent.setReasonSell(ReasonSell.Reason_17);
 
         //display our data
@@ -52,13 +46,13 @@ public class SOC extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        this.sodObj.displayData(agent, write);
+        super.displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate our value(s)
-        this.sodObj.calculate(history);
+        super.calculate(history);
     }
 }

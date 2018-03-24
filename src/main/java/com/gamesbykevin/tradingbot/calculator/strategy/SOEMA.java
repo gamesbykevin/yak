@@ -12,10 +12,7 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
 /**
  * stochastic oscillator and ema
  */
-public class SOEMA extends Strategy {
-
-    //our reference object
-    private SOD soObj;
+public class SOEMA extends SO {
 
     //our reference object
     private EMA emaObj;
@@ -38,10 +35,9 @@ public class SOEMA extends Strategy {
     public SOEMA() {
 
         //use default value
-        super(0);
+        super();
 
-        //create new object(s)
-        this.soObj = new SOD();
+        //create new object
         this.emaObj = new EMA(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
     }
 
@@ -49,7 +45,7 @@ public class SOEMA extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish crossover and the so indicator is below 50, let's buy
-        if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(soObj.getStochasticOscillator()) < SO_INDICATOR)
+        if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(getStochasticOscillator()) < SO_INDICATOR)
             agent.setReasonBuy(ReasonBuy.Reason_17);
 
         //display our data
@@ -60,7 +56,7 @@ public class SOEMA extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish crossover and the so indicator is above 50, let's sell
-        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(soObj.getStochasticOscillator()) > SO_INDICATOR)
+        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(getStochasticOscillator()) > SO_INDICATOR)
             agent.setReasonSell(ReasonSell.Reason_18);
 
         //display our data
@@ -71,7 +67,7 @@ public class SOEMA extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        this.soObj.displayData(agent, write);
+        super.displayData(agent, write);
         this.emaObj.displayData(agent, write);
     }
 
@@ -79,7 +75,7 @@ public class SOEMA extends Strategy {
     public void calculate(List<Period> history) {
 
         //calculate our value(s)
-        this.soObj.calculate(history);
+        super.calculate(history);
         this.emaObj.calculate(history);
     }
 }
