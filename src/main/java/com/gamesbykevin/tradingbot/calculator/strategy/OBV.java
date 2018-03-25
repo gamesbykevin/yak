@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -23,13 +22,13 @@ public class OBV extends Strategy {
     //our desired periods
     private final int periodsObv;
 
-    public OBV(int periodsObv) {
+    public OBV(int periods) {
 
         //call parent
-        super(periodsObv);
+        super(periods);
 
         //assign value
-        this.periodsObv = periodsObv;
+        this.periodsObv = periods;
 
         //create list
         this.volume = new ArrayList<>();
@@ -48,10 +47,10 @@ public class OBV extends Strategy {
 
         //if there is a bullish divergence let's buy
         if (hasDivergence(history, getPeriods(), true, getVolume()))
-            agent.setReasonBuy(ReasonBuy.Reason_4);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -59,7 +58,7 @@ public class OBV extends Strategy {
 
         //if there is a bearish divergence let's sell
         if (hasDivergence(history, getPeriods(), false, getVolume()))
-            agent.setReasonSell(ReasonSell.Reason_5);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

@@ -152,12 +152,16 @@ public class Calculator {
                     strategy = new BBR();
                     break;
 
-                case EMAS:
+                case EMASV:
                     strategy = new EMASV();
                     break;
 
                 case OA:
                     strategy = new OA();
+                    break;
+
+                case EMV:
+                    strategy = new EMV();
                     break;
 
                 default:

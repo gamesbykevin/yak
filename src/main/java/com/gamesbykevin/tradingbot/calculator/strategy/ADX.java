@@ -29,10 +29,16 @@ public class ADX extends Strategy {
      */
     public static final double TREND_ADX = 20.0d;
 
-    public ADX(int periods) {
+    //our trend line
+    private final double trend;
+
+    public ADX(int periods, double trend) {
 
         //call parent
         super(periods);
+
+        //save the trend
+        this.trend = trend;
 
         //create our lists
         this.adx = new ArrayList<>();
@@ -41,7 +47,7 @@ public class ADX extends Strategy {
     }
 
     public ADX() {
-        this(PERIODS_ADX);
+        this(PERIODS_ADX, TREND_ADX);
     }
 
     public List<Double> getAdx() {
@@ -59,32 +65,27 @@ public class ADX extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //get the most recent adx value
-        double adx = getRecent(getAdx());
-
-        //check the most recent adx to see if there is a trend in price
-        if (adx >= TREND_ADX) {
+        //if the most recent adx value is above the trend
+        if (getRecent(getAdx()) >= this.trend) {
 
             //if dm plus crosses above dm minus, that is our signal to buy
             if (hasCrossover(true, getDmPlusIndicator(), getDmMinusIndicator()))
-                agent.setReasonBuy(TransactionHelper.ReasonBuy.Reason_6);
+                agent.setBuy(true);
         }
 
         //display data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //get the most recent adx value
-        double adx = getRecent(getAdx());
-
-        if (adx >= TREND_ADX) {
+        //if the most recent adx value is above the trend
+        if (getRecent(getAdx()) >= this.trend) {
 
             //if the minus has crossed below the plus that is our signal to sell
             if (hasCrossover(false, getDmPlusIndicator(), getDmMinusIndicator()))
-                agent.setReasonSell(TransactionHelper.ReasonSell.Reason_7);
+                agent.setReasonSell(TransactionHelper.ReasonSell.Reason_Strategy);
         }
 
         //display data

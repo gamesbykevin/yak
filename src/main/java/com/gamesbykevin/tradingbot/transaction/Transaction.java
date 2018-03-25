@@ -5,13 +5,10 @@ import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.NOTIFICATION_EVERY_TRANSACTION;
@@ -39,11 +36,8 @@ public class Transaction {
     //the amount of the transaction
     private double amount;
 
-    //the reason why we bought
-    private TransactionHelper.ReasonBuy reasonBuy;
-
     //the reason why we sold
-    private TransactionHelper.ReasonSell reasonSell;
+    private TransactionHelper.ReasonSell reason;
 
     public Transaction() {
         //default constructor
@@ -105,9 +99,6 @@ public class Transaction {
             //assign our buy order
             setBuy(order);
 
-            //assign our reason for buying
-            setReasonBuy(agent.getReasonBuy());
-
             //if our buy order has been filled, update our wallet to have the current purchase price
             agent.getWallet().setPurchasePrice(price.doubleValue());
 
@@ -144,7 +135,6 @@ public class Transaction {
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
 
-            displayMessage(agent, "Reason buy: " + agent.getReasonBuy().getDescription(), true);
             displayMessage(agent, "Reason sell: " + agent.getReasonSell().getDescription(), true);
 
             //did we win or lose?
@@ -211,19 +201,11 @@ public class Transaction {
         );
     }
 
-    private void setReasonBuy(ReasonBuy reasonBuy) {
-        this.reasonBuy = reasonBuy;
-    }
-
-    private void setReasonSell(ReasonSell reasonSell) {
-        this.reasonSell = reasonSell;
+    private void setReasonSell(ReasonSell reason) {
+        this.reason = reason;
     }
 
     public ReasonSell getReasonSell() {
-        return this.reasonSell;
-    }
-
-    public ReasonBuy getReasonBuy() {
-        return this.reasonBuy;
+        return this.reason;
     }
 }

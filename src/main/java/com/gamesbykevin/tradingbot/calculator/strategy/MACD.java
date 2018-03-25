@@ -2,9 +2,8 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,13 +81,13 @@ public class MACD extends Strategy {
 
                 //last we want the macd line to cross above the signal line
                 if (hasCrossover(true, getMacdLine(), getSignalLine()))
-                    agent.setReasonBuy(ReasonBuy.Reason_2);
+                    agent.setBuy(true);
             }
         }
 
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -102,7 +101,7 @@ public class MACD extends Strategy {
 
                 //last we want the macd line to cross below the signal line
                 if (hasCrossover(false, getMacdLine(), getSignalLine()))
-                    agent.setReasonSell(ReasonSell.Reason_2);
+                    agent.setReasonSell(ReasonSell.Reason_Strategy);
             }
         }
 
@@ -138,7 +137,7 @@ public class MACD extends Strategy {
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
 
         //calculate our sma price
-        calculateSMA(history, getSmaPrice(), PERIODS_SMA_TREND, PeriodField.Close);
+        calculateSMA(history, getSmaPrice(), PERIODS_SMA_TREND, Fields.Close);
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {

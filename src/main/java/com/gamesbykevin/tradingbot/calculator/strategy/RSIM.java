@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -45,11 +44,11 @@ public class RSIM extends Strategy {
 
             //if bullish divergence in macd and price
             if (hasDivergence(history, macdObj.getPeriods(), true, macdObj.getMacdLine()))
-                agent.setReasonBuy(ReasonBuy.Reason_12);
+                agent.setBuy(true);
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -63,7 +62,7 @@ public class RSIM extends Strategy {
 
             //if bearish divergence in macd and price
             if (hasDivergence(history, macdObj.getPeriods(), false, macdObj.getMacdLine()))
-                agent.setReasonSell(ReasonSell.Reason_13);
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data

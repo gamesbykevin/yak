@@ -2,8 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -83,13 +82,13 @@ public class OA extends Strategy {
 
                 //make sure obv is above both sma averages and then we can sell
                 if (valueOBV > getRecent(smaObvLong) && valueOBV > getRecent(smaObvShort)) {
-                    agent.setReasonBuy(ReasonBuy.Reason_21);
+                    agent.setBuy(true);
                 }
             }
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -112,7 +111,7 @@ public class OA extends Strategy {
 
                 //make sure obv is above both sma averages and then we can sell
                 if (valueOBV < getRecent(smaObvLong) && valueOBV < getRecent(smaObvShort)) {
-                    agent.setReasonSell(ReasonSell.Reason_22);
+                    agent.setReasonSell(ReasonSell.Reason_Strategy);
                 }
             }
         }
@@ -148,7 +147,7 @@ public class OA extends Strategy {
         calculateSMA(adlObj.getAccumulationDistributionLine(), smaAdlLong, periodsLong);
         calculateSMA(obvObj.getVolume(), smaObvShort, periodsShort);
         calculateSMA(obvObj.getVolume(), smaObvLong, periodsLong);
-        calculateSMA(history, smaPriceShort, periodsShort, PeriodField.Close);
-        calculateSMA(history, smaPriceLong, periodsLong, PeriodField.Close);
+        calculateSMA(history, smaPriceShort, periodsShort, Fields.Close);
+        calculateSMA(history, smaPriceLong, periodsLong, Fields.Close);
     }
 }

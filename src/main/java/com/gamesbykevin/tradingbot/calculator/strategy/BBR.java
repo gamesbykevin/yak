@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -59,11 +58,11 @@ public class BBR extends Strategy {
 
             //if the price was below the previous lower value, then crosses above it
             if (hasCrossover(true, previous, currentPrice, current, current))
-                agent.setReasonBuy(ReasonBuy.Reason_19);
+                agent.setBuy(true);
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -78,7 +77,7 @@ public class BBR extends Strategy {
 
             //if the price was above the previous upper value, then crosses below it
             if (hasCrossover(false, previous, currentPrice, current, current))
-                agent.setReasonSell(ReasonSell.Reason_20);
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data

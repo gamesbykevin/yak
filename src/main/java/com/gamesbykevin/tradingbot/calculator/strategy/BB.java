@@ -2,8 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -53,10 +52,10 @@ public class BB extends Strategy {
 
         //if the current price goes below our lower line, let's buy
         if (currentPrice < getRecent(getLower()))
-            agent.setReasonBuy(ReasonBuy.Reason_13);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -64,7 +63,7 @@ public class BB extends Strategy {
 
         //if the current price goes above our upper line, let's sell
         if (currentPrice > getRecent(getUpper()))
-            agent.setReasonSell(ReasonSell.Reason_14);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -83,7 +82,7 @@ public class BB extends Strategy {
     public void calculate(List<Period> history) {
 
         //calculate our sma values
-        calculateSMA(history, getMiddle(), getPeriods(), PeriodField.Close);
+        calculateSMA(history, getMiddle(), getPeriods(), Fields.Close);
 
         for (int index = 0; index < getMiddle().size(); index++) {
 

@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -67,10 +66,10 @@ public class BBER extends Strategy {
 
         //if all are true, let's buy
         if (belowEmaLong && belowBbMiddle && belowRsiSupport)
-            agent.setReasonBuy(ReasonBuy.Reason_14);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -87,7 +86,7 @@ public class BBER extends Strategy {
 
         //if all are true, let's sell
         if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport)
-            agent.setReasonSell(ReasonSell.Reason_15);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

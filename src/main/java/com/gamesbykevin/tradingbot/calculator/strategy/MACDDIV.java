@@ -2,10 +2,8 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
@@ -30,10 +28,10 @@ public class MACDDIV extends Strategy {
 
         //if bullish divergence, buy
         if (hasDivergence(history, getPeriods(), true, macdObj.getHistogram()))
-            agent.setReasonBuy(ReasonBuy.Reason_9);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -41,7 +39,7 @@ public class MACDDIV extends Strategy {
 
         //if we have a bearish divergence, we expect price to go down
         if (hasDivergence(history, getPeriods(), false, macdObj.getHistogram()))
-            agent.setReasonSell(ReasonSell.Reason_10);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

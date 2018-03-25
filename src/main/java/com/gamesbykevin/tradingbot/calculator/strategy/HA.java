@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -64,10 +63,10 @@ public class HA extends Strategy {
 
         //if we confirm bullish, let's buy
         if (confirmBullish)
-            agent.setReasonBuy(ReasonBuy.Reason_10);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -99,7 +98,7 @@ public class HA extends Strategy {
 
         //if we confirm bullish, let's sell
         if (confirmBearish)
-            agent.setReasonSell(ReasonSell.Reason_11);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

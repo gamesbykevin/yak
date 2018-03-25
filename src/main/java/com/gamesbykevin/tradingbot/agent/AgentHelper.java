@@ -94,9 +94,13 @@ public class AgentHelper {
         //check for a sell signal
         calculator.getIndicator(agent.getStrategy()).checkSellSignal(agent, calculator.getHistory(), currentPrice);
 
-        //if the current stock price is less than what we paid, we would lose money if we sold
+        //if the current stock price is less than what we paid, we don't want to sell because we would lose $
         if (currentPrice < agent.getWallet().getPurchasePrice())
             agent.setReasonSell(null);
+
+        //if the price dropped below our hard stop, we will sell to cut our losses
+        if (currentPrice <= agent.getHardStop())
+            agent.setReasonSell(ReasonSell.Reason_HardStop);
 
         //what is the increase we check to see if we set a new hard stop amount
         double increase = (agent.getWallet().getPurchasePrice() * HARD_STOP_RATIO);
@@ -110,10 +114,6 @@ public class AgentHelper {
             //write hard stop amount to our log file
             displayMessage(agent, "New hard stop $" + agent.getHardStop(), true);
         }
-
-        //if the price dropped below our hard stop, we will sell to cut our losses
-        if (currentPrice <= agent.getHardStop())
-            agent.setReasonSell(ReasonSell.Reason_0);
 
         //if there is a reason then we will sell
         if (agent.getReasonSell() != null) {
@@ -133,8 +133,8 @@ public class AgentHelper {
 
     protected static void checkBuy(Agent agent, Calculator calculator, Product product, double currentPrice) {
 
-        //check for reasons first
-        agent.setReasonBuy(null);
+        //flag buy false before we check
+        agent.setBuy(false);
 
         //reset our hard stop until we actually buy
         agent.setHardStop(0);
@@ -143,14 +143,11 @@ public class AgentHelper {
         calculator.getIndicator(agent.getStrategy()).checkBuySignal(agent, calculator.getHistory(), currentPrice);
 
         //we will buy if there is a reason
-        if (agent.getReasonBuy() != null) {
+        if (agent.hasBuy()) {
 
             //let's set our hard stop if it hasn't been set already
             if (agent.getHardStop() == 0)
                 agent.setHardStop(currentPrice - (currentPrice * HARD_STOP_RATIO));
-
-            //if there is a reason display it
-            displayMessage(agent, agent.getReasonBuy().getDescription(), true);
 
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStop(), true);

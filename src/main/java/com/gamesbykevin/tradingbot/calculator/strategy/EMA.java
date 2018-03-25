@@ -2,8 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -68,10 +67,10 @@ public class EMA extends Strategy {
 
         //if we have a bullish crossover, we expect price to go up
         if (hasCrossover(true, getEmaShort(), getEmaLong()))
-            agent.setReasonBuy(ReasonBuy.Reason_1);
+            agent.setBuy(true);
 
         //display data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -79,23 +78,7 @@ public class EMA extends Strategy {
 
         //if we have a bearish crossover, we expect price to go down
         if (hasCrossover(false, getEmaShort(), getEmaLong()))
-            agent.setReasonSell(ReasonSell.Reason_1);
-
-        //if no reason to sell yet, check if the price drops below the ema values
-        if (agent.getReasonSell() == null) {
-
-            //get the current ema long and short values
-            double emaLong = getRecent(getEmaLong());
-            double emaShort = getRecent(getEmaShort());
-
-            //get the low of the most recent period
-            double recentLow = history.get(history.size() - 1).low;
-
-            //if the recent low price is less than both the long/short ema values, we need to exit our trade
-            if (recentLow < emaLong && recentLow < emaShort)
-                agent.setReasonSell(ReasonSell.Reason_3);
-
-        }
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display data
         displayData(agent, agent.getReasonSell() != null);
@@ -105,8 +88,8 @@ public class EMA extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short: ", getEmaShort(), (periodsShort / 2), agent.getReasonBuy() != null);
-        display(agent, "EMA Long: ", getEmaLong(), (periodsShort / 2),agent.getReasonBuy() != null);
+        display(agent, "EMA Short: ", getEmaShort(), (periodsShort / 2), write);
+        display(agent, "EMA Long: ", getEmaLong(), (periodsShort / 2),write);
     }
 
     @Override
@@ -135,7 +118,7 @@ public class EMA extends Strategy {
         } else {
 
             //calculate simple moving average since there is no previous ema
-            final double sma = calculateSMA(history, current - 1, periods, PeriodField.Close);
+            final double sma = calculateSMA(history, current - 1, periods, Fields.Close);
 
             ema = ((currentPrice - sma) * multiplier) + sma;
         }

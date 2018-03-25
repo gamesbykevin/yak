@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -30,10 +29,10 @@ public class SOD extends SO {
 
         //if we have a bullish divergence, let's buy
         if (hasDivergence(history, periodsSO, true, getStochasticOscillator()))
-            agent.setReasonBuy(ReasonBuy.Reason_15);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -41,7 +40,7 @@ public class SOD extends SO {
 
         //if we have a bearish divergence, let's sell
         if (hasDivergence(history, periodsSO, false, getStochasticOscillator()))
-            agent.setReasonSell(ReasonSell.Reason_16);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

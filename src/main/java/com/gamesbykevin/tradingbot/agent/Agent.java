@@ -7,7 +7,6 @@ import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
@@ -42,11 +41,8 @@ public class Agent {
     //number of attempts we try to verify the order
     private int attempts = 0;
 
-    //the reason why we are buying
-    private ReasonBuy reasonBuy;
-
     //the reason why we are selling
-    private ReasonSell reasonSell;
+    private ReasonSell reason;
 
     //what is our trading strategy
     private final TradingStrategy strategy;
@@ -59,6 +55,9 @@ public class Agent {
 
     //let's keep track of how low and high our money goes
     private double fundsMin, fundsMax;
+
+    //do we buy stock?
+    private boolean buy = false;
 
     protected Agent(TradingStrategy strategy, double funds, String productId, String fileName) {
 
@@ -256,17 +255,9 @@ public class Agent {
             //display the total $ amount invested in stocks
             displayMessage(this, AgentHelper.getStockInvestmentDesc(this), true);
 
-            //display the count for each buying reason for when we win
-            TransactionHelper.displayBuyingReasonCount(this, Result.Win);
-
-            //display the count for each selling reason for when we win
-            TransactionHelper.displaySellingReasonCount(this, Result.Win);
-
-            //display the count for each buying reason for when we lose
-            TransactionHelper.displayBuyingReasonCount(this, Result.Lose);
-
-            //display the count for each selling reason for when we lose
-            TransactionHelper.displaySellingReasonCount(this, Result.Lose);
+            //display the count and reasons why we sold our stock
+            TransactionHelper.displaySellReasonCount(this, Result.Win);
+            TransactionHelper.displaySellReasonCount(this, Result.Lose);
         }
     }
 
@@ -298,20 +289,12 @@ public class Agent {
         return this.attempts;
     }
 
-    public void setReasonBuy(final ReasonBuy reasonBuy) {
-        this.reasonBuy = reasonBuy;
-    }
-
-    public void setReasonSell(final ReasonSell reasonSell) {
-        this.reasonSell = reasonSell;
-    }
-
-    public ReasonBuy getReasonBuy() {
-        return this.reasonBuy;
+    public void setReasonSell(final ReasonSell reason) {
+        this.reason = reason;
     }
 
     public ReasonSell getReasonSell() {
-        return this.reasonSell;
+        return this.reason;
     }
 
     public List<Transaction> getTransactions() {
@@ -340,5 +323,13 @@ public class Agent {
 
     public void setFundsMin(double fundsMin) {
         this.fundsMin = fundsMin;
+    }
+
+    public void setBuy(boolean buy) {
+        this.buy = buy;
+    }
+
+    public boolean hasBuy() {
+        return this.buy;
     }
 }

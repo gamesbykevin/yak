@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -59,11 +58,11 @@ public class RSI extends Strategy {
 
             //if there is a bullish divergence let's buy
             if (hasDivergence(history, getPeriods(), true, getRsi()))
-                agent.setReasonBuy(ReasonBuy.Reason_3);
+                agent.setBuy(true);
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -77,7 +76,7 @@ public class RSI extends Strategy {
 
             //if there is a bearish divergence let's sell
             if (hasDivergence(history, getPeriods(), false, getRsi()))
-                agent.setReasonSell(ReasonSell.Reason_4);
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data

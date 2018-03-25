@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -25,10 +24,10 @@ public class SOC extends SO {
 
         //if we have a bullish crossover, let's buy
         if (hasCrossover(true, getMarketRate(), getStochasticOscillator()))
-            agent.setReasonBuy(ReasonBuy.Reason_16);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -36,7 +35,7 @@ public class SOC extends SO {
 
         //if we have a bearish crossover, let's sell
         if (hasCrossover(false, getMarketRate(), getStochasticOscillator()))
-            agent.setReasonSell(ReasonSell.Reason_17);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

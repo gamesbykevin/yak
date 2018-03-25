@@ -2,10 +2,10 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
+import javax.swing.table.TableRowSorter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,13 +31,13 @@ public class EMASV extends Strategy {
      */
     public static final int PERIODS_EMA_LONG = 35;
     public static final int PERIODS_EMA_SHORT = 5;
-    public static final int PERIODS_SMA_TREND = 150;
+    public static final int PERIODS_SMA_PRICE = 150;
     public static final int PERIODS_SMA_VOLUME = 200;
 
     //what are our periods
-    private final int periodsEmaLong, periodsEmaShort, periodsSmaTrend, periodsSmaVolume;
+    private final int periodsEmaLong, periodsEmaShort, periodsSmaPrice, periodsSmaVolume;
 
-    public EMASV(int periodsEmaLong, int periodsEmaShort, int periodsSmaTrend, int periodsSmaVolume) {
+    public EMASV(int periodsEmaLong, int periodsEmaShort, int periodsSmaPrice, int periodsSmaVolume) {
 
         //call parent with default
         super(0);
@@ -45,7 +45,7 @@ public class EMASV extends Strategy {
         //store our settings
         this.periodsEmaLong = periodsEmaLong;
         this.periodsEmaShort = periodsEmaShort;
-        this.periodsSmaTrend = periodsSmaTrend;
+        this.periodsSmaPrice = periodsSmaPrice;
         this.periodsSmaVolume = periodsSmaVolume;
 
         //create new object(s)
@@ -55,7 +55,7 @@ public class EMASV extends Strategy {
     }
 
     public EMASV() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_SMA_TREND, PERIODS_SMA_VOLUME);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_SMA_PRICE, PERIODS_SMA_VOLUME);
     }
 
     public List<Double> getSmaPrice() {
@@ -79,16 +79,16 @@ public class EMASV extends Strategy {
         if (previous < current) {
 
             //we also want the current volume to be larger than our sma volume
-            if (history.get(history.size() - 1).volume > getRecent(getSmaVolume())) {
+            if (getRecent(history, Fields.Volume) > getRecent(getSmaVolume())) {
 
                 //then if we have crossover let's buy
                 if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()))
-                    agent.setReasonBuy(ReasonBuy.Reason_20);
+                    agent.setBuy(true);
             }
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -104,11 +104,11 @@ public class EMASV extends Strategy {
         if (current < previous) {
 
             //we also want the current volume to be larger than our sma volume
-            if (history.get(history.size() - 1).volume > getRecent(getSmaVolume())) {
+            if (getRecent(history, Fields.Volume) > getRecent(getSmaVolume())) {
 
                 //then if we have crossover let's sell
                 if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
-                    agent.setReasonSell(ReasonSell.Reason_21);
+                    agent.setReasonSell(ReasonSell.Reason_Strategy);
             }
         }
 
@@ -132,9 +132,9 @@ public class EMASV extends Strategy {
         this.emaObj.calculate(history);
 
         //calculate our sma price
-        calculateSMA(history, getSmaPrice(), periodsSmaTrend, PeriodField.Close);
+        calculateSMA(history, getSmaPrice(), periodsSmaPrice, Fields.Close);
 
         //calculate our sma volume
-        calculateSMA(history, getSmaVolume(), periodsSmaVolume, PeriodField.Volume);
+        calculateSMA(history, getSmaVolume(), periodsSmaVolume, Fields.Volume);
     }
 }

@@ -53,28 +53,6 @@ public abstract class SO extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //if we have a bullish divergence, let's buy
-        //if (hasDivergence(history, periodsSO, true, getStochasticOscillator()))
-        //    agent.setReasonBuy(ReasonBuy.Reason_15);
-
-        //display our data
-        displayData(agent, agent.getReasonBuy() != null);
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //if we have a bearish divergence, let's sell
-        //if (hasDivergence(history, periodsSO, false, getStochasticOscillator()))
-        //    agent.setReasonSell(ReasonSell.Reason_16);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the information
@@ -161,5 +139,4 @@ public abstract class SO extends Strategy {
         //return our result
         return result;
     }
-
 }

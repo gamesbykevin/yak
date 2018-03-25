@@ -8,7 +8,7 @@ public class Period {
     public double close;
     public double volume;
 
-    public enum PeriodField {
+    public enum Fields {
         Time, Low, High, Open, Close, Volume
     }
 }

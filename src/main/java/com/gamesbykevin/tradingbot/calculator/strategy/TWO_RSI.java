@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -44,10 +43,10 @@ public class TWO_RSI extends Strategy {
 
         //if above the max we have a buy signal
         if (rsi > MAX_RSI)
-            agent.setReasonBuy(ReasonBuy.Reason_7);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -58,7 +57,7 @@ public class TWO_RSI extends Strategy {
 
         //if below the min we have a sell signal
         if (rsi < MIN_RSI)
-            agent.setReasonSell(ReasonSell.Reason_8);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -46,10 +45,10 @@ public class SOEMA extends SO {
 
         //if we have a bullish crossover and the so indicator is below 50, let's buy
         if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(getStochasticOscillator()) < SO_INDICATOR)
-            agent.setReasonBuy(ReasonBuy.Reason_17);
+            agent.setBuy(true);
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -57,7 +56,7 @@ public class SOEMA extends SO {
 
         //if we have a bearish crossover and the so indicator is above 50, let's sell
         if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(getStochasticOscillator()) > SO_INDICATOR)
-            agent.setReasonSell(ReasonSell.Reason_18);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

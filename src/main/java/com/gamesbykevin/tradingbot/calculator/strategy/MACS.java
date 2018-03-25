@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 /**
@@ -69,11 +68,11 @@ public class MACS extends Strategy {
 
             //lets also check that the current price is above the trending data
             if (currentPrice > emaTrend.get(emaTrend.size() - 1))
-                agent.setReasonBuy(ReasonBuy.Reason_5);
+                agent.setBuy(true);
         }
 
         //display our data for what it is worth
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -84,7 +83,7 @@ public class MACS extends Strategy {
 
             //lets also check that the current price is below the trending data
             if (currentPrice < emaTrend.get(emaTrend.size() - 1))
-                agent.setReasonSell(ReasonSell.Reason_6);
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data for what it is worth

@@ -3,12 +3,12 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.ADX.PERIODS_ADX;
+import static com.gamesbykevin.tradingbot.calculator.strategy.ADX.TREND_ADX;
 import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.*;
 
 /**
@@ -28,7 +28,7 @@ public class RSIA extends Strategy {
         super(PERIODS_RSI);
 
         //create objects
-        this.adxObj = new ADX(PERIODS_ADX);
+        this.adxObj = new ADX(PERIODS_ADX, TREND_ADX);
         this.rsiObj = new RSI(PERIODS_RSI);
     }
 
@@ -43,11 +43,11 @@ public class RSIA extends Strategy {
 
             //if dm plus crosses above dm minus, that is our signal to buy
             if (hasCrossover(true, adxObj.getDmPlusIndicator(), adxObj.getDmMinusIndicator()))
-                agent.setReasonBuy(ReasonBuy.Reason_11);
+                agent.setBuy(true);
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -61,7 +61,7 @@ public class RSIA extends Strategy {
 
             //if the minus has crossed below the plus that is our signal to sell
             if (hasCrossover(false, adxObj.getDmPlusIndicator(), adxObj.getDmMinusIndicator()))
-                agent.setReasonSell(ReasonSell.Reason_12);
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data

@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 
 import java.util.List;
 
@@ -34,14 +33,14 @@ public class NR extends Strategy {
         if (currentPrice > smallest.high) {
 
             //assign our reason to buy
-            agent.setReasonBuy(ReasonBuy.Reason_8);
+            agent.setBuy(true);
 
             //set our hard stop amount
             //agent.setHardStop(smallest.low);
         }
 
         //display our data
-        displayData(agent, agent.getReasonBuy() != null);
+        displayData(agent, agent.hasBuy());
     }
 
     @Override

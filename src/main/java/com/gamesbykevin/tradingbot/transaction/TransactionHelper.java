@@ -11,72 +11,12 @@ import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 public class TransactionHelper {
 
     /**
-     * The reasons for why we buy
-     */
-    public enum ReasonBuy {
-
-        Reason_1("There is a swing detected in the EMA"),
-        Reason_2("MACD close > sma close and macd < 0 and macd > signal"),
-        Reason_3("There is a divergence in the RSI"),
-        Reason_4("Volume has a divergence"),
-        Reason_5("MACS crossover and above trend line"),
-        Reason_6("ADX is trending and +DI has crossed above -DI"),
-        Reason_7("2 period rsi is above 90"),
-        Reason_8("NR Price breakout"),
-        Reason_9("MACD Histogram/Price is showing divergence"),
-        Reason_10("Heikin-Ashi candles are now going bullish"),
-        Reason_11("RSI is < support, ADX dm+ is above dm-"),
-        Reason_12("RSI is < support, macd has divergence"),
-        Reason_13("Price is below BB lower line"),
-        Reason_14("Price is below long ema line, bb middle line, and rsi is below 50"),
-        Reason_15("SO has a divergence"),
-        Reason_16("SO has a crossover"),
-        Reason_17("SO has EMA crossover and SO indicator < 50"),
-        Reason_18("ADL has a divergence"),
-        Reason_19("RSI is below support and price just moved above BB lower"),
-        Reason_20("SMA Trend is trading higher than previous and EMA bullish crossover"),
-        Reason_21("Close < Close long/short, ADL > ADL long/short, OBV > OBV long/short"),
-        ;
-
-        private final String description;
-
-        ReasonBuy(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return this.description;
-        }
-    }
-
-    /**
-     * The reasons for why we sell
+     * The reasons for why we sold
      */
     public enum ReasonSell {
 
-        Reason_0("We have hit our hard stop"),
-        Reason_1("There is a swing detected in the EMA"),
-        Reason_2("MACD close < sma close and macd > 0 and macd < signal"),
-        Reason_3("The current stock price is below both short and long emas"),
-        Reason_4("There is a divergence in the RSI"),
-        Reason_5("Volume has a divergence"),
-        Reason_6("MACS crossover and below trend line"),
-        Reason_7("-DI has crossed below +DI"),
-        Reason_8("2 period rsi is below 10"),
-        Reason_9("NR Period close is > purchase price"),
-        Reason_10("MACD Histogram/Price is showing divergence"),
-        Reason_11("Heikin-Ashi candles are now going bearish"),
-        Reason_12("RSI is > resistance, ADX dm- is above dm+"),
-        Reason_13("RSI is > resistance, macd has divergence"),
-        Reason_14("Price is above BB upper line"),
-        Reason_15("Price is above long ema line, bb middle line, and rsi is above 50"),
-        Reason_16("SO has a divergence"),
-        Reason_17("SO has a crossover"),
-        Reason_18("SO has EMA crossover and SO indicator > 50"),
-        Reason_19("ADL has a divergence"),
-        Reason_20("RSI is above resistance and price just moved below BB upper"),
-        Reason_21("SMA Trend is trading lower than previous and EMA bearish crossover"),
-        Reason_22("Close > Close long/short, ADL < ADL long/short, OBV < OBV long/short"),
+        Reason_Strategy("Sold based on strategy logic"),
+        Reason_HardStop("We have hit our hard stop"),
         ;
 
         private final String description;
@@ -127,7 +67,7 @@ public class TransactionHelper {
         return (duration / count);
     }
 
-    public static void displaySellingReasonCount(Agent agent, Result result) {
+    public static void displaySellReasonCount(Agent agent, Result result) {
 
         //check each reason
         for (ReasonSell sell : ReasonSell.values()) {
@@ -155,37 +95,6 @@ public class TransactionHelper {
             //display the count if greater than 0
             if (count > 0)
                 displayMessage(agent, result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true);
-        }
-    }
-
-    public static void displayBuyingReasonCount(Agent agent, Result result) {
-
-        //check each reason
-        for (ReasonBuy buy : ReasonBuy.values()) {
-
-            //keep track of the count
-            int count = 0;
-
-            //keep track of the money involved
-            double amount = 0;
-
-            //look at each transaction
-            for (Transaction transaction : agent.getTransactions()) {
-
-                //skip if no match
-                if (transaction.getResult() == null || transaction.getResult() != result)
-                    continue;
-
-                //if there is a match increase the count
-                if (transaction.getReasonBuy() == buy) {
-                    count++;
-                    amount += transaction.getAmount();
-                }
-            }
-
-            //display the count if greater than 0
-            if (count > 0)
-                displayMessage(agent, result.toString() + " Buy " + buy.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + buy.getDescription(), true);
         }
     }
 

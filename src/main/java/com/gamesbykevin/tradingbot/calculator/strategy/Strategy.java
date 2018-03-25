@@ -1,8 +1,8 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 
 import java.util.List;
 
@@ -47,6 +47,35 @@ public abstract class Strategy {
         }
 
         displayMessage(agent, desc + info, write);
+    }
+
+    protected double getRecent(List<Period> periods, Fields field) {
+
+        Period period = periods.get(periods.size() - 1);
+
+        switch (field) {
+
+            case Volume:
+                return period.volume;
+
+            case Close:
+                return period.close;
+
+            case Time:
+                return period.time;
+
+            case Low:
+                return period.low;
+
+            case Open:
+                return period.open;
+
+            case High:
+                return period.high;
+
+            default:
+                throw new RuntimeException("Field not handled: " + field);
+        }
     }
 
     protected double getRecent(List<Double> list) {
