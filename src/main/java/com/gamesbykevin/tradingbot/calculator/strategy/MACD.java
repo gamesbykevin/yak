@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class MACD extends Strategy {
 
@@ -21,13 +23,21 @@ public class MACD extends Strategy {
     //our histogram (macdLine - signalLine)
     private List<Double> histogram;
 
+    //list of sma closing prices
+    private List<Double> smaPrice;
+
     //our ema object
     private EMA emaObj;
 
     /**
      * How many periods do we calculate ema from macd line
      */
-    public static int PERIODS_MACD;
+    public static final int PERIODS_MACD = 9;
+
+    /**
+     * How many periods do we calculate the sma trend line
+     */
+    public static final int PERIODS_SMA_TREND = 200;
 
     public MACD() {
         this(PERIODS_MACD);
@@ -42,6 +52,7 @@ public class MACD extends Strategy {
         this.signalLine = new ArrayList<>();
         this.emaObj = new EMA();
         this.histogram = new ArrayList<>();
+        this.smaPrice = new ArrayList<>();
     }
 
     public List<Double> getMacdLine() {
@@ -56,11 +67,25 @@ public class MACD extends Strategy {
         return this.histogram;
     }
 
+    public List<Double> getSmaPrice() {
+        return this.smaPrice;
+    }
+
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        if (hasCrossover(true, getMacdLine(), getSignalLine()))
-            agent.setReasonBuy(ReasonBuy.Reason_2);
+        //first we want the close price to be greater than our sma price for the most recent period
+        if (history.get(history.size() - 1).close > getRecent(getSmaPrice())) {
+
+            //then we want our macd line less than 0
+            if (getRecent(getMacdLine()) < 0) {
+
+                //last we want the macd line to cross above the signal line
+                if (hasCrossover(true, getMacdLine(), getSignalLine()))
+                    agent.setReasonBuy(ReasonBuy.Reason_2);
+            }
+        }
+
 
         //display our data
         displayData(agent, agent.getReasonBuy() != null);
@@ -69,9 +94,17 @@ public class MACD extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bearish crossover, we expect price to go down
-        if (hasCrossover(false, getMacdLine(), getSignalLine()))
-            agent.setReasonSell(ReasonSell.Reason_2);
+        //first we want the close price to be less than our sma price for the most recent period
+        if (history.get(history.size() - 1).close < getRecent(getSmaPrice())) {
+
+            //then we want our macd line greater than 0
+            if (getRecent(getMacdLine()) > 0) {
+
+                //last we want the macd line to cross below the signal line
+                if (hasCrossover(false, getMacdLine(), getSignalLine()))
+                    agent.setReasonSell(ReasonSell.Reason_2);
+            }
+        }
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -83,6 +116,7 @@ public class MACD extends Strategy {
         //display the recent MACD values which we use as a signal
         display(agent, "MACD Line: ", getMacdLine(), getPeriods(), write);
         display(agent, "Signal Line: ", getSignalLine(), getPeriods(), write);
+        display(agent, "SMA Price: ", getSmaPrice(), getPeriods(), write);
 
         //display values
         this.emaObj.displayData(agent, write);
@@ -102,6 +136,9 @@ public class MACD extends Strategy {
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
+
+        //calculate our sma price
+        calculateSMA(history, getSmaPrice(), PERIODS_SMA_TREND, PeriodField.Close);
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {
@@ -143,7 +180,7 @@ public class MACD extends Strategy {
         final double sma = sum / (float)periods;
 
         //here is our multiplier
-        final double multiplier = ((float)2 / ((float)periods + 1));
+        final double multiplier = ((float)2 / ((float)periods + 1.0f));
 
         //calculate our first ema
         final double ema = ((valueList.get(periods - 1) - sma) * multiplier) + sma;

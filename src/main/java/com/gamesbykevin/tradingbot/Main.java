@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIOD_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
@@ -67,12 +68,6 @@ public class Main implements Runnable {
     //which currencies do we want to trade with (separated by comma)
     public static String[] TRADING_CURRENCIES;
 
-    //the previous time we sent a notification
-    private long previous;
-
-    //what are the previous total assets
-    private double previousTotal = 0;
-
     /**
      * Are we paper trading? default true
      */
@@ -86,25 +81,16 @@ public class Main implements Runnable {
     //our list of products
     private List<Product> products;
 
-    //how often do we display/write the strategy description to the log file (milliseconds)
-    private static final long STRATEGY_DELAY = 300000;
-
-    //when was the last time we displayed the strategy summary
-    private long previousRunStrategyDesc = 0;
-
-    //how long has the bot been running
-    private final long start;
-
     /**
-     * Warn the user before we actually start (no paper trading)
+     * Warn the user before we actually start (when using real money)
      */
-    public static long DELAY_STARTUP = 15000L;
+    public static long DELAY_STARTUP = 20000L;
 
     public static void main(String[] args) {
 
         try {
 
-            displayMessage("Starting...", false, null);
+            displayMessage("Starting...");
 
             //load the properties from our application.properties
             PropertyUtil.loadProperties();
@@ -119,15 +105,12 @@ public class Main implements Runnable {
             thread.start();
 
         } catch (Exception e) {
-            displayMessage("Trading bot not started...", false, null);
+            displayMessage("Trading bot not started...");
             e.printStackTrace();
         }
     }
 
     private Main(ConfigurableApplicationContext context) {
-
-        //track the start time
-        this.start = System.currentTimeMillis();
 
         ConfigurableListableBeanFactory factory = context.getBeanFactory();
         ORDER_SERVICE = factory.getBean(OrderService.class);
@@ -140,7 +123,7 @@ public class Main implements Runnable {
         if (PAPER_TRADING) {
 
             //warning no real money used
-            displayMessage("INFO: No real money used", true, writer);
+            displayMessage("INFO: No real money used", getWriter());
 
         } else {
 
@@ -153,8 +136,9 @@ public class Main implements Runnable {
                 throw new RuntimeException("You should only focus on 1 trading strategy, this doesn't seem right.");
 
             //display message and pause if using real money
-            displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", true, writer);
-            displayMessage("Stop this process if this is incorrect!!!!!!!", false, null);
+            displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", getWriter());
+            displayMessage("Stop this process if this is incorrect!!!!!!!");
+            displayMessage("Otherwise we will resume in " + (DELAY_STARTUP / 1000) + " seconds.");
 
             try {
                 //sleep for a short period before we actually start
@@ -233,20 +217,20 @@ public class Main implements Runnable {
                             Thread.sleep(THREAD_DELAY);
 
                             //display total assets update
-                            manageStatusUpdate();
+                            manageStatusUpdate(this);
 
                         } else {
 
                             //if we don't have a connection and we aren't trying to connect, let's start connecting
                             if (!websocketFeed.isConnecting()) {
 
-                                displayMessage("Lost connection, attempting to re-connect", true, writer);
+                                displayMessage("Lost connection, attempting to re-connect", getWriter());
                                 websocketFeed.connect();
 
                             } else {
 
                                 //we are trying to connect and just need to be patient
-                                displayMessage("Waiting to connect...", true, writer);
+                                displayMessage("Waiting to connect...", getWriter());
                             }
                         }
 
@@ -271,12 +255,12 @@ public class Main implements Runnable {
                                 Thread.sleep(THREAD_DELAY);
 
                                 //display total assets update
-                                manageStatusUpdate();
+                                manageStatusUpdate(this);
 
                             } catch (Exception e1) {
 
                                 e1.printStackTrace();
-                                displayMessage(e1, true, writer);
+                                displayMessage(e1, getWriter());
                             }
                         }
                     }
@@ -284,116 +268,14 @@ public class Main implements Runnable {
                 } catch (Exception e) {
 
                     e.printStackTrace();
-                    displayMessage(e, true, writer);
+                    displayMessage(e, getWriter());
                 }
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            displayMessage(ex, true, writer);
+            displayMessage(ex, getWriter());
         }
-    }
-
-    private void manageStatusUpdate() {
-
-        //text of our notification message
-        String subject = "", text = "\n";
-
-        //how much did we start with
-        //text = text + "Started with $" + FUNDS + "\n";
-
-        //how long has the bot been running
-        text = text + "Bot Running: " + Transaction.getDurationDesc(System.currentTimeMillis() - start) + "\n\n";
-
-        double total = 0;
-
-        //print the summary of each agent manager
-        for (AgentManager agentManager : agentManagers.values()) {
-
-            //get the total assets for the current product
-            final double assets = agentManager.getTotalAssets();
-
-            //add to our total
-            total += assets;
-
-            //add to our details
-            text = text + agentManager.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
-
-            //display each agent's funds as well
-            text = text + agentManager.getAgentDetails();
-
-            //add line break in the end
-            text = text + "\n";
-        }
-
-        text = text + "\n";
-
-        //get our strategy summary
-        final String strategyDesc = getStrategySummary();
-
-        //add strategy summary to the overall message
-        text = text + strategyDesc;
-
-        subject = "Total assets $" + AgentHelper.formatValue(total);
-
-        //print our total assets if they have changed
-        if (total != previousTotal) {
-            displayMessage(subject, true, writer);
-            previousTotal = total;
-        }
-
-        //if enough time has passed send ourselves a notification
-        if (System.currentTimeMillis() - previous >= NOTIFICATION_DELAY) {
-
-            //send our total assets in an email
-            sendEmail(subject, text);
-
-            //update the timer
-            previous = System.currentTimeMillis();
-
-            //force our logic to write the strategy desc
-            previousRunStrategyDesc = System.currentTimeMillis() - STRATEGY_DELAY;
-
-        } else {
-
-            //how much time remaining
-            final long duration = NOTIFICATION_DELAY - (System.currentTimeMillis() - previous);
-
-            //show when the next notification message will be sent
-            displayMessage("Next notification message in " + Transaction.getDurationDesc(duration), false, null);
-        }
-
-
-        //we want to write this to log file periodically even if no notification message
-        if (System.currentTimeMillis() - previousRunStrategyDesc >= STRATEGY_DELAY) {
-
-            //write summary strategy to log file
-            displayMessage(strategyDesc, true, writer);
-
-            //update our timer
-            previousRunStrategyDesc = System.currentTimeMillis();
-        }
-    }
-
-    private String getStrategySummary() {
-
-        String strategyDesc = "Strategy Summary\n";
-
-        //now show the total $ per trading strategy
-        for (AgentManager.TradingStrategy strategy : AgentManager.TradingStrategy.values()) {
-
-            double amount = 0;
-
-            //check each manager looking for the strategy
-            for (AgentManager agentManager : agentManagers.values()) {
-                amount += agentManager.getAssets(strategy);
-            }
-
-            strategyDesc = strategyDesc + strategy.toString() + " $" + AgentHelper.formatValue(amount) + "\n";
-        }
-
-        //return our result
-        return strategyDesc;
     }
 
     private void init() {
@@ -433,7 +315,7 @@ public class Main implements Runnable {
                 this.agentManagers.put(product.getId(), agentManager);
 
                 //display agent is created
-                displayMessage("Agent created - " + product.getId(), true, writer);
+                displayMessage("Agent created - " + product.getId(), getWriter());
 
                 //sleep for a few seconds
                 Thread.sleep(THREAD_DELAY * 3);
@@ -446,7 +328,7 @@ public class Main implements Runnable {
         //create our web socket feed if the websocket is enabled
         if (WEBSOCKET_ENABLED) {
 
-            displayMessage("Connected via websocket...", true, writer);
+            displayMessage("Connected via websocket...", getWriter());
 
             websocketFeed = new MyWebsocketFeed(
                 PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
@@ -458,10 +340,15 @@ public class Main implements Runnable {
 
         } else {
 
-            displayMessage("Websocket is not enabled...", true, writer);
+            displayMessage("Websocket is not enabled...", getWriter());
         }
+    }
 
-        //store the last time we checked
-        previous = System.currentTimeMillis();
+    protected PrintWriter getWriter() {
+        return this.writer;
+    }
+
+    protected HashMap<String, AgentManager> getAgentManagers() {
+        return this.agentManagers;
     }
 }

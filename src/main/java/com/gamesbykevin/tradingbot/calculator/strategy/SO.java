@@ -6,9 +6,9 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SO extends Strategy {
+public abstract class SO extends Strategy {
 
-
+    //indicator list
     private List<Double> stochasticOscillator;
 
     //our market rate

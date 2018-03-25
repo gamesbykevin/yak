@@ -70,12 +70,12 @@ public class CalculatorHelper {
      * Do we have divergence?
      *
      * What we do to detect bullish divergence:
-     * a) The first period the price is highest and the last period is the lowest (new low)
-     * b) The first period the data is lowest and the last period is the highest (new high)
+     * a) The first period the price is highest and each period afterwards is lower
+     * b) The first period our data is the lowest and each period afterwards is higher
      *
      * What we do to detect bearish divergence:
-     * a) The first period the price is the lowest and the last period is the highest (new high)
-     * b) The first period the data is the highest and the last period is the lowest (new low)
+     * a) The first period the price is the lowest and each period afterwards is higher
+     * b) The first period the data is the highest and each period afterwards is lower
      *
      * @param history Stock price history
      * @param periods How many periods do we check
@@ -87,60 +87,40 @@ public class CalculatorHelper {
 
         if (bullish) {
 
-            //now check the previous x periods to see if this is a new low
             for (int i = history.size() - periods; i < history.size(); i++) {
 
                 //at this point we want prices that are lower than the starting price
                 if (history.get(i).close > history.get(history.size() - periods).close)
                     return false;
-
-                //if this current closing price is < our latest price, we don't have a new low
-                //if (history.get(i).close < history.get(history.size() - 1).close)
-                //    return false;
             }
 
-            //lets make sure the indicator data is higher than the start period
             for (int i = data.size() - periods; i < data.size(); i++) {
 
                 //at this point we want every data point to be larger than the first
                 if (data.get(i) < data.get(data.size() - periods))
                     return false;
-
-                //and we want every data point to be smaller than the last
-                //if (data.get(i) > data.get(data.size() - 1))
-                //    return false;
             }
 
-            //the price are all new lows, and the indicator data is setting new highs, we have a bullish divergence
+            //the prices are lower and the indicator data is higher
             return true;
 
         } else {
 
-            //now check the previous x periods to see if this is a new high
             for (int i = history.size() - periods; i < history.size(); i++) {
 
                 //at this point we want prices that are higher than the starting price
                 if (history.get(i).close < history.get(history.size() - periods).close)
                     return false;
-
-                //if this current closing price is > our latest price, we don't have a new high
-                //if (history.get(i).close > history.get(history.size() - 1).close)
-                //    return false;
             }
 
-            //lets make sure the indicator data is lower than the start period
             for (int i = data.size() - periods; i < data.size(); i++) {
 
                 //at this point we want every data point to be smaller than the first
                 if (data.get(i) > data.get(data.size() - periods))
                     return false;
-
-                //and we want every data point to be larger than the last
-                //if (data.get(i) < data.get(data.size() - 1))
-                //    return false;
             }
 
-            //the price are all new highs, and the indicator data is setting new lows, we have a bearish divergence
+            //the price are higher and the indicator data is lower
             return true;
         }
     }
@@ -171,30 +151,36 @@ public class CalculatorHelper {
         double currentSlow = slow.get(slow.size() - 1);
         double currentFast = fast.get(fast.size() - 1);
 
-        //if we are checking bullish the long is greater then the short is greater
+        //now check if we have a crossover
+        return hasCrossover(bullish, previousSlow, previousFast, currentSlow, currentFast);
+    }
+
+    /**
+     * Do we have a crossover?
+     * @param bullish True: Check if value1 > value2 then value1 < value2, False value1 < value2 then value1 > value2
+     * @param previousValue1
+     * @param previousValue2
+     * @param currentValue1
+     * @param currentValue2
+     * @return true if the specified bullish or bearish check mentioned above is verified, false otherwise
+     */
+    public static boolean hasCrossover(boolean bullish, double previousValue1, double previousValue2, double currentValue1, double currentValue2) {
+
         if (bullish) {
 
-            //to start we want the previous slow to be greater than the previous fast
-            if (previousSlow > previousFast) {
-
-                //now we want the current fast to be greater than the current slow
-                if (currentFast > currentSlow)
-                    return true;
-            }
+            //if the previous value1 > previous value2 and now the current value1 < current value2 we have a crossover
+            if (previousValue1 > previousValue2 && currentValue1 < currentValue2)
+                return true;
 
         } else {
 
-            //to start we want the previous fast to be greater than the previous slow
-            if (previousFast > previousSlow) {
-
-                //now we want the current slow to be greater than the current fast
-                if (currentSlow > currentFast)
-                    return true;
-            }
+            //if the previous value1 < previous value2 and now the current value1 > current value2 we have a crossover
+            if (previousValue1 < previousValue2 && currentValue1 > currentValue2)
+                return true;
 
         }
 
-        //no crossover detected
+        //we did not find a crossover
         return false;
     }
 }

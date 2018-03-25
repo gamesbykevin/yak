@@ -22,12 +22,12 @@ public class ADX extends Strategy {
     /**
      * How many periods do we calculate the average directional index
      */
-    public static int PERIODS_ADX;
+    public static final int PERIODS_ADX = 14;
 
     /**
      * The minimum value to determine there is a price trend
      */
-    public static double TREND_ADX;
+    public static final double TREND_ADX = 20.0d;
 
     public ADX(int periods) {
 

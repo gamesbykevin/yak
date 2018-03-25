@@ -2,14 +2,15 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
-import org.hibernate.validator.internal.constraintvalidators.bv.past.PastValidatorForReadableInstant;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class EMA extends Strategy {
 
@@ -22,12 +23,12 @@ public class EMA extends Strategy {
     /**
      * How many periods to calculate long ema
      */
-    public static int PERIODS_EMA_LONG;
+    public static final int PERIODS_EMA_LONG = 26;
 
     /**
      * How many periods to calculate short ema
      */
-    public static int PERIODS_EMA_SHORT;
+    public static final int PERIODS_EMA_SHORT = 12;
 
     //how many periods
     private final int periodsLong, periodsShort;
@@ -116,32 +117,10 @@ public class EMA extends Strategy {
         calculateEMA(history, getEmaLong(), periodsLong);
     }
 
-    /**
-     * Calculate the SMA (simple moving average)
-     * @param currentPeriod The desired period of the SMA we want
-     * @param periods The number of periods to check
-     * @return The average of the sum of closing prices within the specified period
-     */
-    protected static double calculateSMA(List<Period> history, int currentPeriod, int periods) {
-
-        //the total sum
-        double sum = 0;
-
-        //check every period
-        for (int i = currentPeriod - periods; i < currentPeriod; i++) {
-
-            //add to the total sum
-            sum += history.get(i).close;
-        }
-
-        //return the average of the sum
-        return (sum / (double)periods);
-    }
-
     private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
 
         //what is our multiplier
-        final float multiplier = ((float)2 / ((float)periods + 1));
+        final float multiplier = ((float)2 / ((float)periods + 1.0f));
 
         //this close price is the current price
         final double currentPrice = history.get(current).close;
@@ -156,7 +135,7 @@ public class EMA extends Strategy {
         } else {
 
             //calculate simple moving average since there is no previous ema
-            final double sma = calculateSMA(history, current - 1, periods);
+            final double sma = calculateSMA(history, current - 1, periods, PeriodField.Close);
 
             ema = ((currentPrice - sma) * multiplier) + sma;
         }

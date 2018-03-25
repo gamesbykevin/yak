@@ -16,7 +16,7 @@ public class TransactionHelper {
     public enum ReasonBuy {
 
         Reason_1("There is a swing detected in the EMA"),
-        Reason_2("MACD Strategy is showing a swing"),
+        Reason_2("MACD close > sma close and macd < 0 and macd > signal"),
         Reason_3("There is a divergence in the RSI"),
         Reason_4("Volume has a divergence"),
         Reason_5("MACS crossover and above trend line"),
@@ -32,6 +32,10 @@ public class TransactionHelper {
         Reason_15("SO has a divergence"),
         Reason_16("SO has a crossover"),
         Reason_17("SO has EMA crossover and SO indicator < 50"),
+        Reason_18("ADL has a divergence"),
+        Reason_19("RSI is below support and price just moved above BB lower"),
+        Reason_20("SMA Trend is trading higher than previous and EMA bullish crossover"),
+        Reason_21("Close < Close long/short, ADL > ADL long/short, OBV > OBV long/short"),
         ;
 
         private final String description;
@@ -52,7 +56,7 @@ public class TransactionHelper {
 
         Reason_0("We have hit our hard stop"),
         Reason_1("There is a swing detected in the EMA"),
-        Reason_2("MACD Strategy is showing a swing"),
+        Reason_2("MACD close < sma close and macd > 0 and macd < signal"),
         Reason_3("The current stock price is below both short and long emas"),
         Reason_4("There is a divergence in the RSI"),
         Reason_5("Volume has a divergence"),
@@ -69,6 +73,10 @@ public class TransactionHelper {
         Reason_16("SO has a divergence"),
         Reason_17("SO has a crossover"),
         Reason_18("SO has EMA crossover and SO indicator > 50"),
+        Reason_19("ADL has a divergence"),
+        Reason_20("RSI is above resistance and price just moved below BB upper"),
+        Reason_21("SMA Trend is trading lower than previous and EMA bearish crossover"),
+        Reason_22("Close > Close long/short, ADL < ADL long/short, OBV < OBV long/short"),
         ;
 
         private final String description;

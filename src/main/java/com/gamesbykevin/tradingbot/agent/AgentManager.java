@@ -40,13 +40,14 @@ public class AgentManager {
     private final PrintWriter writer;
 
     /**
-     * Different trading strategies
+     * Different trading strategies we can use
      */
     public enum TradingStrategy {
         RSI, MACD, OBV, EMA, ADX,
         MACS, RSI_2, NR7, MACDD, HA,
         NR4, RSIM, RSIA, BB, BBER,
-        SOD, SOC, SOEMA,
+        SOD, SOC, SOEMA, ADL, BBR,
+        EMAS, OA
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -96,7 +97,7 @@ public class AgentManager {
             if (System.currentTimeMillis() - previous >= (getMyDuration().duration / 6) * 1000) {
 
                 //display message as sometimes the call is not successful
-                displayMessage("Making rest call to retrieve history " + getProductId(), false, getWriter());
+                displayMessage("Making rest call to retrieve history " + getProductId(), null);
 
                 //get the size of the history
                 final int size = getCalculator().getHistory().size();
@@ -110,12 +111,12 @@ public class AgentManager {
                 if (success) {
 
                     //rest call is successful
-                    displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew), getWriter());
+                    displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew) ? getWriter() : null);
 
                 } else {
 
                     //rest call isn't successful
-                    displayMessage("Rest call is NOT successful.", true, getWriter());
+                    displayMessage("Rest call is NOT successful.", getWriter());
                 }
 
                 this.previous = System.currentTimeMillis();
@@ -125,7 +126,7 @@ public class AgentManager {
             if (getCalculator().getHistory().size() < HISTORICAL_PERIODS_MINIMUM) {
 
                 //we are not ready to trade yet
-                displayMessage(getProductId() + ": Not enough periods to trade yet - " + getCalculator().getHistory().size() + " < " + HISTORICAL_PERIODS_MINIMUM, false, getWriter());
+                displayMessage(getProductId() + ": Not enough periods to trade yet - " + getCalculator().getHistory().size() + " < " + HISTORICAL_PERIODS_MINIMUM, null);
 
             } else {
 
@@ -137,7 +138,7 @@ public class AgentManager {
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            displayMessage(ex, true, getWriter());
+            displayMessage(ex, getWriter());
         }
 
         //flag that we are no longer working
@@ -178,7 +179,16 @@ public class AgentManager {
         String result = "";
 
         for (Agent agent : agents) {
-            result = result + getProductId() + " : " + agent.getStrategy() + " - $" + AgentHelper.formatValue(getAssets(agent)) +"\n";
+            result = result + getProductId() + " : " + agent.getStrategy() + " - $" + AgentHelper.formatValue(getAssets(agent));
+
+            //add our min value
+            result = result + ", Min $" + AgentHelper.formatValue(agent.getFundsMin());
+
+            //add our max value
+            result = result + ", Max $" + AgentHelper.formatValue(agent.getFundsMax());
+
+            //make new line
+            result = result + "\n";
         }
 
         //return our result
@@ -218,19 +228,19 @@ public class AgentManager {
     }
 
     private double getAssets(Agent agent) {
-        return (agent.getWallet().getQuantity() * getCurrentPrice()) + agent.getWallet().getFunds();
+        return agent.getAssets(getCurrentPrice());
     }
 
-    private static void displayMessage(String message, boolean write, PrintWriter writer) {
-        PropertyUtil.displayMessage(message, write, writer);
+    private static void displayMessage(String message, PrintWriter writer) {
+        PropertyUtil.displayMessage(message, writer);
     }
 
-    public static void displayMessage(Exception e, boolean write, PrintWriter writer) {
-        PropertyUtil.displayMessage(e, write, writer);
+    public static void displayMessage(Exception e, PrintWriter writer) {
+        PropertyUtil.displayMessage(e, writer);
     }
 
     public static void displayMessage(Agent agent, String message, boolean write) {
-        displayMessage(agent.getProductId() + "-" + agent.getStrategy() + " " + message, write, agent.getWriter());
+        displayMessage(agent.getProductId() + "-" + agent.getStrategy() + " " + message, write ? agent.getWriter() : null);
     }
 
     protected String getFileName(TradingStrategy strategy) {

@@ -57,6 +57,9 @@ public class Agent {
     //what is our hard stop amount
     private double hardStop = 0;
 
+    //let's keep track of how low and high our money goes
+    private double fundsMin, fundsMax;
+
     protected Agent(TradingStrategy strategy, double funds, String productId, String fileName) {
 
         //save the trading strategy we want to implement
@@ -73,6 +76,10 @@ public class Agent {
 
         //create a wallet so we can track our investments
         this.wallet = new Wallet(funds);
+
+        //assign our min/max when we start
+        this.setFundsMin(funds);
+        this.setFundsMax(funds);
 
         //display message and write to file
         displayMessage(this, "Starting $" + funds, true);
@@ -91,6 +98,22 @@ public class Agent {
         //skip if we lost too much $
         if (hasStopTrading())
             return;
+
+        //get our current assets
+        double assets = getAssets(currentPrice);
+
+        //track our min/max value
+        if (assets < getFundsMin()) {
+
+            //set the new minimum if lower than previous
+            setFundsMin(assets);
+
+        } else if (assets > getFundsMax()) {
+
+            //set new maximum if greater than previous
+            setFundsMax(assets);
+
+        }
 
         //if we don't have an active order look at the market data for a chance to buy
         if (getOrder() == null) {
@@ -192,6 +215,10 @@ public class Agent {
                 Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", message);
             }
         }
+    }
+
+    protected double getAssets(double currentPrice) {
+        return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
     }
 
     public PrintWriter getWriter() {
@@ -297,5 +324,21 @@ public class Agent {
 
     public void setHardStop(double hardStop) {
         this.hardStop = hardStop;
+    }
+
+    public double getFundsMax() {
+        return this.fundsMax;
+    }
+
+    public double getFundsMin() {
+        return this.fundsMin;
+    }
+
+    public void setFundsMax(double fundsMax) {
+        this.fundsMax = fundsMax;
+    }
+
+    public void setFundsMin(double fundsMin) {
+        this.fundsMin = fundsMin;
     }
 }

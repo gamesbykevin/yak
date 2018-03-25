@@ -327,7 +327,7 @@ public class AgentHelper {
                 } catch (Exception e) {
 
                     //keep track of any errors
-                    displayMessage(e, true, agent.getWriter());
+                    displayMessage(e, agent.getWriter());
                 }
 
                 //if we reach our limit, just stop

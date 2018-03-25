@@ -50,13 +50,13 @@ public class Email implements Runnable {
             message.setText(text);
 
             //we are now sending
-            displayMessage("Sending email....", false, null);
+            displayMessage("Sending email....");
 
             //send the email
             Transport.send(message);
 
             //display we are good
-            displayMessage("Sent message successfully....", false, null);
+            displayMessage("Sent message successfully....");
 
         } catch (Exception e) {
             e.printStackTrace();

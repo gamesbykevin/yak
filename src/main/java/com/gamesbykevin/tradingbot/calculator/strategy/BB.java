@@ -2,13 +2,14 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.PeriodField;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonBuy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class BB extends Strategy {
 
@@ -81,25 +82,16 @@ public class BB extends Strategy {
     @Override
     public void calculate(List<Period> history) {
 
-        //clear our lists
-        getUpper().clear();
-        getMiddle().clear();
-        getLower().clear();
+        //calculate our sma values
+        calculateSMA(history, getMiddle(), getPeriods(), PeriodField.Close);
 
-        for (int i = 0; i < history.size(); i++) {
+        for (int index = 0; index < getMiddle().size(); index++) {
 
-            //we need enough data to calculate
-            if (i <= getPeriods())
-                continue;
-
-            //calculate simple moving average
-            final double sma = calculateSMA(history, i, getPeriods());
-
-            //add our middle values
-            getMiddle().add(sma);
+            //get the sma value
+            double sma = getMiddle().get(index);
 
             //get the standard deviation
-            double standardDeviation = calculateStandardDeviation(history, sma, i);
+            double standardDeviation = calculateStandardDeviation(history, sma, index + getPeriods());
 
             //add our upper value
             getUpper().add(sma + (standardDeviation * 2.0d));

@@ -144,6 +144,22 @@ public class Calculator {
                     strategy = new SOEMA();
                     break;
 
+                case ADL:
+                    strategy = new ADL();
+                    break;
+
+                case BBR:
+                    strategy = new BBR();
+                    break;
+
+                case EMAS:
+                    strategy = new EMASV();
+                    break;
+
+                case OA:
+                    strategy = new OA();
+                    break;
+
                 default:
                     throw new RuntimeException("Strategy not found: " + tradingStrategy);
             }

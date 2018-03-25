@@ -53,4 +53,7 @@ public abstract class Strategy {
         return list.get(list.size() - 1);
     }
 
+    protected double getRecent(List<Double> list, int index) {
+        return list.get(list.size() - index);
+    }
 }

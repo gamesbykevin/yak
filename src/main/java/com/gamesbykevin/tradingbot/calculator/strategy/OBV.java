@@ -15,21 +15,31 @@ public class OBV extends Strategy {
     /**
      * How many periods to calculate the on balance volume
      */
-    public static int PERIODS_OBV;
+    public static final int PERIODS_OBV = 10;
 
     //keep a historical list of the volume so we can check for divergence
     private List<Double> volume;
 
-    public OBV() {
+    //our desired periods
+    private final int periodsObv;
+
+    public OBV(int periodsObv) {
 
         //call parent
-        super(PERIODS_OBV);
+        super(periodsObv);
+
+        //assign value
+        this.periodsObv = periodsObv;
 
         //create list
         this.volume = new ArrayList<>();
     }
 
-    private List<Double> getVolume() {
+    public OBV() {
+        this(PERIODS_OBV);
+    }
+
+    public List<Double> getVolume() {
         return this.volume;
     }
 
@@ -59,7 +69,7 @@ public class OBV extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "OBV: ", getVolume(), (PERIODS_OBV / 2), write);
+        display(agent, "OBV: ", getVolume(), (periodsObv / 2), write);
     }
 
     @Override
