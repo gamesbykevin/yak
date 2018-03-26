@@ -67,7 +67,7 @@ public class MACS extends Strategy {
         if (hasCrossover(true, emaFast, emaSlow)) {
 
             //lets also check that the current price is above the trending data
-            if (currentPrice > emaTrend.get(emaTrend.size() - 1))
+            if (currentPrice > getRecent(emaTrend))
                 agent.setBuy(true);
         }
 
@@ -82,7 +82,7 @@ public class MACS extends Strategy {
         if (hasCrossover(false, emaFast, emaSlow)) {
 
             //lets also check that the current price is below the trending data
-            if (currentPrice < emaTrend.get(emaTrend.size() - 1))
+            if (currentPrice < getRecent(emaTrend))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 

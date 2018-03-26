@@ -6,6 +6,9 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stochastic Oscillator
+ */
 public abstract class SO extends Strategy {
 
     //indicator list
@@ -132,7 +135,6 @@ public abstract class SO extends Strategy {
                     if (current.low < result.low)
                         result = current;
                 }
-
             }
         }
 

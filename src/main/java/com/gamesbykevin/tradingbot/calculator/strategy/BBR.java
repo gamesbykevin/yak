@@ -36,28 +36,39 @@ public class BBR extends Strategy {
      */
     public static final int PERIODS_BB = 20;
 
+    //our resistance and support lines
+    private final double resistance, support;
+
     public BBR() {
+        this(PERIODS_BB, PERIODS_RSI, RESISTANCE_LINE, SUPPORT_LINE);
+    }
+
+    public BBR(int periodsBB, int periodsRSI, double resistance, double support) {
 
         //call parent with default value
         super(0);
 
+        //store our data
+        this.resistance = resistance;
+        this.support = support;
+
         //create new objects
-        this.bbObj = new BB(PERIODS_BB);
-        this.rsiObj = new RSI(PERIODS_RSI);
+        this.bbObj = new BB(periodsBB);
+        this.rsiObj = new RSI(periodsRSI);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //we won't try to buy unless we are below the support line
-        if (getRecent(rsiObj.getRsi()) < SUPPORT_LINE) {
+        if (getRecent(rsiObj.getRsiVal()) < support) {
 
             //check the previous 2 lower values
             double previous = getRecent(bbObj.getLower(), 2);
             double current = getRecent(bbObj.getLower());
 
-            //if the price was below the previous lower value, then crosses above it
-            if (hasCrossover(true, previous, currentPrice, current, current))
+            //if the current price was below the previous, then current price crosses above the current
+            if (hasCrossover(true, previous, currentPrice, current, currentPrice))
                 agent.setBuy(true);
         }
 
@@ -69,14 +80,14 @@ public class BBR extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //we won't try to sell unless we are above the resistance line
-        if (getRecent(rsiObj.getRsi()) > RESISTANCE_LINE) {
+        if (getRecent(rsiObj.getRsiVal()) > resistance) {
 
             //check the previous 2 upper values
             double previous = getRecent(bbObj.getUpper(), 2);
             double current = getRecent(bbObj.getUpper());
 
             //if the price was above the previous upper value, then crosses below it
-            if (hasCrossover(false, previous, currentPrice, current, current))
+            if (hasCrossover(false, previous, currentPrice, current, currentPrice))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 

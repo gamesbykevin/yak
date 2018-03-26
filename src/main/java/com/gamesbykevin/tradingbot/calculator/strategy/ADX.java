@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 
 import java.util.ArrayList;
@@ -9,8 +10,12 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class ADX extends Strategy {
+
+    //list of sma prices
+    private List<Double> smaPrice;
 
     //the average directional index
     private List<Double> adx;
@@ -18,6 +23,11 @@ public class ADX extends Strategy {
     //our +- indicators to calculate adx and signal trades
     private List<Double> dmPlusIndicator;
     private List<Double> dmMinusIndicator;
+
+    /**
+     * Number of periods we are calculating SMA
+     */
+    public static final int PERIODS_SMA = 50;
 
     /**
      * How many periods do we calculate the average directional index
@@ -44,6 +54,7 @@ public class ADX extends Strategy {
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();
         this.dmMinusIndicator = new ArrayList<>();
+        this.smaPrice = new ArrayList<>();
     }
 
     public ADX() {
@@ -62,15 +73,23 @@ public class ADX extends Strategy {
         return this.dmMinusIndicator;
     }
 
+    public List<Double> getSmaPrice() {
+        return this.smaPrice;
+    }
+
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) >= this.trend) {
+        if (getRecent(getAdx()) > this.trend) {
 
-            //if dm plus crosses above dm minus, that is our signal to buy
-            if (hasCrossover(true, getDmPlusIndicator(), getDmMinusIndicator()))
-                agent.setBuy(true);
+            //if the current stock price is above our sma average
+            if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
+
+                //if dm plus crosses above dm minus, that is our signal to buy
+                if (hasCrossover(true, getDmPlusIndicator(), getDmMinusIndicator()))
+                    agent.setBuy(true);
+            }
         }
 
         //display data
@@ -81,11 +100,15 @@ public class ADX extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) >= this.trend) {
+        if (getRecent(getAdx()) > this.trend) {
 
-            //if the minus has crossed below the plus that is our signal to sell
-            if (hasCrossover(false, getDmPlusIndicator(), getDmMinusIndicator()))
-                agent.setReasonSell(TransactionHelper.ReasonSell.Reason_Strategy);
+            //if the current stock price is below our sma average
+            if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
+
+                //if the minus has crossed below the plus that is our signal to sell
+                if (hasCrossover(false, getDmPlusIndicator(), getDmMinusIndicator()))
+                    agent.setReasonSell(TransactionHelper.ReasonSell.Reason_Strategy);
+            }
         }
 
         //display data
@@ -99,6 +122,7 @@ public class ADX extends Strategy {
         display(agent, "+DI: ", getDmPlusIndicator(), getPeriods() / 2, write);
         display(agent, "-DI: ", getDmMinusIndicator(), getPeriods() / 2, write);
         displayMessage(agent, "ADX: " + getRecent(getAdx()), write);
+        display(agent, "SMA: ", getSmaPrice(), getPeriods() / 2, write);
     }
 
     @Override
@@ -224,6 +248,9 @@ public class ADX extends Strategy {
             //add new value to our list
             getAdx().add(newAdx);
         }
+
+        //calculate the sma
+        calculateSMA(history, getSmaPrice(), PERIODS_SMA, Fields.Close);
     }
 
     /**

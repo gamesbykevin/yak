@@ -39,7 +39,7 @@ public class TWO_RSI extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = getRecent(rsiObj.getRsi());
+        double rsi = getRecent(rsiObj.getRsiVal());
 
         //if above the max we have a buy signal
         if (rsi > MAX_RSI)
@@ -53,7 +53,7 @@ public class TWO_RSI extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the most recent rsi value
-        double rsi = getRecent(rsiObj.getRsi());
+        double rsi = getRecent(rsiObj.getRsiVal());
 
         //if below the min we have a sell signal
         if (rsi < MIN_RSI)

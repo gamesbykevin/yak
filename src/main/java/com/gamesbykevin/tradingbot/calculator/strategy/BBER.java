@@ -6,9 +6,6 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.BB.PERIODS_BB;
-import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.PERIODS_RSI;
-
 /**
  * Bollinger Bands, EMA, & RSI
  */
@@ -29,6 +26,16 @@ public class BBER extends Strategy {
      */
     public static final double RSI_LINE = 50.0d;
 
+    /**
+     * How many RSI periods we are calculating
+     */
+    public static final int PERIODS_RSI = 12;
+
+    /**
+     * How many BB periods we are calculating
+     */
+    public static final int PERIODS_BB = 20;
+
     //ema object
     private EMA emaObj;
 
@@ -38,7 +45,10 @@ public class BBER extends Strategy {
     //our rsi object
     private RSI rsiObj;
 
-    public BBER(int periodsRSI, int periodsBB, int periodsEmaShort, int periodsEmaLong) {
+    //what is our rsi line
+    private final double rsiLine;
+
+    public BBER(int periodsRSI, int periodsBB, int periodsEmaShort, int periodsEmaLong, double rsiLine) {
 
         //call parent with default volume
         super(0);
@@ -46,26 +56,27 @@ public class BBER extends Strategy {
         this.emaObj = new EMA(periodsEmaLong, periodsEmaShort);
         this.bbObj = new BB(periodsBB);
         this.rsiObj = new RSI(periodsRSI);
+        this.rsiLine = rsiLine;
     }
 
     public BBER() {
-        this(PERIODS_RSI, PERIODS_BB, PERIODS_EMA_SHORT, PERIODS_EMA_LONG);
+        this(PERIODS_RSI, PERIODS_BB, PERIODS_EMA_SHORT, PERIODS_EMA_LONG, RSI_LINE);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //is the current price below our ema long?
-        boolean belowEmaLong = currentPrice < getRecent(emaObj.getEmaLong());
+        //is the current price above our ema long?
+        boolean aboveEmaLong = currentPrice > getRecent(emaObj.getEmaLong());
 
-        //is the current price below our bollinger bands middle line?
-        boolean belowBbMiddle = currentPrice < getRecent(bbObj.getMiddle());
+        //is the current price above our bollinger bands middle line?
+        boolean aboveBbMiddle = currentPrice > getRecent(bbObj.getMiddle());
 
-        //is the rsi value below the mid line suggesting oversold
-        boolean belowRsiSupport = getRecent(rsiObj.getRsi()) < RSI_LINE;
+        //is the rsi value above the rsi line
+        boolean aboveRsiSupport = getRecent(rsiObj.getRsiVal()) > rsiLine;
 
         //if all are true, let's buy
-        if (belowEmaLong && belowBbMiddle && belowRsiSupport)
+        if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport)
             agent.setBuy(true);
 
         //display our data
@@ -76,16 +87,16 @@ public class BBER extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //is the current price below our ema long?
-        boolean aboveEmaLong = currentPrice > getRecent(emaObj.getEmaLong());
+        boolean belowEmaLong = currentPrice < getRecent(emaObj.getEmaLong());
 
         //is the current price below our bollinger bands middle line?
-        boolean aboveBbMiddle = currentPrice > getRecent(bbObj.getMiddle());
+        boolean belowBbMiddle = currentPrice < getRecent(bbObj.getMiddle());
 
-        //is the rsi value below the mid line suggesting oversold
-        boolean aboveRsiSupport = getRecent(rsiObj.getRsi()) > RSI_LINE;
+        //is the rsi value below the rsi line
+        boolean belowRsiSupport = getRecent(rsiObj.getRsiVal()) < rsiLine;
 
         //if all are true, let's sell
-        if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport)
+        if (belowEmaLong && belowBbMiddle && belowRsiSupport)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data

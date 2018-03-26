@@ -5,7 +5,6 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import javax.swing.table.TableRowSorter;
 import java.util.ArrayList;
 import java.util.List;
 

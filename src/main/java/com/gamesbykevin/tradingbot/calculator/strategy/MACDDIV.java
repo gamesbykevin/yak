@@ -9,6 +9,9 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
 import static com.gamesbykevin.tradingbot.calculator.strategy.MACD.*;
 
+/**
+ * Divergence between MACD Histogram and Price
+ */
 public class MACDDIV extends Strategy {
 
     //our macd object

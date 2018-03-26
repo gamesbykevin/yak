@@ -30,10 +30,10 @@ public class SMA {
         }
     }
 
-    protected static void calculateSMA(List<Period> history, List<Double> list, int periods, Fields field) {
+    protected static void calculateSMA(List<Period> history, List<Double> populate, int periods, Fields field) {
 
         //clear the list
-        list.clear();
+        populate.clear();
 
         //check all data when calculating
         for (int i = 0; i < history.size(); i++) {
@@ -46,7 +46,7 @@ public class SMA {
             double sma = calculateSMA(history, i, periods, field);
 
             //add the sma value to our list
-            list.add(sma);
+            populate.add(sma);
         }
     }
 

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateEmaList;
 import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class MACD extends Strategy {
@@ -74,7 +75,7 @@ public class MACD extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we want the close price to be greater than our sma price for the most recent period
-        if (history.get(history.size() - 1).close > getRecent(getSmaPrice())) {
+        if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
 
             //then we want our macd line less than 0
             if (getRecent(getMacdLine()) < 0) {
@@ -94,7 +95,7 @@ public class MACD extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we want the close price to be less than our sma price for the most recent period
-        if (history.get(history.size() - 1).close < getRecent(getSmaPrice())) {
+        if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
 
             //then we want our macd line greater than 0
             if (getRecent(getMacdLine()) > 0) {
@@ -153,54 +154,6 @@ public class MACD extends Strategy {
 
             //the macd line is the 12 day ema - 26 day ema
             macdLine.add(emaShort.get(difference + i) - emaLong.get(i));
-        }
-    }
-
-    /**
-     * Calculate ema and populate the provided emaList
-     * @param emaList Our result ema list that needs calculations
-     * @param valueList The list of values we will use to do the calculations
-     * @param periods The range of periods to make each calculation
-     */
-    protected static void calculateEmaList(List<Double> emaList, List<Double> valueList, int periods) {
-
-        //clear list
-        emaList.clear();
-
-        //we add the sum to get the sma (simple moving average)
-        double sum = 0;
-
-        //calculate sma first
-        for (int i = 0; i < periods; i++) {
-            sum += valueList.get(i);
-        }
-
-        //we now have the sma as a start
-        final double sma = sum / (float)periods;
-
-        //here is our multiplier
-        final double multiplier = ((float)2 / ((float)periods + 1.0f));
-
-        //calculate our first ema
-        final double ema = ((valueList.get(periods - 1) - sma) * multiplier) + sma;
-
-        //add the ema value to our list
-        emaList.add(ema);
-
-        //now let's calculate the remaining periods for ema
-        for (int i = periods; i < valueList.size(); i++) {
-
-            //get our previous ema
-            final double previousEma = emaList.get(emaList.size() - 1);
-
-            //get our close value
-            final double close = valueList.get(i);
-
-            //calculate our new ema
-            final double newEma = ((close - previousEma) * multiplier) + previousEma;
-
-            //add our new ema value to the list
-            emaList.add(newEma);
         }
     }
 

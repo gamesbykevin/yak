@@ -128,10 +128,6 @@ public class Calculator {
                     strategy = new BB();
                     break;
 
-                case BBER:
-                    strategy = new BBER();
-                    break;
-
                 case SOD:
                     strategy = new SOD();
                     break;
@@ -148,10 +144,6 @@ public class Calculator {
                     strategy = new ADL();
                     break;
 
-                case BBR:
-                    strategy = new BBR();
-                    break;
-
                 case EMASV:
                     strategy = new EMASV();
                     break;
@@ -162,6 +154,42 @@ public class Calculator {
 
                 case EMV:
                     strategy = new EMV();
+                    break;
+
+                case NVI:
+                    strategy = new NVI();
+                    break;
+
+                case PVI:
+                    strategy = new PVI();
+                    break;
+
+                case NP:
+                    strategy = new NP();
+                    break;
+
+                case SR:
+                    strategy = new SR();
+                    break;
+
+                case BBER:
+                    strategy = new BBER();
+                    break;
+
+                case BBER2:
+                    strategy = new BBER(21, 20, 10, 100, 50);
+                    break;
+
+                case BBR:
+                    strategy = new BBR();
+                    break;
+
+                case BBR2:
+                    strategy = new BBR(200, 6, 50, 50);
+                    break;
+
+                case EMVS:
+                    strategy = new EMVS();
                     break;
 
                 default:
@@ -208,7 +236,7 @@ public class Calculator {
                 //sort the history
                 sortHistory(getHistory());
 
-                //make sure the history is long enough
+                //make sure the history is long enough for a few indicators
                 if (getHistory().size() < PERIODS_OBV)
                     throw new RuntimeException("History not long enough to calculate OBV");
                 if (getHistory().size() < PERIODS_RSI)

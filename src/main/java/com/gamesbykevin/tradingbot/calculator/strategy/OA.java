@@ -81,9 +81,8 @@ public class OA extends Strategy {
                 double valueOBV = getRecent(obvObj.getVolume());
 
                 //make sure obv is above both sma averages and then we can sell
-                if (valueOBV > getRecent(smaObvLong) && valueOBV > getRecent(smaObvShort)) {
+                if (valueOBV > getRecent(smaObvLong) && valueOBV > getRecent(smaObvShort))
                     agent.setBuy(true);
-                }
             }
         }
 
@@ -110,9 +109,8 @@ public class OA extends Strategy {
                 double valueOBV = getRecent(obvObj.getVolume());
 
                 //make sure obv is above both sma averages and then we can sell
-                if (valueOBV < getRecent(smaObvLong) && valueOBV < getRecent(smaObvShort)) {
+                if (valueOBV < getRecent(smaObvLong) && valueOBV < getRecent(smaObvShort))
                     agent.setReasonSell(ReasonSell.Reason_Strategy);
-                }
             }
         }
 

@@ -7,8 +7,6 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
-import static com.gamesbykevin.tradingbot.calculator.strategy.MACD.PERIODS_MACD;
-import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.PERIODS_RSI;
 import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.RESISTANCE_LINE;
 import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.SUPPORT_LINE;
 
@@ -23,6 +21,17 @@ public class RSIM extends Strategy {
     //our rsi object reference
     private RSI rsiObj;
 
+    /**
+     * How many RSI periods we are calculating
+     */
+    public static final int PERIODS_RSI = 12;
+
+    /**
+     * How many RSI periods we are calculating
+     */
+    public static final int PERIODS_MACD = 9;
+
+
     public RSIM() {
 
         //call parent
@@ -36,11 +45,8 @@ public class RSIM extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //get the most recent rsi value
-        double rsi = getRecent(rsiObj.getRsi());
-
         //if we are at or below the support line, let's check if we are in a good place to buy
-        if (rsi <= SUPPORT_LINE) {
+        if (getRecent(rsiObj.getRsiVal()) <= SUPPORT_LINE) {
 
             //if bullish divergence in macd and price
             if (hasDivergence(history, macdObj.getPeriods(), true, macdObj.getMacdLine()))
@@ -54,11 +60,8 @@ public class RSIM extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //get the most recent rsi value
-        double rsi = getRecent(rsiObj.getRsi());
-
         //let's see if we are above resistance line before selling
-        if (rsi >= RESISTANCE_LINE) {
+        if (getRecent(rsiObj.getRsiVal()) >= RESISTANCE_LINE) {
 
             //if bearish divergence in macd and price
             if (hasDivergence(history, macdObj.getPeriods(), false, macdObj.getMacdLine()))
@@ -72,6 +75,7 @@ public class RSIM extends Strategy {
     @Override
     public void displayData(Agent agent, boolean write) {
 
+        //display information
         rsiObj.displayData(agent, write);
         macdObj.displayData(agent, write);
     }

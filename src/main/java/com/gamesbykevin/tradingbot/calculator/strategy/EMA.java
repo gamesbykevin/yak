@@ -149,4 +149,52 @@ public class EMA extends Strategy {
             emaList.add(ema);
         }
     }
+
+    /**
+     * Calculate ema and populate the provided emaList
+     * @param populate Our result ema list that needs calculations
+     * @param data The list of values we will use to do the calculations
+     * @param periods The range of periods to make each calculation
+     */
+    protected static void calculateEmaList(List<Double> populate, List<Double> data, int periods) {
+
+        //clear list
+        populate.clear();
+
+        //we add the sum to get the sma (simple moving average)
+        double sum = 0;
+
+        //calculate sma first
+        for (int i = 0; i < periods; i++) {
+            sum += data.get(i);
+        }
+
+        //we now have the sma as a start
+        final double sma = sum / (float)periods;
+
+        //here is our multiplier
+        final double multiplier = ((float)2 / ((float)periods + 1.0f));
+
+        //calculate our first ema
+        final double ema = ((data.get(periods - 1) - sma) * multiplier) + sma;
+
+        //add the ema value to our list
+        populate.add(ema);
+
+        //now let's calculate the remaining periods for ema
+        for (int i = periods; i < data.size(); i++) {
+
+            //get our previous ema
+            final double previousEma = populate.get(populate.size() - 1);
+
+            //get our close value
+            final double close = data.get(i);
+
+            //calculate our new ema
+            final double newEma = ((close - previousEma) * multiplier) + previousEma;
+
+            //add our new ema value to the list
+            populate.add(newEma);
+        }
+    }
 }

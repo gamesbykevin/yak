@@ -2,23 +2,31 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
+import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class RSI extends Strategy {
 
     //keep a historical list of the rsi so we can check for divergence
-    private List<Double> rsi;
+    private List<Double> rsiVal;
+
+    //keep an average of the price
+    private List<Double> smaPrice;
+
+    /**
+     * How many periods do we calculate sma price
+     */
+    public static final int PERIODS_PRICE = 200;
 
     /**
      * How many periods to calculate rsi
      */
-    public static final int PERIODS_RSI = 12;
+    public static final int PERIODS_RSI = 5;
 
     /**
      * The support line meaning the stock is oversold
@@ -40,24 +48,26 @@ public class RSI extends Strategy {
         super(periods);
 
         //create new list(s)
-        this.rsi = new ArrayList<>();
+        this.rsiVal = new ArrayList<>();
+        this.smaPrice = new ArrayList<>();
     }
 
-    public List<Double> getRsi() {
-        return this.rsi;
+    public List<Double> getRsiVal() {
+        return this.rsiVal;
+    }
+
+    public List<Double> getSmaPrice() {
+        return this.smaPrice;
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //get the most recent rsi value
-        double rsi = getRecent(getRsi());
+        //first we need to make sure we are below the support line
+        if (getRecent(getRsiVal()) < SUPPORT_LINE) {
 
-        //if we are at or below the support line, let's check if we are in a good place to buy
-        if (rsi <= SUPPORT_LINE) {
-
-            //if there is a bullish divergence let's buy
-            if (hasDivergence(history, getPeriods(), true, getRsi()))
+            //now we need to check that price is in an overall uptrend
+            if (getRecent(history, Fields.Close) > getRecent(getSmaPrice()))
                 agent.setBuy(true);
         }
 
@@ -68,14 +78,11 @@ public class RSI extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //get the most recent rsi value
-        double rsi = getRecent(getRsi());
+        //first we need to make sure we are above the resistance line
+        if (getRecent(getRsiVal()) > RESISTANCE_LINE) {
 
-        //let's see if we are above resistance line before selling
-        if (rsi >= RESISTANCE_LINE) {
-
-            //if there is a bearish divergence let's sell
-            if (hasDivergence(history, getPeriods(), false, getRsi()))
+            //now we need to check that price is in an overall downtrend
+            if (getRecent(history, Fields.Close) < getRecent(getSmaPrice()))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
@@ -87,12 +94,18 @@ public class RSI extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "RSI: ", getRsi(), getPeriods() / 2, write);
+        display(agent, "RSI: ", getRsiVal(), getPeriods() / 2, write);
+        display(agent, "SMA: ", getSmaPrice(), getPeriods() / 2, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
-        calculateRsi(history, getRsi(), getPeriods());
+
+        //calculate rsi values
+        calculateRsi(history, getRsiVal(), getPeriods());
+
+        //calculate sma of price
+        calculateSMA(history, getSmaPrice(), PERIODS_PRICE, Fields.Close);
     }
 
     protected static void calculateRsi(List<Period> history, List<Double> rsi, int periods) {
