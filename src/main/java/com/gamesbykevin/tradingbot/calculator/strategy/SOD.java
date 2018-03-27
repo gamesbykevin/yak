@@ -4,7 +4,6 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
@@ -12,23 +11,45 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDiverge
 /**
  * Stochastic Oscillator divergence
  */
-public class SOD extends SO {
+public class SOD extends Strategy {
 
-    public SOD(int periodsSMA, int periodsSO) {
+    //our object reference
+    private SO soObj;
 
-        //calling our parent with a default value
-        super(periodsSMA, periodsSO);
+    /**
+     * Number of periods for stochastic oscillator
+     */
+    private static final int PERIODS_SO = 14;
+
+    /**
+     * Number of periods we calculate sma to get our indicator
+     */
+    private static final int PERIODS_SMA = 3;
+
+    /**
+     * Number of periods we calculate sma to get our indicator
+     */
+    private static final int PERIODS_SMA_PRICE = 200;
+
+
+    public SOD(int periodsSMA, int periodsSO, int periodsSmaPrice) {
+
+        //call parent with a default value
+        super(periodsSO);
+
+        //create a new object
+        this.soObj = new SO(periodsSMA, periodsSO, periodsSmaPrice);
     }
 
     public SOD() {
-        this(PERIODS_SMA, PERIODS_SO);
+        this(PERIODS_SMA, PERIODS_SO, PERIODS_SMA_PRICE);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish divergence, let's buy
-        if (hasDivergence(history, periodsSO, true, getStochasticOscillator()))
+        if (hasDivergence(history, getPeriods(), true, soObj.getStochasticOscillator()))
             agent.setBuy(true);
 
         //display our data
@@ -39,7 +60,7 @@ public class SOD extends SO {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish divergence, let's sell
-        if (hasDivergence(history, periodsSO, false, getStochasticOscillator()))
+        if (hasDivergence(history, getPeriods(), false, soObj.getStochasticOscillator()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
@@ -50,11 +71,13 @@ public class SOD extends SO {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        super.displayData(agent, write);
+        this.soObj.displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
-        super.calculate(history);
+
+        //perform calculations
+        this.soObj.calculate(history);
     }
 }

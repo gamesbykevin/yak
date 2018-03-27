@@ -13,7 +13,7 @@ public class NP extends Strategy {
     /**
      * How many periods do we calculate for our ema
      */
-    public static final int PERIODS_EMA = 255;
+    private static final int PERIODS_EMA = 255;
 
     //our negative volume object
     private NVI nviObj;

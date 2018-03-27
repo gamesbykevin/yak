@@ -11,19 +11,44 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
 /**
  * Stochastic Oscillator crossover
  */
-public class SOC extends SO {
+public class SOC extends Strategy {
+
+    //our object reference
+    private SO soObj;
+
+    /**
+     * Number of periods for stochastic oscillator
+     */
+    private static final int PERIODS_SO = 14;
+
+    /**
+     * Number of periods we calculate sma to get our indicator
+     */
+    private static final int PERIODS_SMA = 3;
+
+    /**
+     * Number of periods we calculate sma to get our indicator
+     */
+    private static final int PERIODS_SMA_PRICE = 200;
+
+    public SOC(int periodsSMA, int periodsSO, int periodsSmaPrice) {
+
+        //call parent with a default value
+        super(periodsSO);
+
+        //create a new object
+        this.soObj = new SO(periodsSMA, periodsSO, periodsSmaPrice);
+    }
 
     public SOC() {
-
-        //use default value
-        super();
+        this(PERIODS_SMA, PERIODS_SO, PERIODS_SMA_PRICE);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish crossover, let's buy
-        if (hasCrossover(true, getMarketRate(), getStochasticOscillator()))
+        if (hasCrossover(true, soObj.getMarketRate(), soObj.getStochasticOscillator()))
             agent.setBuy(true);
 
         //display our data
@@ -34,7 +59,7 @@ public class SOC extends SO {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish crossover, let's sell
-        if (hasCrossover(false, getMarketRate(), getStochasticOscillator()))
+        if (hasCrossover(false, soObj.getMarketRate(), soObj.getStochasticOscillator()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
@@ -45,13 +70,13 @@ public class SOC extends SO {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        super.displayData(agent, write);
+        this.soObj.displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate our value(s)
-        super.calculate(history);
+        this.soObj.calculate(history);
     }
 }

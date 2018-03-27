@@ -13,28 +13,29 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
  */
 public class BBR extends Strategy {
 
+    //our bollinger bands and rsi objects
     private BB bbObj;
     private RSI rsiObj;
 
     /**
      * RSI Resistance line indicating our stock is overbought
      */
-    public static final double RESISTANCE_LINE = 55.0d;
+    private static final double RESISTANCE_LINE = 55.0d;
 
     /**
      * RSI Support line indicating our stock is oversold
      */
-    public static final double SUPPORT_LINE = 45.0d;
+    private static final double SUPPORT_LINE = 45.0d;
 
     /**
      * How many RSI periods we are calculating
      */
-    public static final int PERIODS_RSI = 16;
+    private static final int PERIODS_RSI = 16;
 
     /**
      * How many BB periods we are calculating
      */
-    public static final int PERIODS_BB = 20;
+    private static final int PERIODS_BB = 20;
 
     //our resistance and support lines
     private final double resistance, support;

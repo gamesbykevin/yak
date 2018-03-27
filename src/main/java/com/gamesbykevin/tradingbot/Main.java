@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.MainHelper.displayNextStatusUpdateDesc;
 import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIOD_DURATION;
@@ -213,11 +214,11 @@ public class Main implements Runnable {
                             //subscribe to get the updated information
                             websocketFeed.subscribe(subscribe);
 
-                            //sleep for a second
-                            Thread.sleep(THREAD_DELAY);
+                            //show when next notification message will take place
+                            displayNextStatusUpdateDesc();
 
-                            //display total assets update
-                            manageStatusUpdate(this);
+                            //sleep for a brief moment
+                            Thread.sleep(THREAD_DELAY);
 
                         } else {
 
@@ -251,11 +252,11 @@ public class Main implements Runnable {
                                 if (ticker != null)
                                     agentManager.update(ticker.price);
 
-                                //sleep for a second
-                                Thread.sleep(THREAD_DELAY);
+                                //show when next notification message will take place
+                                displayNextStatusUpdateDesc();
 
-                                //display total assets update
-                                manageStatusUpdate(this);
+                                //sleep for a brief moment
+                                Thread.sleep(THREAD_DELAY);
 
                             } catch (Exception e1) {
 
@@ -264,6 +265,9 @@ public class Main implements Runnable {
                             }
                         }
                     }
+
+                    //display total assets update
+                    manageStatusUpdate(this);
 
                 } catch (Exception e) {
 

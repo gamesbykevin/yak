@@ -14,7 +14,7 @@ public class OBV extends Strategy {
     /**
      * How many periods to calculate the on balance volume
      */
-    public static final int PERIODS_OBV = 10;
+    private static final int PERIODS_OBV = 10;
 
     //keep a historical list of the volume so we can check for divergence
     private List<Double> volume;
@@ -81,7 +81,7 @@ public class OBV extends Strategy {
         for (int i = 0; i < history.size(); i++) {
 
             //skip if not enough info
-            if (i <= getPeriods())
+            if (i < getPeriods())
                 continue;
 
             //get the obv for this period

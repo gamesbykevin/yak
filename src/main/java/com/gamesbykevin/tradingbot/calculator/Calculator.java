@@ -9,14 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.calculator.strategy.ADX.PERIODS_ADX;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.PERIODS_EMA_LONG;
-import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.PERIODS_EMA_SHORT;
 import static com.gamesbykevin.tradingbot.calculator.strategy.NR.PERIODS_NR4;
 import static com.gamesbykevin.tradingbot.calculator.strategy.NR.PERIODS_NR7;
-import static com.gamesbykevin.tradingbot.calculator.strategy.OBV.PERIODS_OBV;
-import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.PERIODS_RSI;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
@@ -92,20 +87,24 @@ public class Calculator {
                     strategy = new EMA();
                     break;
 
+                case EMAR:
+                    strategy = new EMAR();
+                    break;
+
                 case MACS:
                     strategy = new MACS();
+                    break;
+
+                case MACS2:
+                    strategy = new MACS(10, 20, 50);
                     break;
 
                 case RSI_2:
                     strategy = new TWO_RSI();
                     break;
 
-                case NR7:
-                    strategy = new NR(PERIODS_NR7);
-                    break;
-
                 case MACDD:
-                    strategy = new MACDDIV();
+                    strategy = new MACDD();
                     break;
 
                 case HA:
@@ -114,6 +113,10 @@ public class Calculator {
 
                 case NR4:
                     strategy = new NR(PERIODS_NR4);
+                    break;
+
+                case NR7:
+                    strategy = new NR(PERIODS_NR7);
                     break;
 
                 case RSIA:
@@ -136,6 +139,10 @@ public class Calculator {
                     strategy = new SOC();
                     break;
 
+                case SO:
+                    strategy = new SO();
+                    break;
+
                 case SOEMA:
                     strategy = new SOEMA();
                     break;
@@ -150,10 +157,6 @@ public class Calculator {
 
                 case OA:
                     strategy = new OA();
-                    break;
-
-                case EMV:
-                    strategy = new EMV();
                     break;
 
                 case NVI:
@@ -188,8 +191,24 @@ public class Calculator {
                     strategy = new BBR(200, 6, 50, 50);
                     break;
 
+                case EMV:
+                    strategy = new EMV();
+                    break;
+
                 case EMVS:
                     strategy = new EMVS();
+                    break;
+
+                case MACD2:
+                    strategy = new MACD(9,50);
+                    break;
+
+                case RSIM2:
+                    strategy = new RSIM(9,50,14);
+                    break;
+
+                case MACDD2:
+                    strategy = new MACDD(9,50);
                     break;
 
                 default:
@@ -236,21 +255,13 @@ public class Calculator {
                 //sort the history
                 sortHistory(getHistory());
 
-                //make sure the history is long enough for a few indicators
-                if (getHistory().size() < PERIODS_OBV)
-                    throw new RuntimeException("History not long enough to calculate OBV");
-                if (getHistory().size() < PERIODS_RSI)
-                    throw new RuntimeException("History not long enough to calculate RSI");
-                if (getHistory().size() < PERIODS_EMA_SHORT)
-                    throw new RuntimeException("History not long enough to calculate EMA (short)");
-                if (getHistory().size() < PERIODS_EMA_LONG)
-                    throw new RuntimeException("History not long enough to calculate EMA (long)");
-                if (getHistory().size() < PERIODS_ADX)
-                    throw new RuntimeException("History not long enough to calculate ADX");
+                //make sure the history is long enough before we start doing our calculations
+                if (getHistory().size() >= HISTORICAL_PERIODS_MINIMUM) {
 
-                //now do all indicator calculations
-                for (Strategy indicator : getStrategies().values()) {
-                    indicator.calculate(getHistory());
+                    //now do all indicator calculations
+                    for (Strategy indicator : getStrategies().values()) {
+                        indicator.calculate(getHistory());
+                    }
                 }
 
                 //we are successful

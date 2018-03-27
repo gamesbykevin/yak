@@ -20,17 +20,17 @@ public class MACS extends Strategy {
     /**
      * The number of periods for our moving average crossover strategy fast calculations
      */
-    public static final int PERIODS_MACS_FAST = 20;
+    private static final int PERIODS_MACS_FAST = 20;
 
     /**
      * The number of periods for our moving average crossover strategy slow calculations
      */
-    public static final int PERIODS_MACS_SLOW = 60;
+    private static final int PERIODS_MACS_SLOW = 60;
 
     /**
      * The number of periods for our moving average crossover strategy trending calculations
      */
-    public static final int PERIODS_MACS_TREND = 100;
+    private static final int PERIODS_MACS_TREND = 100;
 
     private final int periodsFast, periodsSlow, periodsTrend;
 

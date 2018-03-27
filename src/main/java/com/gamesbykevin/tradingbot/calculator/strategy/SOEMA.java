@@ -11,40 +11,42 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
 /**
  * stochastic oscillator and ema
  */
-public class SOEMA extends SO {
+public class SOEMA extends Strategy {
 
-    //our reference object
+    //our reference object(s)
     private EMA emaObj;
+    private SO soObj;
 
     /**
      * Number of periods used to calculate ema short
      */
-    public static final int PERIODS_EMA_SHORT = 2;
+    private static final int PERIODS_EMA_SHORT = 2;
 
     /**
      * Number of periods used to calculate ema long
      */
-    public static final int PERIODS_EMA_LONG = 4;
+    private static final int PERIODS_EMA_LONG = 4;
 
     /**
      * Additional indicator value we use for trading
      */
-    public static final int SO_INDICATOR = 50;
+    private static final int SO_INDICATOR = 50;
 
     public SOEMA() {
 
         //use default value
-        super();
+        super(0);
 
         //create new object
         this.emaObj = new EMA(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
+        this.soObj = new SO();
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish crossover and the so indicator is below 50, let's buy
-        if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(getStochasticOscillator()) < SO_INDICATOR)
+        if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(soObj.getStochasticOscillator()) < SO_INDICATOR)
             agent.setBuy(true);
 
         //display our data
@@ -55,7 +57,7 @@ public class SOEMA extends SO {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish crossover and the so indicator is above 50, let's sell
-        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(getStochasticOscillator()) > SO_INDICATOR)
+        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(soObj.getStochasticOscillator()) > SO_INDICATOR)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
@@ -66,7 +68,7 @@ public class SOEMA extends SO {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        super.displayData(agent, write);
+        this.soObj.displayData(agent, write);
         this.emaObj.displayData(agent, write);
     }
 
@@ -74,7 +76,7 @@ public class SOEMA extends SO {
     public void calculate(List<Period> history) {
 
         //calculate our value(s)
-        super.calculate(history);
+        this.soObj.calculate(history);
         this.emaObj.calculate(history);
     }
 }

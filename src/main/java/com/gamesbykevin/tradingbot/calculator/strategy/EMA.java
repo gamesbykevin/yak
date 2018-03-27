@@ -22,12 +22,12 @@ public class EMA extends Strategy {
     /**
      * How many periods to calculate long ema
      */
-    public static final int PERIODS_EMA_LONG = 26;
+    private static final int PERIODS_EMA_LONG = 26;
 
     /**
      * How many periods to calculate short ema
      */
-    public static final int PERIODS_EMA_SHORT = 12;
+    private static final int PERIODS_EMA_SHORT = 12;
 
     //how many periods
     private final int periodsLong, periodsShort;
@@ -118,8 +118,9 @@ public class EMA extends Strategy {
         } else {
 
             //calculate simple moving average since there is no previous ema
-            final double sma = calculateSMA(history, current - 1, periods, Fields.Close);
+            final double sma = calculateSMA(history, current + 1, periods, Fields.Close);
 
+            //use sma to help calculate the first ema value
             ema = ((currentPrice - sma) * multiplier) + sma;
         }
 
@@ -136,7 +137,7 @@ public class EMA extends Strategy {
         for (int i = 0; i < history.size(); i++) {
 
             //skip if we can't go back far enough
-            if (i <= periods)
+            if (i < periods)
                 continue;
 
             //either the ema will be 0 or we get the most recent

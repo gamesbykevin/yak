@@ -27,17 +27,17 @@ public class ADX extends Strategy {
     /**
      * Number of periods we are calculating SMA
      */
-    public static final int PERIODS_SMA = 50;
+    private static final int PERIODS_SMA = 50;
 
     /**
      * How many periods do we calculate the average directional index
      */
-    public static final int PERIODS_ADX = 14;
+    private static final int PERIODS_ADX = 14;
 
     /**
      * The minimum value to determine there is a price trend
      */
-    public static final double TREND_ADX = 20.0d;
+    private static final double TREND_ADX = 20.0d;
 
     //our trend line
     private final double trend;

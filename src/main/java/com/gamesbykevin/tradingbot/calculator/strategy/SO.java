@@ -2,14 +2,18 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+
 /**
  * Stochastic Oscillator
  */
-public abstract class SO extends Strategy {
+public final class SO extends Strategy {
 
     //indicator list
     private List<Double> stochasticOscillator;
@@ -17,34 +21,55 @@ public abstract class SO extends Strategy {
     //our market rate
     private List<Double> marketRate;
 
+    //our simple moving average of closing price
+    private List<Double> smaPrice;
+
     /**
      * Number of periods for stochastic oscillator
      */
-    public static final int PERIODS_SO = 14;
+    private static final int PERIODS_SO = 14;
 
     /**
-     * Number of periods we calculate sma to get our indicator
+     * Number of periods we calculate sma so to get our indicator
      */
-    public static final int PERIODS_SMA = 3;
+    private static final int PERIODS_SMA_SO = 3;
 
-    protected int periodsSMA, periodsSO;
+    /**
+     * Number of periods we calculate sma price
+     */
+    private static final int PERIODS_SMA_PRICE = 200;
 
-    public SO(int periodsSMA, int periodsSO) {
+    /**
+     * Security is considered over sold
+     */
+    private static final double OVER_SOLD = 20.0d;
+
+    /**
+     * Security is considered over bought
+     */
+    private static final double OVER_BOUGHT = 80.0d;
+
+    //store our periods
+    private final int periodsSmaSO, periodsSO, periodsSmaPrice;
+
+    public SO(int periodsSmaSO, int periodsSO, int periodsSmaPrice) {
 
         //calling our parent with a default value
         super(0);
 
         //assign our periods
-        this.periodsSMA = periodsSMA;
+        this.periodsSmaSO = periodsSmaSO;
         this.periodsSO = periodsSO;
+        this.periodsSmaPrice = periodsSmaPrice;
 
         //create new list(s)
         this.stochasticOscillator = new ArrayList<>();
         this.marketRate = new ArrayList<>();
+        this.smaPrice = new ArrayList<>();
     }
 
     public SO() {
-        this(PERIODS_SMA, PERIODS_SO);
+        this(PERIODS_SMA_SO, PERIODS_SO, PERIODS_SMA_PRICE);
     }
 
     public List<Double> getStochasticOscillator() {
@@ -55,25 +80,67 @@ public abstract class SO extends Strategy {
         return this.marketRate;
     }
 
+    public List<Double> getSmaPrice() {
+        return this.smaPrice;
+    }
+
+    @Override
+    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if the close is above the average
+        if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
+
+            //get the last 2 indicator values
+            double previous = getRecent(getStochasticOscillator(), 2);
+            double current = getRecent(getStochasticOscillator());
+
+            //if previously oversold, and no longer
+            if (previous < OVER_SOLD && current >  OVER_SOLD)
+                agent.setBuy(true);
+        }
+
+        //display info
+        displayData(agent, agent.hasBuy());
+    }
+
+    @Override
+    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //if the close is now below the average
+        if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
+
+            //get the last 2 indicator values
+            double previous = getRecent(getStochasticOscillator(), 2);
+            double current = getRecent(getStochasticOscillator());
+
+            //if previously over bought, and no longer
+            if (previous > OVER_BOUGHT && current < OVER_BOUGHT)
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
+        }
+
+        //display info
+        displayData(agent, agent.getReasonSell() != null);
+    }
+
     @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "SO: ", getStochasticOscillator(), periodsSO / 4, write);
-        display(agent, "MR: ", getMarketRate(), periodsSO / 4, write);
+        display(agent, "SO: %D ", getStochasticOscillator(), periodsSO, write);
+        display(agent, "MR: %K ", getMarketRate(), periodsSO, write);
+        display(agent, "SMA: ", getSmaPrice(), periodsSO, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //clear our list(s)
-        getStochasticOscillator().clear();
         getMarketRate().clear();
 
         for (int i = 0; i < history.size(); i++) {
 
             //we don't have enough data yet
-            if (i <= periodsSO)
+            if (i < periodsSO)
                 continue;
 
             //what is the high and low for our period range
@@ -87,22 +154,11 @@ public abstract class SO extends Strategy {
             getMarketRate().add(marketValue);
         }
 
-        //the indicator will be a 3 period sma of marketRate
-        for (int i = 0; i < getMarketRate().size(); i++) {
+        //calculate sma for our indicator
+        calculateSMA(getMarketRate(), getStochasticOscillator(), periodsSmaSO);
 
-            //we don't have enough data yet
-            if (i < periodsSMA)
-                continue;
-
-            double sum = 0;
-
-            for (int x = i - periodsSMA; x < i; x++) {
-                sum += getMarketRate().get(x);
-            }
-
-            //add our 3 period sma as our result
-            getStochasticOscillator().add((sum / (float)periodsSMA));
-        }
+        //calculate sma for the closing price
+        calculateSMA(history, getSmaPrice(), periodsSmaPrice, Fields.Close);
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {
@@ -110,7 +166,7 @@ public abstract class SO extends Strategy {
         Period result = null;
 
         //check these periods for the high or low
-        for (int i = index - periodsSO; i <= index; i++) {
+        for (int i = index - periodsSO; i < index; i++) {
 
             //check the current period
             Period current = history.get(i);

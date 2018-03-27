@@ -24,7 +24,7 @@ public class EMVS extends Strategy {
     /**
      * The number of periods to calculate sma
      */
-    public static final int PERIODS_SMA = 30;
+    private static final int PERIODS_SMA = 30;
 
     public EMVS() {
 

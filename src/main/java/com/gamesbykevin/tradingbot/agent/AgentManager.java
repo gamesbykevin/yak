@@ -43,13 +43,10 @@ public class AgentManager {
      * Different trading strategies we can use
      */
     public enum TradingStrategy {
-        RSI, MACD, OBV, EMA, ADX,
-        MACS, RSI_2, NR7, MACDD, HA,
-        NR4, RSIM, RSIA, BB, BBER,
-        SOD, SOC, SOEMA, ADL, BBR,
-        EMASV, OA, EMV, NVI, PVI,
-        NP, SR, BBER2, BBR2, EMVS
-
+        RSI, MACD, OBV, EMA, ADX, MACS, RSI_2, NR7, MACDD, HA,
+        NR4, RSIM, RSIA, BB, BBER, SOD, SOC, SOEMA, ADL, BBR,
+        EMASV, OA, EMV, NVI, PVI, NP, SR, BBER2, BBR2, EMVS,
+        SO, EMAR, MACS2, MACD2, RSIM2, MACDD2,
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -184,10 +181,10 @@ public class AgentManager {
             result = result + getProductId() + " : " + agent.getStrategy() + " - $" + AgentHelper.formatValue(getAssets(agent));
 
             //add our min value
-            result = result + ", Min $" + AgentHelper.formatValue(agent.getFundsMin());
+            result = result + ",  Min $" + AgentHelper.formatValue(agent.getFundsMin());
 
             //add our max value
-            result = result + ", Max $" + AgentHelper.formatValue(agent.getFundsMax());
+            result = result + ",  Max $" + AgentHelper.formatValue(agent.getFundsMax());
 
             //make new line
             result = result + "\n";

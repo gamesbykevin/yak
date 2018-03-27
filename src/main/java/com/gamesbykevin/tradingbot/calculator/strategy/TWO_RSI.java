@@ -14,17 +14,17 @@ public class TWO_RSI extends Strategy {
     /**
      * Minimum required rsi value
      */
-    public static final double MIN_RSI = 10.0d;
+    private static final double MIN_RSI = 10.0d;
 
     /**
      * Maximum required rsi value
      */
-    public static final double MAX_RSI = 90.0d;
+    private static final double MAX_RSI = 90.0d;
 
     /**
      * The two rsi will always be 2 periods
      */
-    public static final int TWO_RSI = 2;
+    private static final int TWO_RSI = 2;
 
     public TWO_RSI() {
 

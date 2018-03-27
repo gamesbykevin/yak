@@ -63,10 +63,20 @@ public class Email implements Runnable {
         }
     }
 
+    public static boolean hasContactAddress() {
+
+        //we can't send if null or too short
+        if (EMAIL_NOTIFICATION_ADDRESS == null || EMAIL_NOTIFICATION_ADDRESS.trim().length() < 10)
+            return false;
+
+        //we are good
+        return true;
+    }
+
     public static synchronized void sendEmail(final String subject, final String text) {
 
         //don't send email if email address doesn't exist
-        if (EMAIL_NOTIFICATION_ADDRESS == null || EMAIL_NOTIFICATION_ADDRESS.trim().length() < 10)
+        if (!hasContactAddress())
             return;
 
         //create our email object

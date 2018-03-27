@@ -14,27 +14,27 @@ public class BBER extends Strategy {
     /**
      * How many periods to calculate long ema
      */
-    public static final int PERIODS_EMA_LONG = 75;
+    private static final int PERIODS_EMA_LONG = 75;
 
     /**
      * How many periods to calculate short ema
      */
-    public static final int PERIODS_EMA_SHORT = 5;
+    private static final int PERIODS_EMA_SHORT = 5;
 
     /**
      * What is our rsi line to detect bullish / bearish trends
      */
-    public static final double RSI_LINE = 50.0d;
+    private static final double RSI_LINE = 50.0d;
 
     /**
      * How many RSI periods we are calculating
      */
-    public static final int PERIODS_RSI = 12;
+    private static final int PERIODS_RSI = 12;
 
     /**
      * How many BB periods we are calculating
      */
-    public static final int PERIODS_BB = 20;
+    private static final int PERIODS_BB = 20;
 
     //ema object
     private EMA emaObj;

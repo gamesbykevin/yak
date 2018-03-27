@@ -22,27 +22,27 @@ public class RSIA extends Strategy {
     /**
      * How many periods do we calculate the average directional index
      */
-    public static final int PERIODS_ADX = 20;
+    private static final int PERIODS_ADX = 20;
 
     /**
      * The minimum value to determine there is a price trend
      */
-    public static final double TREND_ADX = 20.0d;
+    private static final double TREND_ADX = 20.0d;
 
     /**
      * How many periods to calculate rsi
      */
-    public static final int PERIODS_RSI = 7;
+    private static final int PERIODS_RSI = 7;
 
     /**
      * The support line meaning the stock is oversold
      */
-    public static final float SUPPORT_LINE = 30.0f;
+    private static final float SUPPORT_LINE = 30.0f;
 
     /**
      * The resistance line meaning the stock is overbought
      */
-    public static final float RESISTANCE_LINE = 70.0f;
+    private static final float RESISTANCE_LINE = 70.0f;
 
     public RSIA() {
 

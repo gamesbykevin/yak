@@ -27,17 +27,17 @@ public class SR extends Strategy {
     /**
      * How many periods do we calculate for our long sma
      */
-    public static final int PERIODS_LONG = 60;
+    private static final int PERIODS_LONG = 60;
 
     /**
      * How many periods do we calculate for our short sma
      */
-    public static final int PERIODS_SHORT = 10;
+    private static final int PERIODS_SHORT = 10;
 
     /**
      * The number of periods to calculate our values
      */
-    public static final int PERIODS_STOCH_RSI = 14;
+    private static final int PERIODS_STOCH_RSI = 14;
 
     /**
      * Indicator security is over bought

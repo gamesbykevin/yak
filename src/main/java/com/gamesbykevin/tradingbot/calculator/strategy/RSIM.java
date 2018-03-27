@@ -7,11 +7,9 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
-import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.RESISTANCE_LINE;
-import static com.gamesbykevin.tradingbot.calculator.strategy.RSI.SUPPORT_LINE;
 
 /**
- * RSI MACD
+ * RSI / MACD
  */
 public class RSIM extends Strategy {
 
@@ -24,22 +22,40 @@ public class RSIM extends Strategy {
     /**
      * How many RSI periods we are calculating
      */
-    public static final int PERIODS_RSI = 12;
+    private static final int PERIODS_RSI = 12;
 
     /**
      * How many RSI periods we are calculating
      */
-    public static final int PERIODS_MACD = 9;
+    private static final int PERIODS_MACD = 9;
 
+    /**
+     * The support line meaning the stock is oversold
+     */
+    private static final float SUPPORT_LINE = 30.0f;
+
+    /**
+     * The resistance line meaning the stock is overbought
+     */
+    private static final float RESISTANCE_LINE = 70.0f;
+
+    /**
+     * How many periods do we calculate the sma trend line
+     */
+    private static final int PERIODS_SMA_TREND = 200;
 
     public RSIM() {
+        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_RSI);
+    }
+
+    public RSIM(int periodsMacd, int periodsSmaTrend, int periodsRsi) {
 
         //call parent
         super(PERIODS_RSI);
 
         //create objects
-        this.macdObj = new MACD(PERIODS_MACD);
-        this.rsiObj = new RSI(PERIODS_RSI);
+        this.macdObj = new MACD(periodsMacd, periodsSmaTrend);
+        this.rsiObj = new RSI(periodsRsi);
     }
 
     @Override

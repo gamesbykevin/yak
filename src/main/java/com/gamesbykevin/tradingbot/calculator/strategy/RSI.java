@@ -21,22 +21,22 @@ public class RSI extends Strategy {
     /**
      * How many periods do we calculate sma price
      */
-    public static final int PERIODS_PRICE = 200;
+    private static final int PERIODS_PRICE = 200;
 
     /**
      * How many periods to calculate rsi
      */
-    public static final int PERIODS_RSI = 5;
+    private static final int PERIODS_RSI = 5;
 
     /**
      * The support line meaning the stock is oversold
      */
-    public static final float SUPPORT_LINE = 30.0f;
+    private static final float SUPPORT_LINE = 30.0f;
 
     /**
      * The resistance line meaning the stock is overbought
      */
-    public static final float RESISTANCE_LINE = 70.0f;
+    private static final float RESISTANCE_LINE = 70.0f;
 
     public RSI() {
         this(PERIODS_RSI);

@@ -22,7 +22,7 @@ public class PVI extends Strategy {
     /**
      * How many periods do we calculate for our ema
      */
-    public static final int PERIODS_EMA = 255;
+    private static final int PERIODS_EMA = 255;
 
     public PVI() {
         this(PERIODS_EMA);

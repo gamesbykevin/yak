@@ -30,8 +30,8 @@ public class OA extends Strategy {
     //our obv object
     private OBV obvObj;
 
-    public static final int PERIODS_LONG = 65;
-    public static final int PERIODS_SHORT = 20;
+    private static final int PERIODS_LONG = 65;
+    private static final int PERIODS_SHORT = 20;
 
     //our long and short periods
     private final int periodsLong, periodsShort;

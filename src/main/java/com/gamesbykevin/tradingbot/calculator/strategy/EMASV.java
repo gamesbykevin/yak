@@ -28,10 +28,10 @@ public class EMASV extends Strategy {
     /**
      * What is the size of our periods
      */
-    public static final int PERIODS_EMA_LONG = 35;
-    public static final int PERIODS_EMA_SHORT = 5;
-    public static final int PERIODS_SMA_PRICE = 150;
-    public static final int PERIODS_SMA_VOLUME = 200;
+    private static final int PERIODS_EMA_LONG = 26;
+    private static final int PERIODS_EMA_SHORT = 12;
+    private static final int PERIODS_SMA_PRICE = 50;
+    private static final int PERIODS_SMA_VOLUME = 60;
 
     //what are our periods
     private final int periodsEmaLong, periodsEmaShort, periodsSmaPrice, periodsSmaVolume;

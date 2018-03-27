@@ -32,22 +32,28 @@ public class MACD extends Strategy {
     /**
      * How many periods do we calculate ema from macd line
      */
-    public static final int PERIODS_MACD = 9;
+    private static final int PERIODS_MACD = 9;
 
     /**
      * How many periods do we calculate the sma trend line
      */
-    public static final int PERIODS_SMA_TREND = 200;
+    private static final int PERIODS_SMA_TREND = 200;
+
+    private final int periodsSmaTrend;
 
     public MACD() {
-        this(PERIODS_MACD);
+        this(PERIODS_MACD, PERIODS_SMA_TREND);
     }
 
-    public MACD(int periods) {
+    public MACD(int periods, int periodsSmaTrend) {
 
         //call parent
         super(periods);
 
+        //save our setting
+        this.periodsSmaTrend = periodsSmaTrend;
+
+        //create lists and objects
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
         this.emaObj = new EMA();
@@ -138,7 +144,7 @@ public class MACD extends Strategy {
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
 
         //calculate our sma price
-        calculateSMA(history, getSmaPrice(), PERIODS_SMA_TREND, Fields.Close);
+        calculateSMA(history, getSmaPrice(), periodsSmaTrend, Fields.Close);
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {
@@ -162,12 +168,12 @@ public class MACD extends Strategy {
         //clear list
         histogram.clear();
 
-        //determine how long back we can calculate the histogram
+        //determine how long back we can calculate the histogram since the list sizes may vary
         int length = (macdLine.size() > signalLine.size()) ? signalLine.size() - 1 : macdLine.size() - 1;
 
         //loop through and calculate the histogram
         for (int i = length; i > 0; i--) {
-            histogram.add(macdLine.get(i) - signalLine.get(i));
+            histogram.add(macdLine.get(macdLine.size() - i) - signalLine.get(signalLine.size() - i));
         }
     }
 }

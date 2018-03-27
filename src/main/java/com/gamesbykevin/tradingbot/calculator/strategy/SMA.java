@@ -12,7 +12,7 @@ public class SMA {
         //clear the list
         populate.clear();
 
-        for (int i = 0; i < data.size(); i++) {
+        for (int i = 0; i <= data.size(); i++) {
 
             //skip if we don't have enough data
             if (i < periods)
@@ -36,7 +36,7 @@ public class SMA {
         populate.clear();
 
         //check all data when calculating
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = 0; i <= history.size(); i++) {
 
             //skip until we have enough data to calculate
             if (i < periods)

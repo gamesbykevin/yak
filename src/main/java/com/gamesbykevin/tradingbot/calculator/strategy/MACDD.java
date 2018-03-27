@@ -7,23 +7,36 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
-import static com.gamesbykevin.tradingbot.calculator.strategy.MACD.*;
 
 /**
  * Divergence between MACD Histogram and Price
  */
-public class MACDDIV extends Strategy {
+public class MACDD extends Strategy {
 
     //our macd object
     private MACD macdObj;
 
-    public MACDDIV() {
+    /**
+     * How many periods do we calculate ema from macd line
+     */
+    private static final int PERIODS_MACD = 9;
+
+    /**
+     * How many periods do we calculate the sma trend line
+     */
+    private static final int PERIODS_SMA_TREND = 200;
+
+    public MACDD() {
+        this(PERIODS_MACD, PERIODS_SMA_TREND);
+    }
+
+    public MACDD(int periodsMacd, int periodsSmaTrend) {
 
         //call parent
-        super(PERIODS_MACD);
+        super(periodsMacd);
 
         //create obj
-        this.macdObj = new MACD(PERIODS_MACD);
+        this.macdObj = new MACD(periodsMacd, periodsSmaTrend);
     }
 
     @Override

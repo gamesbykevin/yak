@@ -17,7 +17,7 @@ public class EMV extends Strategy {
     /**
      * Default number of periods to calculate
      */
-    public static final int PERIODS_EMV = 14;
+    private static final int PERIODS_EMV = 14;
 
     /**
      * What is the default volume we used to calculate the box ratio

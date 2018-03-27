@@ -20,7 +20,7 @@ public class ADL extends Strategy {
     /**
      * Default number of periods
      */
-    public static final int DEFAULT_PERIODS = 7;
+    private static final int DEFAULT_PERIODS = 7;
 
     private final int periodsADL;
 

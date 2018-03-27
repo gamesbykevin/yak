@@ -2,20 +2,18 @@ package com.gamesbykevin.tradingbot;
 
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
+import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
+
+import java.util.HashMap;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
+import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class MainHelper {
-
-    //how often do we display/write the strategy description to the log file (milliseconds)
-    private static final long STRATEGY_DELAY = 300000;
-
-    //when was the last time we displayed the strategy summary
-    private static long PREVIOUS_STRATEGY_DESC = 0;
 
     //what are the previous total assets
     private static double TOTAL_PREVIOUS = 0;
@@ -26,12 +24,15 @@ public class MainHelper {
     //how long has the bot been running
     protected static final long START = System.currentTimeMillis();
 
+    //keep track of our strategy progress between each progress update
+    private static HashMap<TradingStrategy, Double> STRATEGY_PROGRESS;
+
     protected static String getStrategySummaryDesc(Main main) {
 
         String strategyDesc = "Strategy Summary\n";
 
         //now show the total $ per trading strategy
-        for (AgentManager.TradingStrategy strategy : AgentManager.TradingStrategy.values()) {
+        for (TradingStrategy strategy : TradingStrategy.values()) {
 
             double amount = 0;
 
@@ -40,11 +41,39 @@ public class MainHelper {
                 amount += agentManager.getAssets(strategy);
             }
 
-            strategyDesc = strategyDesc + strategy.toString() + " $" + AgentHelper.formatValue(amount) + "\n";
+            //what is the change from the previous update
+            String change = "";
+
+            if (getStrategyProgress().get(strategy) != null) {
+
+                //get the previous total
+                double previous = getStrategyProgress().get(strategy);
+
+                //first title
+                change = ",  Diff $";
+
+                //then add the difference to the change
+                change += AgentHelper.formatValue(amount - previous);
+            }
+
+            //update value in list
+            getStrategyProgress().put(strategy, amount);
+
+            //add strategy, price and price change
+            strategyDesc += strategy.toString() + " $" + AgentHelper.formatValue(amount) + change + "\n";
         }
 
         //return our result
         return strategyDesc;
+    }
+
+    private static HashMap<TradingStrategy, Double> getStrategyProgress() {
+
+        if (STRATEGY_PROGRESS == null)
+            STRATEGY_PROGRESS = new HashMap<>();
+
+        //return our object
+        return STRATEGY_PROGRESS;
     }
 
     protected static void manageStatusUpdate(Main main) {
@@ -81,50 +110,50 @@ public class MainHelper {
 
         text = text + "\n";
 
-        //get our strategy summary
-        final String strategyDesc = getStrategySummaryDesc(main);
-
-        //add strategy summary to the overall message
-        text = text + strategyDesc;
-
+        //format our message
         subject = "Total assets $" + AgentHelper.formatValue(total);
 
-        //print our total assets if they have changed
         if (total != TOTAL_PREVIOUS) {
+
+            //if assets changed, write to log file
             displayMessage(subject, main.getWriter());
+
+            //update the new total
             TOTAL_PREVIOUS = total;
+
+        } else {
+
+            //else just print to console
+            displayMessage(subject);
         }
 
         //if enough time has passed send ourselves a notification
         if (System.currentTimeMillis() - PREVIOUS_TIME >= NOTIFICATION_DELAY) {
 
-            //send our total assets in an email
-            sendEmail(subject, text);
-
-            //update the timer
-            PREVIOUS_TIME = System.currentTimeMillis();
-
-            //force our logic to write the strategy desc
-            PREVIOUS_STRATEGY_DESC = System.currentTimeMillis() - STRATEGY_DELAY;
-
-        } else {
-
-            //how much time remaining
-            final long duration = NOTIFICATION_DELAY - (System.currentTimeMillis() - PREVIOUS_TIME);
-
-            //show when the next notification message will be sent
-            displayMessage("Next notification message in " + Transaction.getDurationDesc(duration));
-        }
-
-
-        //we want to write this to log file periodically even if no notification message
-        if (System.currentTimeMillis() - PREVIOUS_STRATEGY_DESC >= STRATEGY_DELAY) {
+            //get our strategy summary
+            final String strategyDesc = getStrategySummaryDesc(main);
 
             //write summary strategy to log file
             displayMessage(strategyDesc, main.getWriter());
 
-            //update our timer
-            PREVIOUS_STRATEGY_DESC = System.currentTimeMillis();
+            //send our total assets in an email
+            sendEmail(subject, text + strategyDesc);
+
+            //update the timer
+            PREVIOUS_TIME = System.currentTimeMillis();
         }
+    }
+
+    /**
+     * Print to console when next notification message will send
+     */
+    protected static void displayNextStatusUpdateDesc() {
+
+        //we con't send if there is no address
+        if (!hasContactAddress())
+            return;
+
+        //show when the next notification message will be sent
+        displayMessage("Next notification message in " + Transaction.getDurationDesc(NOTIFICATION_DELAY - (System.currentTimeMillis() - PREVIOUS_TIME)));
     }
 }

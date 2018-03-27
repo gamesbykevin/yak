@@ -15,7 +15,7 @@ public class BB extends Strategy {
     /**
      * Typical # periods is 20
      */
-    public static final int PERIODS_BB = 20;
+    private static final int PERIODS_BB = 20;
 
     //our lists
     private List<Double> middle, upper, lower;
