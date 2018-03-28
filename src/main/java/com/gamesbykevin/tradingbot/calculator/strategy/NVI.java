@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -49,8 +50,8 @@ public class NVI extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have crossover that is signal to buy
-        if (hasCrossover(true, getNviCumulative(), getNviEma()))
+        //if we have crossover and cumulative value is > than previous period value that is signal to buy
+        if (hasCrossover(true, getNviCumulative(), getNviEma()) && getRecent(getNviCumulative()) > getRecent(getNviCumulative(), 2))
             agent.setBuy(true);
 
         //display our data
@@ -60,8 +61,8 @@ public class NVI extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have crossover that is signal to sell
-        if (hasCrossover(false, getNviCumulative(), getNviEma()))
+        //if we have crossover and cumulative value is < than previous period value that is signal to sell
+        if (hasCrossover(false, getNviCumulative(), getNviEma()) && getRecent(getNviCumulative()) < getRecent(getNviCumulative(), 2))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data

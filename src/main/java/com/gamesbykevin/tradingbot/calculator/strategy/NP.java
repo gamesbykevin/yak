@@ -13,7 +13,7 @@ public class NP extends Strategy {
     /**
      * How many periods do we calculate for our ema
      */
-    private static final int PERIODS_EMA = 255;
+    private static final int PERIODS_EMA = 50;
 
     //our negative volume object
     private NVI nviObj;
@@ -31,8 +31,8 @@ public class NP extends Strategy {
         super(periods);
 
         //create new objects
-        this.nviObj = new NVI(PERIODS_EMA);
-        this.pviObj = new PVI(PERIODS_EMA);
+        this.nviObj = new NVI(periods);
+        this.pviObj = new PVI(periods);
     }
 
     @Override

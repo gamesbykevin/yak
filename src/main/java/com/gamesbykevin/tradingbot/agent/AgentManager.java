@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 
@@ -10,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING;
+import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
 public class AgentManager {
@@ -19,7 +22,7 @@ public class AgentManager {
     private final List<Agent> agents;
 
     //our reference to calculate calculator
-    private final Calculator calculator;
+    private Calculator calculator;
 
     //when is the last time we loaded historical data
     private long previous;
@@ -28,7 +31,7 @@ public class AgentManager {
     private boolean working = false;
 
     //the duration of data we are checking
-    private final Calculator.Duration myDuration;
+    private final Duration myDuration;
 
     //the product we are trading
     private final Product product;
@@ -43,10 +46,11 @@ public class AgentManager {
      * Different trading strategies we can use
      */
     public enum TradingStrategy {
-        RSI, MACD, OBV, EMA, ADX, MACS, RSI_2, NR7, MACDD, HA,
-        NR4, RSIM, RSIA, BB, BBER, SOD, SOC, SOEMA, ADL, BBR,
-        EMASV, OA, EMV, NVI, PVI, NP, SR, BBER2, BBR2, EMVS,
-        SO, EMAR, MACS2, MACD2, RSIM2, MACDD2,
+
+        ADL, ADX, BB, BBER, BBER2, BBR, BBR2, EMA, EMA2, EMAR,
+        EMASV, EMV, EMVS, HA, MACD, MACD2, MACDD, MACDD2, MACS, MACS2,
+        NP, NR4, NR7, NVI, OA, OBV, PVI, RSI, RSIA, RSIM,
+        RSIM2, SO, SOC, SOC2, SOD, SOD2, SOEMA, SR, TWO_RSI,
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -60,22 +64,76 @@ public class AgentManager {
         //store our period duration
         this.myDuration = myDuration;
 
-        //create our calculator
-        this.calculator = new Calculator();
-
         //update the previous run time, so it runs immediately since we don't have data yet
         this.previous = System.currentTimeMillis() - (getMyDuration().duration * 1000);
 
         //create new list of agents
         this.agents = new ArrayList<>();
 
-        //how many funds does each agent get?
-        double fundsPerAgent = funds / (double)TradingStrategy.values().length;
+        //populate our strategies
+        loadStrategies();
 
-        //create an agent for every trading strategy
-        for (TradingStrategy strategy : TradingStrategy.values()) {
-            this.agents.add(new Agent(strategy, fundsPerAgent, product.getId(), getFileName(strategy)));
+        //create our agents
+        createAgents(funds);
+    }
+
+    private void createAgents(double funds) {
+
+        //how many funds does each agent get?
+        double fundsPerAgent = funds / (double)MY_TRADING_STRATEGIES.length;
+
+        //create an agent for every trading strategy that we have specified
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+            this.agents.add(new Agent(MY_TRADING_STRATEGIES[i], fundsPerAgent, product.getId(), getFileName(MY_TRADING_STRATEGIES[i])));
         }
+    }
+
+    private void loadStrategies() {
+
+        //make sure we aren't using duplicate strategies
+        for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+            for (int j = 0; j < TRADING_STRATEGIES.length; j++) {
+
+                //don't check the same element
+                if (i == j)
+                    continue;
+
+                //if the value already exists we have duplicate strategies
+                if (TRADING_STRATEGIES[i].trim().equalsIgnoreCase(TRADING_STRATEGIES[j].trim()))
+                    throw new RuntimeException("Duplicate trading strategy in your property file \"" + TRADING_STRATEGIES[i] + "\"");
+            }
+        }
+
+        //create a new array which will contain our trading strategies
+        MY_TRADING_STRATEGIES = new TradingStrategy[TRADING_STRATEGIES.length];
+
+        //temp list of all values so we can check for a match
+        TradingStrategy[] tmp = TradingStrategy.values();
+
+        //make sure the specified strategies exist
+        for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+
+            //check each strategy for a match
+            for (int j = 0; j < tmp.length; j++) {
+
+                //if the spelling matches we have found our strategy
+                if (tmp[j].toString().trim().equalsIgnoreCase(TRADING_STRATEGIES[i].trim())) {
+
+                    //assign our strategy
+                    MY_TRADING_STRATEGIES[i] = tmp[j];
+
+                    //exit the loop
+                    break;
+                }
+            }
+
+            //no matching strategy was found throw exception
+            if (MY_TRADING_STRATEGIES[i] == null)
+                throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
+        }
+
+        //create our calculator now that we have the strategies
+        this.calculator = new Calculator();
     }
 
     public synchronized void update(final double price) {
@@ -130,8 +188,8 @@ public class AgentManager {
             } else {
 
                 //update each agent trading this specific product with their own trading strategy
-                for (Agent agent : getAgents()) {
-                    agent.update(getCalculator(), getProduct(), getCurrentPrice());
+                for (int i = 0; i < getAgents().size(); i++) {
+                    getAgents().get(i).update(getCalculator(), getProduct(), getCurrentPrice());
                 }
             }
 
@@ -177,17 +235,18 @@ public class AgentManager {
         //message with all agent totals
         String result = "";
 
-        for (Agent agent : agents) {
-            result = result + getProductId() + " : " + agent.getStrategy() + " - $" + AgentHelper.formatValue(getAssets(agent));
+        for (int i = 0; i < getAgents().size(); i++) {
+
+            result += getProductId() + " : " + getAgents().get(i).getStrategy() + " - $" + AgentHelper.formatValue(getAssets(getAgents().get(i)));
 
             //add our min value
-            result = result + ",  Min $" + AgentHelper.formatValue(agent.getFundsMin());
+            result += ",  Min $" + AgentHelper.formatValue(getAgents().get(i).getFundsMin());
 
             //add our max value
-            result = result + ",  Max $" + AgentHelper.formatValue(agent.getFundsMax());
+            result += ",  Max $" + AgentHelper.formatValue(getAgents().get(i).getFundsMax());
 
             //make new line
-            result = result + "\n";
+            result += "\n";
         }
 
         //return our result
@@ -202,10 +261,10 @@ public class AgentManager {
 
         double amount = 0;
 
-        for (Agent agent : agents) {
+        for (int i = 0; i < getAgents().size(); i++) {
 
             //add the total amount
-            amount += getAssets(agent);
+            amount += getAssets(getAgents().get(i));
         }
 
         //return the total amount
@@ -216,10 +275,11 @@ public class AgentManager {
 
         double amount = 0;
 
-        //add the total for every agent with the matching strategy
-        for (Agent agent : getAgents()) {
-            if (agent.getStrategy() == strategy)
-                amount += getAssets(agent);
+        for (int i = 0; i < getAgents().size(); i++) {
+
+            //add the total for every agent with the matching strategy
+            if (getAgents().get(i).getStrategy() == strategy)
+                amount += getAssets(getAgents().get(i));
         }
 
         //return the result

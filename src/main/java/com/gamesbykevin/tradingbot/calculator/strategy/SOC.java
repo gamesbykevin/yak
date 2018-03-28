@@ -29,19 +29,24 @@ public class SOC extends Strategy {
     /**
      * Number of periods we calculate sma to get our indicator
      */
-    private static final int PERIODS_SMA_PRICE = 200;
+    private static final int PERIODS_SMA_PRICE_LONG = 200;
 
-    public SOC(int periodsSMA, int periodsSO, int periodsSmaPrice) {
+    /**
+     * Number of periods we calculate sma to get our indicator
+     */
+    private static final int PERIODS_SMA_PRICE_SHORT = 50;
+
+    public SOC(int periodsSMA, int periodsSO, int periodsSmaPriceLong, int periodsSmaPriceShort) {
 
         //call parent with a default value
         super(periodsSO);
 
         //create a new object
-        this.soObj = new SO(periodsSMA, periodsSO, periodsSmaPrice);
+        this.soObj = new SO(periodsSMA, periodsSO, periodsSmaPriceLong, periodsSmaPriceShort);
     }
 
     public SOC() {
-        this(PERIODS_SMA, PERIODS_SO, PERIODS_SMA_PRICE);
+        this(PERIODS_SMA, PERIODS_SO, PERIODS_SMA_PRICE_LONG, PERIODS_SMA_PRICE_SHORT);
     }
 
     @Override

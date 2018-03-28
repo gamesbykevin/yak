@@ -16,26 +16,13 @@ public class CalculatorHelper {
      */
     protected static void checkHistory(List<Period> history, Period period) {
 
-        //did we find an existing period
-        boolean match = false;
-
         //check every period
         for (int i = 0; i < history.size(); i++) {
 
-            //if the time matches it already exists
-            if (history.get(i).time == period.time) {
-
-                //flag match
-                match = true;
-
-                //exit loop
-                break;
-            }
+            //if the time matches it already exists and no need to continue
+            if (history.get(i).time == period.time)
+                return;
         }
-
-        //if there was a match we don't need to add
-        if (match)
-            return;
 
         //since it wasn't found, add it to the list
         history.add(period);

@@ -77,8 +77,16 @@ public class PropertyUtil {
         //which crypto currencies do we want to trade
         Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(",");
 
+        //make sure we have something
         if (Main.TRADING_CURRENCIES.length < 1)
             throw new RuntimeException("You haven't specified what products you want to trade in your properties file");
+
+        //what strategies are we trading with
+        Main.TRADING_STRATEGIES = getProperties().getProperty("tradingStrategies").split(",");
+
+        //make sure we have something
+        if (Main.TRADING_STRATEGIES.length < 1 || Main.TRADING_STRATEGIES[0].trim().length() < 1)
+            throw new RuntimeException("You don't have any trading strategies specified");
 
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
@@ -136,8 +144,8 @@ public class PropertyUtil {
 
             StackTraceElement[] stack = e.getStackTrace();
 
-            for (StackTraceElement s : stack) {
-                message = message + s.toString() + "\n\t\t";
+            for (int i = 0; i <  stack.length; i++) {
+                message = message + stack[i].toString() + "\n\t\t";
             }
 
         } catch (Exception ex) {

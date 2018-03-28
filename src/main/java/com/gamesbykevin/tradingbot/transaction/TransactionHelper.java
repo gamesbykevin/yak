@@ -2,7 +2,6 @@ package com.gamesbykevin.tradingbot.transaction;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 
-import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.formatValue;
@@ -47,16 +46,16 @@ public class TransactionHelper {
             return 0;
 
         //check every transaction
-        for (Transaction transaction : agent.getTransactions()) {
+        for (int i = 0; i < agent.getTransactions().size(); i++) {
 
-            if (transaction.getResult() == null)
+            if (agent.getTransactions().get(i).getResult() == null)
                 continue;
 
             //keep track of total transactions
             count++;
 
             //add total duration
-            duration += transaction.getDuration();
+            duration += agent.getTransactions().get(i).getDuration();
         }
 
         //if nothing, return 0
@@ -69,8 +68,11 @@ public class TransactionHelper {
 
     public static void displaySellReasonCount(Agent agent, Result result) {
 
+        //obtain list of reasons to sell
+        ReasonSell[] reasons = ReasonSell.values();
+
         //check each reason
-        for (ReasonSell sell : ReasonSell.values()) {
+        for (int i = 0; i < reasons.length; i++) {
 
             //keep track of the count
             int count = 0;
@@ -79,22 +81,22 @@ public class TransactionHelper {
             double amount = 0;
 
             //look at each transaction
-            for (Transaction transaction : agent.getTransactions()) {
+            for (int x = 0; x < agent.getTransactions().size(); x++) {
 
                 //skip if no match
-                if (transaction.getResult() == null || transaction.getResult() != result)
+                if (agent.getTransactions().get(x).getResult() == null || agent.getTransactions().get(x).getResult() != result)
                     continue;
 
                 //if there is a match increase the count
-                if (transaction.getReasonSell() == sell) {
+                if (agent.getTransactions().get(x).getReasonSell() == reasons[i]) {
                     count++;
-                    amount += transaction.getAmount();
+                    amount += agent.getTransactions().get(x).getAmount();
                 }
             }
 
             //display the count if greater than 0
             if (count > 0)
-                displayMessage(agent, result.toString() + " Sell " + sell.toString() +  " total " + count + ", $" + formatValue(amount) + ". " + sell.getDescription(), true);
+                displayMessage(agent, result.toString() + " Sell " + reasons[i].toString() +  " total " + count + ", $" + formatValue(amount) + ". " + reasons[i].getDescription(), true);
         }
     }
 
@@ -108,14 +110,14 @@ public class TransactionHelper {
         double amount = 0;
 
         //check every transaction
-        for (Transaction transaction : agent.getTransactions()) {
+        for (int i = 0; i < agent.getTransactions().size(); i++) {
 
-            if (transaction.getResult() == null)
+            if (agent.getTransactions().get(i).getResult() == null)
                 continue;
 
             //if there is a match keep track
-            if (transaction.getResult() == result)
-                amount += transaction.getAmount();
+            if (agent.getTransactions().get(i).getResult() == result)
+                amount += agent.getTransactions().get(i).getAmount();
         }
 
         //return our result
@@ -132,13 +134,13 @@ public class TransactionHelper {
         int count = 0;
 
         //check every transaction
-        for (Transaction transaction : agent.getTransactions()) {
+        for (int i = 0; i < agent.getTransactions().size(); i++) {
 
-            if (transaction.getResult() == null)
+            if (agent.getTransactions().get(i).getResult() == null)
                 continue;
 
             //if there is a match keep track
-            if (transaction.getResult() == result)
+            if (agent.getTransactions().get(i).getResult() == result)
                 count++;
         }
 

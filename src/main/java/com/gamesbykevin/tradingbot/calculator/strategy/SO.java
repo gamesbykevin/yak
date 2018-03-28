@@ -21,8 +21,11 @@ public final class SO extends Strategy {
     //our market rate
     private List<Double> marketRate;
 
-    //our simple moving average of closing price
-    private List<Double> smaPrice;
+    //our simple moving average closing price for a long period
+    private List<Double> smaPriceLong;
+
+    //our simple moving average closing price for a short period
+    private List<Double> smaPriceShort;
 
     /**
      * Number of periods for stochastic oscillator
@@ -37,7 +40,12 @@ public final class SO extends Strategy {
     /**
      * Number of periods we calculate sma price
      */
-    private static final int PERIODS_SMA_PRICE = 200;
+    private static final int PERIODS_SMA_PRICE_LONG = 200;
+
+    /**
+     * Number of periods we calculate sma price
+     */
+    private static final int PERIODS_SMA_PRICE_SHORT = 50;
 
     /**
      * Security is considered over sold
@@ -50,26 +58,31 @@ public final class SO extends Strategy {
     private static final double OVER_BOUGHT = 80.0d;
 
     //store our periods
-    private final int periodsSmaSO, periodsSO, periodsSmaPrice;
+    private final int periodsSmaSO, periodsSO, periodsSmaPriceLong, periodsSmaPriceShort;
 
-    public SO(int periodsSmaSO, int periodsSO, int periodsSmaPrice) {
+    public SO(int periodsSmaSO, int periodsSO, int periodsSmaPriceLong, int periodsSmaPriceShort) {
 
         //calling our parent with a default value
         super(0);
 
+        if (periodsSmaPriceLong < periodsSmaPriceShort)
+            throw new RuntimeException("Long (" + periodsSmaPriceLong + ") periods can't be less than the short (" + periodsSmaPriceShort + ") periods");
+
         //assign our periods
         this.periodsSmaSO = periodsSmaSO;
         this.periodsSO = periodsSO;
-        this.periodsSmaPrice = periodsSmaPrice;
+        this.periodsSmaPriceLong = periodsSmaPriceLong;
+        this.periodsSmaPriceShort = periodsSmaPriceShort;
 
         //create new list(s)
         this.stochasticOscillator = new ArrayList<>();
         this.marketRate = new ArrayList<>();
-        this.smaPrice = new ArrayList<>();
+        this.smaPriceLong = new ArrayList<>();
+        this.smaPriceShort = new ArrayList<>();
     }
 
     public SO() {
-        this(PERIODS_SMA_SO, PERIODS_SO, PERIODS_SMA_PRICE);
+        this(PERIODS_SMA_SO, PERIODS_SO, PERIODS_SMA_PRICE_LONG, PERIODS_SMA_PRICE_SHORT);
     }
 
     public List<Double> getStochasticOscillator() {
@@ -80,22 +93,22 @@ public final class SO extends Strategy {
         return this.marketRate;
     }
 
-    public List<Double> getSmaPrice() {
-        return this.smaPrice;
+    public List<Double> getSmaPriceLong() {
+        return this.smaPriceLong;
+    }
+
+    public List<Double> getSmaPriceShort() {
+        return this.smaPriceShort;
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if the close is above the average
-        if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
-
-            //get the last 2 indicator values
-            double previous = getRecent(getStochasticOscillator(), 2);
-            double current = getRecent(getStochasticOscillator());
+        //if the close is above the sma averages
+        if (getRecent(history, Fields.Close) > getRecent(getSmaPriceLong()) && getRecent(history, Fields.Close) > getRecent(getSmaPriceShort())) {
 
             //if previously oversold, and no longer
-            if (previous < OVER_SOLD && current >  OVER_SOLD)
+            if (getRecent(getStochasticOscillator(), 2) < OVER_SOLD && getRecent(getStochasticOscillator()) > OVER_SOLD)
                 agent.setBuy(true);
         }
 
@@ -106,15 +119,11 @@ public final class SO extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if the close is now below the average
-        if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
-
-            //get the last 2 indicator values
-            double previous = getRecent(getStochasticOscillator(), 2);
-            double current = getRecent(getStochasticOscillator());
+        //if the close is now below the sma averages
+        if (getRecent(history, Fields.Close) < getRecent(getSmaPriceLong()) && getRecent(history, Fields.Close) < getRecent(getSmaPriceShort())) {
 
             //if previously over bought, and no longer
-            if (previous > OVER_BOUGHT && current < OVER_BOUGHT)
+            if (getRecent(getStochasticOscillator(), 2) > OVER_BOUGHT && getRecent(getStochasticOscillator()) < OVER_BOUGHT)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
@@ -128,7 +137,8 @@ public final class SO extends Strategy {
         //display the information
         display(agent, "SO: %D ", getStochasticOscillator(), periodsSO, write);
         display(agent, "MR: %K ", getMarketRate(), periodsSO, write);
-        display(agent, "SMA: ", getSmaPrice(), periodsSO, write);
+        display(agent, "SMA: Long ", getSmaPriceLong(), periodsSO, write);
+        display(agent, "SMA: Short ", getSmaPriceShort(), periodsSO, write);
     }
 
     @Override
@@ -157,8 +167,9 @@ public final class SO extends Strategy {
         //calculate sma for our indicator
         calculateSMA(getMarketRate(), getStochasticOscillator(), periodsSmaSO);
 
-        //calculate sma for the closing price
-        calculateSMA(history, getSmaPrice(), periodsSmaPrice, Fields.Close);
+        //calculate sma's for the closing price
+        calculateSMA(history, getSmaPriceLong(), periodsSmaPriceLong, Fields.Close);
+        calculateSMA(history, getSmaPriceShort(), periodsSmaPriceShort, Fields.Close);
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {

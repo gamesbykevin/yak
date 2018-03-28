@@ -34,6 +34,11 @@ public class Calculator {
     private HashMap<TradingStrategy, Strategy> strategies;
 
     /**
+     * Our list of chosen trading strategies
+     */
+    public static TradingStrategy[] MY_TRADING_STRATEGIES;
+
+    /**
      * How long is each period?
      */
     public static int PERIOD_DURATION = 0;
@@ -60,12 +65,13 @@ public class Calculator {
         this.history = new ArrayList<>();
         this.strategies = new HashMap<>();
 
-        //create an object for each strategy
-        for (TradingStrategy tradingStrategy : TradingStrategy.values()) {
+        //create an object for each strategy that we have specified
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
-            Strategy strategy = null;
+            //what is our strategy?
+            Strategy strategy;
 
-            switch (tradingStrategy) {
+            switch (MY_TRADING_STRATEGIES[i]) {
 
                 case ADX:
                     strategy = new ADX();
@@ -87,6 +93,10 @@ public class Calculator {
                     strategy = new EMA();
                     break;
 
+                case EMA2:
+                    strategy = new EMA(31, 13);
+                    break;
+
                 case EMAR:
                     strategy = new EMAR();
                     break;
@@ -99,7 +109,7 @@ public class Calculator {
                     strategy = new MACS(10, 20, 50);
                     break;
 
-                case RSI_2:
+                case TWO_RSI:
                     strategy = new TWO_RSI();
                     break;
 
@@ -135,8 +145,16 @@ public class Calculator {
                     strategy = new SOD();
                     break;
 
+                case SOD2:
+                    strategy = new SOD(3,14,50,20);
+                    break;
+
                 case SOC:
                     strategy = new SOC();
+                    break;
+
+                case SOC2:
+                    strategy = new SOC(3,14,50,20);
                     break;
 
                 case SO:
@@ -212,11 +230,11 @@ public class Calculator {
                     break;
 
                 default:
-                    throw new RuntimeException("Strategy not found: " + tradingStrategy);
+                    throw new RuntimeException("Strategy not found: " + MY_TRADING_STRATEGIES[i]);
             }
 
             //add to hash map
-            getStrategies().put(tradingStrategy, strategy);
+            getStrategies().put(MY_TRADING_STRATEGIES[i], strategy);
         }
     }
 
@@ -232,6 +250,9 @@ public class Calculator {
 
             //convert json text to multi array
             double[][] data = GSon.getGson().fromJson(json, double[][].class);
+
+            //get the size of our history
+            final int size = getHistory().size();
 
             //make sure we have data before we update
             if (data != null && data.length > 0) {
@@ -255,12 +276,12 @@ public class Calculator {
                 //sort the history
                 sortHistory(getHistory());
 
-                //make sure the history is long enough before we start doing our calculations
-                if (getHistory().size() >= HISTORICAL_PERIODS_MINIMUM) {
+                //make sure the history is long enough, and that it has changed before we start doing our calculations
+                if (getHistory().size() >= HISTORICAL_PERIODS_MINIMUM && size != getHistory().size()) {
 
-                    //now do all indicator calculations
-                    for (Strategy indicator : getStrategies().values()) {
-                        indicator.calculate(getHistory());
+                    //now do all strategy calculations
+                    for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+                        getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(history);
                     }
                 }
 

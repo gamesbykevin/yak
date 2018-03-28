@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
+import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
 import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -31,23 +32,26 @@ public class MainHelper {
 
         String strategyDesc = "Strategy Summary\n";
 
+        //get the list of values
+        TradingStrategy[] strategies = TradingStrategy.values();
+
         //now show the total $ per trading strategy
-        for (TradingStrategy strategy : TradingStrategy.values()) {
+        for (int i = 0; i < strategies.length; i++) {
 
             double amount = 0;
 
             //check each manager looking for the strategy
-            for (AgentManager agentManager : main.getAgentManagers().values()) {
-                amount += agentManager.getAssets(strategy);
+            for (int x = 0; x < TRADING_CURRENCIES.length; x++) {
+                amount += main.getAgentManagers().get(TRADING_CURRENCIES[x]).getAssets(strategies[i]);
             }
 
             //what is the change from the previous update
             String change = "";
 
-            if (getStrategyProgress().get(strategy) != null) {
+            if (getStrategyProgress().get(strategies[i]) != null) {
 
                 //get the previous total
-                double previous = getStrategyProgress().get(strategy);
+                double previous = getStrategyProgress().get(strategies[i]);
 
                 //first title
                 change = ",  Diff $";
@@ -57,10 +61,10 @@ public class MainHelper {
             }
 
             //update value in list
-            getStrategyProgress().put(strategy, amount);
+            getStrategyProgress().put(strategies[i], amount);
 
             //add strategy, price and price change
-            strategyDesc += strategy.toString() + " $" + AgentHelper.formatValue(amount) + change + "\n";
+            strategyDesc += strategies[i].toString() + " $" + AgentHelper.formatValue(amount) + change + "\n";
         }
 
         //return our result
@@ -90,19 +94,19 @@ public class MainHelper {
         double total = 0;
 
         //print the summary of each agent manager
-        for (AgentManager agentManager : main.getAgentManagers().values()) {
+        for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
 
             //get the total assets for the current product
-            final double assets = agentManager.getTotalAssets();
+            final double assets = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getTotalAssets();
 
             //add to our total
             total += assets;
 
             //add to our details
-            text = text + agentManager.getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
+            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
 
             //display each agent's funds as well
-            text = text + agentManager.getAgentDetails();
+            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getAgentDetails();
 
             //add line break in the end
             text = text + "\n";

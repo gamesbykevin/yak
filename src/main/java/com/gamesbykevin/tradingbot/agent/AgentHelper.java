@@ -111,6 +111,10 @@ public class AgentHelper {
             //set our new hard stop limit
             agent.setHardStop(agent.getHardStop() + (increase));
 
+            //if the price is higher than the next hard stop, increase the hard stop again to right below the current price
+            if (currentPrice > agent.getHardStop() + increase)
+                agent.setHardStop(currentPrice - increase);
+
             //write hard stop amount to our log file
             displayMessage(agent, "New hard stop $" + agent.getHardStop(), true);
         }

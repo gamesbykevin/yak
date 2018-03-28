@@ -6,17 +6,14 @@ import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
-import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
-import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.product.Ticker;
-import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -68,6 +65,9 @@ public class Main implements Runnable {
 
     //which currencies do we want to trade with (separated by comma)
     public static String[] TRADING_CURRENCIES;
+
+    //which strategies do we want to trade with (separated by comma)
+    public static String[] TRADING_STRATEGIES;
 
     /**
      * Are we paper trading? default true
@@ -128,12 +128,8 @@ public class Main implements Runnable {
 
         } else {
 
-            //we need at least
-            if (TradingStrategy.values().length != 0)
-                throw new RuntimeException("You have to pick a trading strategy");
-
             //if we are using real money, let's only focus on 1 trading strategy
-            if (TradingStrategy.values().length != 1)
+            if (TRADING_STRATEGIES.length != 1)
                 throw new RuntimeException("You should only focus on 1 trading strategy, this doesn't seem right.");
 
             //display message and pause if using real money
@@ -153,10 +149,6 @@ public class Main implements Runnable {
         loadProducts();
     }
 
-    public static OrderService getOrderService() {
-        return ORDER_SERVICE;
-    }
-
     private void loadProducts() {
 
         List<Product> tmp = productService.getProducts();
@@ -165,16 +157,16 @@ public class Main implements Runnable {
         this.products = new ArrayList<>();
 
         //figure out which products we are trading
-        for (Product product : tmp) {
+        for (int i = 0; i < tmp.size(); i++) {
 
             //make sure we only add products we want to trade
-            for (String productId : TRADING_CURRENCIES) {
+            for (int x = 0; x < TRADING_CURRENCIES.length; x++) {
 
                 //does this product match, if yes we will add it
-                if (product.getId().trim().equalsIgnoreCase(productId.trim())) {
+                if (tmp.get(i).getId().trim().equalsIgnoreCase(TRADING_CURRENCIES[x].trim())) {
 
                     //add to list
-                    this.products.add(product);
+                    getProducts().add(tmp.get(i));
 
                     //exit loop
                     break;
@@ -183,20 +175,21 @@ public class Main implements Runnable {
         }
 
         //make sure we are trading at least 1 product
-        if (this.products.isEmpty())
+        if (getProducts().isEmpty())
             throw new RuntimeException("No products were found");
     }
 
     @Override
     public void run() {
 
+        //initialize
+        init();
+
+        //only need to create subscription once
+        Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
+
         try {
 
-            //initialize
-            init();
-
-            //only need to create subscription once
-            Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
 
             //send notification our bot is starting
             sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On" : "Off"));
@@ -237,10 +230,12 @@ public class Main implements Runnable {
 
                     } else {
 
-                        //we aren't using web socket since it is null
-                        for (AgentManager agentManager : agentManagers.values()) {
+                        //if we aren't using the web socket we need to check each manager one by one
+                        for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
 
                             try {
+
+                                AgentManager agentManager = getAgentManagers().get(TRADING_CURRENCIES[i]);
 
                                 //get json response from ticker
                                 final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agentManager.getProductId()));
@@ -285,7 +280,7 @@ public class Main implements Runnable {
     private void init() {
 
         //we will invest in each product equally
-        final double funds = FUNDS / (double)products.size();
+        final double funds = FUNDS / (double)getProducts().size();
 
         //create new hash map of agents
         this.agentManagers = new HashMap<>();
@@ -293,12 +288,15 @@ public class Main implements Runnable {
         //identify our duration
         Calculator.Duration duration = null;
 
-        //search for the desired duration
-        for (Calculator.Duration tmpDuration : Calculator.Duration.values()) {
+        //get the list of durations
+        Duration[] durations = Calculator.Duration.values();
+
+        //check if the duration matches our selection
+        for (int i = 0; i < durations.length; i++) {
 
             //if the numbers match we found it
-            if (tmpDuration.duration == PERIOD_DURATION) {
-                duration = tmpDuration;
+            if (durations[i].duration == PERIOD_DURATION) {
+                duration = durations[i];
                 break;
             }
         }
@@ -308,18 +306,18 @@ public class Main implements Runnable {
             throw new RuntimeException("Desired duration doesn't match: " + PERIOD_DURATION);
 
         //add an agent for each product we are trading
-        for (Product product : products) {
+        for (int i = 0; i < getProducts().size(); i++) {
+
+            //create new manager agent
+            AgentManager agentManager = new AgentManager(getProducts().get(i), funds, duration);
+
+            //add manager to list
+            getAgentManagers().put(getProducts().get(i).getId(), agentManager);
+
+            //display agent is created
+            displayMessage("Agent created - " + getProducts().get(i).getId(), getWriter());
 
             try {
-
-                //create new manager agent
-                AgentManager agentManager = new AgentManager(product, funds, duration);
-
-                //add manager to list
-                this.agentManagers.put(product.getId(), agentManager);
-
-                //display agent is created
-                displayMessage("Agent created - " + product.getId(), getWriter());
 
                 //sleep for a few seconds
                 Thread.sleep(THREAD_DELAY * 3);
@@ -334,12 +332,12 @@ public class Main implements Runnable {
 
             displayMessage("Connected via websocket...", getWriter());
 
-            websocketFeed = new MyWebsocketFeed(
+            this.websocketFeed = new MyWebsocketFeed(
                 PropertyUtil.getProperties().getProperty("websocket.baseUrl"),
                 PropertyUtil.getProperties().getProperty("gdax.key"),
                 PropertyUtil.getProperties().getProperty("gdax.passphrase"),
                 new Signature(PropertyUtil.getProperties().getProperty("gdax.secret")),
-                this.agentManagers
+                getAgentManagers()
             );
 
         } else {
@@ -348,11 +346,19 @@ public class Main implements Runnable {
         }
     }
 
+    private List<Product> getProducts() {
+        return this.products;
+    }
+
     protected PrintWriter getWriter() {
         return this.writer;
     }
 
     protected HashMap<String, AgentManager> getAgentManagers() {
         return this.agentManagers;
+    }
+
+    public static OrderService getOrderService() {
+        return ORDER_SERVICE;
     }
 }
