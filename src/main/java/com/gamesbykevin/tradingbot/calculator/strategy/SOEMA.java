@@ -32,6 +32,22 @@ public class SOEMA extends Strategy {
      */
     private static final int SO_INDICATOR = 50;
 
+    /**
+     * Number of periods for stochastic oscillator
+     */
+    private static final int PERIODS_SO = 5;
+
+    /**
+     * Number of periods we calculate sma so to get our indicator
+     */
+    private static final int PERIODS_SMA_SO = 3;
+
+    /**
+     * Number of long periods
+     */
+    private static final int PERIODS_LONG = 100;
+
+
     public SOEMA() {
 
         //use default value
@@ -39,15 +55,25 @@ public class SOEMA extends Strategy {
 
         //create new object
         this.emaObj = new EMA(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
-        this.soObj = new SO();
+        this.soObj = new SO(PERIODS_SMA_SO, PERIODS_SO, PERIODS_LONG, PERIODS_LONG);
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bullish crossover and the so indicator is below 50, let's buy
-        if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(soObj.getStochasticOscillator()) < SO_INDICATOR)
+        double previousSO = getRecent(soObj.getStochasticOscillator(), 2);
+        double currentSO = getRecent(soObj.getStochasticOscillator());
+
+        if (currentSO < SO_INDICATOR && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())) {
+
+            //make sure we are below the indicator and we have a bullish crossover
             agent.setBuy(true);
+
+        } else if (previousSO > SO_INDICATOR && currentSO < SO_INDICATOR && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
+
+            //confirm we just crossed below the indicator and the ema short is > ema long
+            agent.setBuy(true);
+        }
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -56,9 +82,19 @@ public class SOEMA extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bearish crossover and the so indicator is above 50, let's sell
-        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()) && getRecent(soObj.getStochasticOscillator()) > SO_INDICATOR)
+        double previousSO = getRecent(soObj.getStochasticOscillator(), 2);
+        double currentSO = getRecent(soObj.getStochasticOscillator());
+
+        if (currentSO > SO_INDICATOR && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())) {
+
+            //make sure we are above the indicator and we have a bearish crossover
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        } else if (previousSO < SO_INDICATOR && currentSO > SO_INDICATOR && getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong())) {
+
+            //confirm we just crossed above the indicator and the ema short is < ema long
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        }
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

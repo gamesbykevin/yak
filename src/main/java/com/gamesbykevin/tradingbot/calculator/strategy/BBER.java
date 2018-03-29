@@ -14,22 +14,22 @@ public class BBER extends Strategy {
     /**
      * How many periods to calculate long ema
      */
-    private static final int PERIODS_EMA_LONG = 75;
+    private static final int PERIODS_EMA_LONG = 60;
 
     /**
      * How many periods to calculate short ema
      */
-    private static final int PERIODS_EMA_SHORT = 5;
+    private static final int PERIODS_EMA_SHORT = 10;
 
     /**
      * What is our rsi line to detect bullish / bearish trends
      */
-    private static final double RSI_LINE = 50.0d;
+    private static final float RSI_LINE = 50.0f;
 
     /**
      * How many RSI periods we are calculating
      */
-    private static final int PERIODS_RSI = 12;
+    private static final int PERIODS_RSI = 14;
 
     /**
      * How many BB periods we are calculating
@@ -46,16 +46,16 @@ public class BBER extends Strategy {
     private RSI rsiObj;
 
     //what is our rsi line
-    private final double rsiLine;
+    private final float rsiLine;
 
-    public BBER(int periodsRSI, int periodsBB, int periodsEmaShort, int periodsEmaLong, double rsiLine) {
+    public BBER(int periodsRSI, int periodsBB, int periodsEmaShort, int periodsEmaLong, float rsiLine) {
 
         //call parent with default volume
         super(0);
 
         this.emaObj = new EMA(periodsEmaLong, periodsEmaShort);
         this.bbObj = new BB(periodsBB);
-        this.rsiObj = new RSI(periodsRSI);
+        this.rsiObj = new RSI(periodsRSI, 1, rsiLine, rsiLine);
         this.rsiLine = rsiLine;
     }
 

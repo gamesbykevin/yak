@@ -42,20 +42,30 @@ public class RSIM extends Strategy {
     /**
      * How many periods do we calculate the sma trend line
      */
-    private static final int PERIODS_SMA_TREND = 200;
+    private static final int PERIODS_SMA_TREND = 50;
+
+    /**
+     * How many periods to calculate long ema
+     */
+    private static final int PERIODS_EMA_LONG = 26;
+
+    /**
+     * How many periods to calculate short ema
+     */
+    private static final int PERIODS_EMA_SHORT = 12;
 
     public RSIM() {
-        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_RSI);
+        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_RSI, PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
     }
 
-    public RSIM(int periodsMacd, int periodsSmaTrend, int periodsRsi) {
+    public RSIM(int periodsMacd, int periodsSmaTrend, int periodsRsi, int periodsEmaLong, int periodsEmaShort) {
 
         //call parent
-        super(PERIODS_RSI);
+        super(periodsRsi);
 
         //create objects
-        this.macdObj = new MACD(periodsMacd, periodsSmaTrend);
-        this.rsiObj = new RSI(periodsRsi);
+        this.macdObj = new MACD(periodsMacd, periodsSmaTrend, periodsEmaLong, periodsEmaShort);
+        this.rsiObj = new RSI(periodsRsi, 1, RESISTANCE_LINE, SUPPORT_LINE);
     }
 
     @Override

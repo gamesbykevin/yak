@@ -30,7 +30,7 @@ public final class SO extends Strategy {
     /**
      * Number of periods for stochastic oscillator
      */
-    private static final int PERIODS_SO = 14;
+    private static final int PERIODS_SO = 12;
 
     /**
      * Number of periods we calculate sma so to get our indicator
@@ -40,12 +40,12 @@ public final class SO extends Strategy {
     /**
      * Number of periods we calculate sma price
      */
-    private static final int PERIODS_SMA_PRICE_LONG = 200;
+    private static final int PERIODS_SMA_PRICE_LONG = 50;
 
     /**
      * Number of periods we calculate sma price
      */
-    private static final int PERIODS_SMA_PRICE_SHORT = 50;
+    private static final int PERIODS_SMA_PRICE_SHORT = 10;
 
     /**
      * Security is considered over sold

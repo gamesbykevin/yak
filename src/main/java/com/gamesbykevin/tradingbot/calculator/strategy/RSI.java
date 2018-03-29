@@ -21,7 +21,7 @@ public class RSI extends Strategy {
     /**
      * How many periods do we calculate sma price
      */
-    private static final int PERIODS_PRICE = 200;
+    private static final int PERIODS_SMA_PRICE = 50;
 
     /**
      * How many periods to calculate rsi
@@ -38,14 +38,25 @@ public class RSI extends Strategy {
      */
     private static final float RESISTANCE_LINE = 70.0f;
 
+    //our resistance and support lines
+    private final float resistanceLine, supportLine;
+
+    //the number of periods to calculate sma
+    private final int periodsSma;
+
     public RSI() {
-        this(PERIODS_RSI);
+        this(PERIODS_RSI, PERIODS_SMA_PRICE, RESISTANCE_LINE, SUPPORT_LINE);
     }
 
-    public RSI(int periods) {
+    public RSI(int periods, int periodsSma, float resistanceLine, float supportLine) {
 
         //call parent
         super(periods);
+
+        //store our desired values
+        this.periodsSma = periodsSma;
+        this.resistanceLine = resistanceLine;
+        this.supportLine = supportLine;
 
         //create new list(s)
         this.rsiVal = new ArrayList<>();
@@ -64,7 +75,7 @@ public class RSI extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we need to make sure we are below the support line
-        if (getRecent(getRsiVal()) < SUPPORT_LINE) {
+        if (getRecent(getRsiVal()) < supportLine) {
 
             //now we need to check that price is in an overall uptrend
             if (getRecent(history, Fields.Close) > getRecent(getSmaPrice()))
@@ -79,7 +90,7 @@ public class RSI extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we need to make sure we are above the resistance line
-        if (getRecent(getRsiVal()) > RESISTANCE_LINE) {
+        if (getRecent(getRsiVal()) > resistanceLine) {
 
             //now we need to check that price is in an overall downtrend
             if (getRecent(history, Fields.Close) < getRecent(getSmaPrice()))
@@ -94,8 +105,8 @@ public class RSI extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "RSI: ", getRsiVal(), getPeriods() / 2, write);
-        display(agent, "SMA: ", getSmaPrice(), getPeriods() / 2, write);
+        display(agent, "RSI: ", getRsiVal(), 5, write);
+        display(agent, "SMA: ", getSmaPrice(), 5, write);
     }
 
     @Override
@@ -105,7 +116,7 @@ public class RSI extends Strategy {
         calculateRsi(history, getRsiVal(), getPeriods());
 
         //calculate sma of price
-        calculateSMA(history, getSmaPrice(), PERIODS_PRICE, Fields.Close);
+        calculateSMA(history, getSmaPrice(), periodsSma, Fields.Close);
     }
 
     protected static void calculateRsi(List<Period> history, List<Double> rsi, int periods) {
@@ -168,8 +179,8 @@ public class RSI extends Strategy {
         }
 
         //calculate the average gain and loss
-        float avgGain = (gain / size);
-        float avgLoss = (loss / size);
+        float avgGain = (gain / (float)size);
+        float avgLoss = (loss / (float)size);
 
         //get the latest price in our list so we can compare to the current price
         final double recentPrice = history.get(endIndex - 1).close;
@@ -186,13 +197,13 @@ public class RSI extends Strategy {
 
         //smothered rsi including current gain loss
         float smotheredRS = (
-            ((avgGain * size) + gainCurrent) / (size + 1)
+            ((avgGain * size) + gainCurrent) / (float)(size + 1)
         ) / (
-            ((avgLoss * size) + lossCurrent) / (size + 1)
+            ((avgLoss * size) + lossCurrent) / (float)(size + 1)
         );
 
         //calculate our rsi value
-        final float rsi = 100 - (100 / (1 + smotheredRS));
+        final float rsi = 100f - (100f / (1f + smotheredRS));
 
         //return our rsi value
         return rsi;

@@ -37,15 +37,26 @@ public class MACD extends Strategy {
     /**
      * How many periods do we calculate the sma trend line
      */
-    private static final int PERIODS_SMA_TREND = 200;
+    private static final int PERIODS_SMA_TREND = 50;
 
+    /**
+     * How many periods to calculate long ema
+     */
+    private static final int PERIODS_EMA_LONG = 26;
+
+    /**
+     * How many periods to calculate short ema
+     */
+    private static final int PERIODS_EMA_SHORT = 12;
+
+    //store the number of periods
     private final int periodsSmaTrend;
 
     public MACD() {
-        this(PERIODS_MACD, PERIODS_SMA_TREND);
+        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
     }
 
-    public MACD(int periods, int periodsSmaTrend) {
+    public MACD(int periods, int periodsSmaTrend, int periodsEmaLong, int periodsEmaShort) {
 
         //call parent
         super(periods);
@@ -56,7 +67,7 @@ public class MACD extends Strategy {
         //create lists and objects
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
-        this.emaObj = new EMA();
+        this.emaObj = new EMA(periodsEmaLong, periodsEmaShort);
         this.histogram = new ArrayList<>();
         this.smaPrice = new ArrayList<>();
     }

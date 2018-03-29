@@ -11,7 +11,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 /**
- * StochRSI
+ * Stoch RSI
  */
 public class SR extends Strategy {
 
@@ -59,7 +59,7 @@ public class SR extends Strategy {
         super(periods);
 
         //create our rsi object
-        this.rsiObj = new RSI(PERIODS_STOCH_RSI);
+        this.rsiObj = new RSI(PERIODS_STOCH_RSI, 1, 0, 0);
 
         //create new lists
         this.stochRsi = new ArrayList<>();
@@ -82,8 +82,8 @@ public class SR extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double dailyShort = getRecent(smaPriceShort);
-        double dailyLong = getRecent(smaPriceLong);
+        double dailyShort = getRecent(getSmaPriceShort());
+        double dailyLong = getRecent(getSmaPriceLong());
 
         //if our short sma is greater than our long sma and our current close is less than the short sma
         if (dailyShort > dailyLong && getRecent(history, Fields.Close) < dailyShort) {
@@ -100,8 +100,8 @@ public class SR extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double dailyShort = getRecent(smaPriceShort);
-        double dailyLong = getRecent(smaPriceLong);
+        double dailyShort = getRecent(getSmaPriceShort());
+        double dailyLong = getRecent(getSmaPriceLong());
 
         //if our short sma is less than our long sma and our current close is greater than the short sma
         if (dailyShort < dailyLong && getRecent(history, Fields.Close) > dailyShort) {
@@ -110,9 +110,6 @@ public class SR extends Strategy {
             if (getRecent(getStochRsi()) > OVER_BOUGHT)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
-        //if all are true, let's sell
-        //if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport)
-        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

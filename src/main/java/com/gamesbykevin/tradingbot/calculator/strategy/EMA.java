@@ -65,8 +65,8 @@ public class EMA extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bullish crossover, we expect price to go up
-        if (hasCrossover(true, getEmaShort(), getEmaLong()))
+        //if we have a bullish crossover and stock price is above short ema, we expect price to go up
+        if (hasCrossover(true, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) > getRecent(getEmaShort()))
             agent.setBuy(true);
 
         //display data
@@ -76,8 +76,8 @@ public class EMA extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bearish crossover, we expect price to go down
-        if (hasCrossover(false, getEmaShort(), getEmaLong()))
+        //if we have a bearish crossover and stock price is below ema, we expect price to go down
+        if (hasCrossover(false, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) < getRecent(getEmaShort()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display data

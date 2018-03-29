@@ -47,10 +47,10 @@ public class AgentManager {
      */
     public enum TradingStrategy {
 
-        ADL, ADX, BB, BBER, BBER2, BBR, BBR2, EMA, EMA2, EMAR,
-        EMASV, EMV, EMVS, HA, MACD, MACD2, MACDD, MACDD2, MACS, MACS2,
-        NP, NR4, NR7, NVI, OA, OBV, PVI, RSI, RSIA, RSIM,
-        RSIM2, SO, SOC, SOC2, SOD, SOD2, SOEMA, SR, TWO_RSI,
+        ADL, ADX, BB, BBER, BBR, EMA, EMA2, EMAR, EMAS, EMASV,
+        EMV, EMVS, HA, MACD, MACDD, MACS, NP, NR4, NR7, NVI,
+        OA, OBV, PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA,
+        SR, TWO_RSI,
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {

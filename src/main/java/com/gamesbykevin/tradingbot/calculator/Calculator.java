@@ -73,20 +73,24 @@ public class Calculator {
 
             switch (MY_TRADING_STRATEGIES[i]) {
 
+                case ADL:
+                    strategy = new ADL();
+                    break;
+
                 case ADX:
                     strategy = new ADX();
                     break;
 
-                case MACD:
-                    strategy = new MACD();
+                case BB:
+                    strategy = new BB();
                     break;
 
-                case RSI:
-                    strategy = new RSI();
+                case BBER:
+                    strategy = new BBER();
                     break;
 
-                case OBV:
-                    strategy = new OBV();
+                case BBR:
+                    strategy = new BBR();
                     break;
 
                 case EMA:
@@ -101,112 +105,12 @@ public class Calculator {
                     strategy = new EMAR();
                     break;
 
-                case MACS:
-                    strategy = new MACS();
-                    break;
-
-                case MACS2:
-                    strategy = new MACS(10, 20, 50);
-                    break;
-
-                case TWO_RSI:
-                    strategy = new TWO_RSI();
-                    break;
-
-                case MACDD:
-                    strategy = new MACDD();
-                    break;
-
-                case HA:
-                    strategy = new HA();
-                    break;
-
-                case NR4:
-                    strategy = new NR(PERIODS_NR4);
-                    break;
-
-                case NR7:
-                    strategy = new NR(PERIODS_NR7);
-                    break;
-
-                case RSIA:
-                    strategy = new RSIA();
-                    break;
-
-                case RSIM:
-                    strategy = new RSIM();
-                    break;
-
-                case BB:
-                    strategy = new BB();
-                    break;
-
-                case SOD:
-                    strategy = new SOD();
-                    break;
-
-                case SOD2:
-                    strategy = new SOD(3,14,50,20);
-                    break;
-
-                case SOC:
-                    strategy = new SOC();
-                    break;
-
-                case SOC2:
-                    strategy = new SOC(3,14,50,20);
-                    break;
-
-                case SO:
-                    strategy = new SO();
-                    break;
-
-                case SOEMA:
-                    strategy = new SOEMA();
-                    break;
-
-                case ADL:
-                    strategy = new ADL();
+                case EMAS:
+                    strategy = new EMAS();
                     break;
 
                 case EMASV:
                     strategy = new EMASV();
-                    break;
-
-                case OA:
-                    strategy = new OA();
-                    break;
-
-                case NVI:
-                    strategy = new NVI();
-                    break;
-
-                case PVI:
-                    strategy = new PVI();
-                    break;
-
-                case NP:
-                    strategy = new NP();
-                    break;
-
-                case SR:
-                    strategy = new SR();
-                    break;
-
-                case BBER:
-                    strategy = new BBER();
-                    break;
-
-                case BBER2:
-                    strategy = new BBER(21, 20, 10, 100, 50);
-                    break;
-
-                case BBR:
-                    strategy = new BBR();
-                    break;
-
-                case BBR2:
-                    strategy = new BBR(200, 6, 50, 50);
                     break;
 
                 case EMV:
@@ -217,16 +121,84 @@ public class Calculator {
                     strategy = new EMVS();
                     break;
 
-                case MACD2:
-                    strategy = new MACD(9,50);
+                case HA:
+                    strategy = new HA();
                     break;
 
-                case RSIM2:
-                    strategy = new RSIM(9,50,14);
+                case MACD:
+                    strategy = new MACD();
                     break;
 
-                case MACDD2:
-                    strategy = new MACDD(9,50);
+                case MACDD:
+                    strategy = new MACDD();
+                    break;
+
+                case MACS:
+                    strategy = new MACS();
+                    break;
+
+                case NP:
+                    strategy = new NP();
+                    break;
+
+                case NR4:
+                    strategy = new NR(PERIODS_NR4);
+                    break;
+
+                case NR7:
+                    strategy = new NR(PERIODS_NR7);
+                    break;
+
+                case NVI:
+                    strategy = new NVI();
+                    break;
+
+                case OA:
+                    strategy = new OA();
+                    break;
+
+                case OBV:
+                    strategy = new OBV();
+                    break;
+
+                case PVI:
+                    strategy = new PVI();
+                    break;
+
+                case RSI:
+                    strategy = new RSI();
+                    break;
+
+                case RSIA:
+                    strategy = new RSIA();
+                    break;
+
+                case RSIM:
+                    strategy = new RSIM();
+                    break;
+
+                case SO:
+                    strategy = new SO();
+                    break;
+
+                case SOC:
+                    strategy = new SOC();
+                    break;
+
+                case SOD:
+                    strategy = new SOD();
+                    break;
+
+                case SOEMA:
+                    strategy = new SOEMA();
+                    break;
+
+                case SR:
+                    strategy = new SR();
+                    break;
+
+                case TWO_RSI:
+                    strategy = new TWO_RSI();
                     break;
 
                 default:

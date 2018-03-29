@@ -20,27 +20,22 @@ public class EMAR extends Strategy {
     /**
      * How many periods to calculate long ema
      */
-    private static final int PERIODS_EMA_LONG = 26;
+    private static final int PERIODS_EMA_LONG = 12;
 
     /**
      * How many periods to calculate short ema
      */
-    private static final int PERIODS_EMA_SHORT = 12;
+    private static final int PERIODS_EMA_SHORT = 5;
 
     /**
      * How many periods to calculate rsi
      */
-    private static final int PERIODS_RSI = 14;
+    private static final int PERIODS_RSI = 21;
 
     /**
-     * The support line meaning the stock is oversold
+     * What is our rsi line to detect bullish / bearish trends
      */
-    private static final float SUPPORT_LINE = 30.0f;
-
-    /**
-     * The resistance line meaning the stock is overbought
-     */
-    private static final float RESISTANCE_LINE = 70.0f;
+    private static final float RSI_LINE = 50.0f;
 
 
     public EMAR(int periodsLong, int periodsShort, int periodsRSI) {
@@ -50,7 +45,7 @@ public class EMAR extends Strategy {
 
         //create our objects
         this.emaObj = new EMA(periodsLong, periodsShort);
-        this.rsiObj = new RSI(periodsRSI);
+        this.rsiObj = new RSI(periodsRSI, 1, RSI_LINE, RSI_LINE);
     }
 
     public EMAR() {
@@ -60,16 +55,19 @@ public class EMAR extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //we want the rsi to be below the support line
-        if (getRecent(rsiObj.getRsiVal()) < SUPPORT_LINE) {
+        //RSI values
+        double current = getRecent(rsiObj.getRsiVal());
+        double previous = getRecent(rsiObj.getRsiVal(), 2);
 
-            //the current price needs to be above the short ema to show uptrend
-            if (getRecent(emaObj.getEmaShort()) < getRecent(history, Fields.Close)) {
+        if (current > RSI_LINE && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())) {
 
-                //last we also want a crossover, then we are in a good position to buy
-                if (hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()))
-                    agent.setBuy(true);
-            }
+            //if rsi is over the line and we have a bullish crossover
+            agent.setBuy(true);
+
+        } else if (previous < RSI_LINE && current > RSI_LINE && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
+
+            //if rsi JUST went over and ema short > ema long without checking for a crossover
+            agent.setBuy(true);
         }
 
         //display our data
@@ -79,17 +77,27 @@ public class EMAR extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //we want the rsi to be above the resistance line
-        if (getRecent(rsiObj.getRsiVal()) > RESISTANCE_LINE) {
+        /*
+        //RSI values
+        double current = getRecent(rsiObj.getRsiVal());
+        double previous = getRecent(rsiObj.getRsiVal(), 2);
 
-            //the current price needs to be below the short ema to show downtrend
-            if (getRecent(emaObj.getEmaShort()) > getRecent(history, Fields.Close)) {
+        if (current < RSI_LINE && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())) {
 
-                //last we also want a crossover, then we are in a good position to sell
-                if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
-                    agent.setReasonSell(ReasonSell.Reason_Strategy);
-            }
+            //if rsi is under the line and we have a bearish crossover
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        } else if (previous > RSI_LINE && current < RSI_LINE && getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong())) {
+
+            //if rsi JUST went under and ema short < ema long without checking for a crossover
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
+        */
+
+        //if we have bearish crossover
+        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

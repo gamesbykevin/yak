@@ -20,17 +20,17 @@ public class BBR extends Strategy {
     /**
      * RSI Resistance line indicating our stock is overbought
      */
-    private static final double RESISTANCE_LINE = 55.0d;
+    private static final float RESISTANCE_LINE = 55.0f;
 
     /**
      * RSI Support line indicating our stock is oversold
      */
-    private static final double SUPPORT_LINE = 45.0d;
+    private static final float SUPPORT_LINE = 45.0f;
 
     /**
      * How many RSI periods we are calculating
      */
-    private static final int PERIODS_RSI = 16;
+    private static final int PERIODS_RSI = 12;
 
     /**
      * How many BB periods we are calculating
@@ -55,7 +55,7 @@ public class BBR extends Strategy {
 
         //create new objects
         this.bbObj = new BB(periodsBB);
-        this.rsiObj = new RSI(periodsRSI);
+        this.rsiObj = new RSI(periodsRSI, 1, RESISTANCE_LINE, SUPPORT_LINE);
     }
 
     @Override

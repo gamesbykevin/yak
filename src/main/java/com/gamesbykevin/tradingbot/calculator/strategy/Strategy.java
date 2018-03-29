@@ -50,8 +50,12 @@ public abstract class Strategy {
     }
 
     protected double getRecent(List<Period> periods, Fields field) {
+        return getRecent(periods, field, 1);
+    }
 
-        Period period = periods.get(periods.size() - 1);
+    protected double getRecent(List<Period> periods, Fields field, int index) {
+
+        Period period = periods.get(periods.size() - index);
 
         switch (field) {
 

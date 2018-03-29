@@ -19,7 +19,7 @@ public class SOC extends Strategy {
     /**
      * Number of periods for stochastic oscillator
      */
-    private static final int PERIODS_SO = 14;
+    private static final int PERIODS_SO = 12;
 
     /**
      * Number of periods we calculate sma to get our indicator
@@ -29,12 +29,12 @@ public class SOC extends Strategy {
     /**
      * Number of periods we calculate sma to get our indicator
      */
-    private static final int PERIODS_SMA_PRICE_LONG = 200;
+    private static final int PERIODS_SMA_PRICE_LONG = 50;
 
     /**
      * Number of periods we calculate sma to get our indicator
      */
-    private static final int PERIODS_SMA_PRICE_SHORT = 50;
+    private static final int PERIODS_SMA_PRICE_SHORT = 10;
 
     public SOC(int periodsSMA, int periodsSO, int periodsSmaPriceLong, int periodsSmaPriceShort) {
 

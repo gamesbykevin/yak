@@ -24,19 +24,29 @@ public class MACDD extends Strategy {
     /**
      * How many periods do we calculate the sma trend line
      */
-    private static final int PERIODS_SMA_TREND = 200;
+    private static final int PERIODS_SMA_TREND = 50;
+
+    /**
+     * How many periods to calculate long ema
+     */
+    private static final int PERIODS_EMA_LONG = 26;
+
+    /**
+     * How many periods to calculate short ema
+     */
+    private static final int PERIODS_EMA_SHORT = 12;
 
     public MACDD() {
-        this(PERIODS_MACD, PERIODS_SMA_TREND);
+        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
     }
 
-    public MACDD(int periodsMacd, int periodsSmaTrend) {
+    public MACDD(int periodsMacd, int periodsSmaTrend, int periodsEmaLong, int periodsEmaShort) {
 
         //call parent
         super(periodsMacd);
 
         //create obj
-        this.macdObj = new MACD(periodsMacd, periodsSmaTrend);
+        this.macdObj = new MACD(periodsMacd, periodsSmaTrend, periodsEmaLong, periodsEmaShort);
     }
 
     @Override

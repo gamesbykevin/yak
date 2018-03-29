@@ -198,13 +198,19 @@ public class Agent {
                 String subject = "We stopped trading";
                 String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
                 String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
+                String text3 = "Min $" + AgentHelper.formatValue(getFundsMin());
+                String text4 = "Max $" + AgentHelper.formatValue(getFundsMax());
                 displayMessage(this, subject, true);
                 displayMessage(this, text1, true);
                 displayMessage(this, text2, true);
+                displayMessage(this, text3, true);
+                displayMessage(this, text4, true);
 
                 //include the funds in our message
                 String message = text1 + "\n";
-                message = message + text2 + "\n";
+                message += text2 + "\n";
+                message += text3 + "\n";
+                message += text4 + "\n";
 
                 //also include the summary of wins/losses
                 message = message + TransactionHelper.getDescWins(this) + "\n";

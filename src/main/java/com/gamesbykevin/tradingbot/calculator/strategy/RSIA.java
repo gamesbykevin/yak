@@ -51,7 +51,7 @@ public class RSIA extends Strategy {
 
         //create objects
         this.adxObj = new ADX(PERIODS_ADX, TREND_ADX);
-        this.rsiObj = new RSI(PERIODS_RSI);
+        this.rsiObj = new RSI(PERIODS_RSI, 1, RESISTANCE_LINE, SUPPORT_LINE);
     }
 
     @Override
