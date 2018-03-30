@@ -117,8 +117,8 @@ public class Main implements Runnable {
         ORDER_SERVICE = factory.getBean(OrderService.class);
         this.productService = factory.getBean(ProductService.class);
 
-        //create the main log file
-        this.writer = LogFile.getPrintWriter("main-" + getFileDateDesc() + ".log");
+        //create the main log file and place in our root logs directory
+        this.writer = LogFile.getPrintWriter("main-" + getFileDateDesc() + ".log", LogFile.LOG_DIRECTORY);
 
         //display message of bot starting
         if (PAPER_TRADING) {

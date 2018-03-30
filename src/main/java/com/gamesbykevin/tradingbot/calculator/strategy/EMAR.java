@@ -9,6 +9,9 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 
+/**
+ * EMA / RSI
+ */
 public class EMAR extends Strategy {
 
     //our ema object reference

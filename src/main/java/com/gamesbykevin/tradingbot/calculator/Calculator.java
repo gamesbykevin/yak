@@ -1,5 +1,6 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
@@ -281,7 +282,11 @@ public class Calculator {
         return this.strategies;
     }
 
-    public Strategy getIndicator(TradingStrategy strategy) {
+    public Strategy getStrategy(Agent agent) {
+        return getStrategy(agent.getStrategy());
+    }
+
+    public Strategy getStrategy(TradingStrategy strategy) {
         return getStrategies().get(strategy);
     }
 }

@@ -144,7 +144,8 @@ public class CalculatorHelper {
 
     /**
      * Do we have a crossover?
-     * @param bullish True: Check if value1 > value2 then value1 < value2, False value1 < value2 then value1 > value2
+     * @param bullish True: Check if previousValue1 > previousValue2 then currentValue1 < currentValue2.
+     *                False: Check if previousValue1 < previousValue2 then currentValue1 > currentValue2
      * @param previousValue1
      * @param previousValue2
      * @param currentValue1

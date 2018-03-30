@@ -47,9 +47,18 @@ public class ADL extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bullish divergence, let's buy
-        if (hasDivergence(history, getPeriods(), true, getAccumulationDistributionLine()))
+        double previous = getRecent(history, Period.Fields.Close, 2);
+        double current = getRecent(history, Period.Fields.Close);
+
+        double previousVal = getRecent(getAccumulationDistributionLine(), 2);
+        double currentVal = getRecent(getAccumulationDistributionLine());
+
+        if (previous > current && previousVal < currentVal)
             agent.setBuy(true);
+
+        //if we have a bullish divergence, let's buy
+        //if (hasDivergence(history, getPeriods(), true, getAccumulationDistributionLine()))
+        //    agent.setBuy(true);
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -58,9 +67,18 @@ public class ADL extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bearish divergence, let's sell
-        if (hasDivergence(history, getPeriods(), false, getAccumulationDistributionLine()))
+        double previous = getRecent(history, Period.Fields.Close, 2);
+        double current = getRecent(history, Period.Fields.Close);
+
+        double previousVal = getRecent(getAccumulationDistributionLine(), 2);
+        double currentVal = getRecent(getAccumulationDistributionLine());
+
+        if (previous < current && previousVal > currentVal)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //if we have a bearish divergence, let's sell
+        //if (hasDivergence(history, getPeriods(), false, getAccumulationDistributionLine()))
+        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

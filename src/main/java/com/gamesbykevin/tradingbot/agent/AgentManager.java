@@ -1,25 +1,31 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.Product;
+import com.gamesbykevin.tradingbot.MainHelper;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.util.LogFile;
-import com.gamesbykevin.tradingbot.util.PropertyUtil;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING;
 import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.MainHelper.getStrategyProgress;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.getFileName;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.SIMULATE_STRATEGIES;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.runSimulation;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
-import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
 public class AgentManager {
 
     //list of agents we are trading with different strategies
     private final List<Agent> agents;
+
+    //list of agents that we will run our simulations
+    private final List<Agent> tmpAgents;
 
     //our reference to calculate calculator
     private Calculator calculator;
@@ -42,6 +48,9 @@ public class AgentManager {
     //object used to write to a text file
     private final PrintWriter writer;
 
+    //how many funds did we start with
+    private final double funds;
+
     /**
      * Different trading strategies we can use
      */
@@ -58,8 +67,11 @@ public class AgentManager {
         //store the product this agent is trading
         this.product = product;
 
+        //how many funds do we start with?
+        this.funds = funds;
+
         //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter(getFileName(null));
+        this.writer = LogFile.getPrintWriter("manager-" + getFileName(), LogFile.LOG_DIRECTORY + "\\" + getProductId());
 
         //store our period duration
         this.myDuration = myDuration;
@@ -70,22 +82,32 @@ public class AgentManager {
         //create new list of agents
         this.agents = new ArrayList<>();
 
+        //create our list of agents that will run our simulations
+        this.tmpAgents = new ArrayList<>();
+
         //populate our strategies
         loadStrategies();
 
         //create our agents
-        createAgents(funds);
+        createAgents();
     }
 
-    private void createAgents(double funds) {
-
-        //how many funds does each agent get?
-        double fundsPerAgent = funds / (double)MY_TRADING_STRATEGIES.length;
+    private void createAgents() {
 
         //create an agent for every trading strategy that we have specified
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
-            this.agents.add(new Agent(MY_TRADING_STRATEGIES[i], fundsPerAgent, product.getId(), getFileName(MY_TRADING_STRATEGIES[i])));
+
+            //add our live agents
+            getAgents().add(new Agent(MY_TRADING_STRATEGIES[i], getFundsPerAgent(), getProductId(), false));
+
+            //add our tmp agents so we can run simulations
+            if (SIMULATE_STRATEGIES)
+                getTmpAgents().add(new Agent(MY_TRADING_STRATEGIES[i], getFundsPerAgent(), getProductId(), true));
         }
+    }
+
+    protected double getFundsPerAgent() {
+        return (this.funds / (double)MY_TRADING_STRATEGIES.length);
     }
 
     private void loadStrategies() {
@@ -170,6 +192,10 @@ public class AgentManager {
                     //rest call is successful
                     displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew) ? getWriter() : null);
 
+                    //if the size of history changed and we want to simulate and we meet the minimum requirement, run a simulation
+                    if (SIMULATE_STRATEGIES && size != sizeNew && sizeNew >= HISTORICAL_PERIODS_MINIMUM)
+                        runSimulation(this);
+
                 } else {
 
                     //rest call isn't successful
@@ -189,7 +215,12 @@ public class AgentManager {
 
                 //update each agent trading this specific product with their own trading strategy
                 for (int i = 0; i < getAgents().size(); i++) {
-                    getAgents().get(i).update(getCalculator(), getProduct(), getCurrentPrice());
+
+                    //get our agent
+                    Agent agent = getAgents().get(i);
+
+                    //update the agent
+                    agent.update(getCalculator().getStrategy(agent), getCalculator().getHistory(), getProduct(), getCurrentPrice());
                 }
             }
 
@@ -204,6 +235,10 @@ public class AgentManager {
 
     private List<Agent> getAgents() {
         return this.agents;
+    }
+
+    protected List<Agent> getTmpAgents() {
+        return this.tmpAgents;
     }
 
     public void setCurrentPrice(final double currentPrice) {
@@ -244,6 +279,10 @@ public class AgentManager {
 
             //add our max value
             result += ",  Max $" + AgentHelper.formatValue(getAgents().get(i).getFundsMax());
+
+            //if this agent has stopped trading, include it in the message
+            if (getAgents().get(i).hasStopTrading())
+                result += ", (Stopped)";
 
             //make new line
             result += "\n";
@@ -290,28 +329,7 @@ public class AgentManager {
         return agent.getAssets(getCurrentPrice());
     }
 
-    private static void displayMessage(String message, PrintWriter writer) {
-        PropertyUtil.displayMessage(message, writer);
-    }
-
-    public static void displayMessage(Exception e, PrintWriter writer) {
-        PropertyUtil.displayMessage(e, writer);
-    }
-
-    public static void displayMessage(Agent agent, String message, boolean write) {
-        displayMessage(agent.getProductId() + "-" + agent.getStrategy() + " " + message, write ? agent.getWriter() : null);
-    }
-
-    protected String getFileName(TradingStrategy strategy) {
-
-        if (strategy == null) {
-            return (getProductId() + "-" + getFileDateDesc() + ".log");
-        } else {
-            return (getProductId() + "-" + strategy.toString() + "-" + getFileDateDesc() + ".log");
-        }
-    }
-
-    private PrintWriter getWriter() {
+    protected PrintWriter getWriter() {
         return this.writer;
     }
 }

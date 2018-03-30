@@ -6,7 +6,7 @@ import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 public abstract class Strategy {
 

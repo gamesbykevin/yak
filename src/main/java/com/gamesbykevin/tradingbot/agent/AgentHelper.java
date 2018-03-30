@@ -5,14 +5,16 @@ import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.*;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
 public class AgentHelper {
 
@@ -36,6 +38,17 @@ public class AgentHelper {
      */
     public static float HARD_STOP_RATIO;
 
+    /**
+     * Do we want to send a notification for every transaction?
+     */
+    public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
+
+    //how many times do we check to see if the limit order is successful
+    private static final int FAILURE_LIMIT = 10;
+
+    //how long do we wait until between creating orders
+    private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
+
     public enum Action {
 
         Buy("buy"),
@@ -51,12 +64,6 @@ public class AgentHelper {
             return this.description;
         }
     }
-
-    //how many times do we check to see if the limit order is successful
-    private static final int FAILURE_LIMIT = 10;
-
-    //how long do we wait until between creating orders
-    private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
 
     /**
      * The possible status of our limit order
@@ -81,18 +88,13 @@ public class AgentHelper {
         }
     }
 
-    /**
-     * Do we want to send a notification for every transaction?
-     */
-    public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
-
-    protected static void checkSell(Agent agent, Calculator calculator, Product product, double currentPrice) {
+    protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
         //do we sell the stock
         agent.setReasonSell(null);
 
         //check for a sell signal
-        calculator.getIndicator(agent.getStrategy()).checkSellSignal(agent, calculator.getHistory(), currentPrice);
+        strategy.checkSellSignal(agent, history, currentPrice);
 
         //if the current stock price is less than what we paid, we don't want to sell because we would lose $
         if (currentPrice < agent.getWallet().getPurchasePrice())
@@ -135,7 +137,7 @@ public class AgentHelper {
         }
     }
 
-    protected static void checkBuy(Agent agent, Calculator calculator, Product product, double currentPrice) {
+    protected static void checkBuy(Agent agent, Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
         //flag buy false before we check
         agent.setBuy(false);
@@ -144,7 +146,7 @@ public class AgentHelper {
         agent.setHardStop(0);
 
         //check for a buy signal
-        calculator.getIndicator(agent.getStrategy()).checkBuySignal(agent, calculator.getHistory(), currentPrice);
+        strategy.checkBuySignal(agent, history, currentPrice);
 
         //we will buy if there is a reason
         if (agent.hasBuy()) {
@@ -294,7 +296,7 @@ public class AgentHelper {
         //how many attempts to try
         int attempts = 0;
 
-        if (Main.PAPER_TRADING) {
+        if (Main.PAPER_TRADING || agent.isSimulation()) {
 
             //if we are paper trading populate the order object ourselves
             order = new Order();
@@ -372,5 +374,9 @@ public class AgentHelper {
 
     public static String getStockInvestmentDesc(Agent agent) {
         return "Owned Stock: " + formatValue(agent.getWallet().getQuantity());
+    }
+
+    protected static String getFileName() {
+        return getFileDateDesc() + ".log";
     }
 }

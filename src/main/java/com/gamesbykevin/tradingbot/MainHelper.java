@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
+import com.gamesbykevin.tradingbot.calculator.strategy.StrategyDetails;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class MainHelper {
     protected static final long START = System.currentTimeMillis();
 
     //keep track of our strategy progress between each progress update
-    private static HashMap<TradingStrategy, Double> STRATEGY_PROGRESS;
+    private static HashMap<TradingStrategy, StrategyDetails> STRATEGY_PROGRESS;
 
     protected static String getStrategySummaryDesc(Main main) {
 
@@ -45,33 +46,56 @@ public class MainHelper {
                 amount += main.getAgentManagers().get(TRADING_CURRENCIES[x]).getAssets(strategies[i]);
             }
 
+            //we aren't using this strategy if we don't have any money
+            if (amount <= 0)
+                continue;
+
             //what is the change from the previous update
             String change = "";
 
-            if (getStrategyProgress().get(strategies[i]) != null) {
+            //obtain our strategy details
+            StrategyDetails details = getStrategyProgress().get(strategies[i]);
 
-                //get the previous total
-                double previous = getStrategyProgress().get(strategies[i]);
-
-                //first title
-                change = ",  Diff $";
-
-                //then add the difference to the change
-                change += AgentHelper.formatValue(amount - previous);
+            if (details == null) {
+                details = new StrategyDetails();
+                details.setFunds(amount);
+                getStrategyProgress().put(strategies[i], details);
+                details.setFundsMax(amount);
+                details.setFundsMin(amount);
             }
 
+            //get the previous total
+            double previous = details.getFunds();
+
+            //first title
+            change = ",  Diff $";
+
+            //then add the difference to the change
+            change += AgentHelper.formatValue(amount - previous);
+
             //update value in list
-            getStrategyProgress().put(strategies[i], amount);
+            details.setFunds(amount);
+
+            //if we set a new low save the new record
+            if (amount < details.getFundsMin())
+                details.setFundsMin(amount);
+
+            //if we set a new high save the new record
+            if (amount > details.getFundsMax())
+                details.setFundsMax(amount);
 
             //add strategy, price and price change
-            strategyDesc += strategies[i].toString() + " $" + AgentHelper.formatValue(amount) + change + "\n";
+            strategyDesc += strategies[i].toString() +
+                    " $" + AgentHelper.formatValue(amount) + change +
+                    ",  Min $" + AgentHelper.formatValue(details.getFundsMin()) +
+                    ",  Max $" + AgentHelper.formatValue(details.getFundsMax()) + "\n";
         }
 
         //return our result
         return strategyDesc;
     }
 
-    private static HashMap<TradingStrategy, Double> getStrategyProgress() {
+    public static HashMap<TradingStrategy, StrategyDetails> getStrategyProgress() {
 
         if (STRATEGY_PROGRESS == null)
             STRATEGY_PROGRESS = new HashMap<>();

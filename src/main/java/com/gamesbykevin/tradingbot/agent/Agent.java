@@ -3,7 +3,8 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
@@ -18,16 +19,17 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.util.LogFile.STRATEGIES_DIRECTORY;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
-public class Agent {
+public class Agent implements IAgent {
 
     //list of wallet for each product we are investing
-    private final Wallet wallet;
+    private Wallet wallet;
 
     //object used to write to a text file
-    private final PrintWriter writer;
+    private PrintWriter writer;
 
     //do we have an order?
     private Order order = null;
@@ -59,7 +61,10 @@ public class Agent {
     //do we buy stock?
     private boolean buy = false;
 
-    protected Agent(TradingStrategy strategy, double funds, String productId, String fileName) {
+    //is this agent used to run simulations
+    private final boolean simulation;
+
+    protected Agent(TradingStrategy strategy, double funds, String productId, boolean simulation) {
 
         //save the trading strategy we want to implement
         this.strategy = strategy;
@@ -70,8 +75,42 @@ public class Agent {
         //store the product reference
         this.productId = productId;
 
+        //is this agent running simulations?
+        this.simulation = simulation;
+
+        //reset our information
+        reset(funds);
+    }
+
+    @Override
+    public void reset(double funds) {
+
+        //obtain our file name
+        String fileName = getFileName();
+
+        //directory will be organized based on product and strategy example: logs/LTC-USD/EMA
+        String directory = LogFile.LOG_DIRECTORY + "\\" + getProductId() + "\\" + STRATEGIES_DIRECTORY + "\\" + getStrategy() + "\\";
+
+        //we place the simulation files in a different directory
+        directory += (isSimulation()) ? "test" : "live";
+
         //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter(fileName);
+        this.writer = LogFile.getPrintWriter(fileName, directory);
+
+        //we don't want to buy when reset
+        setBuy(false);
+
+        //we don't want to sell either
+        setReasonSell(null);
+
+        //set order null
+        this.order = null;
+
+        //we don't want to stop trading
+        setStopTrading(false);
+
+        //clear our list
+        this.transactions.clear();
 
         //create a wallet so we can track our investments
         this.wallet = new Wallet(funds);
@@ -84,6 +123,10 @@ public class Agent {
         displayMessage(this, "Starting $" + funds, true);
     }
 
+    public boolean isSimulation() {
+        return this.simulation;
+    }
+
     public TradingStrategy getStrategy() {
         return this.strategy;
     }
@@ -92,7 +135,8 @@ public class Agent {
         return this.productId;
     }
 
-    protected synchronized void update(Calculator calculator, Product product, double currentPrice) {
+    @Override
+    public synchronized void update(Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
         //skip if we lost too much $
         if (hasStopTrading())
@@ -120,12 +164,12 @@ public class Agent {
             if (getWallet().getQuantity() > 0) {
 
                 //we have quantity let's see if we can sell it
-                checkSell(this, calculator, product, currentPrice);
+                checkSell(this, strategy, history, product, currentPrice);
 
             } else {
 
                 //we don't have any quantity so let's see if we can buy
-                checkBuy(this, calculator, product, currentPrice);
+                checkBuy(this, strategy, history, product, currentPrice);
 
             }
 
@@ -137,7 +181,7 @@ public class Agent {
             //what is the status of our order
             AgentHelper.Status status = null;
 
-            if (Main.PAPER_TRADING) {
+            if (Main.PAPER_TRADING || isSimulation()) {
 
                 //if we are paper trading assume the order has been completed
                 status = AgentHelper.Status.Filled;
@@ -217,7 +261,8 @@ public class Agent {
                 message = message + TransactionHelper.getDescLost(this) + "\n";
 
                 //send email notification
-                Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", message);
+                if (!isSimulation())
+                    Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", message);
             }
         }
     }

@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
+import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
 import com.gamesbykevin.tradingbot.calculator.*;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
@@ -58,6 +59,9 @@ public class PropertyUtil {
         //is the websocket enabled?
         Main.WEBSOCKET_ENABLED = Boolean.parseBoolean(getProperties().getProperty("websocketEnabled"));
 
+        //do we want to simulate our strategies?
+        AgentManagerHelper.SIMULATE_STRATEGIES = Boolean.parseBoolean(getProperties().getProperty("simulateStrategies"));
+
         //how long is each thread
         Main.THREAD_DELAY = Long.parseLong(getProperties().getProperty("threadDelay"));
 
@@ -78,15 +82,31 @@ public class PropertyUtil {
         Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(",");
 
         //make sure we have something
-        if (Main.TRADING_CURRENCIES.length < 1)
+        if (Main.TRADING_CURRENCIES.length < 1) {
+
             throw new RuntimeException("You haven't specified what products you want to trade in your properties file");
+
+        } else {
+
+            //make sure there aren't extra spaces
+            for (int i = 0; i < Main.TRADING_CURRENCIES.length; i++) {
+                Main.TRADING_CURRENCIES[i] = Main.TRADING_CURRENCIES[i].trim();
+            }
+        }
 
         //what strategies are we trading with
         Main.TRADING_STRATEGIES = getProperties().getProperty("tradingStrategies").split(",");
 
         //make sure we have something
-        if (Main.TRADING_STRATEGIES.length < 1 || Main.TRADING_STRATEGIES[0].trim().length() < 1)
+        if (Main.TRADING_STRATEGIES.length < 1 || Main.TRADING_STRATEGIES[0].trim().length() < 1) {
             throw new RuntimeException("You don't have any trading strategies specified");
+        } else {
+
+            //make sure there aren't extra spaces
+            for (int i = 0; i < Main.TRADING_STRATEGIES.length; i++) {
+                Main.TRADING_STRATEGIES[i] = Main.TRADING_STRATEGIES[i].trim();
+            }
+        }
 
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));

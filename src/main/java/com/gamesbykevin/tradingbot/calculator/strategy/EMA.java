@@ -65,9 +65,24 @@ public class EMA extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bullish crossover and stock price is above short ema, we expect price to go up
-        if (hasCrossover(true, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) > getRecent(getEmaShort()))
+        double previousEmaShort = getRecent(getEmaShort(), 2);
+        double previousEmaLong = getRecent(getEmaLong(), 2);
+        double currentEmaShort = getRecent(getEmaShort());
+        double currentEmaLong = getRecent(getEmaLong());
+
+        double previous = getRecent(history, Fields.Close, 2);
+        double previousSma = getRecent(getEmaShort(), 2);
+        double current = getRecent(history, Fields.Close);
+        double currentSma = getRecent(getEmaShort());
+
+        if (previousEmaShort < previousEmaLong && currentEmaShort > currentEmaLong && current > currentSma)
             agent.setBuy(true);
+        if (currentEmaShort > currentEmaLong && previous < previousSma && current > currentSma)
+            agent.setBuy(true);
+
+        //if we have a bullish crossover and stock price is above short ema, we expect price to go up
+        //if (hasCrossover(true, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) > getRecent(getEmaShort()))
+        //    agent.setBuy(true);
 
         //display data
         displayData(agent, agent.hasBuy());
@@ -76,9 +91,24 @@ public class EMA extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have a bearish crossover and stock price is below ema, we expect price to go down
-        if (hasCrossover(false, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) < getRecent(getEmaShort()))
+        double previousEmaShort = getRecent(getEmaShort(), 2);
+        double previousEmaLong = getRecent(getEmaLong(), 2);
+        double currentEmaShort = getRecent(getEmaShort());
+        double currentEmaLong = getRecent(getEmaLong());
+
+        double previous = getRecent(history, Fields.Close, 2);
+        double previousSma = getRecent(getEmaShort(), 2);
+        double current = getRecent(history, Fields.Close);
+        double currentSma = getRecent(getEmaShort());
+
+        if (previousEmaShort > previousEmaLong && currentEmaShort < currentEmaLong)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+        if (previous > previousSma && current < currentSma)
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //if we have a bearish crossover and stock price is below ema, we expect price to go down
+        //if (hasCrossover(false, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) < getRecent(getEmaShort()))
+        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display data
         displayData(agent, agent.getReasonSell() != null);

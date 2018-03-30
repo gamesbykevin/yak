@@ -8,7 +8,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 

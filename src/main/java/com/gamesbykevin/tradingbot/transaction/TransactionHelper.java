@@ -5,7 +5,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.formatValue;
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 public class TransactionHelper {
 

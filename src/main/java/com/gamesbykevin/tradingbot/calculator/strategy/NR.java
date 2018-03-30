@@ -5,7 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 public class NR extends Strategy {
 

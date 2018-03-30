@@ -12,7 +12,7 @@ import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.NOTIFICATION_EVERY_TRANSACTION;
-import static com.gamesbykevin.tradingbot.agent.AgentManager.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 
 public class Transaction {
@@ -177,7 +177,7 @@ public class Transaction {
         displayMessage(agent, text, true);
 
         //are we going to notify every transaction?
-        if (NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
+        if (!agent.isSimulation() && NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
             sendEmail(subject, text + "\n" + summary);
     }
 
