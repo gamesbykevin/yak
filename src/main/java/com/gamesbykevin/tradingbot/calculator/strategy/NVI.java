@@ -20,19 +20,16 @@ public class NVI extends Strategy {
     //our cumulative and ema lists
     private List<Double> nviCumulative, nviEma;
 
-    /**
-     * How many periods do we calculate for our ema
-     */
-    private static final int PERIODS_EMA = 255;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA = {255};
+
+    //list of configurable values
+    protected static int PERIODS_EMA = 255;
 
     public NVI() {
-        this(PERIODS_EMA);
-    }
 
-    public NVI(int periods) {
-
-        //call default value
-        super(periods);
+        //call parent
+        super();
 
         //create new lists
         this.nviCumulative = new ArrayList<>();
@@ -73,8 +70,8 @@ public class NVI extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "NVI Cum: ", getNviCumulative(), 5, write);
-        display(agent, "NVI Ema: ", getNviEma(), 5, write);
+        display(agent, "NVI Cum: ", getNviCumulative(), write);
+        display(agent, "NVI Ema: ", getNviEma(), write);
     }
 
     @Override

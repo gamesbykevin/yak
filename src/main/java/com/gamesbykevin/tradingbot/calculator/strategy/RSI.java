@@ -18,45 +18,22 @@ public class RSI extends Strategy {
     //keep an average of the price
     private List<Double> smaPrice;
 
-    /**
-     * How many periods do we calculate sma price
-     */
-    private static final int PERIODS_SMA_PRICE = 50;
+    //our list of variations
+    protected static int[] LIST_PERIODS_SMA_PRICE = {50};
+    protected static int[] LIST_PERIODS_RSI = {5};
+    protected static float[] LIST_SUPPORT_LINE = {30.0f};
+    protected static float[] LIST_RESISTANCE_LINE = {70.0f};
 
-    /**
-     * How many periods to calculate rsi
-     */
-    private static final int PERIODS_RSI = 5;
-
-    /**
-     * The support line meaning the stock is oversold
-     */
-    private static final float SUPPORT_LINE = 30.0f;
-
-    /**
-     * The resistance line meaning the stock is overbought
-     */
-    private static final float RESISTANCE_LINE = 70.0f;
-
-    //our resistance and support lines
-    private final float resistanceLine, supportLine;
-
-    //the number of periods to calculate sma
-    private final int periodsSma;
+    //list of configurable values
+    protected static int PERIODS_SMA_PRICE = 50;
+    protected static int PERIODS_RSI = 5;
+    protected static float SUPPORT_LINE = 30.0f;
+    protected static float RESISTANCE_LINE = 70.0f;
 
     public RSI() {
-        this(PERIODS_RSI, PERIODS_SMA_PRICE, RESISTANCE_LINE, SUPPORT_LINE);
-    }
-
-    public RSI(int periods, int periodsSma, float resistanceLine, float supportLine) {
 
         //call parent
-        super(periods);
-
-        //store our desired values
-        this.periodsSma = periodsSma;
-        this.resistanceLine = resistanceLine;
-        this.supportLine = supportLine;
+        super();
 
         //create new list(s)
         this.rsiVal = new ArrayList<>();
@@ -75,7 +52,7 @@ public class RSI extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we need to make sure we are below the support line
-        if (getRecent(getRsiVal()) < supportLine) {
+        if (getRecent(getRsiVal()) < SUPPORT_LINE) {
 
             //now we need to check that price is in an overall uptrend
             if (getRecent(history, Fields.Close) > getRecent(getSmaPrice()))
@@ -90,7 +67,7 @@ public class RSI extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we need to make sure we are above the resistance line
-        if (getRecent(getRsiVal()) > resistanceLine) {
+        if (getRecent(getRsiVal()) > RESISTANCE_LINE) {
 
             //now we need to check that price is in an overall downtrend
             if (getRecent(history, Fields.Close) < getRecent(getSmaPrice()))
@@ -105,24 +82,24 @@ public class RSI extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "RSI: ", getRsiVal(), 5, write);
-        display(agent, "SMA: ", getSmaPrice(), 5, write);
+        display(agent, "RSI: ", getRsiVal(), write);
+        display(agent, "SMA: ", getSmaPrice(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate rsi values
-        calculateRsi(history, getRsiVal(), getPeriods());
+        calculateRsi(history, getRsiVal(), PERIODS_RSI);
 
         //calculate sma of price
-        calculateSMA(history, getSmaPrice(), periodsSma, Fields.Close);
+        calculateSMA(history, getSmaPrice(), PERIODS_SMA_PRICE, Fields.Close);
     }
 
-    protected static void calculateRsi(List<Period> history, List<Double> rsi, int periods) {
+    protected static void calculateRsi(List<Period> history, List<Double> populate, int periods) {
 
         //clear our historical rsi list
-        rsi.clear();
+        populate.clear();
 
         //calculate as many periods as we can
         for (int i = 0; i < history.size(); i++) {
@@ -139,7 +116,7 @@ public class RSI extends Strategy {
             final double tmpRsi = calculateRsi(history, start, end);
 
             //add the rsi value to our list
-            rsi.add(tmpRsi);
+            populate.add(tmpRsi);
         }
     }
 

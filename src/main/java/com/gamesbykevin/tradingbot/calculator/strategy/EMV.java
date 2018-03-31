@@ -14,33 +14,24 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
  */
 public class EMV extends Strategy {
 
-    /**
-     * Default number of periods to calculate
-     */
-    private static final int PERIODS_EMV = 14;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMV = {14};
+
+    //list of configurable values
+    protected static int PERIODS_EMV = 14;
 
     /**
      * What is the default volume we used to calculate the box ratio
      */
-    private static final double VOLUME_DEFAULT = 100000000d;
+    protected static double VOLUME_DEFAULT = 100000000d;
 
     //list of emv values
     private List<Double> smaEmv, valEmv;
 
-    //our period reference
-    private final int periodsEmv;
-
     public EMV() {
-        this(PERIODS_EMV);
-    }
-
-    public EMV(int periods) {
 
         //call parent with default value
-        super(periods);
-
-        //store our periods reference
-        this.periodsEmv = periods;
+        super();
 
         //create new lists
         this.smaEmv = new ArrayList<>();
@@ -87,8 +78,8 @@ public class EMV extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "SMA EMV: ", getSmaEmv(), periodsEmv / 2, write);
-        display(agent, "Val EMV: ", getValEmv(), periodsEmv / 2, write);
+        display(agent, "SMA EMV: ", getSmaEmv(), write);
+        display(agent, "Val EMV: ", getValEmv(), write);
     }
 
     @Override
@@ -121,6 +112,6 @@ public class EMV extends Strategy {
         }
 
         //now that we have our list of emv values, calculate sma
-        calculateSMA(getValEmv(), getSmaEmv(), getPeriods());
+        calculateSMA(getValEmv(), getSmaEmv(), PERIODS_EMV);
     }
 }

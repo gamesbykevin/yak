@@ -16,45 +16,29 @@ public class SOD extends Strategy {
     //our object reference
     private SO soObj;
 
-    /**
-     * Number of periods for stochastic oscillator
-     */
-    private static final int PERIODS_SO = 12;
+    //our list of variations
+    protected static int[] LIST_PERIODS_SO = {12};
+    protected static int[] LIST_PERIODS_SMA = {3};
+    protected static int[] LIST_PERIODS_SMA_PRICE_LONG = {50};
+    protected static int[] LIST_PERIODS_SMA_PRICE_SHORT = {10};
 
-    /**
-     * Number of periods we calculate sma to get our indicator
-     */
-    private static final int PERIODS_SMA = 3;
-
-    /**
-     * Number of periods we calculate sma to get our indicator
-     */
-    private static final int PERIODS_SMA_PRICE_LONG = 50;
-
-    /**
-     * Number of periods we calculate sma to get our indicator
-     */
-    private static final int PERIODS_SMA_PRICE_SHORT = 10;
-
-
-    public SOD(int periodsSMA, int periodsSO, int periodsSmaPriceLong, int periodsSmaPriceShort) {
-
-        //call parent with a default value
-        super(periodsSO);
-
-        //create a new object
-        this.soObj = new SO(periodsSMA, periodsSO, periodsSmaPriceLong, periodsSmaPriceShort);
-    }
+    //list of configurable values
+    protected static int PERIODS_SO = 12;
 
     public SOD() {
-        this(PERIODS_SMA, PERIODS_SO, PERIODS_SMA_PRICE_LONG, PERIODS_SMA_PRICE_SHORT);
+
+        //call parent
+        super();
+
+        //create a new object
+        this.soObj = new SO();
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish divergence, let's buy
-        if (hasDivergence(history, getPeriods(), true, soObj.getStochasticOscillator()))
+        if (hasDivergence(history, PERIODS_SO, true, soObj.getStochasticOscillator()))
             agent.setBuy(true);
 
         //display our data
@@ -65,7 +49,7 @@ public class SOD extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish divergence, let's sell
-        if (hasDivergence(history, getPeriods(), false, soObj.getStochasticOscillator()))
+        if (hasDivergence(history, PERIODS_SO, false, soObj.getStochasticOscillator()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data

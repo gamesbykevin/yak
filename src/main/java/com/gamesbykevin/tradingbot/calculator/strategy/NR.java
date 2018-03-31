@@ -12,18 +12,16 @@ public class NR extends Strategy {
     //the period with the smallest range
     private Period smallest;
 
-    /**
-     * Narrow range 4 will always be 4 periods
-     */
-    public static final int PERIODS_NR4 = 4;
+    //our list of variations
+    protected static int[] LIST_PERIODS_NR = {4, 7};
 
-    /**
-     * Narrow range 7 will always be 7 periods
-     */
-    public static final int PERIODS_NR7 = 7;
+    //list of configurable values
+    public static int PERIODS_NR = 4;
 
-    public NR(int periods) {
-        super(periods);
+    public NR() {
+
+        //call parent
+        super();
     }
 
     @Override
@@ -62,7 +60,7 @@ public class NR extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        displayMessage(agent, "NR" + getPeriods() + ": High $" + smallest.high + ", Low $" + smallest.low, write);
+        displayMessage(agent, "NR" + PERIODS_NR + ": High $" + smallest.high + ", Low $" + smallest.low, write);
     }
 
     @Override
@@ -72,13 +70,15 @@ public class NR extends Strategy {
         smallest = null;
 
         //check the previous # of periods to look for the smallest range
-        for (int i = history.size() - getPeriods(); i < history.size(); i++) {
+        for (int i = history.size() - PERIODS_NR; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);
 
             //we are always looking for a period with the smallest range
-            if (smallest == null || current.high - current.low < smallest.high - smallest.low)
+            if (smallest == null)
+                smallest = current;
+            if (current.high - current.low < smallest.high - smallest.low)
                 smallest = current;
         }
     }

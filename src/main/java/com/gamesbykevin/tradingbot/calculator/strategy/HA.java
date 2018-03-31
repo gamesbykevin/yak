@@ -14,17 +14,19 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
  */
 public class HA extends Strategy {
 
+    //we will create our own candles
     private List<Period> haPeriods;
 
-    /**
-     * How many periods do we calculate Heikin-Ashi
-     */
-    public final static int PERIODS_HA = 7;
+    //our list of variations
+    protected static int[] LIST_PERIODS_HA = {7};
+
+    //list of configurable values
+    public static int PERIODS_HA = 7;
 
     public HA() {
 
         //call parent
-        super(PERIODS_HA);
+        super();
 
         //create new list
         this.haPeriods = new ArrayList<>();
@@ -41,7 +43,7 @@ public class HA extends Strategy {
         boolean confirmBullish = false;
 
         //check each candle to confirm they are bearish
-        for (int i = history.size() - getPeriods(); i < history.size() - 2; i++) {
+        for (int i = history.size() - PERIODS_HA; i < history.size() - 2; i++) {
 
             //all candles should be bearish
             if (isBearish(history.get(i))) {
@@ -76,7 +78,7 @@ public class HA extends Strategy {
         boolean confirmBullish = true;
 
         //check each candle to confirm they are bullish
-        for (int i = history.size() - getPeriods(); i < history.size() - 2; i++) {
+        for (int i = history.size() - PERIODS_HA; i < history.size() - 2; i++) {
 
             //all candles should be bullish
             if (isBullish(history.get(i))) {
@@ -109,7 +111,7 @@ public class HA extends Strategy {
 
         String desc = "";
 
-        for (int i = getHaPeriods().size() - getPeriods(); i < getHaPeriods().size(); i++) {
+        for (int i = getHaPeriods().size() - PERIODS_HA; i < getHaPeriods().size(); i++) {
 
             if (desc.length() > 0)
                 desc = desc + ", ";

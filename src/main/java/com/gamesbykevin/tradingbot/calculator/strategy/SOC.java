@@ -16,37 +16,19 @@ public class SOC extends Strategy {
     //our object reference
     private SO soObj;
 
-    /**
-     * Number of periods for stochastic oscillator
-     */
-    private static final int PERIODS_SO = 12;
-
-    /**
-     * Number of periods we calculate sma to get our indicator
-     */
-    private static final int PERIODS_SMA = 3;
-
-    /**
-     * Number of periods we calculate sma to get our indicator
-     */
-    private static final int PERIODS_SMA_PRICE_LONG = 50;
-
-    /**
-     * Number of periods we calculate sma to get our indicator
-     */
-    private static final int PERIODS_SMA_PRICE_SHORT = 10;
-
-    public SOC(int periodsSMA, int periodsSO, int periodsSmaPriceLong, int periodsSmaPriceShort) {
-
-        //call parent with a default value
-        super(periodsSO);
-
-        //create a new object
-        this.soObj = new SO(periodsSMA, periodsSO, periodsSmaPriceLong, periodsSmaPriceShort);
-    }
+    //our list of variations
+    protected static int[] LIST_PERIODS_SO = {12};
+    protected static int[] LIST_PERIODS_SMA = {3};
+    protected static int[] LIST_PERIODS_SMA_PRICE_LONG = {50};
+    protected static int[] LIST_PERIODS_SMA_PRICE_SHORT = {10};
 
     public SOC() {
-        this(PERIODS_SMA, PERIODS_SO, PERIODS_SMA_PRICE_LONG, PERIODS_SMA_PRICE_SHORT);
+
+        //call parent
+        super();
+
+        //create a new object
+        this.soObj = new SO();
     }
 
     @Override

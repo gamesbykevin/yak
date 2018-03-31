@@ -1,6 +1,8 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
+import com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 
 import java.io.PrintWriter;
@@ -12,7 +14,7 @@ public class AgentManagerHelper {
     /**
      * The minimum number of periods required in order to run a simulation
      */
-    public static final int PERIODS_SIMULATION_MIN = 61;
+    public static final int PERIODS_SIMULATION_MIN = 260;
 
     /**
      * Are we simulating strategies to see the result?
@@ -27,64 +29,80 @@ public class AgentManagerHelper {
         //display message
         displayMessage("Running simulations...", manager.getWriter());
 
-        //reset our simulation agents
+        //check each agent belonging to the manager
         for (int i = 0; i < manager.getTmpAgents().size(); i++) {
-            manager.getTmpAgents().get(i).reset(manager.getFundsPerAgent());
-        }
 
-        //start out with a minimum # of periods
-        for (int index = 0; index < PERIODS_SIMULATION_MIN; index++) {
-            tmpHistory.add(manager.getCalculator().getHistory().get(index));
-        }
+            //get the agent
+            Agent agent = manager.getTmpAgents().get(i);
 
-        //continue to simulate until we check all of our history
-        while (tmpHistory.size() < manager.getCalculator().getHistory().size()) {
+            //get the assigned strategy
+            Strategy strategy = manager.getCalculator().getStrategy(agent);
 
-            //obtain the latest index
-            int index = tmpHistory.size();
+            //reset the index of the strategy assigned to the agent
+            strategy.setIndexStrategy(0);
 
-            //update each agent
-            for (int i = 0; i < manager.getTmpAgents().size(); i++) {
+            while (true) {
 
-                //get the current agent to run our simulation
-                Agent tmpAgent = manager.getTmpAgents().get(i);
+                //setup the correct values before we run our simulation
+                boolean result = StrategyHelper.setupValues(agent.getStrategy(), strategy.getIndexStrategy());
 
-                //the current price will be the closing price of the current period
-                double currentPrice = manager.getCalculator().getHistory().get(index).close;
+                //if there was an issue, we checked all scenarios for this strategy and we can move to the next
+                if (!result) {
+                    strategy.setIndexStrategy(0);
+                    break;
+                }
 
-                //simulate the agent
-                tmpAgent.update(manager.getCalculator().getStrategy(tmpAgent), tmpHistory, manager.getProduct(), currentPrice);
+                //reset the agent funds
+                agent.reset(manager.getFundsPerAgent());
+
+                //clear the history
+                tmpHistory.clear();
+
+                //start out with a minimum # of periods
+                for (int index = 0; index < PERIODS_SIMULATION_MIN; index++) {
+                    tmpHistory.add(manager.getCalculator().getHistory().get(index));
+                }
+
+                //continue to simulate until we check all of our history
+                while (tmpHistory.size() < manager.getCalculator().getHistory().size()) {
+
+                    //obtain the latest index
+                    int index = tmpHistory.size();
+
+                    //the current price will be the closing price of the current period
+                    double currentPrice = manager.getCalculator().getHistory().get(index).close;
+
+                    //recalculate based on the current history
+                    strategy.calculate(tmpHistory);
+
+                    //simulate the agent
+                    agent.update(strategy, tmpHistory, manager.getProduct(), currentPrice);
+
+                    //add to the tmp history
+                    tmpHistory.add(manager.getCalculator().getHistory().get(index));
+                }
+
+                //display the results of our simulation
+                String message = manager.getProductId() + " - " + agent.getStrategy() + " - (Index " + strategy.getIndexStrategy() + ")";
+
+                //the most recent period close will be the current price
+                double currentPrice = manager.getCalculator().getHistory().get(manager.getCalculator().getHistory().size() - 1).close;
+
+                //get the agents assets
+                double assets = agent.getAssets(currentPrice);
+
+                //did we pass or fail?
+                message += (assets >= manager.getFundsPerAgent()) ? ", Status: PASS" : ", Status: FAIL";
+
+                //add our start and finish
+                message += ",  Start $" + manager.getFundsPerAgent() + ",  End $" + assets;
+
+                //display our message
+                displayMessage(message, manager.getWriter());
+
+                //increase the index and check another configuration of the same strategy
+                strategy.setIndexStrategy(strategy.getIndexStrategy() + 1);
             }
-
-            //add to the tmp history
-            tmpHistory.add(manager.getCalculator().getHistory().get(index));
-
-        }
-
-        //display message
-        displayMessage("Simulation results...", manager.getWriter());
-
-        //check the status of each agent
-        for (int i = 0; i < manager.getTmpAgents().size(); i++) {
-
-            //get the current agent to run our simulation
-            Agent tmpAgent = manager.getTmpAgents().get(i);
-
-            //construct our message
-            String message = manager.getProductId() + " - " + tmpAgent.getStrategy();
-
-            //get the agents assets
-            double assets = tmpAgent.getAssets(manager.getCalculator().getHistory().get(manager.getCalculator().getHistory().size() - 1).close);
-
-            //did we pass or fail?
-            message += (assets >= manager.getFundsPerAgent()) ? ", Status: PASS" : ", Status: FAIL";
-
-            //add our start and finish
-            message += ",  Start $" + manager.getFundsPerAgent();
-            message += ",  End $" + assets;
-
-            //display our message
-            displayMessage(message, manager.getWriter());
         }
     }
 

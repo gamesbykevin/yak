@@ -17,45 +17,28 @@ public class SOEMA extends Strategy {
     private EMA emaObj;
     private SO soObj;
 
-    /**
-     * Number of periods used to calculate ema short
-     */
-    private static final int PERIODS_EMA_SHORT = 2;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA_LONG = {2};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {4};
+    protected static int[] LIST_SO_INDICATOR = {50};
+    protected static int[] LIST_PERIODS_SO = {5};
+    protected static int[] LIST_PERIODS_SMA_SO = {3};
+    protected static int[] LIST_PERIODS_LONG = {100};
 
-    /**
-     * Number of periods used to calculate ema long
-     */
-    private static final int PERIODS_EMA_LONG = 4;
-
-    /**
-     * Additional indicator value we use for trading
-     */
-    private static final int SO_INDICATOR = 50;
-
-    /**
-     * Number of periods for stochastic oscillator
-     */
-    private static final int PERIODS_SO = 5;
-
-    /**
-     * Number of periods we calculate sma so to get our indicator
-     */
-    private static final int PERIODS_SMA_SO = 3;
-
-    /**
-     * Number of long periods
-     */
-    private static final int PERIODS_LONG = 100;
-
+    //list of configurable values
+    protected static int SO_INDICATOR = 50;
+    protected static int PERIODS_SO = 5;
+    protected static int PERIODS_SMA_SO = 3;
+    protected static int PERIODS_LONG = 100;
 
     public SOEMA() {
 
-        //use default value
-        super(0);
+        //call parent
+        super();
 
         //create new object
-        this.emaObj = new EMA(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
-        this.soObj = new SO(PERIODS_SMA_SO, PERIODS_SO, PERIODS_LONG, PERIODS_LONG);
+        this.emaObj = new EMA();
+        this.soObj = new SO();
     }
 
     @Override

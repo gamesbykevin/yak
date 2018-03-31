@@ -46,8 +46,8 @@ public class Agent implements IAgent {
     //the reason why we are selling
     private ReasonSell reason;
 
-    //what is our trading strategy
-    private final TradingStrategy strategy;
+    //what is our assigned trading strategy
+    private TradingStrategy strategy;
 
     //the product we are trading
     private final String productId;
@@ -67,7 +67,7 @@ public class Agent implements IAgent {
     protected Agent(TradingStrategy strategy, double funds, String productId, boolean simulation) {
 
         //save the trading strategy we want to implement
-        this.strategy = strategy;
+        setStrategy(strategy);
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
@@ -121,18 +121,6 @@ public class Agent implements IAgent {
 
         //display message and write to file
         displayMessage(this, "Starting $" + funds, true);
-    }
-
-    public boolean isSimulation() {
-        return this.simulation;
-    }
-
-    public TradingStrategy getStrategy() {
-        return this.strategy;
-    }
-
-    public String getProductId() {
-        return this.productId;
     }
 
     @Override
@@ -267,14 +255,6 @@ public class Agent implements IAgent {
         }
     }
 
-    protected double getAssets(double currentPrice) {
-        return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
-    }
-
-    public PrintWriter getWriter() {
-        return this.writer;
-    }
-
     private void fillOrder(final Order order, final Product product) {
 
         if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription())) {
@@ -309,7 +289,12 @@ public class Agent implements IAgent {
             //display the count and reasons why we sold our stock
             TransactionHelper.displaySellReasonCount(this, Result.Win);
             TransactionHelper.displaySellReasonCount(this, Result.Lose);
+
         }
+    }
+
+    protected double getAssets(double currentPrice) {
+        return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
     }
 
     public void setOrder(final Order order) {
@@ -382,5 +367,25 @@ public class Agent implements IAgent {
 
     public boolean hasBuy() {
         return this.buy;
+    }
+
+    public boolean isSimulation() {
+        return this.simulation;
+    }
+
+    public void setStrategy(TradingStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    public TradingStrategy getStrategy() {
+        return this.strategy;
+    }
+
+    public String getProductId() {
+        return this.productId;
+    }
+
+    public PrintWriter getWriter() {
+        return this.writer;
     }
 }

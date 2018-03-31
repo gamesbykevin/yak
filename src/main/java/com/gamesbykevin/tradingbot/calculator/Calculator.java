@@ -11,8 +11,6 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.strategy.NR.PERIODS_NR4;
-import static com.gamesbykevin.tradingbot.calculator.strategy.NR.PERIODS_NR7;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
@@ -98,10 +96,6 @@ public class Calculator {
                     strategy = new EMA();
                     break;
 
-                case EMA2:
-                    strategy = new EMA(31, 13);
-                    break;
-
                 case EMAR:
                     strategy = new EMAR();
                     break;
@@ -142,12 +136,8 @@ public class Calculator {
                     strategy = new NP();
                     break;
 
-                case NR4:
-                    strategy = new NR(PERIODS_NR4);
-                    break;
-
-                case NR7:
-                    strategy = new NR(PERIODS_NR7);
+                case NR:
+                    strategy = new NR();
                     break;
 
                 case NVI:
@@ -254,7 +244,15 @@ public class Calculator {
 
                     //now do all strategy calculations
                     for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
-                        getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(history);
+
+                        //get the current strategy
+                        Strategy strategy = getStrategies().get(MY_TRADING_STRATEGIES[i]);
+
+                        //make sure the correct variables are set
+                        StrategyHelper.setupValues(MY_TRADING_STRATEGIES[i], strategy.getIndexStrategy());
+
+                        //now perform our calculations
+                        strategy.calculate(history);
                     }
                 }
 

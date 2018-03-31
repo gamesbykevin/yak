@@ -30,24 +30,19 @@ public class OA extends Strategy {
     //our obv object
     private OBV obvObj;
 
-    private static final int PERIODS_LONG = 65;
-    private static final int PERIODS_SHORT = 20;
+    //our list of variations
+    protected static int[] LIST_PERIODS_LONG = {65};
+    protected static int[] LIST_PERIODS_SHORT = {20};
+    protected static int[] LIST_PERIODS_OBV = {10};
 
-    //our long and short periods
-    private final int periodsLong, periodsShort;
+    //list of configurable values
+    protected static int PERIODS_LONG = 65;
+    protected static int PERIODS_SHORT = 20;
 
     public OA() {
-        this(PERIODS_LONG, PERIODS_SHORT);
-    }
 
-    public OA(int periodsLong, int periodsShort) {
-
-        //call parent with default value
-        super(0);
-
-        //assign our values
-        this.periodsLong = periodsLong;
-        this.periodsShort = periodsShort;
+        //call parent
+        super();
 
         //create our lists for calculation
         this.smaPriceShort = new ArrayList<>();
@@ -122,12 +117,12 @@ public class OA extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "SMA Price Long: ", smaPriceLong, periodsShort / 5, write);
-        display(agent, "SMA Price Short: ", smaPriceShort, periodsShort / 5, write);
-        display(agent, "SMA OBV Long: ", smaObvLong, periodsShort / 5, write);
-        display(agent, "SMA OBV Short: ", smaObvShort, periodsShort / 5, write);
-        display(agent, "SMA ADL Long: ", smaAdlLong, periodsShort / 5, write);
-        display(agent, "SMA ADL Short: ", smaAdlShort, periodsShort / 5, write);
+        display(agent, "SMA Price Long: ", smaPriceLong, write);
+        display(agent, "SMA Price Short: ", smaPriceShort, write);
+        display(agent, "SMA OBV Long: ", smaObvLong, write);
+        display(agent, "SMA OBV Short: ", smaObvShort, write);
+        display(agent, "SMA ADL Long: ", smaAdlLong, write);
+        display(agent, "SMA ADL Short: ", smaAdlShort, write);
 
         this.adlObj.displayData(agent, write);
         this.obvObj.displayData(agent, write);
@@ -141,11 +136,11 @@ public class OA extends Strategy {
         this.obvObj.calculate(history);
 
         //now calculate our sma lists
-        calculateSMA(adlObj.getAccumulationDistributionLine(), smaAdlShort, periodsShort);
-        calculateSMA(adlObj.getAccumulationDistributionLine(), smaAdlLong, periodsLong);
-        calculateSMA(obvObj.getVolume(), smaObvShort, periodsShort);
-        calculateSMA(obvObj.getVolume(), smaObvLong, periodsLong);
-        calculateSMA(history, smaPriceShort, periodsShort, Fields.Close);
-        calculateSMA(history, smaPriceLong, periodsLong, Fields.Close);
+        calculateSMA(adlObj.getAccumulationDistributionLine(), smaAdlShort, PERIODS_SHORT);
+        calculateSMA(adlObj.getAccumulationDistributionLine(), smaAdlLong, PERIODS_LONG);
+        calculateSMA(obvObj.getVolume(), smaObvShort, PERIODS_SHORT);
+        calculateSMA(obvObj.getVolume(), smaObvLong, PERIODS_LONG);
+        calculateSMA(history, smaPriceShort, PERIODS_SHORT, Fields.Close);
+        calculateSMA(history, smaPriceLong, PERIODS_LONG, Fields.Close);
     }
 }

@@ -29,47 +29,27 @@ public class MACD extends Strategy {
     //our ema object
     private EMA emaObj;
 
-    /**
-     * How many periods do we calculate ema from macd line
-     */
-    private static final int PERIODS_MACD = 9;
+    //our list of variations
+    protected static int[] LIST_PERIODS_MACD = {9};
+    protected static int[] LIST_PERIODS_SMA_TREND = {50};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
 
-    /**
-     * How many periods do we calculate the sma trend line
-     */
-    private static final int PERIODS_SMA_TREND = 50;
-
-    /**
-     * How many periods to calculate long ema
-     */
-    private static final int PERIODS_EMA_LONG = 26;
-
-    /**
-     * How many periods to calculate short ema
-     */
-    private static final int PERIODS_EMA_SHORT = 12;
-
-    //store the number of periods
-    private final int periodsSmaTrend;
+    //list of configurable values
+    protected static int PERIODS_MACD = 9;
+    protected static int PERIODS_SMA_TREND = 50;
 
     public MACD() {
-        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
-    }
-
-    public MACD(int periods, int periodsSmaTrend, int periodsEmaLong, int periodsEmaShort) {
 
         //call parent
-        super(periods);
-
-        //save our setting
-        this.periodsSmaTrend = periodsSmaTrend;
+        super();
 
         //create lists and objects
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
-        this.emaObj = new EMA(periodsEmaLong, periodsEmaShort);
         this.histogram = new ArrayList<>();
         this.smaPrice = new ArrayList<>();
+        this.emaObj = new EMA();
     }
 
     public List<Double> getMacdLine() {
@@ -103,7 +83,6 @@ public class MACD extends Strategy {
             }
         }
 
-
         //display our data
         displayData(agent, agent.hasBuy());
     }
@@ -131,9 +110,9 @@ public class MACD extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the recent MACD values which we use as a signal
-        display(agent, "MACD Line: ", getMacdLine(), getPeriods(), write);
-        display(agent, "Signal Line: ", getSignalLine(), getPeriods(), write);
-        display(agent, "SMA Price: ", getSmaPrice(), getPeriods(), write);
+        display(agent, "MACD Line: ",   getMacdLine(),   write);
+        display(agent, "Signal Line: ", getSignalLine(), write);
+        display(agent, "SMA Price: ",   getSmaPrice(),   write);
 
         //display values
         this.emaObj.displayData(agent, write);
@@ -149,13 +128,13 @@ public class MACD extends Strategy {
         calculateMacdLine(this.emaObj.getEmaShort(), this.emaObj.getEmaLong(), getMacdLine());
 
         //then we can calculate our signal line
-        calculateEmaList(getSignalLine(), getMacdLine(), getPeriods());
+        calculateEmaList(getSignalLine(), getMacdLine(), PERIODS_MACD);
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
 
         //calculate our sma price
-        calculateSMA(history, getSmaPrice(), periodsSmaTrend, Fields.Close);
+        calculateSMA(history, getSmaPrice(), PERIODS_SMA_TREND, Fields.Close);
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {

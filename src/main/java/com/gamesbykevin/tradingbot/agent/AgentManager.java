@@ -4,6 +4,8 @@ import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.MainHelper;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
+import com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
@@ -56,10 +58,10 @@ public class AgentManager {
      */
     public enum TradingStrategy {
 
-        ADL, ADX, BB, BBER, BBR, EMA, EMA2, EMAR, EMAS, EMASV,
-        EMV, EMVS, HA, MACD, MACDD, MACS, NP, NR4, NR7, NVI,
-        OA, OBV, PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA,
-        SR, TWO_RSI,
+        ADL, ADX, BB, BBER, BBR, EMA, EMAR, EMAS, EMASV, EMV,
+        EMVS, HA, MACD, MACDD, MACS, NP, NR, NVI, OA, OBV,
+        PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA, SR, TWO_RSI,
+
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -219,8 +221,14 @@ public class AgentManager {
                     //get our agent
                     Agent agent = getAgents().get(i);
 
+                    //get the strategy related to the agent
+                    Strategy strategy = getCalculator().getStrategy(agent);
+
+                    //make sure the correct variables are set
+                    StrategyHelper.setupValues(agent.getStrategy(), strategy.getIndexStrategy());
+
                     //update the agent
-                    agent.update(getCalculator().getStrategy(agent), getCalculator().getHistory(), getProduct(), getCurrentPrice());
+                    agent.update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
                 }
             }
 

@@ -3,10 +3,10 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 public class StrategyDetails {
 
     //store our details
-    private double funds = 0, fundsMin = 0, fundsMax = 0;
+    private double funds = 0, fundsMin = 0, fundsMax = 0, fundsPrevious = 0;
 
-    public StrategyDetails() {
-        //default constructor
+    public StrategyDetails(double startFunds) {
+        setFundsPrevious(startFunds);
     }
 
     public void setFundsMin(double fundsMin) {
@@ -31,5 +31,13 @@ public class StrategyDetails {
 
     public void setFunds(double funds) {
         this.funds = funds;
+    }
+
+    public double getFundsPrevious() {
+        return this.fundsPrevious;
+    }
+
+    public void setFundsPrevious(double fundsPrevious) {
+        this.fundsPrevious = fundsPrevious;
     }
 }

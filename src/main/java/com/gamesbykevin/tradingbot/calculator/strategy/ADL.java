@@ -17,27 +17,16 @@ public class ADL extends Strategy {
     //our data for each period
     private List<Double> accumulationDistributionLine;
 
-    /**
-     * Default number of periods
-     */
-    private static final int DEFAULT_PERIODS = 7;
+    //this is here by default
+    protected static int[] LIST_DEFAULT = {0};
 
-    private final int periodsADL;
-
-    public ADL(int periodsADL) {
+    public ADL() {
 
         //call parent
-        super(periodsADL);
-
-        //assign value
-        this.periodsADL = periodsADL;
+        super();
 
         //create a new list
         this.accumulationDistributionLine = new ArrayList<>();
-    }
-
-    public ADL() {
-        this(DEFAULT_PERIODS);
     }
 
     public List<Double> getAccumulationDistributionLine() {
@@ -88,7 +77,7 @@ public class ADL extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "ADL: ", getAccumulationDistributionLine(), periodsADL, write);
+        display(agent, "ADL: ", getAccumulationDistributionLine(), write);
     }
 
     @Override

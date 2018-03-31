@@ -10,13 +10,16 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 
 public abstract class Strategy {
 
-    //the number of periods for the indicator
-    private final int periods;
+    //which data are we using to do our calculations
+    private int indexStrategy = 0;
 
-    protected Strategy(final int periods) {
+    /**
+     * When displaying data how many periods do we print/write to the console/log
+     */
+    private static int RECENT_PERIODS = 5;
 
-        //assign the periods
-        this.periods = periods;
+    protected Strategy() {
+        //default constructor
     }
 
     public abstract void checkBuySignal(Agent agent, List<Period> history, double currentPrice);
@@ -27,14 +30,23 @@ public abstract class Strategy {
 
     protected abstract void displayData(Agent agent, boolean write);
 
-    protected int getPeriods() {
-        return this.periods;
+    public void setIndexStrategy(final int indexStrategy) {
+        this.indexStrategy = indexStrategy;
     }
 
-    public static void display(Agent agent, String desc, List<Double> list, int periods, boolean write) {
+    public int getIndexStrategy() {
+        return this.indexStrategy;
+    }
+
+    public static void display(Agent agent, String desc, List<Double> list, boolean write) {
+
+        int size = RECENT_PERIODS;
+
+        if (size >= list.size())
+            size = list.size();
 
         String info = "";
-        for (int i = list.size() - periods; i < list.size(); i++) {
+        for (int i = list.size() - size; i < list.size(); i++) {
 
             if (info != null && info.length() > 0)
                 info += ", ";
@@ -53,9 +65,16 @@ public abstract class Strategy {
         return getRecent(periods, field, 1);
     }
 
-    protected double getRecent(List<Period> periods, Fields field, int index) {
+    /**
+     * Get the recent data
+     * @param periods The list of historical periods where we will be grabbing our data
+     * @param field The desired field (examples: open, close, low, high, volume)
+     * @param previous The index location of the desired data
+     * @return The value of the desired data for the specified recent index
+     */
+    protected double getRecent(List<Period> periods, Fields field, int previous) {
 
-        Period period = periods.get(periods.size() - index);
+        Period period = periods.get(periods.size() - previous);
 
         switch (field) {
 

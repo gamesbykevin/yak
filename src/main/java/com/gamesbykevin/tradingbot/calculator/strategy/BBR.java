@@ -17,52 +17,31 @@ public class BBR extends Strategy {
     private BB bbObj;
     private RSI rsiObj;
 
-    /**
-     * RSI Resistance line indicating our stock is overbought
-     */
-    private static final float RESISTANCE_LINE = 55.0f;
+    //our list of variations
+    protected static float[] LIST_RESISTANCE_LINE = {55.0f};
+    protected static float[] LIST_SUPPORT_LINE = {45.0f};
+    protected static int[] LIST_PERIODS_RSI = {12};
+    protected static int[] LIST_PERIODS_BB = {20};
 
-    /**
-     * RSI Support line indicating our stock is oversold
-     */
-    private static final float SUPPORT_LINE = 45.0f;
-
-    /**
-     * How many RSI periods we are calculating
-     */
-    private static final int PERIODS_RSI = 12;
-
-    /**
-     * How many BB periods we are calculating
-     */
-    private static final int PERIODS_BB = 20;
-
-    //our resistance and support lines
-    private final double resistance, support;
+    //list of configurable values
+    protected static float RESISTANCE_LINE = 55.0f;
+    protected static float SUPPORT_LINE = 45.0f;
 
     public BBR() {
-        this(PERIODS_BB, PERIODS_RSI, RESISTANCE_LINE, SUPPORT_LINE);
-    }
 
-    public BBR(int periodsBB, int periodsRSI, double resistance, double support) {
-
-        //call parent with default value
-        super(0);
-
-        //store our data
-        this.resistance = resistance;
-        this.support = support;
+        //call parent
+        super();
 
         //create new objects
-        this.bbObj = new BB(periodsBB);
-        this.rsiObj = new RSI(periodsRSI, 1, RESISTANCE_LINE, SUPPORT_LINE);
+        this.bbObj = new BB();
+        this.rsiObj = new RSI();
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //we won't try to buy unless we are below the support line
-        if (getRecent(rsiObj.getRsiVal()) < support) {
+        if (getRecent(rsiObj.getRsiVal()) < SUPPORT_LINE) {
 
             //check the previous 2 lower values
             double previous = getRecent(bbObj.getLower(), 2);
@@ -81,7 +60,7 @@ public class BBR extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //we won't try to sell unless we are above the resistance line
-        if (getRecent(rsiObj.getRsiVal()) > resistance) {
+        if (getRecent(rsiObj.getRsiVal()) > RESISTANCE_LINE) {
 
             //check the previous 2 upper values
             double previous = getRecent(bbObj.getUpper(), 2);

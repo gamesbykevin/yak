@@ -18,37 +18,24 @@ public class TWO_RSI extends Strategy {
     //our rsi object
     private RSI rsiObj;
 
-    /**
-     * List of periods to calculate our sma values
-     */
-    private static final int PERIODS_SMA = 100;
+    //our list of variations
+    protected static int[] LIST_PERIODS_SMA = {100};
+    protected static double[] LIST_MIN_RSI = {5.0d};
+    protected static double[] LIST_MAX_RSI = {95.0d};
+    protected static int[] LIST_PERIODS_RSI = {2};
 
-    /**
-     * Minimum required rsi value
-     */
-    private static final double MIN_RSI = 5.0d;
-
-    /**
-     * Maximum required rsi value
-     */
-    private static final double MAX_RSI = 95.0d;
-
-    /**
-     * The two rsi will always be 2 periods
-     */
-    private static final int TWO_RSI = 2;
+    //list of configurable values
+    protected static int PERIODS_SMA = 100;
+    protected static double MIN_RSI = 5.0d;
+    protected static double MAX_RSI = 95.0d;
 
     public TWO_RSI() {
-        this(TWO_RSI, PERIODS_SMA);
-    }
-
-    public TWO_RSI(int periodsRSI, int periodsSma) {
 
         //call parent
-        super(periodsRSI);
+        super();
 
         //create new list
-        this.rsiObj = new RSI(periodsRSI, periodsSma, 0, 0);
+        this.rsiObj = new RSI();
     }
 
     @Override

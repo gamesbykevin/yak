@@ -21,15 +21,16 @@ public class EMVS extends Strategy {
     //list of prices
     private List<Double> smaPrice;
 
-    /**
-     * The number of periods to calculate sma
-     */
-    private static final int PERIODS_SMA = 30;
+    //our list of variations
+    protected static int[] LIST_PERIODS_SMA = {30};
+
+    //list of configurable values
+    protected static int PERIODS_SMA = 30;
 
     public EMVS() {
 
-        //call parent with default value
-        super(0);
+        //call parent
+        super();
 
         //create new object
         this.emvObj = new EMV();
@@ -63,7 +64,7 @@ public class EMVS extends Strategy {
 
         //display the information
         emvObj.displayData(agent, write);
-        display(agent, "SMA: ", smaPrice, PERIODS_SMA / 10, write);
+        display(agent, "SMA: ", smaPrice, write);
     }
 
     @Override

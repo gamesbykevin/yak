@@ -12,27 +12,24 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class BB extends Strategy {
 
-    /**
-     * Typical # periods is 20
-     */
-    private static final int PERIODS_BB = 20;
+    //our list of variations
+    protected static int[] LIST_PERIODS_BB = {20};
+
+    //list of configurable values
+    protected static int PERIODS_BB = 20;
 
     //our lists
     private List<Double> middle, upper, lower;
 
-    public BB(int periods) {
+    public BB() {
 
         //call parent
-        super(periods);
+        super();
 
         //create our lists
         this.middle = new ArrayList<>();
         this.upper = new ArrayList<>();
         this.lower = new ArrayList<>();
-    }
-
-    public BB() {
-        this(PERIODS_BB);
     }
 
     public List<Double> getUpper() {
@@ -73,16 +70,16 @@ public class BB extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Upper: ", getUpper(), getPeriods() / 4, write);
-        display(agent, "Middle: ", getMiddle(), getPeriods() / 4, write);
-        display(agent, "Lower: ", getLower(), getPeriods() / 4, write);
+        display(agent, "Upper: ", getUpper(), write);
+        display(agent, "Middle: ", getMiddle(), write);
+        display(agent, "Lower: ", getLower(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate our sma values
-        calculateSMA(history, getMiddle(), getPeriods(), Fields.Close);
+        calculateSMA(history, getMiddle(), PERIODS_BB, Fields.Close);
 
         for (int index = 0; index < getMiddle().size(); index++) {
 
@@ -90,7 +87,7 @@ public class BB extends Strategy {
             double sma = getMiddle().get(index);
 
             //get the standard deviation
-            double standardDeviation = calculateStandardDeviation(history, sma, index + getPeriods());
+            double standardDeviation = calculateStandardDeviation(history, sma, index + PERIODS_BB);
 
             //add our upper value
             getUpper().add(sma + (standardDeviation * 2.0d));
@@ -104,14 +101,14 @@ public class BB extends Strategy {
 
         double sum = 0;
 
-        for (int x = index - getPeriods(); x < index; x++) {
+        for (int x = index - PERIODS_BB; x < index; x++) {
 
             //subtract the simple moving average from the price, then square it, now add it to our total sum
             sum += (Math.pow(history.get(x).close - sma, 2));
         }
 
         //calculate the new average
-        double average = sum / (double)getPeriods();
+        double average = sum / (double)PERIODS_BB;
 
         //return the square root of our average aka standard deviation
         return Math.sqrt(average);

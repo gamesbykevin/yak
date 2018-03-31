@@ -19,53 +19,28 @@ public class RSIM extends Strategy {
     //our rsi object reference
     private RSI rsiObj;
 
-    /**
-     * How many RSI periods we are calculating
-     */
-    private static final int PERIODS_RSI = 12;
+    //our list of variations
+    protected static int[] LIST_PERIODS_RSI = {12};
+    protected static int[] LIST_PERIODS_MACD = {9};
+    protected static float[] LIST_SUPPORT_LINE = {30.0f};
+    protected static float[] LIST_RESISTANCE_LINE = {70.0f};
+    protected static int[] LIST_PERIODS_SMA_TREND = {50};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
 
-    /**
-     * How many RSI periods we are calculating
-     */
-    private static final int PERIODS_MACD = 9;
-
-    /**
-     * The support line meaning the stock is oversold
-     */
-    private static final float SUPPORT_LINE = 30.0f;
-
-    /**
-     * The resistance line meaning the stock is overbought
-     */
-    private static final float RESISTANCE_LINE = 70.0f;
-
-    /**
-     * How many periods do we calculate the sma trend line
-     */
-    private static final int PERIODS_SMA_TREND = 50;
-
-    /**
-     * How many periods to calculate long ema
-     */
-    private static final int PERIODS_EMA_LONG = 26;
-
-    /**
-     * How many periods to calculate short ema
-     */
-    private static final int PERIODS_EMA_SHORT = 12;
+    //list of configurable values
+    protected static int PERIODS_MACD = 9;
+    protected static float SUPPORT_LINE = 30.0f;
+    protected static float RESISTANCE_LINE = 70.0f;
 
     public RSIM() {
-        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_RSI, PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
-    }
-
-    public RSIM(int periodsMacd, int periodsSmaTrend, int periodsRsi, int periodsEmaLong, int periodsEmaShort) {
 
         //call parent
-        super(periodsRsi);
+        super();
 
         //create objects
-        this.macdObj = new MACD(periodsMacd, periodsSmaTrend, periodsEmaLong, periodsEmaShort);
-        this.rsiObj = new RSI(periodsRsi, 1, RESISTANCE_LINE, SUPPORT_LINE);
+        this.macdObj = new MACD();
+        this.rsiObj = new RSI();
     }
 
     @Override
@@ -75,7 +50,7 @@ public class RSIM extends Strategy {
         if (getRecent(rsiObj.getRsiVal()) <= SUPPORT_LINE) {
 
             //if bullish divergence in macd and price
-            if (hasDivergence(history, macdObj.getPeriods(), true, macdObj.getMacdLine()))
+            if (hasDivergence(history, PERIODS_MACD, true, macdObj.getMacdLine()))
                 agent.setBuy(true);
         }
 
@@ -90,7 +65,7 @@ public class RSIM extends Strategy {
         if (getRecent(rsiObj.getRsiVal()) >= RESISTANCE_LINE) {
 
             //if bearish divergence in macd and price
-            if (hasDivergence(history, macdObj.getPeriods(), false, macdObj.getMacdLine()))
+            if (hasDivergence(history, PERIODS_MACD, false, macdObj.getMacdLine()))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 

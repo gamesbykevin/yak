@@ -17,47 +17,25 @@ public class MACS extends Strategy {
     //our list of fast, slow, trending values
     private List<Double> emaFast, emaSlow, emaTrend;
 
-    /**
-     * The number of periods for our moving average crossover strategy fast calculations
-     */
-    private static final int PERIODS_MACS_FAST = 10;
+    //our list of variations
+    protected static int[] LIST_PERIODS_MACS_FAST = {10};
+    protected static int[] LIST_PERIODS_MACS_SLOW = {20};
+    protected static int[] LIST_PERIODS_MACS_TREND = {50};
 
-    /**
-     * The number of periods for our moving average crossover strategy slow calculations
-     */
-    private static final int PERIODS_MACS_SLOW = 20;
+    //list of configurable values
+    protected static int PERIODS_MACS_FAST = 10;
+    protected static int PERIODS_MACS_SLOW = 20;
+    protected static int PERIODS_MACS_TREND = 50;
 
-    /**
-     * The number of periods for our moving average crossover strategy trending calculations
-     */
-    private static final int PERIODS_MACS_TREND = 50;
+    public MACS() {
 
-    private final int periodsFast, periodsSlow, periodsTrend;
-
-    public MACS(int periodsFast, int periodsSlow, int periodsTrend) {
-
-        //call parent with default volume
-        super(0);
-
-        //make sure the periods are appropriate
-        if (periodsFast > periodsSlow || periodsFast > periodsTrend)
-            throw new RuntimeException("The fast periods have to be less than both the slow and trend periods");
-        if (periodsSlow > periodsTrend)
-            throw new RuntimeException("The slow period has to be less than the trend period");
-
-        //store our period counts
-        this.periodsFast = periodsFast;
-        this.periodsSlow = periodsSlow;
-        this.periodsTrend = periodsTrend;
+        //call parent
+        super();
 
         //create new list(s)
         this.emaFast = new ArrayList<>();
         this.emaSlow = new ArrayList<>();
         this.emaTrend = new ArrayList<>();
-    }
-
-    public MACS() {
-        this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND);
     }
 
     @Override
@@ -94,17 +72,17 @@ public class MACS extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display values
-        display(agent, "EMA Fast: ", emaFast, periodsFast, write);
-        display(agent, "EMA Slow: ", emaSlow, periodsFast, write);
-        display(agent, "EMA Trend: ", emaTrend, periodsFast, write);
+        display(agent, "EMA Fast: ", emaFast, write);
+        display(agent, "EMA Slow: ", emaSlow, write);
+        display(agent, "EMA Trend: ", emaTrend, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate the different ema values
-        EMA.calculateEMA(history, emaFast, periodsFast);
-        EMA.calculateEMA(history, emaSlow, periodsSlow);
-        EMA.calculateEMA(history, emaTrend, periodsTrend);
+        EMA.calculateEMA(history, emaFast, PERIODS_MACS_FAST);
+        EMA.calculateEMA(history, emaSlow, PERIODS_MACS_SLOW);
+        EMA.calculateEMA(history, emaTrend, PERIODS_MACS_TREND);
     }
 }

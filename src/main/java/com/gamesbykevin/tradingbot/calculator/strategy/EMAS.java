@@ -16,35 +16,25 @@ public class EMAS extends Strategy {
     //our ema object reference
     private EMA emaObj;
 
-    /**
-     * How many periods to calculate long ema
-     */
-    private static final int PERIODS_EMA_LONG = 26;
 
-    /**
-     * How many periods to calculate short ema
-     */
-    private static final int PERIODS_EMA_SHORT = 12;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA_LONG = {26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
+    protected static int[] LIST_PERIODS_SMA_PRICE = {50};
 
-    /**
-     * How many periods to calculate price SMA
-     */
-    private static final int PERIODS_PRICE_SMA = 50;
+    //list of configurable values
+    protected static int PERIODS_SMA_PRICE = 50;
 
     //list of sma prices
     private List<Double> priceSMA;
 
     public EMAS() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_PRICE_SMA);
-    }
-
-    public EMAS(int periodsLong, int periodsShort, int periodsSma) {
 
         //call parent
-        super(periodsSma);
+        super();
 
         //create new objects
-        this.emaObj = new EMA(periodsLong, periodsShort);
+        this.emaObj = new EMA();
         this.priceSMA = new ArrayList<>();
     }
 
@@ -82,7 +72,7 @@ public class EMAS extends Strategy {
 
         //display the information
         this.emaObj.displayData(agent, write);
-        display(agent, "SMA Price: ", priceSMA, getPeriods() / 10, write);
+        display(agent, "SMA Price: ", priceSMA, write);
     }
 
     @Override
@@ -92,6 +82,6 @@ public class EMAS extends Strategy {
         this.emaObj.calculate(history);
 
         //calculate our sma price
-        calculateSMA(history, priceSMA, getPeriods(), Fields.Close);
+        calculateSMA(history, priceSMA, PERIODS_SMA_PRICE, Fields.Close);
     }
 }

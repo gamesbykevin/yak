@@ -19,39 +19,22 @@ public class EMA extends Strategy {
     //list of ema values for our short period
     private List<Double> emaShort;
 
-    /**
-     * How many periods to calculate long ema
-     */
-    private static final int PERIODS_EMA_LONG = 26;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA_LONG = {26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
 
-    /**
-     * How many periods to calculate short ema
-     */
-    private static final int PERIODS_EMA_SHORT = 12;
+    //list of configurable values
+    protected static int PERIODS_EMA_LONG = 26;
+    protected static int PERIODS_EMA_SHORT = 12;
 
-    //how many periods
-    private final int periodsLong, periodsShort;
+    public EMA() {
 
-    public EMA(int periodsLong, int periodsShort) {
-
-        //call parent with default value
-        super(0);
-
-        //if long is less than short throw exception
-        if (periodsLong <= periodsShort)
-            throw new RuntimeException("The long periods are less than the short. L=" + periodsLong + ", S=" + periodsShort);
-
-        //store our periods
-        this.periodsLong = periodsLong;
-        this.periodsShort = periodsShort;
+        //call parent
+        super();
 
         //create our lists
         this.emaLong = new ArrayList<>();
         this.emaShort = new ArrayList<>();
-    }
-
-    public EMA() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
     }
 
     public List<Double> getEmaShort() {
@@ -118,16 +101,16 @@ public class EMA extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short: ", getEmaShort(), (periodsShort / 2), write);
-        display(agent, "EMA Long: ", getEmaLong(), (periodsShort / 2),write);
+        display(agent, "EMA Short: ", getEmaShort(), write);
+        display(agent, "EMA Long: ", getEmaLong(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate ema for short and long periods
-        calculateEMA(history, getEmaShort(), periodsShort);
-        calculateEMA(history, getEmaLong(), periodsLong);
+        calculateEMA(history, getEmaShort(), PERIODS_EMA_SHORT);
+        calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
     }
 
     private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {

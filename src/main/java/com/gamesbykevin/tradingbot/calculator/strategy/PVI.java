@@ -15,23 +15,19 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateEmaLi
  */
 public class PVI extends Strategy {
 
-
     //our cumulative and ema lists
     private List<Double> pviCumulative, pviEma;
 
-    /**
-     * How many periods do we calculate for our ema
-     */
-    private static final int PERIODS_EMA = 255;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA = {255};
+
+    //list of configurable values
+    protected static int PERIODS_EMA = 255;
 
     public PVI() {
-        this(PERIODS_EMA);
-    }
 
-    public PVI(int periods) {
-
-        //call default value
-        super(periods);
+        //call parent
+        super();
 
         //create new lists
         this.pviCumulative = new ArrayList<>();
@@ -72,8 +68,8 @@ public class PVI extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "PVI Cum: ", getPviCumulative(), 5, write);
-        display(agent, "PVI Ema: ", getPviEma(), 5, write);
+        display(agent, "PVI Cum: ", getPviCumulative(), write);
+        display(agent, "PVI Ema: ", getPviEma(),        write);
     }
 
     @Override

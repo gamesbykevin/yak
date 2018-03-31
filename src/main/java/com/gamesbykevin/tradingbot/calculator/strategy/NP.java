@@ -10,10 +10,9 @@ import java.util.List;
  */
 public class NP extends Strategy {
 
-    /**
-     * How many periods do we calculate for our ema
-     */
-    private static final int PERIODS_EMA = 50;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA_NVI = {50};
+    protected static int[] LIST_PERIODS_EMA_PVI = {50};
 
     //our negative volume object
     private NVI nviObj;
@@ -22,17 +21,13 @@ public class NP extends Strategy {
     private PVI pviObj;
 
     public NP() {
-        this(PERIODS_EMA);
-    }
 
-    public NP(int periods) {
-
-        //call default value
-        super(periods);
+        //call parent
+        super();
 
         //create new objects
-        this.nviObj = new NVI(periods);
-        this.pviObj = new PVI(periods);
+        this.nviObj = new NVI();
+        this.pviObj = new PVI();
     }
 
     @Override

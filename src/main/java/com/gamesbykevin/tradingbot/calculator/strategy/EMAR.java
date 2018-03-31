@@ -20,39 +20,23 @@ public class EMAR extends Strategy {
     //our rsi object reference
     private RSI rsiObj;
 
-    /**
-     * How many periods to calculate long ema
-     */
-    private static final int PERIODS_EMA_LONG = 12;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA_LONG = {12};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {5};
+    protected static int[] LIST_PERIODS_RSI = {21};
+    protected static float[] LIST_RSI_LINE = {50.0f};
 
-    /**
-     * How many periods to calculate short ema
-     */
-    private static final int PERIODS_EMA_SHORT = 5;
-
-    /**
-     * How many periods to calculate rsi
-     */
-    private static final int PERIODS_RSI = 21;
-
-    /**
-     * What is our rsi line to detect bullish / bearish trends
-     */
-    private static final float RSI_LINE = 50.0f;
-
-
-    public EMAR(int periodsLong, int periodsShort, int periodsRSI) {
-
-        //call parent
-        super(0);
-
-        //create our objects
-        this.emaObj = new EMA(periodsLong, periodsShort);
-        this.rsiObj = new RSI(periodsRSI, 1, RSI_LINE, RSI_LINE);
-    }
+    //list of configurable values
+    protected static float RSI_LINE = 50.0f;
 
     public EMAR() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_RSI);
+
+        //call parent
+        super();
+
+        //create our objects
+        this.emaObj = new EMA();
+        this.rsiObj = new RSI();
     }
 
     @Override

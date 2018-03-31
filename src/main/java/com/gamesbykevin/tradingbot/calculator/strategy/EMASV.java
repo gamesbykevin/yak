@@ -25,36 +25,26 @@ public class EMASV extends Strategy {
     //our list of sma volume values
     private List<Double> smaVolume;
 
-    /**
-     * What is the size of our periods
-     */
-    private static final int PERIODS_EMA_LONG = 26;
-    private static final int PERIODS_EMA_SHORT = 12;
-    private static final int PERIODS_SMA_PRICE = 50;
-    private static final int PERIODS_SMA_VOLUME = 60;
+    //our list of variations
+    protected static int[] LIST_PERIODS_EMA_LONG = {26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
+    protected static int[] LIST_PERIODS_SMA_PRICE = {50};
+    protected static int[] LIST_PERIODS_SMA_VOLUME = {60};
 
-    //what are our periods
-    private final int periodsEmaLong, periodsEmaShort, periodsSmaPrice, periodsSmaVolume;
-
-    public EMASV(int periodsEmaLong, int periodsEmaShort, int periodsSmaPrice, int periodsSmaVolume) {
-
-        //call parent with default
-        super(0);
-
-        //store our settings
-        this.periodsEmaLong = periodsEmaLong;
-        this.periodsEmaShort = periodsEmaShort;
-        this.periodsSmaPrice = periodsSmaPrice;
-        this.periodsSmaVolume = periodsSmaVolume;
-
-        //create new object(s)
-        this.emaObj = new EMA(this.periodsEmaLong, this.periodsEmaShort);
-        this.smaPrice = new ArrayList<>();
-        this.smaVolume = new ArrayList<>();
-    }
+    //list of configurable values
+    protected static int PERIODS_EMA_SHORT = 12;
+    protected static int PERIODS_SMA_PRICE = 50;
+    protected static int PERIODS_SMA_VOLUME = 60;
 
     public EMASV() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_SMA_PRICE, PERIODS_SMA_VOLUME);
+
+        //call parent
+        super();
+
+        //create new object(s)
+        this.emaObj = new EMA();
+        this.smaPrice = new ArrayList<>();
+        this.smaVolume = new ArrayList<>();
     }
 
     public List<Double> getSmaPrice() {
@@ -69,7 +59,7 @@ public class EMASV extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the previous sma value
-        double previous = getRecent(getSmaPrice(), periodsEmaShort);
+        double previous = getRecent(getSmaPrice(), PERIODS_EMA_SHORT);
 
         //get the current sma value
         double current = getRecent(getSmaPrice());
@@ -94,7 +84,7 @@ public class EMASV extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the previous sma value
-        double previous = getRecent(getSmaPrice(), periodsEmaShort);
+        double previous = getRecent(getSmaPrice(), PERIODS_EMA_SHORT);
 
         //get the current sma value
         double current = getRecent(getSmaPrice());
@@ -120,8 +110,8 @@ public class EMASV extends Strategy {
 
         //display the information
         this.emaObj.displayData(agent, write);
-        display(agent, "SMA Price: ", getSmaPrice(), periodsEmaShort, write);
-        display(agent, "SMA Volume: ", getSmaVolume(), periodsEmaShort, write);
+        display(agent, "SMA Price: ", getSmaPrice(), write);
+        display(agent, "SMA Volume: ", getSmaVolume(), write);
     }
 
     @Override
@@ -131,9 +121,9 @@ public class EMASV extends Strategy {
         this.emaObj.calculate(history);
 
         //calculate our sma price
-        calculateSMA(history, getSmaPrice(), periodsSmaPrice, Fields.Close);
+        calculateSMA(history, getSmaPrice(), PERIODS_SMA_PRICE, Fields.Close);
 
         //calculate our sma volume
-        calculateSMA(history, getSmaVolume(), periodsSmaVolume, Fields.Volume);
+        calculateSMA(history, getSmaVolume(), PERIODS_SMA_VOLUME, Fields.Volume);
     }
 }

@@ -19,39 +19,25 @@ public class RSIA extends Strategy {
     //our rsi object reference
     private RSI rsiObj;
 
-    /**
-     * How many periods do we calculate the average directional index
-     */
-    private static final int PERIODS_ADX = 20;
+    //our list of variations
+    protected static int[] LIST_PERIODS_ADX = {20};
+    protected static double[] LIST_TREND_ADX = {20.0d};
+    protected static int[] LIST_PERIODS_RSI = {7};
+    protected static float[] LIST_SUPPORT_LINE = {30.0f};
+    protected static float[] LIST_RESISTANCE_LINE = {70.0f};
 
-    /**
-     * The minimum value to determine there is a price trend
-     */
-    private static final double TREND_ADX = 20.0d;
-
-    /**
-     * How many periods to calculate rsi
-     */
-    private static final int PERIODS_RSI = 7;
-
-    /**
-     * The support line meaning the stock is oversold
-     */
-    private static final float SUPPORT_LINE = 30.0f;
-
-    /**
-     * The resistance line meaning the stock is overbought
-     */
-    private static final float RESISTANCE_LINE = 70.0f;
+    //list of configurable values
+    protected static float SUPPORT_LINE = 30.0f;
+    protected static float RESISTANCE_LINE = 70.0f;
 
     public RSIA() {
 
         //call parent
-        super(PERIODS_RSI);
+        super();
 
         //create objects
-        this.adxObj = new ADX(PERIODS_ADX, TREND_ADX);
-        this.rsiObj = new RSI(PERIODS_RSI, 1, RESISTANCE_LINE, SUPPORT_LINE);
+        this.adxObj = new ADX();
+        this.rsiObj = new RSI();
     }
 
     @Override

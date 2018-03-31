@@ -16,44 +16,29 @@ public class MACDD extends Strategy {
     //our macd object
     private MACD macdObj;
 
-    /**
-     * How many periods do we calculate ema from macd line
-     */
-    private static final int PERIODS_MACD = 9;
+    //our list of variations
+    protected static int[] LIST_PERIODS_MACD = {9};
+    protected static int[] LIST_PERIODS_SMA_TREND = {50};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
 
-    /**
-     * How many periods do we calculate the sma trend line
-     */
-    private static final int PERIODS_SMA_TREND = 50;
-
-    /**
-     * How many periods to calculate long ema
-     */
-    private static final int PERIODS_EMA_LONG = 26;
-
-    /**
-     * How many periods to calculate short ema
-     */
-    private static final int PERIODS_EMA_SHORT = 12;
+    //list of configurable values
+    protected static int PERIODS_MACD = 9;
 
     public MACDD() {
-        this(PERIODS_MACD, PERIODS_SMA_TREND, PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
-    }
-
-    public MACDD(int periodsMacd, int periodsSmaTrend, int periodsEmaLong, int periodsEmaShort) {
 
         //call parent
-        super(periodsMacd);
+        super();
 
         //create obj
-        this.macdObj = new MACD(periodsMacd, periodsSmaTrend, periodsEmaLong, periodsEmaShort);
+        this.macdObj = new MACD();
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if bullish divergence, buy
-        if (hasDivergence(history, getPeriods(), true, macdObj.getHistogram()))
+        if (hasDivergence(history, PERIODS_MACD, true, macdObj.getHistogram()))
             agent.setBuy(true);
 
         //display our data
@@ -64,7 +49,7 @@ public class MACDD extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bearish divergence, we expect price to go down
-        if (hasDivergence(history, getPeriods(), false, macdObj.getHistogram()))
+        if (hasDivergence(history, PERIODS_MACD, false, macdObj.getHistogram()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
@@ -75,7 +60,7 @@ public class MACDD extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the histogram values which we use as a signal
-        display(agent, "Histogram: ", macdObj.getHistogram(), getPeriods(), write);
+        display(agent, "Histogram: ", macdObj.getHistogram(), write);
 
         //display values
         this.macdObj.displayData(agent, write);

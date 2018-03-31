@@ -24,42 +24,27 @@ public class SR extends Strategy {
     //list of stoch rsi values
     private List<Double> stochRsi;
 
-    /**
-     * How many periods do we calculate for our long sma
-     */
-    private static final int PERIODS_LONG = 60;
+    //our list of variations
+    protected static int[] LIST_PERIODS_LONG = {60};
+    protected static int[] LIST_PERIODS_SHORT = {10};
+    protected static int[] LIST_PERIODS_STOCH_RSI = {14};
+    protected static double[] LIST_OVER_BOUGHT = {.90d};
+    protected static double[] LIST_OVER_SOLD = {.10d};
 
-    /**
-     * How many periods do we calculate for our short sma
-     */
-    private static final int PERIODS_SHORT = 10;
-
-    /**
-     * The number of periods to calculate our values
-     */
-    private static final int PERIODS_STOCH_RSI = 14;
-
-    /**
-     * Indicator security is over bought
-     */
-    private static final double OVER_BOUGHT = .90d;
-
-    /**
-     * Indicator security is over sold
-     */
-    private static final double OVER_SOLD = .10d;
+    //list of configurable values
+    protected static int PERIODS_LONG = 60;
+    protected static int PERIODS_SHORT = 10;
+    protected static int PERIODS_STOCH_RSI = 14;
+    protected static double OVER_BOUGHT = .90d;
+    protected static double OVER_SOLD = .10d;
 
     public SR() {
-        this(PERIODS_STOCH_RSI);
-    }
 
-    public SR(int periods) {
-
-        //call parent with periods
-        super(periods);
+        //call parent
+        super();
 
         //create our rsi object
-        this.rsiObj = new RSI(PERIODS_STOCH_RSI, 1, 0, 0);
+        this.rsiObj = new RSI();
 
         //create new lists
         this.stochRsi = new ArrayList<>();
@@ -120,7 +105,7 @@ public class SR extends Strategy {
 
         //display the information
         this.rsiObj.displayData(agent, write);
-        display(agent, "STOCH RSI: ", getStochRsi(), getPeriods() / 3, write);
+        display(agent, "STOCH RSI: ", getStochRsi(), write);
     }
 
     @Override
@@ -136,13 +121,13 @@ public class SR extends Strategy {
         for (int i = 0; i < rsiObj.getRsiVal().size(); i++) {
 
             //skip until we have enough data
-            if (i < getPeriods())
+            if (i < PERIODS_STOCH_RSI)
                 continue;
 
             double rsiHigh = -1, rsiLow = 101;
 
             //check the recent periods for our calculations
-            for (int x = i - getPeriods(); x < i; x++) {
+            for (int x = i - PERIODS_STOCH_RSI; x < i; x++) {
 
                 //get the current rsi value
                 double rsi = rsiObj.getRsiVal().get(x);

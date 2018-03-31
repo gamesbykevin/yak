@@ -24,41 +24,26 @@ public class ADX extends Strategy {
     private List<Double> dmPlusIndicator;
     private List<Double> dmMinusIndicator;
 
-    /**
-     * Number of periods we are calculating SMA
-     */
-    private static final int PERIODS_SMA = 50;
+    //our list of variations
+    protected static int[] LIST_PERIODS_SMA = {50};
+    protected static int[] LIST_PERIODS_ADX = {14};
+    protected static double[] LIST_TREND_ADX = {20.0d};
 
-    /**
-     * How many periods do we calculate the average directional index
-     */
-    private static final int PERIODS_ADX = 14;
+    //list of configurable values
+    protected static int PERIODS_SMA = 50;
+    protected static int PERIODS_ADX = 14;
+    protected static double TREND_ADX = 20.0d;
 
-    /**
-     * The minimum value to determine there is a price trend
-     */
-    private static final double TREND_ADX = 20.0d;
-
-    //our trend line
-    private final double trend;
-
-    public ADX(int periods, double trend) {
+    public ADX() {
 
         //call parent
-        super(periods);
-
-        //save the trend
-        this.trend = trend;
+        super();
 
         //create our lists
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();
         this.dmMinusIndicator = new ArrayList<>();
         this.smaPrice = new ArrayList<>();
-    }
-
-    public ADX() {
-        this(PERIODS_ADX, TREND_ADX);
     }
 
     public List<Double> getAdx() {
@@ -81,7 +66,7 @@ public class ADX extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) > this.trend) {
+        if (getRecent(getAdx()) > TREND_ADX) {
 
             //if the current stock price is above our sma average
             if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
@@ -100,7 +85,7 @@ public class ADX extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) > this.trend) {
+        if (getRecent(getAdx()) > TREND_ADX) {
 
             //if the current stock price is below our sma average
             if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
@@ -119,10 +104,10 @@ public class ADX extends Strategy {
     protected void displayData(Agent agent, boolean write) {
 
         //display the recent values which we use as a signal
-        display(agent, "+DI: ", getDmPlusIndicator(), getPeriods() / 2, write);
-        display(agent, "-DI: ", getDmMinusIndicator(), getPeriods() / 2, write);
+        display(agent, "+DI: ", getDmPlusIndicator(), write);
+        display(agent, "-DI: ", getDmMinusIndicator(), write);
         displayMessage(agent, "ADX: " + getRecent(getAdx()), write);
-        display(agent, "SMA: ", getSmaPrice(), getPeriods() / 2, write);
+        display(agent, "SMA: ", getSmaPrice(), write);
     }
 
     @Override
@@ -201,9 +186,9 @@ public class ADX extends Strategy {
         List<Double> trueRange = new ArrayList<>();
 
         //smooth the values
-        smooth(tmpDmMinus, dmMinus, getPeriods());
-        smooth(tmpDmPlus, dmPlus, getPeriods());
-        smooth(tmpTrueRange, trueRange, getPeriods());
+        smooth(tmpDmMinus, dmMinus,     PERIODS_ADX);
+        smooth(tmpDmPlus, dmPlus,       PERIODS_ADX);
+        smooth(tmpTrueRange, trueRange, PERIODS_ADX);
 
         for (int i = 0; i < dmPlus.size(); i++) {
 
@@ -229,21 +214,21 @@ public class ADX extends Strategy {
         double sum = 0;
 
         //get the average for the first value
-        for (int i = 0; i < getPeriods(); i++) {
+        for (int i = 0; i < PERIODS_ADX; i++) {
             sum += dmIndex.get(i);
         }
 
         //our first value is the average
-        getAdx().add(sum / (double)getPeriods());
+        getAdx().add(sum / (double)PERIODS_ADX);
 
         //calculate the remaining average directional index values
-        for (int i = getPeriods(); i < dmIndex.size(); i++) {
+        for (int i = PERIODS_ADX; i < dmIndex.size(); i++) {
 
             //get the most recent adx
             double previousAdx = getRecent(getAdx());
 
             //calculate the new adx value
-            double newAdx = ((previousAdx * (double)(getPeriods() - 1)) + dmIndex.get(i)) / (double)getPeriods();
+            double newAdx = ((previousAdx * (double)(PERIODS_ADX - 1)) + dmIndex.get(i)) / (double)PERIODS_ADX;
 
             //add new value to our list
             getAdx().add(newAdx);

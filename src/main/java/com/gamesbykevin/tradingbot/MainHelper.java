@@ -1,7 +1,6 @@
 package com.gamesbykevin.tradingbot;
 
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.StrategyDetails;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
@@ -11,6 +10,7 @@ import java.util.HashMap;
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
 import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -31,49 +31,44 @@ public class MainHelper {
 
     protected static String getStrategySummaryDesc(Main main) {
 
-        String strategyDesc = "Strategy Summary\n";
-
-        //get the list of values
-        TradingStrategy[] strategies = TradingStrategy.values();
-
         //now show the total $ per trading strategy
-        for (int i = 0; i < strategies.length; i++) {
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
+            //get the current strategy
+            TradingStrategy strategy = MY_TRADING_STRATEGIES[i];
+
+            //count the total $
             double amount = 0;
 
             //check each manager looking for the strategy
             for (int x = 0; x < TRADING_CURRENCIES.length; x++) {
-                amount += main.getAgentManagers().get(TRADING_CURRENCIES[x]).getAssets(strategies[i]);
+                amount += main.getAgentManagers().get(TRADING_CURRENCIES[x]).getAssets(strategy);
             }
 
             //we aren't using this strategy if we don't have any money
             if (amount <= 0)
                 continue;
 
-            //what is the change from the previous update
-            String change = "";
-
             //obtain our strategy details
-            StrategyDetails details = getStrategyProgress().get(strategies[i]);
+            StrategyDetails details = getStrategyProgress().get(strategy);
 
+            //if the details have not yet been created, let's create it now
             if (details == null) {
-                details = new StrategyDetails();
+
+                //create and populate our details
+                details = new StrategyDetails(amount);
                 details.setFunds(amount);
-                getStrategyProgress().put(strategies[i], details);
                 details.setFundsMax(amount);
                 details.setFundsMin(amount);
+
+                //add it to the hash map
+                getStrategyProgress().put(strategy, details);
             }
 
-            //get the previous total
-            double previous = details.getFunds();
+            //update the previous funds
+            details.setFundsPrevious(details.getFunds());
 
-            //first title
-            change = ",  Diff $";
-
-            //then add the difference to the change
-            change += AgentHelper.formatValue(amount - previous);
-
-            //update value in list
+            //update our funds with the new value
             details.setFunds(amount);
 
             //if we set a new low save the new record
@@ -83,12 +78,54 @@ public class MainHelper {
             //if we set a new high save the new record
             if (amount > details.getFundsMax())
                 details.setFundsMax(amount);
+        }
 
-            //add strategy, price and price change
-            strategyDesc += strategies[i].toString() +
-                    " $" + AgentHelper.formatValue(amount) + change +
-                    ",  Min $" + AgentHelper.formatValue(details.getFundsMin()) +
-                    ",  Max $" + AgentHelper.formatValue(details.getFundsMax()) + "\n";
+        //sort the array so we can display the strategy with the most funds first, lowest will be last
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+            for (int j = i + 1; j < MY_TRADING_STRATEGIES.length; j++) {
+
+                //this shouldn't happen
+                if (i == j)
+                    continue;
+
+                //which strategies are we comparing?
+                TradingStrategy strategy1 = MY_TRADING_STRATEGIES[i];
+                TradingStrategy strategy2 = MY_TRADING_STRATEGIES[j];
+
+                //if the first value is less, we will need to swap strategies
+                if (getStrategyProgress().get(strategy1).getFunds() < getStrategyProgress().get(strategy2).getFunds()) {
+                    MY_TRADING_STRATEGIES[i] = strategy2;
+                    MY_TRADING_STRATEGIES[j] = strategy1;
+                }
+            }
+        }
+
+        //our return result
+        String strategyDesc = "Strategy Summary\n";
+
+        //now that our list has been sorted let's create our String result
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+
+            //get the current strategy
+            TradingStrategy strategy = MY_TRADING_STRATEGIES[i];
+
+            //if the strategy does not exist skip, this shouldn't happen
+            if (getStrategyProgress().get(strategy) == null)
+                continue;
+
+            //get the current strategy details
+            StrategyDetails details = getStrategyProgress().get(strategy);
+
+            //what is the price difference since last update
+            String change = ",  Diff $" + AgentHelper.formatValue(details.getFunds() - details.getFundsPrevious());
+
+            //formulate our string message
+            strategyDesc +=
+                " $" + AgentHelper.formatValue(details.getFunds()) +
+                change +
+                ",  Min $" + AgentHelper.formatValue(details.getFundsMin()) +
+                ",  Max $" + AgentHelper.formatValue(details.getFundsMax()) +
+                " " + strategy.toString() + "\n";
         }
 
         //return our result
@@ -153,6 +190,7 @@ public class MainHelper {
 
             //else just print to console
             displayMessage(subject);
+
         }
 
         //if enough time has passed send ourselves a notification

@@ -11,31 +11,22 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDiverge
 
 public class OBV extends Strategy {
 
-    /**
-     * How many periods to calculate the on balance volume
-     */
-    private static final int PERIODS_OBV = 10;
+    //our list of variations
+    protected static int[] LIST_PERIODS_OBV = {10};
+
+    //list of configurable values
+    protected static int PERIODS_OBV = 10;
 
     //keep a historical list of the volume so we can check for divergence
     private List<Double> volume;
 
-    //our desired periods
-    private final int periodsObv;
-
-    public OBV(int periods) {
+    public OBV() {
 
         //call parent
-        super(periods);
-
-        //assign value
-        this.periodsObv = periods;
+        super();
 
         //create list
         this.volume = new ArrayList<>();
-    }
-
-    public OBV() {
-        this(PERIODS_OBV);
     }
 
     public List<Double> getVolume() {
@@ -46,7 +37,7 @@ public class OBV extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if there is a bullish divergence let's buy
-        if (hasDivergence(history, getPeriods(), true, getVolume()))
+        if (hasDivergence(history, PERIODS_OBV, true, getVolume()))
             agent.setBuy(true);
 
         //display our data
@@ -57,7 +48,7 @@ public class OBV extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if there is a bearish divergence let's sell
-        if (hasDivergence(history, getPeriods(), false, getVolume()))
+        if (hasDivergence(history, PERIODS_OBV, false, getVolume()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
@@ -68,7 +59,7 @@ public class OBV extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "OBV: ", getVolume(), (periodsObv / 2), write);
+        display(agent, "OBV: ", getVolume(), write);
     }
 
     @Override
@@ -81,7 +72,7 @@ public class OBV extends Strategy {
         for (int i = 0; i < history.size(); i++) {
 
             //skip if not enough info
-            if (i < getPeriods())
+            if (i < PERIODS_OBV)
                 continue;
 
             //get the obv for this period
@@ -98,7 +89,7 @@ public class OBV extends Strategy {
         double sum = 0;
 
         //check every period
-        for (int i = currentPeriod - getPeriods(); i < currentPeriod - 1; i++) {
+        for (int i = currentPeriod - PERIODS_OBV; i < currentPeriod - 1; i++) {
 
             Period prev = history.get(i);
             Period next = history.get(i + 1);
