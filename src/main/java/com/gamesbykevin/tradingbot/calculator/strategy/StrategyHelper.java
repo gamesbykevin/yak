@@ -78,6 +78,7 @@ public class StrategyHelper {
 
                 case EMVS:
                     EMVS.PERIODS_SMA = EMVS.LIST_PERIODS_SMA[index];
+                    EMV.PERIODS_EMV = EMVS.LIST_PERIODS_EMV[index];
                     break;
 
                 case HA:

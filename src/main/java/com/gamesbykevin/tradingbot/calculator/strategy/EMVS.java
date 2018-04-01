@@ -23,6 +23,7 @@ public class EMVS extends Strategy {
 
     //our list of variations
     protected static int[] LIST_PERIODS_SMA = {30};
+    protected static int[] LIST_PERIODS_EMV = {14};
 
     //list of configurable values
     protected static int PERIODS_SMA = 30;

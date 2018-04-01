@@ -59,9 +59,6 @@ public class PropertyUtil {
         //is the websocket enabled?
         Main.WEBSOCKET_ENABLED = Boolean.parseBoolean(getProperties().getProperty("websocketEnabled"));
 
-        //do we want to simulate our strategies?
-        AgentManagerHelper.SIMULATE_STRATEGIES = Boolean.parseBoolean(getProperties().getProperty("simulateStrategies"));
-
         //how long is each thread
         Main.THREAD_DELAY = Long.parseLong(getProperties().getProperty("threadDelay"));
 

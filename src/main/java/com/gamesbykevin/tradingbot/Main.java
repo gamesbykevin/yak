@@ -285,6 +285,9 @@ public class Main implements Runnable {
         //create new hash map of agents
         this.agentManagers = new HashMap<>();
 
+        //populate our specified strategies
+        Calculator.populateStrategies();
+
         //identify our duration
         Calculator.Duration duration = null;
 

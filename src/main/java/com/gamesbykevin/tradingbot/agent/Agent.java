@@ -20,7 +20,6 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.util.LogFile.STRATEGIES_DIRECTORY;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent implements IAgent {
@@ -47,7 +46,7 @@ public class Agent implements IAgent {
     private ReasonSell reason;
 
     //what is our assigned trading strategy
-    private TradingStrategy strategy;
+    private TradingStrategy tradingStrategy = null;
 
     //the product we are trading
     private final String productId;
@@ -64,10 +63,7 @@ public class Agent implements IAgent {
     //is this agent used to run simulations
     private final boolean simulation;
 
-    protected Agent(TradingStrategy strategy, double funds, String productId, boolean simulation) {
-
-        //save the trading strategy we want to implement
-        setStrategy(strategy);
+    protected Agent(double funds, String productId, boolean simulation) {
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
@@ -85,17 +81,12 @@ public class Agent implements IAgent {
     @Override
     public void reset(double funds) {
 
-        //obtain our file name
-        String fileName = getFileName();
+        //where to put our log file
+        String directory = LogFile.LOG_DIRECTORY + "\\" + getProductId() + "\\";
 
-        //directory will be organized based on product and strategy example: logs/LTC-USD/EMA
-        String directory = LogFile.LOG_DIRECTORY + "\\" + getProductId() + "\\" + STRATEGIES_DIRECTORY + "\\" + getStrategy() + "\\";
-
-        //we place the simulation files in a different directory
-        directory += (isSimulation()) ? "test" : "live";
-
-        //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter(fileName, directory);
+        //our simulation won't have a log file
+        if (!isSimulation())
+            this.writer = LogFile.getPrintWriter(getFileName(), directory);
 
         //we don't want to buy when reset
         setBuy(false);
@@ -109,6 +100,9 @@ public class Agent implements IAgent {
         //we don't want to stop trading
         setStopTrading(false);
 
+        //reset our hard stop
+        setHardStop(0);
+
         //clear our list
         this.transactions.clear();
 
@@ -120,7 +114,7 @@ public class Agent implements IAgent {
         this.setFundsMax(funds);
 
         //display message and write to file
-        displayMessage(this, "Starting $" + funds, true);
+        //displayMessage(this, "Starting $" + funds, true);
     }
 
     @Override
@@ -239,10 +233,7 @@ public class Agent implements IAgent {
                 displayMessage(this, text4, true);
 
                 //include the funds in our message
-                String message = text1 + "\n";
-                message += text2 + "\n";
-                message += text3 + "\n";
-                message += text4 + "\n";
+                String message = text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n";
 
                 //also include the summary of wins/losses
                 message = message + TransactionHelper.getDescWins(this) + "\n";
@@ -250,7 +241,7 @@ public class Agent implements IAgent {
 
                 //send email notification
                 if (!isSimulation())
-                    Email.sendEmail(subject + " (" + getProductId() + "-" + getStrategy() + ")", message);
+                    Email.sendEmail(subject + " (" + getProductId() + "-" + getTradingStrategy() + ")", message);
             }
         }
     }
@@ -295,6 +286,14 @@ public class Agent implements IAgent {
 
     protected double getAssets(double currentPrice) {
         return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
+    }
+
+    /**
+     * Is this agent pending?
+     * @return true if it has an outstanding order, or if it has stock quantity
+     */
+    protected boolean isPending() {
+        return (getOrder() != null || getWallet().getQuantity() > 0.0d);
     }
 
     public void setOrder(final Order order) {
@@ -373,12 +372,12 @@ public class Agent implements IAgent {
         return this.simulation;
     }
 
-    public void setStrategy(TradingStrategy strategy) {
-        this.strategy = strategy;
+    public void setTradingStrategy(TradingStrategy tradingStrategy) {
+        this.tradingStrategy = tradingStrategy;
     }
 
-    public TradingStrategy getStrategy() {
-        return this.strategy;
+    public TradingStrategy getTradingStrategy() {
+        return this.tradingStrategy;
     }
 
     public String getProductId() {

@@ -21,10 +21,10 @@ public class NVI extends Strategy {
     private List<Double> nviCumulative, nviEma;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA = {255};
+    protected static int[] LIST_PERIODS_EMA = {200};
 
     //list of configurable values
-    protected static int PERIODS_EMA = 255;
+    protected static int PERIODS_EMA = 200;
 
     public NVI() {
 

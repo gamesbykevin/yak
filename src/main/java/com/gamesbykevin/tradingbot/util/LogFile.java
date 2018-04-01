@@ -9,8 +9,6 @@ public class LogFile {
 
     public static final String LOG_DIRECTORY = "logs";
 
-    public static final String STRATEGIES_DIRECTORY = "strategies";
-
     public static PrintWriter getPrintWriter(final String filename, final String directories) {
 
         try {

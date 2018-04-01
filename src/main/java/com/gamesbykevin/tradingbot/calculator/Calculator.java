@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
+import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
@@ -239,23 +240,6 @@ public class Calculator {
                 //sort the history
                 sortHistory(getHistory());
 
-                //make sure the history is long enough, and that it has changed before we start doing our calculations
-                if (getHistory().size() >= HISTORICAL_PERIODS_MINIMUM && size != getHistory().size()) {
-
-                    //now do all strategy calculations
-                    for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
-
-                        //get the current strategy
-                        Strategy strategy = getStrategies().get(MY_TRADING_STRATEGIES[i]);
-
-                        //make sure the correct variables are set
-                        StrategyHelper.setupValues(MY_TRADING_STRATEGIES[i], strategy.getIndexStrategy());
-
-                        //now perform our calculations
-                        strategy.calculate(history);
-                    }
-                }
-
                 //we are successful
                 result = true;
 
@@ -280,11 +264,63 @@ public class Calculator {
         return this.strategies;
     }
 
-    public Strategy getStrategy(Agent agent) {
-        return getStrategy(agent.getStrategy());
+    public Strategy getStrategyObj(Agent agent) {
+        return getStrategyObj(agent.getTradingStrategy());
     }
 
-    public Strategy getStrategy(TradingStrategy strategy) {
+    public Strategy getStrategyObj(TradingStrategy strategy) {
         return getStrategies().get(strategy);
+    }
+
+    /**
+     * Create our array containing our trading strategies
+     */
+    public static void populateStrategies() {
+
+        //create a new array which will contain our trading strategies
+        if (MY_TRADING_STRATEGIES == null) {
+
+            //make sure we aren't using duplicate strategies
+            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+                for (int j = 0; j < TRADING_STRATEGIES.length; j++) {
+
+                    //don't check the same element
+                    if (i == j)
+                        continue;
+
+                    //if the value already exists we have duplicate strategies
+                    if (TRADING_STRATEGIES[i].trim().equalsIgnoreCase(TRADING_STRATEGIES[j].trim()))
+                        throw new RuntimeException("Duplicate trading strategy in your property file \"" + TRADING_STRATEGIES[i] + "\"");
+                }
+            }
+
+            //create our trading array
+            MY_TRADING_STRATEGIES = new TradingStrategy[TRADING_STRATEGIES.length];
+
+            //temp list of all values so we can check for a match
+            TradingStrategy[] tmp = TradingStrategy.values();
+
+            //make sure the specified strategies exist
+            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+
+                //check each strategy for a match
+                for (int j = 0; j < tmp.length; j++) {
+
+                    //if the spelling matches we have found our strategy
+                    if (tmp[j].toString().trim().equalsIgnoreCase(TRADING_STRATEGIES[i].trim())) {
+
+                        //assign our strategy
+                        MY_TRADING_STRATEGIES[i] = tmp[j];
+
+                        //exit the loop
+                        break;
+                    }
+                }
+
+                //no matching strategy was found throw exception
+                if (MY_TRADING_STRATEGIES[i] == null)
+                    throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
+            }
+        }
     }
 }

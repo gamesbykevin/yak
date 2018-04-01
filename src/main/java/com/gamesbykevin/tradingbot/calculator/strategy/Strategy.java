@@ -40,6 +40,10 @@ public abstract class Strategy {
 
     public static void display(Agent agent, String desc, List<Double> list, boolean write) {
 
+        //don't display / write if simulation
+        if (agent.isSimulation())
+            return;
+
         int size = RECENT_PERIODS;
 
         if (size >= list.size())
@@ -69,7 +73,7 @@ public abstract class Strategy {
      * Get the recent data
      * @param periods The list of historical periods where we will be grabbing our data
      * @param field The desired field (examples: open, close, low, high, volume)
-     * @param previous The index location of the desired data
+     * @param previous How many periods do we go back from the most recent
      * @return The value of the desired data for the specified recent index
      */
     protected double getRecent(List<Period> periods, Fields field, int previous) {

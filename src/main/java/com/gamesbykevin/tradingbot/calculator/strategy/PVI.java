@@ -19,10 +19,10 @@ public class PVI extends Strategy {
     private List<Double> pviCumulative, pviEma;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA = {255};
+    protected static int[] LIST_PERIODS_EMA = {200};
 
     //list of configurable values
-    protected static int PERIODS_EMA = 255;
+    protected static int PERIODS_EMA = 200;
 
     public PVI() {
 

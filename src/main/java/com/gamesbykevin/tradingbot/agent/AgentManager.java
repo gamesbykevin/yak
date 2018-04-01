@@ -9,25 +9,20 @@ import com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
-import static com.gamesbykevin.tradingbot.MainHelper.getStrategyProgress;
+import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.getFileName;
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.SIMULATE_STRATEGIES;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.runSimulation;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 
 public class AgentManager {
 
-    //list of agents we are trading with different strategies
-    private final List<Agent> agents;
+    //our primary agent used to trade
+    private Agent agentPrimary;
 
-    //list of agents that we will run our simulations
-    private final List<Agent> tmpAgents;
+    //agent that we use for simulations
+    private Agent agentSimulation;
 
     //our reference to calculate calculator
     private Calculator calculator;
@@ -60,7 +55,7 @@ public class AgentManager {
 
         ADL, ADX, BB, BBER, BBR, EMA, EMAR, EMAS, EMASV, EMV,
         EMVS, HA, MACD, MACDD, MACS, NP, NR, NVI, OA, OBV,
-        PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA, SR, TWO_RSI,
+        PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA, SR, TWO_RSI
 
     }
 
@@ -81,83 +76,20 @@ public class AgentManager {
         //update the previous run time, so it runs immediately since we don't have data yet
         this.previous = System.currentTimeMillis() - (getMyDuration().duration * 1000);
 
-        //create new list of agents
-        this.agents = new ArrayList<>();
+        //create our calculator
+        this.calculator = new Calculator();
 
-        //create our list of agents that will run our simulations
-        this.tmpAgents = new ArrayList<>();
-
-        //populate our strategies
-        loadStrategies();
-
-        //create our agents
+        //create our agents last
         createAgents();
     }
 
     private void createAgents() {
 
-        //create an agent for every trading strategy that we have specified
-        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+        //create our primary agent
+        this.agentPrimary = new Agent(getFunds(), getProductId(), false);
 
-            //add our live agents
-            getAgents().add(new Agent(MY_TRADING_STRATEGIES[i], getFundsPerAgent(), getProductId(), false));
-
-            //add our tmp agents so we can run simulations
-            if (SIMULATE_STRATEGIES)
-                getTmpAgents().add(new Agent(MY_TRADING_STRATEGIES[i], getFundsPerAgent(), getProductId(), true));
-        }
-    }
-
-    protected double getFundsPerAgent() {
-        return (this.funds / (double)MY_TRADING_STRATEGIES.length);
-    }
-
-    private void loadStrategies() {
-
-        //make sure we aren't using duplicate strategies
-        for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
-            for (int j = 0; j < TRADING_STRATEGIES.length; j++) {
-
-                //don't check the same element
-                if (i == j)
-                    continue;
-
-                //if the value already exists we have duplicate strategies
-                if (TRADING_STRATEGIES[i].trim().equalsIgnoreCase(TRADING_STRATEGIES[j].trim()))
-                    throw new RuntimeException("Duplicate trading strategy in your property file \"" + TRADING_STRATEGIES[i] + "\"");
-            }
-        }
-
-        //create a new array which will contain our trading strategies
-        MY_TRADING_STRATEGIES = new TradingStrategy[TRADING_STRATEGIES.length];
-
-        //temp list of all values so we can check for a match
-        TradingStrategy[] tmp = TradingStrategy.values();
-
-        //make sure the specified strategies exist
-        for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
-
-            //check each strategy for a match
-            for (int j = 0; j < tmp.length; j++) {
-
-                //if the spelling matches we have found our strategy
-                if (tmp[j].toString().trim().equalsIgnoreCase(TRADING_STRATEGIES[i].trim())) {
-
-                    //assign our strategy
-                    MY_TRADING_STRATEGIES[i] = tmp[j];
-
-                    //exit the loop
-                    break;
-                }
-            }
-
-            //no matching strategy was found throw exception
-            if (MY_TRADING_STRATEGIES[i] == null)
-                throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
-        }
-
-        //create our calculator now that we have the strategies
-        this.calculator = new Calculator();
+        //create our simulation agent
+        this.agentSimulation = new Agent(FUNDS, getProductId(), true);
     }
 
     public synchronized void update(final double price) {
@@ -174,14 +106,14 @@ public class AgentManager {
 
         try {
 
+            //get the size of the history
+            final int size = getCalculator().getHistory().size();
+
             //we don't need to update every second
             if (System.currentTimeMillis() - previous >= (getMyDuration().duration / 6) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), null);
-
-                //get the size of the history
-                final int size = getCalculator().getHistory().size();
 
                 //update our historical data and update the last update
                 boolean success = getCalculator().update(getMyDuration(), getProductId());
@@ -193,10 +125,6 @@ public class AgentManager {
 
                     //rest call is successful
                     displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew) ? getWriter() : null);
-
-                    //if the size of history changed and we want to simulate and we meet the minimum requirement, run a simulation
-                    if (SIMULATE_STRATEGIES && size != sizeNew && sizeNew >= HISTORICAL_PERIODS_MINIMUM)
-                        runSimulation(this);
 
                 } else {
 
@@ -215,20 +143,34 @@ public class AgentManager {
 
             } else {
 
-                //update each agent trading this specific product with their own trading strategy
-                for (int i = 0; i < getAgents().size(); i++) {
-
-                    //get our agent
-                    Agent agent = getAgents().get(i);
+                //trade with the agent as long as we have a strategy
+                if (getAgentPrimary().getTradingStrategy() != null) {
 
                     //get the strategy related to the agent
-                    Strategy strategy = getCalculator().getStrategy(agent);
-
-                    //make sure the correct variables are set
-                    StrategyHelper.setupValues(agent.getStrategy(), strategy.getIndexStrategy());
+                    Strategy strategy = getCalculator().getStrategyObj(getAgentPrimary());
 
                     //update the agent
-                    agent.update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
+                    getAgentPrimary().update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
+
+                }
+
+                //if the agent does not have a trading strategy or does not have any pending transactions and we added to the history
+                if (getAgentPrimary().getTradingStrategy() == null || (!getAgentPrimary().isPending() && size != getCalculator().getHistory().size())) {
+
+                    //if the agent doesn't have a strategy run the simulations to find one
+                    runSimulation(this, getAgentSimulation());
+
+                    //get our winning strategy
+                    Strategy strategyObj = getCalculator().getStrategyObj(getAgentPrimary());
+
+                    //write the chosen strategy to the console / log
+                    displayMessage("Strategy: " + getAgentPrimary().getTradingStrategy() + " (Index: " + strategyObj.getIndexStrategy() + ")", getWriter());
+
+                    //make sure the correct variables are set
+                    StrategyHelper.setupValues(getAgentPrimary().getTradingStrategy(), strategyObj.getIndexStrategy());
+
+                    //now perform our calculation
+                    strategyObj.calculate(getCalculator().getHistory());
                 }
             }
 
@@ -241,12 +183,57 @@ public class AgentManager {
         working = false;
     }
 
-    private List<Agent> getAgents() {
-        return this.agents;
+    public String getAgentDetails() {
+
+        //message with all agent totals
+        String result = getProductId() + " : " + getAgentPrimary().getTradingStrategy();
+        result += " - $" + AgentHelper.formatValue(getAssets(getAgentPrimary()));
+
+        //add our min value
+        result += ",  Min $" + AgentHelper.formatValue(getAgentPrimary().getFundsMin());
+
+        //add our max value
+        result += ",  Max $" + AgentHelper.formatValue(getAgentPrimary().getFundsMax());
+
+        //if this agent has stopped trading, include it in the message
+        if (getAgentPrimary().hasStopTrading())
+            result += ", (Stopped)";
+
+        //make new line
+        result += "\n";
+
+        //return our result
+        return result;
     }
 
-    protected List<Agent> getTmpAgents() {
-        return this.tmpAgents;
+    /**
+     * Get the total assets
+     * @return The total funds available + the quantity of stock we currently own @ the current stock price
+     */
+    public double getTotalAssets() {
+
+        //return the total amount
+        return getAssets(getAgentPrimary());
+    }
+
+    private double getAssets(Agent agent) {
+        return agent.getAssets(getCurrentPrice());
+    }
+
+    protected PrintWriter getWriter() {
+        return this.writer;
+    }
+
+    public double getFunds() {
+        return (this.funds);
+    }
+
+    private Agent getAgentSimulation() {
+        return this.agentSimulation;
+    }
+
+    protected Agent getAgentPrimary() {
+        return this.agentPrimary;
     }
 
     public void setCurrentPrice(final double currentPrice) {
@@ -271,73 +258,5 @@ public class AgentManager {
 
     public Product getProduct() {
         return this.product;
-    }
-
-    public String getAgentDetails() {
-
-        //message with all agent totals
-        String result = "";
-
-        for (int i = 0; i < getAgents().size(); i++) {
-
-            result += getProductId() + " : " + getAgents().get(i).getStrategy() + " - $" + AgentHelper.formatValue(getAssets(getAgents().get(i)));
-
-            //add our min value
-            result += ",  Min $" + AgentHelper.formatValue(getAgents().get(i).getFundsMin());
-
-            //add our max value
-            result += ",  Max $" + AgentHelper.formatValue(getAgents().get(i).getFundsMax());
-
-            //if this agent has stopped trading, include it in the message
-            if (getAgents().get(i).hasStopTrading())
-                result += ", (Stopped)";
-
-            //make new line
-            result += "\n";
-        }
-
-        //return our result
-        return result;
-    }
-
-    /**
-     * Get the total assets
-     * @return The total funds available + the quantity of stock we currently own @ the current stock price
-     */
-    public double getTotalAssets() {
-
-        double amount = 0;
-
-        for (int i = 0; i < getAgents().size(); i++) {
-
-            //add the total amount
-            amount += getAssets(getAgents().get(i));
-        }
-
-        //return the total amount
-        return amount;
-    }
-
-    public double getAssets(TradingStrategy strategy) {
-
-        double amount = 0;
-
-        for (int i = 0; i < getAgents().size(); i++) {
-
-            //add the total for every agent with the matching strategy
-            if (getAgents().get(i).getStrategy() == strategy)
-                amount += getAssets(getAgents().get(i));
-        }
-
-        //return the result
-        return amount;
-    }
-
-    private double getAssets(Agent agent) {
-        return agent.getAssets(getCurrentPrice());
-    }
-
-    protected PrintWriter getWriter() {
-        return this.writer;
     }
 }
