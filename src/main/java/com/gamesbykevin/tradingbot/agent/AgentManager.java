@@ -48,6 +48,9 @@ public class AgentManager {
     //how many funds did we start with
     private final double funds;
 
+    //has the size of the historical data changed
+    private boolean dirty = false;
+
     /**
      * Different trading strategies we can use
      */
@@ -118,13 +121,17 @@ public class AgentManager {
                 //update our historical data and update the last update
                 boolean success = getCalculator().update(getMyDuration(), getProductId());
 
-                //get the new size for comparison
+                //get the size again so we can compare and see if it has changed
                 final int sizeNew = getCalculator().getHistory().size();
+
+                //if we haven't detected a change yet, check now
+                if (!dirty)
+                    dirty = (size != sizeNew);
 
                 if (success) {
 
                     //rest call is successful
-                    displayMessage("Rest call successful. History size: " + sizeNew, (size != sizeNew) ? getWriter() : null);
+                    displayMessage("Rest call successful. History size: " + sizeNew, (sizeNew != size) ? getWriter() : null);
 
                 } else {
 
@@ -154,8 +161,8 @@ public class AgentManager {
 
                 }
 
-                //if the agent does not have a trading strategy or does not have any pending transactions and we added to the history
-                if (getAgentPrimary().getTradingStrategy() == null || (!getAgentPrimary().isPending() && size != getCalculator().getHistory().size())) {
+                //if the agent does not have a trading strategy or does not have any pending transactions and the size of the history has changed
+                if (getAgentPrimary().getTradingStrategy() == null || (!getAgentPrimary().isPending() && dirty)) {
 
                     //if the agent doesn't have a strategy run the simulations to find one
                     runSimulation(this, getAgentSimulation());
@@ -171,6 +178,9 @@ public class AgentManager {
 
                     //now perform our calculation
                     strategyObj.calculate(getCalculator().getHistory());
+
+                    //turn our dirty flag off now that we have run a simulation
+                    dirty = false;
                 }
             }
 
