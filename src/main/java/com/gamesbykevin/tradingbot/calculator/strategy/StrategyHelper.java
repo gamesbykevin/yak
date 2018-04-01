@@ -188,7 +188,6 @@ public class StrategyHelper {
                     SOEMA.SO_INDICATOR = SOEMA.LIST_SO_INDICATOR[index];
                     SOEMA.PERIODS_SO = SOEMA.LIST_PERIODS_SO[index];
                     SOEMA.PERIODS_SMA_SO = SOEMA.LIST_PERIODS_SMA_SO[index];
-                    SOEMA.PERIODS_LONG = SOEMA.LIST_PERIODS_LONG[index];
                     EMA.PERIODS_EMA_LONG = SOEMA.LIST_PERIODS_EMA_LONG[index];
                     EMA.PERIODS_EMA_SHORT = SOEMA.LIST_PERIODS_EMA_SHORT[index];
                     SO.PERIODS_SMA_SO = SOEMA.LIST_PERIODS_SMA_SO[index];

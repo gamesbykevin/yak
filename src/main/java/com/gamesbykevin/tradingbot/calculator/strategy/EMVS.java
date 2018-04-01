@@ -22,8 +22,8 @@ public class EMVS extends Strategy {
     private List<Double> smaPrice;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_SMA = {30};
-    protected static int[] LIST_PERIODS_EMV = {14};
+    protected static int[] LIST_PERIODS_SMA = {30, 26};
+    protected static int[] LIST_PERIODS_EMV = {14, 10};
 
     //list of configurable values
     protected static int PERIODS_SMA = 30;

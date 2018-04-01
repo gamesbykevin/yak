@@ -9,7 +9,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 
 /**
- * stochastic oscillator and ema
+ * stochastic oscillator / ema
  */
 public class SOEMA extends Strategy {
 
@@ -23,13 +23,11 @@ public class SOEMA extends Strategy {
     protected static int[] LIST_SO_INDICATOR = {50};
     protected static int[] LIST_PERIODS_SO = {5};
     protected static int[] LIST_PERIODS_SMA_SO = {3};
-    protected static int[] LIST_PERIODS_LONG = {100};
 
     //list of configurable values
     protected static int SO_INDICATOR = 50;
     protected static int PERIODS_SO = 5;
     protected static int PERIODS_SMA_SO = 3;
-    protected static int PERIODS_LONG = 100;
 
     public SOEMA() {
 

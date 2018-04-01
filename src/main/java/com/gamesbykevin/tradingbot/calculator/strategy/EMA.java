@@ -20,8 +20,8 @@ public class EMA extends Strategy {
     private List<Double> emaShort;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {26};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26, 31, 12, 30};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 13, 7, 10};
 
     //list of configurable values
     protected static int PERIODS_EMA_LONG = 26;

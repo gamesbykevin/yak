@@ -17,10 +17,10 @@ public class SOC extends Strategy {
     private SO soObj;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_SO = {12};
-    protected static int[] LIST_PERIODS_SMA = {3};
-    protected static int[] LIST_PERIODS_SMA_PRICE_LONG = {50};
-    protected static int[] LIST_PERIODS_SMA_PRICE_SHORT = {10};
+    protected static int[] LIST_PERIODS_SO = {12, 14, 14};
+    protected static int[] LIST_PERIODS_SMA = {3, 3, 3};
+    protected static int[] LIST_PERIODS_SMA_PRICE_LONG = {50, 50, 100};
+    protected static int[] LIST_PERIODS_SMA_PRICE_SHORT = {10, 10, 20};
 
     public SOC() {
 

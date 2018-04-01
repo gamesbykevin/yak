@@ -18,9 +18,9 @@ public class EMAS extends Strategy {
 
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {26};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
-    protected static int[] LIST_PERIODS_SMA_PRICE = {50};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26, 31, 12, 30, 26};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 13, 7, 10, 12};
+    protected static int[] LIST_PERIODS_SMA_PRICE = {50, 50, 50, 50, 100};
 
     //list of configurable values
     protected static int PERIODS_SMA_PRICE = 50;

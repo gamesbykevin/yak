@@ -30,10 +30,10 @@ public class MACD extends Strategy {
     private EMA emaObj;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_MACD = {9};
-    protected static int[] LIST_PERIODS_SMA_TREND = {50};
-    protected static int[] LIST_PERIODS_EMA_LONG = {26};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
+    protected static int[] LIST_PERIODS_MACD = {9, 9, 9};
+    protected static int[] LIST_PERIODS_SMA_TREND = {50, 100, 100};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26, 26, 28};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 12, 14};
 
     //list of configurable values
     protected static int PERIODS_MACD = 9;

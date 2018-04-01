@@ -12,7 +12,7 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDiverge
 public class OBV extends Strategy {
 
     //our list of variations
-    protected static int[] LIST_PERIODS_OBV = {10};
+    protected static int[] LIST_PERIODS_OBV = {10, 20, 30, 50, 100};
 
     //list of configurable values
     protected static int PERIODS_OBV = 10;

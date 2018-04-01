@@ -15,7 +15,7 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 public class EMV extends Strategy {
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMV = {14};
+    protected static int[] LIST_PERIODS_EMV = {14, 26, 10};
 
     //list of configurable values
     protected static int PERIODS_EMV = 14;

@@ -18,9 +18,9 @@ public class MACS extends Strategy {
     private List<Double> emaFast, emaSlow, emaTrend;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_MACS_FAST = {10};
-    protected static int[] LIST_PERIODS_MACS_SLOW = {20};
-    protected static int[] LIST_PERIODS_MACS_TREND = {50};
+    protected static int[] LIST_PERIODS_MACS_FAST = {10, 20, 5, 10, 5};
+    protected static int[] LIST_PERIODS_MACS_SLOW = {20, 60, 10, 30, 10};
+    protected static int[] LIST_PERIODS_MACS_TREND = {50, 100, 25, 150, 20};
 
     //list of configurable values
     protected static int PERIODS_MACS_FAST = 10;

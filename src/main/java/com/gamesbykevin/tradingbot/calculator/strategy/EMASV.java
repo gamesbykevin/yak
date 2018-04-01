@@ -26,10 +26,10 @@ public class EMASV extends Strategy {
     private List<Double> smaVolume;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {26};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12};
-    protected static int[] LIST_PERIODS_SMA_PRICE = {50};
-    protected static int[] LIST_PERIODS_SMA_VOLUME = {60};
+    protected static int[] LIST_PERIODS_EMA_LONG = {26, 35};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 5};
+    protected static int[] LIST_PERIODS_SMA_PRICE = {50, 150};
+    protected static int[] LIST_PERIODS_SMA_VOLUME = {50, 200};
 
     //list of configurable values
     protected static int PERIODS_EMA_SHORT = 12;

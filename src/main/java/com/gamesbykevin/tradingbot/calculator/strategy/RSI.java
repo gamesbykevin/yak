@@ -19,10 +19,10 @@ public class RSI extends Strategy {
     private List<Double> smaPrice;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_SMA_PRICE = {50};
-    protected static int[] LIST_PERIODS_RSI = {5};
-    protected static float[] LIST_SUPPORT_LINE = {30.0f};
-    protected static float[] LIST_RESISTANCE_LINE = {70.0f};
+    protected static int[] LIST_PERIODS_SMA_PRICE = {50, 50, 50, 100};
+    protected static int[] LIST_PERIODS_RSI = {5, 5, 14, 14};
+    protected static float[] LIST_SUPPORT_LINE = {30.0f, 20.0f, 30.0f, 30.0f};
+    protected static float[] LIST_RESISTANCE_LINE = {70.0f, 80.0f, 70.0f, 70.0f};
 
     //list of configurable values
     protected static int PERIODS_SMA_PRICE = 50;

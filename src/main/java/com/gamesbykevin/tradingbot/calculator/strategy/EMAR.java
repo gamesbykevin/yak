@@ -21,10 +21,10 @@ public class EMAR extends Strategy {
     private RSI rsiObj;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {12};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {5};
-    protected static int[] LIST_PERIODS_RSI = {21};
-    protected static float[] LIST_RSI_LINE = {50.0f};
+    protected static int[] LIST_PERIODS_EMA_LONG = {12, 26, 28};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {5, 12, 14};
+    protected static int[] LIST_PERIODS_RSI = {21, 14, 12};
+    protected static float[] LIST_RSI_LINE = {50.0f, 50.0f, 50.0f};
 
     //list of configurable values
     protected static float RSI_LINE = 50.0f;

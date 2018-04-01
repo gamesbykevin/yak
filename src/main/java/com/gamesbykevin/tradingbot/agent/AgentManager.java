@@ -164,7 +164,7 @@ public class AgentManager {
                 //if the agent does not have a trading strategy or does not have any pending transactions and the size of the history has changed
                 if (getAgentPrimary().getTradingStrategy() == null || (!getAgentPrimary().isPending() && dirty)) {
 
-                    //if the agent doesn't have a strategy run the simulations to find one
+                    //if the agent doesn't have a strategy run the simulations to find and assign one
                     runSimulation(this, getAgentSimulation());
 
                     //get our winning strategy

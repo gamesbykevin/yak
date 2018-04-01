@@ -19,10 +19,10 @@ public class TWO_RSI extends Strategy {
     private RSI rsiObj;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_SMA = {100};
-    protected static double[] LIST_MIN_RSI = {5.0d};
-    protected static double[] LIST_MAX_RSI = {95.0d};
-    protected static int[] LIST_PERIODS_RSI = {2};
+    protected static int[] LIST_PERIODS_SMA = {100, 100};
+    protected static double[] LIST_MIN_RSI = {5.0d, 10.0d};
+    protected static double[] LIST_MAX_RSI = {95.0d, 90.0d};
+    protected static int[] LIST_PERIODS_RSI = {2, 2};
 
     //list of configurable values
     protected static int PERIODS_SMA = 100;
