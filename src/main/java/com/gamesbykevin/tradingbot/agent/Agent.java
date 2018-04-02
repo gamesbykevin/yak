@@ -20,6 +20,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameAgent;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent implements IAgent {
@@ -82,11 +83,11 @@ public class Agent implements IAgent {
     public void reset(double funds) {
 
         //where to put our log file
-        String directory = LogFile.LOG_DIRECTORY + "\\" + getProductId() + "\\";
+        String directory = LogFile.getLogDirectory() + "\\" + getProductId() + "\\";
 
         //our simulation won't have a log file
         if (!isSimulation())
-            this.writer = LogFile.getPrintWriter(getFileName(), directory);
+            this.writer = LogFile.getPrintWriter(getFilenameAgent(), directory);
 
         //we don't want to buy when reset
         setBuy(false);

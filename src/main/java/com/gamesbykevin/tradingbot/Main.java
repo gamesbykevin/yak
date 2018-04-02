@@ -31,6 +31,7 @@ import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIOD_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
+import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameMain;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 @SpringBootApplication
@@ -118,7 +119,7 @@ public class Main implements Runnable {
         this.productService = factory.getBean(ProductService.class);
 
         //create the main log file and place in our root logs directory
-        this.writer = LogFile.getPrintWriter("main-" + getFileDateDesc() + ".log", LogFile.LOG_DIRECTORY);
+        this.writer = LogFile.getPrintWriter(getFilenameMain(), LogFile.getLogDirectory());
 
         //display message of bot starting
         if (PAPER_TRADING) {

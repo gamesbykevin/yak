@@ -20,6 +20,13 @@ public class EMAR extends Strategy {
     //our rsi object reference
     private RSI rsiObj;
 
+    /*
+    protected static int[] LIST_PERIODS_EMA_LONG = {12};
+    protected static int[] LIST_PERIODS_EMA_SHORT = {5};
+    protected static int[] LIST_PERIODS_RSI = {21};
+    protected static float[] LIST_RSI_LINE = {50.0f};
+    */
+
     //our list of variations
     protected static int[] LIST_PERIODS_EMA_LONG = {12, 26, 28};
     protected static int[] LIST_PERIODS_EMA_SHORT = {5, 12, 14};

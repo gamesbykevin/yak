@@ -5,9 +5,31 @@ import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import java.io.File;
 import java.io.PrintWriter;
 
+import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
+
 public class LogFile {
 
-    public static final String LOG_DIRECTORY = "logs";
+    private static String LOG_DIRECTORY;
+
+    public static String getFilenameMain() {
+        return "main.log";
+    }
+
+    public static String getFilenameAgent() {
+        return "agent.log";
+    }
+
+    public static String getFilenameManager() {
+        return "manager.log";
+    }
+
+    public static String getLogDirectory() {
+
+        if (LOG_DIRECTORY == null)
+            LOG_DIRECTORY = "logs-" + getFileDateDesc();
+
+        return LOG_DIRECTORY;
+    }
 
     public static PrintWriter getPrintWriter(final String filename, final String directories) {
 

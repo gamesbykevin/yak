@@ -15,6 +15,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentHelper.getFileName;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.runSimulation;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
 
 public class AgentManager {
 
@@ -71,7 +72,7 @@ public class AgentManager {
         this.funds = funds;
 
         //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter("manager-" + getFileName(), LogFile.LOG_DIRECTORY + "\\" + getProductId());
+        this.writer = LogFile.getPrintWriter(getFilenameManager(), LogFile.getLogDirectory() + "\\" + getProductId());
 
         //store our period duration
         this.myDuration = myDuration;
@@ -139,6 +140,7 @@ public class AgentManager {
                     displayMessage("Rest call is NOT successful.", getWriter());
                 }
 
+                //store the last run time for our next update
                 this.previous = System.currentTimeMillis();
             }
 

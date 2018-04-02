@@ -29,9 +29,14 @@ public class AgentHelper {
     public static final int ROUND_DECIMALS_QUANTITY = 2;
 
     /**
-     * Every order will be a limit order
+     * Our orders are limit orders in order to not have to pay a fee
      */
-    private static final String ORDER_DESC = "limit";
+    private static final String LIMIT_ORDER_DESC = "limit";
+
+    /**
+     * Hard stop orders are to help cut our losses
+     */
+    private static final String HARD_STOP_ORDER_DESC = "stop";
 
     /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
@@ -127,13 +132,22 @@ public class AgentHelper {
             //if there is a reason, display message
             displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
-            //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
+            if (agent.getReasonSell() == ReasonSell.Reason_HardStop) {
+
+                //if the reason for selling is we reached our hard stop price, sell for that hard stop price
+                agent.setOrder(createLimitOrder(agent, Action.Sell, product, agent.getHardStop()));
+
+            } else {
+
+                //create and assign our limit order
+                agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
+
+            }
 
         } else {
 
             //we are still waiting
-            displayMessage(agent, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Quantity: " + agent.getWallet().getQuantity(), true);
+            displayMessage(agent, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Hard Stop $" + formatValue(agent.getHardStop()) + ", Quantity: " + agent.getWallet().getQuantity(), true);
         }
     }
 
@@ -154,6 +168,9 @@ public class AgentHelper {
             //let's set our hard stop if it hasn't been set already
             if (agent.getHardStop() == 0)
                 agent.setHardStop(currentPrice - (currentPrice * HARD_STOP_RATIO));
+
+            //display which strategy index are we using
+            displayMessage(agent, "Strategy Index: " + strategy.getIndexStrategy(), true);
 
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStop(), true);
@@ -219,7 +236,7 @@ public class AgentHelper {
         return Status.Pending;
     }
 
-    private static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
+    protected static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
 
         //the price we want to buy/sell
         BigDecimal price = new BigDecimal(currentPrice);
@@ -267,30 +284,30 @@ public class AgentHelper {
         }
 
         //create our limit order
-        NewLimitOrderSingle limitOrder = new NewLimitOrderSingle();
+        NewLimitOrderSingle newOrder = new NewLimitOrderSingle();
 
         //which coin we are trading
-        limitOrder.setProduct_id(product.getId());
+        newOrder.setProduct_id(product.getId());
 
         //set to post only to avoid fees
-        limitOrder.setPost_only(true);
+        newOrder.setPost_only(true);
 
         //are we buying or selling
-        limitOrder.setSide(action.getDescription());
+        newOrder.setSide(action.getDescription());
 
-        //this is a limit order
-        limitOrder.setType(ORDER_DESC);
+        //type of order "limit", "stop", etc...
+        newOrder.setType(LIMIT_ORDER_DESC);
 
         //our price
-        limitOrder.setPrice(price);
+        newOrder.setPrice(price);
 
         //our quantity
-        limitOrder.setSize(size);
+        newOrder.setSize(size);
 
-        //write limit order to log
-        displayMessage(agent, "Creating limit order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
+        //write order details to log
+        displayMessage(agent, "Creating order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
 
-        //our market order
+        //our order object
         Order order = null;
 
         //how many attempts to try
@@ -305,7 +322,7 @@ public class AgentHelper {
             order.setProduct_id(product.getId());
             order.setStatus(Status.Done.getDescription());
             order.setSide(action.getDescription());
-            order.setType(ORDER_DESC);
+            order.setType(LIMIT_ORDER_DESC);
 
         } else {
 
@@ -315,13 +332,13 @@ public class AgentHelper {
                 //keep track of the number of attempts
                 attempts++;
 
-                //notify user we are trying to create the limit order
-                displayMessage(agent, "Creating limit order attempt: " + attempts, true);
+                //notify user we are trying to create the order
+                displayMessage(agent, "Creating order attempt: " + attempts, true);
 
                 try {
 
                     //create our limit order
-                    order = Main.getOrderService().createOrder(limitOrder);
+                    order = Main.getOrderService().createOrder(newOrder);
 
                     //if we got our order, exit loop
                     if (order != null)

@@ -4,12 +4,15 @@ import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.createLimitOrder;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 
 public class AgentManagerHelper {
@@ -29,6 +32,7 @@ public class AgentManagerHelper {
 
         //display message
         displayMessage("Running simulations...", manager.getWriter());
+        displayMessage("Starting funds $" + manager.getFunds(), manager.getWriter());
 
         //track the most money made
         double winningFunds = 0;
@@ -98,6 +102,24 @@ public class AgentManagerHelper {
                         tmpHistory.add(history.get(index));
                 }
 
+                //finish the pending transaction
+                while (agentSimulation.isPending()) {
+
+                    double currentPrice = history.get(history.size() - 1).close;
+
+                    if (agentSimulation.getOrder() != null) {
+
+                        //if there is a pending order let's try to update and see what happens
+                        agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), currentPrice);
+
+                    } else if (agentSimulation.getWallet().getQuantity() > 0) {
+
+                        //if we have any stock we have to sell it now
+                        agentSimulation.setReasonSell(ReasonSell.Reason_Simulation);
+                        agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), currentPrice));
+                    }
+                }
+
                 //display the results of our simulation
                 String message = manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - (Index " + strategyObj.getIndexStrategy() + ")";
 
@@ -111,7 +133,11 @@ public class AgentManagerHelper {
                 message += (assets >= manager.getFunds()) ? ", Status: PASS" : ", Status: FAIL";
 
                 //add our start and finish
-                message += ",  Start $" + manager.getFunds() + ",  End $" + assets;
+                message += ",  End $" + AgentHelper.formatValue(assets);
+
+                //show the total wins / losses
+                message += ", " + TransactionHelper.getDescWins(agentSimulation);
+                message += ", " + TransactionHelper.getDescLost(agentSimulation);
 
                 //if the assets are greater we have a new winning strategy
                 if (assets > winningFunds) {

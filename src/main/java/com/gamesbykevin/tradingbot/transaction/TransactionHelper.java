@@ -16,6 +16,7 @@ public class TransactionHelper {
 
         Reason_Strategy("Sold based on strategy logic"),
         Reason_HardStop("We have hit our hard stop"),
+        Reason_Simulation("Simulation transaction"),
         ;
 
         private final String description;
