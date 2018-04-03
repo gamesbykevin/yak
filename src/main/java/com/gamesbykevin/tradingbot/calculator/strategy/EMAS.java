@@ -16,7 +16,6 @@ public class EMAS extends Strategy {
     //our ema object reference
     private EMA emaObj;
 
-
     //our list of variations
     protected static int[] LIST_PERIODS_EMA_LONG = {26, 31, 12, 30, 26};
     protected static int[] LIST_PERIODS_EMA_SHORT = {12, 13, 7, 10, 12};
@@ -36,6 +35,11 @@ public class EMAS extends Strategy {
         //create new objects
         this.emaObj = new EMA();
         this.priceSMA = new ArrayList<>();
+    }
+
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", PERIODS_SMA_PRICE = " + LIST_PERIODS_SMA_PRICE[getIndexStrategy()];
     }
 
     @Override

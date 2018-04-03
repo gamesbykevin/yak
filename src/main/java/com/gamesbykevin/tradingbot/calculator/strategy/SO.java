@@ -55,6 +55,11 @@ public final class SO extends Strategy {
         this.smaPriceShort = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_SO = " + LIST_PERIODS_SO[getIndexStrategy()] + ", PERIODS_SMA_SO = " + LIST_PERIODS_SMA_SO[getIndexStrategy()] + ", PERIODS_SMA_PRICE_LONG = " + LIST_PERIODS_SMA_PRICE_LONG[getIndexStrategy()] + ", PERIODS_SMA_PRICE_SHORT = " + LIST_PERIODS_SMA_PRICE_SHORT[getIndexStrategy()] + ", OVER_SOLD = " + LIST_OVER_SOLD[getIndexStrategy()] + ", OVER_BOUGHT = " + LIST_OVER_BOUGHT[getIndexStrategy()];
+    }
+
     public List<Double> getStochasticOscillator() {
         return this.stochasticOscillator;
     }

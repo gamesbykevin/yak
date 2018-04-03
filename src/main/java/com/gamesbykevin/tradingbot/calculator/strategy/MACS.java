@@ -39,6 +39,11 @@ public class MACS extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_MACS_FAST = " + LIST_PERIODS_MACS_FAST[getIndexStrategy()] + ", PERIODS_MACS_SLOW = " + LIST_PERIODS_MACS_SLOW[getIndexStrategy()] + ", PERIODS_MACS_TREND" + LIST_PERIODS_MACS_TREND[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //we want a crossover where the fast is greater than slow

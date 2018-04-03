@@ -32,6 +32,11 @@ public class BB extends Strategy {
         this.lower = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_BB = " + LIST_PERIODS_BB[getIndexStrategy()];
+    }
+
     public List<Double> getUpper() {
         return this.upper;
     }

@@ -35,6 +35,11 @@ public class SOD extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_SO = " + LIST_PERIODS_SO[getIndexStrategy()] + ", PERIODS_SMA = " + LIST_PERIODS_SMA[getIndexStrategy()] + ", PERIODS_SMA_PRICE_LONG = " + LIST_PERIODS_SMA_PRICE_LONG[getIndexStrategy()] + ", PERIODS_SMA_PRICE_SHORT = " + LIST_PERIODS_SMA_PRICE_SHORT[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have a bullish divergence, let's buy

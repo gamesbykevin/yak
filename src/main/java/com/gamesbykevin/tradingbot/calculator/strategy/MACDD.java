@@ -35,6 +35,11 @@ public class MACDD extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_MACD = " + LIST_PERIODS_MACD[getIndexStrategy()] + ", PERIODS_SMA_TREND = " + LIST_PERIODS_SMA_TREND[getIndexStrategy()] + ", PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = "  + LIST_PERIODS_EMA_SHORT[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if bullish divergence, buy

@@ -47,6 +47,11 @@ public class EMAR extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", RSI_LINE = " + LIST_RSI_LINE[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //RSI values

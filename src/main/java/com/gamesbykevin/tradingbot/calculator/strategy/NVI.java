@@ -45,6 +45,11 @@ public class NVI extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA = " + LIST_PERIODS_EMA[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have crossover and cumulative value is > than previous period value that is signal to buy

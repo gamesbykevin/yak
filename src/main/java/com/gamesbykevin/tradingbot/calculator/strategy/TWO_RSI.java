@@ -39,6 +39,11 @@ public class TWO_RSI extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_SMA = " + LIST_PERIODS_SMA[getIndexStrategy()] + ", MIN_RSI = " + LIST_MIN_RSI[getIndexStrategy()] + ", MAX_RSI = " + LIST_MAX_RSI[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the current and previous rsi values

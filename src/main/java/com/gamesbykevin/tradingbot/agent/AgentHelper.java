@@ -4,10 +4,11 @@ import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.util.Email;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
+import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class AgentHelper {
 
@@ -32,11 +34,6 @@ public class AgentHelper {
      * Our orders are limit orders in order to not have to pay a fee
      */
     private static final String LIMIT_ORDER_DESC = "limit";
-
-    /**
-     * Hard stop orders are to help cut our losses
-     */
-    private static final String HARD_STOP_ORDER_DESC = "stop";
 
     /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
@@ -106,24 +103,29 @@ public class AgentHelper {
             agent.setReasonSell(null);
 
         //if the price dropped below our hard stop, we will sell to cut our losses
-        if (currentPrice <= agent.getHardStop())
+        if (currentPrice <= agent.getHardStop()) {
+
+            //reason for selling is that we hit our hard stop
             agent.setReasonSell(ReasonSell.Reason_HardStop);
 
-        //what is the increase we check to see if we set a new hard stop amount
-        double increase = (agent.getWallet().getPurchasePrice() * HARD_STOP_RATIO);
+        } else {
 
-        //if the price has increased some more, let's set a new hard stop
-        if (currentPrice > agent.getHardStop() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
+            //what is the increase we check to see if we set a new hard stop amount
+            double increase = (agent.getWallet().getPurchasePrice() * HARD_STOP_RATIO);
 
-            //set our new hard stop limit
-            agent.setHardStop(agent.getHardStop() + (increase));
+            //if the price has increased some more, let's set a new hard stop
+            if (currentPrice > agent.getHardStop() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
 
-            //if the price is higher than the next hard stop, increase the hard stop again to right below the current price
-            if (currentPrice > agent.getHardStop() + increase)
-                agent.setHardStop(currentPrice - increase);
+                //set our new hard stop limit
+                agent.setHardStop(agent.getHardStop() + (increase));
 
-            //write hard stop amount to our log file
-            displayMessage(agent, "New hard stop $" + agent.getHardStop(), true);
+                //if the price is higher than the next hard stop, increase the hard stop again to right below the current price
+                if (currentPrice > agent.getHardStop() + increase)
+                    agent.setHardStop(currentPrice - increase);
+
+                //write hard stop amount to our log file
+                displayMessage(agent, "New hard stop $" + agent.getHardStop(), true);
+            }
         }
 
         //if there is a reason then we will sell
@@ -135,13 +137,15 @@ public class AgentHelper {
             if (agent.getReasonSell() == ReasonSell.Reason_HardStop) {
 
                 //if the reason for selling is we reached our hard stop price, sell for that hard stop price
-                agent.setOrder(createLimitOrder(agent, Action.Sell, product, agent.getHardStop()));
+                //agent.setOrder(createLimitOrder(agent, Action.Sell, product, agent.getHardStop()));
 
             } else {
 
-                //create and assign our limit order
-                agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
+                //our hard stop will be the current price
+                agent.setHardStop(currentPrice);
 
+                //create and assign our limit order
+                //agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));aa
             }
 
         } else {
@@ -169,8 +173,8 @@ public class AgentHelper {
             if (agent.getHardStop() == 0)
                 agent.setHardStop(currentPrice - (currentPrice * HARD_STOP_RATIO));
 
-            //display which strategy index are we using
-            displayMessage(agent, "Strategy Index: " + strategy.getIndexStrategy(), true);
+            //display which strategy we are using
+            displayMessage(agent, " Details: " + strategy.getStrategyDesc(), true);
 
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStop(), true);
@@ -222,18 +226,32 @@ public class AgentHelper {
         //if we have exceeded our waiting limit and the order has not settled
         if (agent.getAttempts() >= FAILURE_LIMIT && !order.getSettled()) {
 
-            //we are now going to cancel the order
-            displayMessage(agent, "Canceling order: " + orderId, true);
-
-            //cancel the order
-            Main.getOrderService().cancelOrder(orderId);
-
-            //notify we sent the message
-            displayMessage(agent, "Cancel order message sent", true);
+            //we will cancel the buy order if the order has not been resolved
+            if (order.getSide().equalsIgnoreCase(Action.Buy.getDescription())) {
+                cancelOrder(agent, orderId);
+            } else {
+                //we don't want to cancel the sell limit order, let's wait until it is created
+            }
         }
 
         //let's say that we are still pending so we continue to wait until we have confirmation of something
         return Status.Pending;
+    }
+
+    protected static synchronized void cancelOrder(Agent agent, String orderId) {
+
+        //don't cancel if we are simulating or paper trading
+        if (Main.PAPER_TRADING || agent.isSimulation())
+            return;
+
+        //we are now going to cancel the order
+        displayMessage(agent, "Canceling order: " + orderId, true);
+
+        //cancel the order
+        Main.getOrderService().cancelOrder(orderId);
+
+        //notify we sent the message
+        displayMessage(agent, "Cancel order message sent", true);
     }
 
     protected static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
@@ -261,7 +279,7 @@ public class AgentHelper {
             case Sell:
 
                 //subtract 1 cent
-                //price.subtract(penny);
+                price.subtract(penny);
 
                 //sell all the quantity we have
                 quantity = agent.getWallet().getQuantity();
@@ -372,6 +390,52 @@ public class AgentHelper {
 
         //return our order
         return order;
+    }
+
+    protected static void checkStanding(Agent agent) {
+
+        //if we lost too much money and have no quantity pending, we will stop trading
+        if (agent.getWallet().getFunds() < (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds()) && agent.getWallet().getQuantity() <= 0)
+            agent.setStopTrading(true);
+
+        //if our money has gone up, increase the stop trading limit
+        if (agent.getWallet().getFunds() > agent.getWallet().getStartingFunds()) {
+
+            final double oldRatio = (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
+            agent.getWallet().setStartingFunds(agent.getWallet().getFunds());
+            final double newRatio = (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
+            displayMessage(agent, "Good news, stop trading limit has increased", true);
+            displayMessage(agent, "    Funds $" + AgentHelper.formatValue(agent.getWallet().getFunds()), true);
+            displayMessage(agent, "Old limit $" + AgentHelper.formatValue(oldRatio), true);
+            displayMessage(agent, "New limit $" + AgentHelper.formatValue(newRatio), true);
+            displayMessage(agent, "If your funds fall below the new limit we will stop trading", true);
+        }
+
+        //notify if this agent has stopped trading
+        if (agent.hasStopTrading()) {
+
+            String subject = "We stopped trading";
+            String text1 = "Funds $" + AgentHelper.formatValue(agent.getWallet().getFunds());
+            String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
+            String text3 = "Min $" + AgentHelper.formatValue(agent.getFundsMin());
+            String text4 = "Max $" + AgentHelper.formatValue(agent.getFundsMax());
+            displayMessage(agent, subject, true);
+            displayMessage(agent, text1, true);
+            displayMessage(agent, text2, true);
+            displayMessage(agent, text3, true);
+            displayMessage(agent, text4, true);
+
+            //include the funds in our message
+            String message = text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n";
+
+            //also include the summary of wins/losses
+            message += TransactionHelper.getDescWins(agent) + "\n";
+            message += TransactionHelper.getDescLost(agent) + "\n";
+
+            //send email notification
+            if (!agent.isSimulation())
+                Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getTradingStrategy() + ")", message);
+        }
     }
 
     public static BigDecimal formatValue(final double value) {

@@ -25,6 +25,11 @@ public class NR extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_NR = " + LIST_PERIODS_NR[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the current $ breaks above high, we will buy

@@ -52,6 +52,11 @@ public class SR extends Strategy {
         this.smaPriceShort = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_LONG = " + LIST_PERIODS_LONG[getIndexStrategy()] + ", PERIODS_SHORT = " + LIST_PERIODS_SHORT[getIndexStrategy()] + ", PERIODS_STOCH_RSI = " + LIST_PERIODS_STOCH_RSI[getIndexStrategy()] + ", OVER_BOUGHT = " + LIST_OVER_BOUGHT[getIndexStrategy()] + ", OVER_SOLD = " + LIST_OVER_SOLD[getIndexStrategy()];
+    }
+
     public List<Double> getStochRsi() {
         return this.stochRsi;
     }

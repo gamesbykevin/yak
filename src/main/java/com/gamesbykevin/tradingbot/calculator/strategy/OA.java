@@ -58,6 +58,11 @@ public class OA extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_LONG = " + LIST_PERIODS_LONG[getIndexStrategy()] + ", PERIODS_SHORT = " + LIST_PERIODS_SHORT[getIndexStrategy()] + ", PERIODS_OBV = " + LIST_PERIODS_OBV[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the latest value

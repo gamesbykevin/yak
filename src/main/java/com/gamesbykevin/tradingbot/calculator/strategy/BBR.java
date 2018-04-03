@@ -38,6 +38,11 @@ public class BBR extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "RESISTANCE_LINE = " + LIST_RESISTANCE_LINE[getIndexStrategy()] + ", SUPPORT_LINE = " + LIST_SUPPORT_LINE[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", PERIODS_BB = " + LIST_PERIODS_BB[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //we won't try to buy unless we are below the support line

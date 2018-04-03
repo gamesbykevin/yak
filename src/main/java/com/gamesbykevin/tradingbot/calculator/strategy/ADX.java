@@ -46,6 +46,11 @@ public class ADX extends Strategy {
         this.smaPrice = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_SMA = " + LIST_PERIODS_SMA[getIndexStrategy()] + ", PERIODS_ADX = " + LIST_PERIODS_ADX[getIndexStrategy()] + ", TREND_ADX = " + LIST_TREND_ADX[getIndexStrategy()];
+    }
+
     public List<Double> getAdx() {
         return this.adx;
     }

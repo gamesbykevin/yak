@@ -40,6 +40,11 @@ public class SOEMA extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", SO_INDICATOR = " + LIST_SO_INDICATOR[getIndexStrategy()] + ", PERIODS_SO = " + LIST_PERIODS_SO[getIndexStrategy()] + ", PERIODS_SMA_SO = " + LIST_PERIODS_SMA_SO[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         double previousSO = getRecent(soObj.getStochasticOscillator(), 2);

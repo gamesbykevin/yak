@@ -38,6 +38,8 @@ public abstract class Strategy {
         return this.indexStrategy;
     }
 
+    public abstract String getStrategyDesc();
+
     public static void display(Agent agent, String desc, List<Double> list, boolean write) {
 
         //don't display / write if simulation

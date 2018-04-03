@@ -39,6 +39,11 @@ public class EMVS extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_SMA = " + LIST_PERIODS_SMA[getIndexStrategy()] + ", PERIODS_EMV = " + LIST_PERIODS_EMV[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if emv is > 0 and the close is > than sma

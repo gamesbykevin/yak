@@ -31,6 +31,11 @@ public class NP extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA_NVI = " + LIST_PERIODS_EMA_NVI[getIndexStrategy()] + ", PERIODS_EMA_PVI = " + LIST_PERIODS_EMA_PVI[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //check the NVI for bullish signals

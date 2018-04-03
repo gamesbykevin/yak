@@ -37,6 +37,11 @@ public class EMA extends Strategy {
         this.emaShort = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()];
+    }
+
     public List<Double> getEmaShort() {
         return this.emaShort;
     }

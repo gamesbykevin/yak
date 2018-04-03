@@ -38,6 +38,11 @@ public class EMV extends Strategy {
         this.valEmv = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMV = " + LIST_PERIODS_EMV[getIndexStrategy()];
+    }
+
     public List<Double> getSmaEmv() {
         return this.smaEmv;
     }

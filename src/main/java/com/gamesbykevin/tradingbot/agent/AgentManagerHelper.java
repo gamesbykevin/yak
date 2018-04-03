@@ -102,7 +102,7 @@ public class AgentManagerHelper {
                         tmpHistory.add(history.get(index));
                 }
 
-                //finish the pending transaction
+                //finish the pending transaction (if any)
                 while (agentSimulation.isPending()) {
 
                     double currentPrice = history.get(history.size() - 1).close;
@@ -121,7 +121,7 @@ public class AgentManagerHelper {
                 }
 
                 //display the results of our simulation
-                String message = manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - (Index " + strategyObj.getIndexStrategy() + ")";
+                String message = manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - " + strategyObj.getStrategyDesc();
 
                 //the most recent period close will be the current price
                 double currentPrice = history.get(history.size() - 1).close;

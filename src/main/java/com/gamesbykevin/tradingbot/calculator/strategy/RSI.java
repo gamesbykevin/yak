@@ -40,6 +40,11 @@ public class RSI extends Strategy {
         this.smaPrice = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_SMA_PRICE = " + LIST_PERIODS_SMA_PRICE[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", SUPPORT_LINE = " + LIST_SUPPORT_LINE[getIndexStrategy()] + ", RESISTANCE_LINE = " + LIST_RESISTANCE_LINE[getIndexStrategy()];
+    }
+
     public List<Double> getRsiVal() {
         return this.rsiVal;
     }

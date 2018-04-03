@@ -29,6 +29,11 @@ public class ADL extends Strategy {
         this.accumulationDistributionLine = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "N/A";
+    }
+
     public List<Double> getAccumulationDistributionLine() {
         return this.accumulationDistributionLine;
     }

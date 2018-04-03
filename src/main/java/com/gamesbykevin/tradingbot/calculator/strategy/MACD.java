@@ -52,6 +52,11 @@ public class MACD extends Strategy {
         this.emaObj = new EMA();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_MACD = " + LIST_PERIODS_MACD[getIndexStrategy()] + ", PERIODS_SMA_TREND = " + LIST_PERIODS_SMA_TREND[getIndexStrategy()] + ", PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()];
+    }
+
     public List<Double> getMacdLine() {
         return this.macdLine;
     }

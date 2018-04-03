@@ -141,13 +141,13 @@ public class Agent implements IAgent {
 
         }
 
-        //if we don't have an active order look at the market data for a chance to buy
+        //if we don't have an active order look at the market data
         if (getOrder() == null) {
 
             if (getWallet().getQuantity() > 0) {
 
-                //we have quantity let's see if we can sell it
-                checkSell(this, strategy, history, product, currentPrice);
+                //if we bought successfully we need to submit a sell limit order for our hard stop value immediately
+                createLimitOrder(this, Action.Sell, product, getHardStop());
 
             } else {
 
@@ -161,19 +161,48 @@ public class Agent implements IAgent {
 
         } else {
 
+            //if we are selling we need to check if our hard stop value changed
+            if (getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription())) {
+
+                //get our hard stop
+                final double tmpHardStop = getHardStop();
+
+                //check if the hard stop has changed
+                checkSell(this, strategy, history, product, currentPrice);
+
+                //if the hard stop value has changed we will cancel this order
+                if (getHardStop() != tmpHardStop) {
+
+                    //cancel the existing order
+                    cancelOrder(this, getOrder().getId());
+
+                    //create a new limit order with the hard stop
+                    createLimitOrder(this, Action.Sell, product, getHardStop());
+                }
+            }
+
             //what is the status of our order
             AgentHelper.Status status = null;
 
-            if (Main.PAPER_TRADING || isSimulation()) {
+            if (isSimulation()) {
 
-                //if we are paper trading assume the order has been completed
+                //if we are simulating assume the order has been completed
                 status = AgentHelper.Status.Filled;
+
+            } else if (Main.PAPER_TRADING) {
+
+                //if the price drops below the hard stop, mark this filled
+                if (currentPrice < getHardStop())
+                    status = Status.Filled;
 
             } else {
 
                 //let's check if our order is complete
                 status = updateLimitOrder(this, getOrder().getId());
             }
+
+            //did we sell successfully
+            boolean sold = false;
 
             //so what do we do now
             switch (status) {
@@ -182,6 +211,10 @@ public class Agent implements IAgent {
 
                     //update our wallet with the order info
                     fillOrder(getOrder(), product);
+
+                    //are we successful selling
+                    if (getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription()))
+                        sold = true;
 
                     //now that the order has been filled, remove it
                     setOrder(null);
@@ -202,48 +235,9 @@ public class Agent implements IAgent {
                     break;
             }
 
-            //if we lost too much money and have no quantity pending, we will stop trading
-            if (getWallet().getFunds() < (STOP_TRADING_RATIO * getWallet().getStartingFunds()) && getWallet().getQuantity() <= 0)
-                setStopTrading(true);
-
-            //if our money has gone up, increase the stop trading limit
-            if (getWallet().getFunds() > getWallet().getStartingFunds()) {
-
-                final double oldRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                getWallet().setStartingFunds(getWallet().getFunds());
-                final double newRatio = (STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                displayMessage(this, "Good news, stop trading limit has increased", true);
-                displayMessage(this, "    Funds $" + AgentHelper.formatValue(getWallet().getFunds()), true);
-                displayMessage(this, "Old limit $" + AgentHelper.formatValue(oldRatio), true);
-                displayMessage(this, "New limit $" + AgentHelper.formatValue(newRatio), true);
-                displayMessage(this, "If your funds fall below the new limit we will stop trading", true);
-            }
-
-            //notify if this agent has stopped trading
-            if (hasStopTrading()) {
-
-                String subject = "We stopped trading";
-                String text1 = "Funds $" + AgentHelper.formatValue(getWallet().getFunds());
-                String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * getWallet().getStartingFunds());
-                String text3 = "Min $" + AgentHelper.formatValue(getFundsMin());
-                String text4 = "Max $" + AgentHelper.formatValue(getFundsMax());
-                displayMessage(this, subject, true);
-                displayMessage(this, text1, true);
-                displayMessage(this, text2, true);
-                displayMessage(this, text3, true);
-                displayMessage(this, text4, true);
-
-                //include the funds in our message
-                String message = text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n";
-
-                //also include the summary of wins/losses
-                message = message + TransactionHelper.getDescWins(this) + "\n";
-                message = message + TransactionHelper.getDescLost(this) + "\n";
-
-                //send email notification
-                if (!isSimulation())
-                    Email.sendEmail(subject + " (" + getProductId() + "-" + getTradingStrategy() + ")", message);
-            }
+            //check our standing now that we have sold successfully
+            if (sold)
+                checkStanding(this);
         }
     }
 

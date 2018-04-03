@@ -41,6 +41,11 @@ public class RSIA extends Strategy {
     }
 
     @Override
+    public String getStrategyDesc() {
+        return "PERIODS_ADX = " + LIST_PERIODS_ADX[getIndexStrategy()] + ", TREND_ADX = " + LIST_TREND_ADX[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", SUPPORT_LINE = " + LIST_SUPPORT_LINE[getIndexStrategy()] + ", RESISTANCE_LINE = " + LIST_RESISTANCE_LINE[getIndexStrategy()];
+    }
+
+    @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //start with rsi > resistance

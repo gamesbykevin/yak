@@ -29,6 +29,11 @@ public class OBV extends Strategy {
         this.volume = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_OBV = " + LIST_PERIODS_OBV[getIndexStrategy()];
+    }
+
     public List<Double> getVolume() {
         return this.volume;
     }

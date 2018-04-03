@@ -47,6 +47,11 @@ public class EMASV extends Strategy {
         this.smaVolume = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", PERIODS_SMA_PRICE = " + LIST_PERIODS_SMA_PRICE[getIndexStrategy()] + ", PERIODS_SMA_VOLUME = " + LIST_PERIODS_SMA_VOLUME[getIndexStrategy()];
+    }
+
     public List<Double> getSmaPrice() {
         return this.smaPrice;
     }

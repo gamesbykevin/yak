@@ -34,6 +34,11 @@ public class PVI extends Strategy {
         this.pviEma = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_EMA = " + LIST_PERIODS_EMA[getIndexStrategy()];
+    }
+
     public List<Double> getPviCumulative() {
         return this.pviCumulative;
     }

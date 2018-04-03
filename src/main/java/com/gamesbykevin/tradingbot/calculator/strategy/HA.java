@@ -32,6 +32,11 @@ public class HA extends Strategy {
         this.haPeriods = new ArrayList<>();
     }
 
+    @Override
+    public String getStrategyDesc() {
+        return "PERIODS_HA = " + LIST_PERIODS_HA[getIndexStrategy()];
+    }
+
     private List<Period> getHaPeriods() {
         return this.haPeriods;
     }
