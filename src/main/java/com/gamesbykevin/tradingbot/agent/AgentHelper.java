@@ -92,11 +92,9 @@ public class AgentHelper {
 
     protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
-        //do we sell the stock
-        agent.setReasonSell(null);
-
-        //check for a sell signal
-        strategy.checkSellSignal(agent, history, currentPrice);
+        //check for a sell signal, if we don't have a reason yet
+        if (agent.getReasonSell() == null)
+            strategy.checkSellSignal(agent, history, currentPrice);
 
         //if the current stock price is less than what we paid, we don't want to sell because we would lose $
         if (currentPrice < agent.getWallet().getPurchasePrice())
@@ -141,7 +139,7 @@ public class AgentHelper {
 
             } else {
 
-                //our hard stop will be the current price
+                //any other reason our hard stop will be the current price
                 agent.setHardStop(currentPrice);
 
                 //create and assign our limit order
@@ -150,8 +148,6 @@ public class AgentHelper {
 
         } else {
 
-            //we are still waiting
-            displayMessage(agent, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + agent.getWallet().getPurchasePrice() + ", Hard Stop $" + formatValue(agent.getHardStop()) + ", Quantity: " + agent.getWallet().getQuantity(), true);
         }
     }
 
@@ -181,6 +177,9 @@ public class AgentHelper {
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
+
+            //we don't have a reason to sell just yet
+            agent.setReasonSell(null);
 
         } else {
 
@@ -263,7 +262,7 @@ public class AgentHelper {
         final double quantity;
 
         //create a penny in case we need to alter the current price
-        BigDecimal penny = new BigDecimal(.01);
+        //BigDecimal penny = new BigDecimal(.01);
 
         switch (action) {
 
@@ -279,7 +278,7 @@ public class AgentHelper {
             case Sell:
 
                 //subtract 1 cent
-                price.subtract(penny);
+                //price.subtract(penny);
 
                 //sell all the quantity we have
                 quantity = agent.getWallet().getQuantity();

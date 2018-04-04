@@ -114,6 +114,9 @@ public class Main implements Runnable {
 
     private Main(ConfigurableApplicationContext context) {
 
+        if (WEBSOCKET_ENABLED)
+            throw new RuntimeException("Stopping because the web socket needs to be tested first before we test!!!!!!!!!!");
+
         ConfigurableListableBeanFactory factory = context.getBeanFactory();
         ORDER_SERVICE = factory.getBean(OrderService.class);
         this.productService = factory.getBean(ProductService.class);

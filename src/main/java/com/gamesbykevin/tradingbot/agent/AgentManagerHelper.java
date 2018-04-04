@@ -110,18 +110,18 @@ public class AgentManagerHelper {
                     if (agentSimulation.getOrder() != null) {
 
                         //if there is a pending order let's try to update and see what happens
-                        agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), currentPrice);
+                        agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), agentSimulation.getHardStop());
 
                     } else if (agentSimulation.getWallet().getQuantity() > 0) {
 
                         //if we have any stock we have to sell it now
                         agentSimulation.setReasonSell(ReasonSell.Reason_Simulation);
-                        agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), currentPrice));
+                        agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), agentSimulation.getHardStop()));
                     }
                 }
 
                 //display the results of our simulation
-                String message = manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - " + strategyObj.getStrategyDesc();
+                String message = "";
 
                 //the most recent period close will be the current price
                 double currentPrice = history.get(history.size() - 1).close;
@@ -130,14 +130,18 @@ public class AgentManagerHelper {
                 double assets = agentSimulation.getAssets(currentPrice);
 
                 //did we pass or fail?
-                message += (assets >= manager.getFunds()) ? ", Status: PASS" : ", Status: FAIL";
+                message += "Status: ";
+                message += (assets >= manager.getFunds()) ? "PASS" : "FAIL";
 
                 //add our start and finish
-                message += ",  End $" + AgentHelper.formatValue(assets);
+                message += ", End $" + AgentHelper.formatValue(assets);
 
                 //show the total wins / losses
                 message += ", " + TransactionHelper.getDescWins(agentSimulation);
                 message += ", " + TransactionHelper.getDescLost(agentSimulation);
+
+                //add product and strategy details to end of message
+                message += ", " + manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - " + strategyObj.getStrategyDesc();
 
                 //if the assets are greater we have a new winning strategy
                 if (assets > winningFunds) {

@@ -147,7 +147,7 @@ public class Agent implements IAgent {
             if (getWallet().getQuantity() > 0) {
 
                 //if we bought successfully we need to submit a sell limit order for our hard stop value immediately
-                createLimitOrder(this, Action.Sell, product, getHardStop());
+                setOrder(createLimitOrder(this, Action.Sell, product, getHardStop()));
 
             } else {
 
@@ -161,39 +161,30 @@ public class Agent implements IAgent {
 
         } else {
 
-            //if we are selling we need to check if our hard stop value changed
-            if (getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription())) {
-
-                //get our hard stop
-                final double tmpHardStop = getHardStop();
-
-                //check if the hard stop has changed
-                checkSell(this, strategy, history, product, currentPrice);
-
-                //if the hard stop value has changed we will cancel this order
-                if (getHardStop() != tmpHardStop) {
-
-                    //cancel the existing order
-                    cancelOrder(this, getOrder().getId());
-
-                    //create a new limit order with the hard stop
-                    createLimitOrder(this, Action.Sell, product, getHardStop());
-                }
-            }
+            //are we selling
+            boolean selling = getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription());
 
             //what is the status of our order
             AgentHelper.Status status = null;
 
-            if (isSimulation()) {
+            if (Main.PAPER_TRADING || isSimulation()) {
 
-                //if we are simulating assume the order has been completed
-                status = AgentHelper.Status.Filled;
+                if (selling && currentPrice <= getHardStop()) {
 
-            } else if (Main.PAPER_TRADING) {
-
-                //if the price drops below the hard stop, mark this filled
-                if (currentPrice < getHardStop())
+                    //if we are selling and the price drops below the hard stop, mark this filled
                     status = Status.Filled;
+                    setReasonSell(ReasonSell.Reason_Simulation);
+
+                } else if (!selling) {
+
+                    //if we are not selling then we are buying, mark this filled
+                    status = Status.Filled;
+
+                } else {
+
+                    //anything else we are pending
+                    status = Status.Pending;
+                }
 
             } else {
 
@@ -209,12 +200,12 @@ public class Agent implements IAgent {
 
                 case Filled:
 
+                    //we are successful selling
+                    if (selling)
+                        sold = true;
+
                     //update our wallet with the order info
                     fillOrder(getOrder(), product);
-
-                    //are we successful selling
-                    if (getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription()))
-                        sold = true;
 
                     //now that the order has been filled, remove it
                     setOrder(null);
@@ -235,9 +226,41 @@ public class Agent implements IAgent {
                     break;
             }
 
-            //check our standing now that we have sold successfully
-            if (sold)
-                checkStanding(this);
+            if (selling) {
+
+                if (sold) {
+
+                    //check our agent's standing now that we have sold successfully
+                    checkStanding(this);
+
+                } else {
+
+                    //if we still have a pending sell order let's see if we need to adjust it
+                    if (getOrder() != null && selling) {
+
+                        //get our hard stop
+                        final double tmpHardStop = getHardStop();
+
+                        //check if the hard stop has changed
+                        checkSell(this, strategy, history, product, currentPrice);
+
+                        //if the hard stop value has increased we will cancel this order and submit a new sell order
+                        if (getHardStop() > tmpHardStop) {
+
+                            //cancel the existing order
+                            cancelOrder(this, getOrder().getId());
+
+                            //create a new limit order with the new hard stop value
+                            setOrder(createLimitOrder(this, Action.Sell, product, getHardStop()));
+                        }
+                    }
+                }
+            }
+
+            //if we still have a pending order
+            if (getOrder() != null)
+                displayMessage(this, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + getWallet().getPurchasePrice() + ", Hard Stop $" + formatValue(getHardStop()) + ", Quantity: " + getWallet().getQuantity(), true);
+
         }
     }
 
