@@ -137,13 +137,23 @@ public class PropertyUtil {
 
     public static synchronized void displayMessage(final String message, PrintWriter writer) {
 
-        //print to console
-        System.out.println(message);
-        System.out.flush();
+        //don't continue if there is nothing to display
+        if (message == null)
+            return;
 
-        if (writer != null) {
-            writer.println(getTextDateDesc() + ":  " + message);
-            writer.flush();
+        try {
+
+            //print to console
+            System.out.println(message);
+            System.out.flush();
+
+            if (writer != null) {
+                writer.println(getTextDateDesc() + ":  " + message);
+                writer.flush();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

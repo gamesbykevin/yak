@@ -33,7 +33,7 @@ public class OrderService {
     }
 
     public Order getOrder(String orderId) {
-        return exchange.get(ORDERS_ENDPOINT + "/" + orderId,new ParameterizedTypeReference<Order>(){});
+        return exchange.get(ORDERS_ENDPOINT + "/" + orderId, new ParameterizedTypeReference<Order>(){});
     }
 
     public Order createOrder(NewOrderSingle order) {

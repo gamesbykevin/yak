@@ -1,5 +1,7 @@
 package com.coinbase.exchange.api.exchange;
 
+import com.gamesbykevin.tradingbot.util.LogFile;
+import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.google.gson.Gson;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,15 +114,29 @@ public class GdaxExchangeImpl implements GdaxExchange {
         Gson gson = new Gson();
         String jsonBody = gson.toJson(jsonObj);
 
+        //display and write to log file
+        PropertyUtil.displayMessage(jsonBody, LogFile.getPrintWriterJsonOrder());
+
         try {
-            ResponseEntity<T> response = restTemplate.exchange(getBaseUrl() + resourcePath,
-                    HttpMethod.POST,
-                    securityHeaders(resourcePath, "POST", jsonBody),
-                    responseType);
+            ResponseEntity<T> response = restTemplate.exchange(
+            getBaseUrl() + resourcePath,
+                HttpMethod.POST,
+                securityHeaders(resourcePath, "POST", jsonBody),
+                responseType);
+
+            //display and write to log file
+            PropertyUtil.displayMessage(gson.toJson(response.getBody()), LogFile.getPrintWriterJsonOrder());
+
+            //return our object
             return response.getBody();
+
         } catch (HttpClientErrorException ex) {
             log.error("POST request Failed for '" + resourcePath + "': " + ex.getResponseBodyAsString());
+
+            //display and write to log file
+            PropertyUtil.displayMessage(ex.getResponseBodyAsString(), LogFile.getPrintWriterJsonOrder());
         }
+
         return null;
     }
 

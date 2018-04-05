@@ -1,7 +1,5 @@
 package com.gamesbykevin.tradingbot.util;
 
-import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
-
 import java.io.File;
 import java.io.PrintWriter;
 
@@ -10,6 +8,8 @@ import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 public class LogFile {
 
     private static String LOG_DIRECTORY;
+
+    private static PrintWriter WRITER;
 
     public static String getFilenameMain() {
         return "main.log";
@@ -23,12 +23,25 @@ public class LogFile {
         return "manager.log";
     }
 
+    public static String getFilenameJsonOrder() {
+        return "gdax_orders.log";
+    }
+
     public static String getLogDirectory() {
 
         if (LOG_DIRECTORY == null)
             LOG_DIRECTORY = "logs-" + getFileDateDesc();
 
         return LOG_DIRECTORY;
+    }
+
+    public static PrintWriter getPrintWriterJsonOrder() {
+
+        if (WRITER == null)
+            WRITER = getPrintWriter(getFilenameJsonOrder(), getLogDirectory());
+
+        //return our object
+        return WRITER;
     }
 
     public static PrintWriter getPrintWriter(final String filename, final String directories) {
