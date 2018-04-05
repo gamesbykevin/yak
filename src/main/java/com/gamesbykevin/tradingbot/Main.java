@@ -155,27 +155,37 @@ public class Main implements Runnable {
 
     private void loadProducts() {
 
-        List<Product> tmp = productService.getProducts();
+        try {
+            List<Product> tmp = productService.getProducts();
 
-        //create new list of products we want to trade
-        this.products = new ArrayList<>();
+            //create new list of products we want to trade
+            this.products = new ArrayList<>();
 
-        //figure out which products we are trading
-        for (int i = 0; i < tmp.size(); i++) {
+            //figure out which products we are trading
+            for (int i = 0; i < tmp.size(); i++) {
 
-            //make sure we only add products we want to trade
-            for (int x = 0; x < TRADING_CURRENCIES.length; x++) {
+                //make sure we only add products we want to trade
+                for (int x = 0; x < TRADING_CURRENCIES.length; x++) {
 
-                //does this product match, if yes we will add it
-                if (tmp.get(i).getId().trim().equalsIgnoreCase(TRADING_CURRENCIES[x].trim())) {
+                    //does this product match, if yes we will add it
+                    if (tmp.get(i).getId().trim().equalsIgnoreCase(TRADING_CURRENCIES[x].trim())) {
 
-                    //add to list
-                    getProducts().add(tmp.get(i));
+                        //add to list
+                        getProducts().add(tmp.get(i));
 
-                    //exit loop
-                    break;
+                        //exit loop
+                        break;
+                    }
                 }
             }
+
+        } catch (Exception e) {
+
+            //write to log
+            displayMessage(e, getWriter());
+
+            //throw exception
+            throw e;
         }
 
         //make sure we are trading at least 1 product
@@ -196,7 +206,7 @@ public class Main implements Runnable {
 
 
             //send notification our bot is starting
-            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On" : "Off"));
+            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On (fake money)" : "Off, You are using real funds!!!!!"));
 
             while (true) {
 

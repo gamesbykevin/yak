@@ -9,7 +9,6 @@ import com.gamesbykevin.tradingbot.transaction.Transaction;
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
-import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
@@ -21,7 +20,6 @@ import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameAgent;
-import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class Agent implements IAgent {
 

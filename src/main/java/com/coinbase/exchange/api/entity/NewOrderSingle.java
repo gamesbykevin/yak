@@ -11,6 +11,7 @@ public abstract class NewOrderSingle {
     private String product_id;
     private String stp; //optional: values are dc, co , cn , cb
     private String funds;
+    private String stop;
 
     public String getStp() {
         return stp;
@@ -58,5 +59,13 @@ public abstract class NewOrderSingle {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getStop() {
+        return stop;
+    }
+
+    public void setStop(String stop) {
+        this.stop = stop;
     }
 }

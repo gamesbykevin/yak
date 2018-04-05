@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class NewLimitOrderSingle extends NewOrderSingle {
     private BigDecimal size;
     private BigDecimal price;
+    private BigDecimal stop_price;
     private Boolean post_only;
 
     public NewLimitOrderSingle() {}
@@ -58,5 +59,13 @@ public class NewLimitOrderSingle extends NewOrderSingle {
 
     public void setSize(BigDecimal size) {
         this.size = size;
+    }
+
+    public BigDecimal getStop_price() {
+        return stop_price;
+    }
+
+    public void setStop_price(BigDecimal stop_price) {
+        this.stop_price = stop_price;
     }
 }

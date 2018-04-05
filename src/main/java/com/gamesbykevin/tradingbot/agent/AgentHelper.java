@@ -36,6 +36,11 @@ public class AgentHelper {
     private static final String LIMIT_ORDER_DESC = "limit";
 
     /**
+     * This is when we need to specify a hard stop
+     */
+    private static final String STOP_LOSS_DESC = "loss";
+
+    /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
      */
     public static float HARD_STOP_RATIO;
@@ -269,7 +274,7 @@ public class AgentHelper {
             case Buy:
 
                 //add 1 cent
-                //price.add(penny);
+                //price = price.add(penny);
 
                 //see how much we can buy
                 quantity = (agent.getWallet().getFunds() / currentPrice);
@@ -278,7 +283,7 @@ public class AgentHelper {
             case Sell:
 
                 //subtract 1 cent
-                //price.subtract(penny);
+                //price = price.subtract(penny);
 
                 //sell all the quantity we have
                 quantity = agent.getWallet().getQuantity();
@@ -288,8 +293,8 @@ public class AgentHelper {
                 throw new RuntimeException("Action not defined: " + action.toString());
         }
 
-        //round few decimals
-        price.setScale(ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
+        //round few decimals so our numbers aren't
+        price = price.setScale(ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
 
         //the quantity we want to purchase
         BigDecimal size = new BigDecimal(quantity).setScale(ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
@@ -320,6 +325,19 @@ public class AgentHelper {
 
         //our quantity
         newOrder.setSize(size);
+
+        //if we are selling set a hard stop
+        if (action == Action.Sell) {
+
+            //set as stop "loss"
+            newOrder.setStop(STOP_LOSS_DESC);
+
+            //our stop price will be slightly above the current price
+            BigDecimal stopPrice = price.add(new BigDecimal(currentPrice * HARD_STOP_RATIO)).setScale(ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
+
+            //set the stop price in addition to the order price above, it will be higher than the order price
+            newOrder.setStop_price(stopPrice);
+        }
 
         //write order details to log
         displayMessage(agent, "Creating order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
