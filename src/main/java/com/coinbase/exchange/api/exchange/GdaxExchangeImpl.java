@@ -53,7 +53,11 @@ public class GdaxExchangeImpl implements GdaxExchange {
 
     @Override
     public <T> T get(String resourcePath, ParameterizedTypeReference<T> responseType) {
+
         try {
+
+            //display and write to log file
+            PropertyUtil.displayMessage("Endpoint:   " + resourcePath, LogFile.getPrintWriterJsonOrder());
 
             ResponseEntity<T> responseEntity = restTemplate.exchange(getBaseUrl() + resourcePath,
                     GET,
@@ -61,9 +65,16 @@ public class GdaxExchangeImpl implements GdaxExchange {
                     "GET",
                      ""),
                     responseType);
+
+            //display and write to log file
+            PropertyUtil.displayMessage("Response:   " + new Gson().toJson(responseEntity.getBody()), LogFile.getPrintWriterJsonOrder());
+
             return responseEntity.getBody();
         } catch (HttpClientErrorException ex) {
             log.error("GET request Failed for '" + resourcePath + "': " + ex.getResponseBodyAsString());
+
+            //display and write to log file
+            PropertyUtil.displayMessage("Exception:  " + ex.getResponseBodyAsString(), LogFile.getPrintWriterJsonOrder());
         }
         return null;
     }
@@ -113,6 +124,9 @@ public class GdaxExchangeImpl implements GdaxExchange {
     public <T, R> T post(String resourcePath,  ParameterizedTypeReference<T> responseType, R jsonObj) {
         Gson gson = new Gson();
         String jsonBody = gson.toJson(jsonObj);
+
+        //display and write to log file
+        PropertyUtil.displayMessage("Endpoint:   " + resourcePath, LogFile.getPrintWriterJsonOrder());
 
         //display and write to log file
         PropertyUtil.displayMessage("Request:    " + jsonBody, LogFile.getPrintWriterJsonOrder());

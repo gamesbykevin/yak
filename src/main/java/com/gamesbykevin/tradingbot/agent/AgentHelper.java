@@ -23,7 +23,7 @@ public class AgentHelper {
     /**
      * How much do we round the decimals when purchasing stock
      */
-    public static final int ROUND_DECIMALS_PRICE = 4;
+    public static final int ROUND_DECIMALS_PRICE = 2;
 
     /**
      * How much do we round the decimals when choosing quantity
