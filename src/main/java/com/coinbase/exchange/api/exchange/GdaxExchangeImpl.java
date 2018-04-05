@@ -115,7 +115,7 @@ public class GdaxExchangeImpl implements GdaxExchange {
         String jsonBody = gson.toJson(jsonObj);
 
         //display and write to log file
-        PropertyUtil.displayMessage(jsonBody, LogFile.getPrintWriterJsonOrder());
+        PropertyUtil.displayMessage("Request:    " + jsonBody, LogFile.getPrintWriterJsonOrder());
 
         try {
             ResponseEntity<T> response = restTemplate.exchange(
@@ -125,7 +125,7 @@ public class GdaxExchangeImpl implements GdaxExchange {
                 responseType);
 
             //display and write to log file
-            PropertyUtil.displayMessage(gson.toJson(response.getBody()), LogFile.getPrintWriterJsonOrder());
+            PropertyUtil.displayMessage("Response:   " + gson.toJson(response.getBody()), LogFile.getPrintWriterJsonOrder());
 
             //return our object
             return response.getBody();
@@ -134,7 +134,7 @@ public class GdaxExchangeImpl implements GdaxExchange {
             log.error("POST request Failed for '" + resourcePath + "': " + ex.getResponseBodyAsString());
 
             //display and write to log file
-            PropertyUtil.displayMessage(ex.getResponseBodyAsString(), LogFile.getPrintWriterJsonOrder());
+            PropertyUtil.displayMessage("Exception:  " + ex.getResponseBodyAsString(), LogFile.getPrintWriterJsonOrder());
         }
 
         return null;
