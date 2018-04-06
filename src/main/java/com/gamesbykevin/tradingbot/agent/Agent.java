@@ -199,8 +199,14 @@ public class Agent implements IAgent {
                 case Filled:
 
                     //we are successful selling
-                    if (selling)
+                    if (selling) {
+
                         sold = true;
+
+                        //if nothing is set, assume hard stop
+                        if (getReasonSell() == null)
+                            setReasonSell(ReasonSell.Reason_HardStop);
+                    }
 
                     //update our wallet with the order info
                     fillOrder(getOrder(), product);
@@ -257,7 +263,7 @@ public class Agent implements IAgent {
 
             //if we still have a pending order
             if (getOrder() != null)
-                displayMessage(this, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + getWallet().getPurchasePrice() + ", Hard Stop $" + formatValue(getHardStop()) + ", Quantity: " + getWallet().getQuantity(), true);
+                displayMessage(this, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + getWallet().getPurchasePrice() + ", Hard Stop $" + round(getHardStop()) + ", Quantity: " + getWallet().getQuantity(), true);
 
         }
     }

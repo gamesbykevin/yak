@@ -51,7 +51,7 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     //how many times do we check to see if the limit order is successful
-    private static final int FAILURE_LIMIT = 10;
+    private static final int FAILURE_LIMIT = 20;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -267,14 +267,14 @@ public class AgentHelper {
         final double quantity;
 
         //create a penny in case we need to alter the current price
-        //BigDecimal penny = new BigDecimal(.01);
+        BigDecimal penny = new BigDecimal(.01);
 
         switch (action) {
 
             case Buy:
 
-                //add 1 cent
-                //price = price.add(penny);
+                //subtract 1 cent
+                price = price.subtract(penny);
 
                 //see how much we can buy
                 quantity = (agent.getWallet().getFunds() / currentPrice);
@@ -282,8 +282,8 @@ public class AgentHelper {
 
             case Sell:
 
-                //subtract 1 cent
-                //price = price.subtract(penny);
+                //add 1 cent
+                price = price.add(penny);
 
                 //sell all the quantity we have
                 quantity = agent.getWallet().getQuantity();
@@ -294,10 +294,10 @@ public class AgentHelper {
         }
 
         //round few decimals so our numbers aren't
-        price = price.setScale(ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
+        price = round(ROUND_DECIMALS_PRICE, price);
 
         //the quantity we want to purchase
-        BigDecimal size = new BigDecimal(quantity).setScale(ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
+        BigDecimal size = round(ROUND_DECIMALS_QUANTITY, quantity);
 
         //make sure we have enough quantity to buy or else we can't continue
         if (size.doubleValue() < product.getBase_min_size()) {
@@ -310,9 +310,6 @@ public class AgentHelper {
 
         //which coin we are trading
         newOrder.setProduct_id(product.getId());
-
-        //set to post only to avoid fees
-        newOrder.setPost_only(true);
 
         //are we buying or selling
         newOrder.setSide(action.getDescription());
@@ -332,11 +329,16 @@ public class AgentHelper {
             //set as stop "loss"
             newOrder.setStop(STOP_LOSS_DESC);
 
-            //our stop price will be slightly above the current price
-            BigDecimal stopPrice = price.add(new BigDecimal(currentPrice * HARD_STOP_RATIO)).setScale(ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
+            //our stop price will be slightly above the current sell price, and will be less than the current stock price
+            BigDecimal stopPrice = round(ROUND_DECIMALS_PRICE, price.add(new BigDecimal(currentPrice * (HARD_STOP_RATIO / 2))));
 
             //set the stop price in addition to the order price above, it will be higher than the order price
             newOrder.setStop_price(stopPrice);
+
+        } else {
+
+            //set to post only to avoid fees (buy only)
+            newOrder.setPost_only(true);
         }
 
         //write order details to log
@@ -422,9 +424,9 @@ public class AgentHelper {
             agent.getWallet().setStartingFunds(agent.getWallet().getFunds());
             final double newRatio = (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
             displayMessage(agent, "Good news, stop trading limit has increased", true);
-            displayMessage(agent, "    Funds $" + AgentHelper.formatValue(agent.getWallet().getFunds()), true);
-            displayMessage(agent, "Old limit $" + AgentHelper.formatValue(oldRatio), true);
-            displayMessage(agent, "New limit $" + AgentHelper.formatValue(newRatio), true);
+            displayMessage(agent, "    Funds $" + AgentHelper.round(agent.getWallet().getFunds()), true);
+            displayMessage(agent, "Old limit $" + AgentHelper.round(oldRatio), true);
+            displayMessage(agent, "New limit $" + AgentHelper.round(newRatio), true);
             displayMessage(agent, "If your funds fall below the new limit we will stop trading", true);
         }
 
@@ -432,10 +434,10 @@ public class AgentHelper {
         if (agent.hasStopTrading()) {
 
             String subject = "We stopped trading";
-            String text1 = "Funds $" + AgentHelper.formatValue(agent.getWallet().getFunds());
-            String text2 = "Limit $" + AgentHelper.formatValue(STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
-            String text3 = "Min $" + AgentHelper.formatValue(agent.getFundsMin());
-            String text4 = "Max $" + AgentHelper.formatValue(agent.getFundsMax());
+            String text1 = "Funds $" + AgentHelper.round(agent.getWallet().getFunds());
+            String text2 = "Limit $" + AgentHelper.round(STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
+            String text3 = "Min $" + AgentHelper.round(agent.getFundsMin());
+            String text4 = "Max $" + AgentHelper.round(agent.getFundsMax());
             displayMessage(agent, subject, true);
             displayMessage(agent, text1, true);
             displayMessage(agent, text2, true);
@@ -455,14 +457,18 @@ public class AgentHelper {
         }
     }
 
-    public static BigDecimal formatValue(final double value) {
-        return formatValue(ROUND_DECIMALS_PRICE, value);
+    public static BigDecimal round(double number) {
+        return round(ROUND_DECIMALS_QUANTITY, number);
     }
 
-    public static BigDecimal formatValue(final int decimals, final double value) {
+    public static BigDecimal round(int decimals, double number) {
+        return round(decimals, BigDecimal.valueOf(number));
+    }
+
+    public static BigDecimal round(int decimals, BigDecimal number) {
+
         try {
-            BigDecimal result = BigDecimal.valueOf(value);
-            return result.setScale(decimals, RoundingMode.HALF_DOWN);
+            return number.setScale(decimals, RoundingMode.HALF_DOWN);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -471,7 +477,7 @@ public class AgentHelper {
     }
 
     public static String getStockInvestmentDesc(Agent agent) {
-        return "Owned Stock: " + formatValue(agent.getWallet().getQuantity());
+        return "Owned Stock: " + round(agent.getWallet().getQuantity());
     }
 
     protected static String getFileName() {

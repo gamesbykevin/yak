@@ -58,5 +58,3 @@ public class OrderService {
         return exchange.getAsList(fillsEndpoint, new ParameterizedTypeReference<Fill[]>(){});
     }
 }
-
-

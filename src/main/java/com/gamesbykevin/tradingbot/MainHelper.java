@@ -1,15 +1,11 @@
 package com.gamesbykevin.tradingbot;
 
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
-
-import java.util.HashMap;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
 import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -48,7 +44,7 @@ public class MainHelper {
             total += assets;
 
             //add to our details
-            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.formatValue(assets) + "\n";
+            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.round(assets) + "\n";
 
             //display each agent's funds as well
             text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getAgentDetails();
@@ -60,7 +56,7 @@ public class MainHelper {
         text = text + "\n";
 
         //format our message
-        subject = "Total assets $" + AgentHelper.formatValue(total);
+        subject = "Total assets $" + AgentHelper.round(total);
 
         if (total != TOTAL_PREVIOUS) {
 

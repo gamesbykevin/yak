@@ -24,7 +24,7 @@ public class LogFile {
     }
 
     public static String getFilenameJsonOrder() {
-        return "gdax_orders.log";
+        return "gdax_json.log";
     }
 
     public static String getLogDirectory() {

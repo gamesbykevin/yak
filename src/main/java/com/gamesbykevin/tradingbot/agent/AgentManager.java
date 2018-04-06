@@ -199,13 +199,13 @@ public class AgentManager {
 
         //message with all agent totals
         String result = getProductId() + " : " + getAgentPrimary().getTradingStrategy();
-        result += " - $" + AgentHelper.formatValue(getAssets(getAgentPrimary()));
+        result += " - $" + AgentHelper.round(getAssets(getAgentPrimary()));
 
         //add our min value
-        result += ",  Min $" + AgentHelper.formatValue(getAgentPrimary().getFundsMin());
+        result += ",  Min $" + AgentHelper.round(getAgentPrimary().getFundsMin());
 
         //add our max value
-        result += ",  Max $" + AgentHelper.formatValue(getAgentPrimary().getFundsMax());
+        result += ",  Max $" + AgentHelper.round(getAgentPrimary().getFundsMax());
 
         //if this agent has stopped trading, include it in the message
         if (getAgentPrimary().hasStopTrading())

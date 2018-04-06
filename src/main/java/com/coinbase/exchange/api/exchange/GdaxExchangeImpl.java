@@ -21,7 +21,6 @@ import java.util.List;
 
 import static org.springframework.http.HttpMethod.GET;
 
-
 /**
  * Created by irufus on 2/25/15.
  */
@@ -69,7 +68,9 @@ public class GdaxExchangeImpl implements GdaxExchange {
             //display and write to log file
             PropertyUtil.displayMessage("Response:   " + new Gson().toJson(responseEntity.getBody()), LogFile.getPrintWriterJsonOrder());
 
+            //return our response
             return responseEntity.getBody();
+
         } catch (HttpClientErrorException ex) {
             log.error("GET request Failed for '" + resourcePath + "': " + ex.getResponseBodyAsString());
 
@@ -141,7 +142,7 @@ public class GdaxExchangeImpl implements GdaxExchange {
             //display and write to log file
             PropertyUtil.displayMessage("Response:   " + gson.toJson(response.getBody()), LogFile.getPrintWriterJsonOrder());
 
-            //return our object
+            //return our response
             return response.getBody();
 
         } catch (HttpClientErrorException ex) {

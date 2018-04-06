@@ -84,7 +84,7 @@ public class Transaction {
     public void update(final Agent agent, final Product product, final Order order) {
 
         //our notification messages
-        String subject = null, text = null, summary = "";
+        String subject = "", text = "", summary = "";
 
         //get the purchase price from the order
         BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
@@ -120,11 +120,26 @@ public class Transaction {
             //assign our sell order
             setSell(order);
 
+            //did we pay any fees?
+            double fees = 0;
+
+            try {
+
+                //parse our fees to double
+                fees = Double.parseDouble(order.getFill_fees());
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             //assign our reason for selling
             setReasonSell(agent.getReasonSell());
 
             //if our sell order has been filled, update our wallet with our new funds
             agent.getWallet().setFunds(agent.getWallet().getFunds() + (price.doubleValue() * quantity.doubleValue()));
+
+            //also subtract our fees
+            agent.getWallet().setFunds(agent.getWallet().getFunds() - fees);
 
             //update the quantity as well
             agent.getWallet().setQuantity(agent.getWallet().getQuantity() - quantity.doubleValue());
@@ -135,7 +150,11 @@ public class Transaction {
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
 
+            //what is the reason for selling
             displayMessage(agent, "Reason sell: " + agent.getReasonSell().getDescription(), true);
+
+            //display the amount of fees that we paid
+            displayMessage(agent, "Fees $" + fees, true);
 
             //did we win or lose?
             if (bought > sold) {
@@ -161,8 +180,23 @@ public class Transaction {
                 subject = "We made $" + getAmount();
             }
 
-            //the transaction description
-            text = "Sell " + product.getId() + " quantity: " + quantity + " @ $" + price + ", purchase $" + agent.getWallet().getPurchasePrice() + ", remaining funds $" + agent.getWallet().getFunds();
+            //start off with the product to start the transaction description
+            text = "Sell " + product.getId();
+
+            //what is the quantity
+            text += ", quantity: " + quantity;
+
+            //what is the price
+            text += " @ $" + price;
+
+            //how much did we pay initially
+            text += ", purchase $" + agent.getWallet().getPurchasePrice();
+
+            //display our fees
+            text += ", fees $" + fees;
+
+            //how much $ do we have left
+            text += ", remaining funds $" + agent.getWallet().getFunds();
 
             //include the duration description
             summary = getDurationSummaryDesc(getDuration());
@@ -177,7 +211,7 @@ public class Transaction {
         displayMessage(agent, text, true);
 
         //are we going to notify every transaction?
-        if (!agent.isSimulation() && NOTIFICATION_EVERY_TRANSACTION && subject != null && text != null)
+        if (!agent.isSimulation() && NOTIFICATION_EVERY_TRANSACTION && subject.length() > 0 && text.length() > 0)
             sendEmail(subject, text + "\n" + summary);
     }
 

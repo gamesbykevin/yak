@@ -134,7 +134,7 @@ public class AgentManagerHelper {
                 message += (assets >= manager.getFunds()) ? "PASS" : "FAIL";
 
                 //add our start and finish
-                message += ", End $" + AgentHelper.formatValue(assets);
+                message += ", End $" + AgentHelper.round(assets);
 
                 //show the total wins / losses
                 message += ", " + TransactionHelper.getDescWins(agentSimulation);

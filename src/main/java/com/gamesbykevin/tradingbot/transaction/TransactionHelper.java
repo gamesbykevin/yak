@@ -4,7 +4,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 
 import com.gamesbykevin.tradingbot.transaction.Transaction.Result;
 
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.formatValue;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 public class TransactionHelper {
@@ -97,7 +97,7 @@ public class TransactionHelper {
 
             //display the count if greater than 0
             if (count > 0)
-                displayMessage(agent, result.toString() + " Sell " + reasons[i].toString() +  " total " + count + ", $" + formatValue(amount) + ". " + reasons[i].getDescription(), true);
+                displayMessage(agent, result.toString() + " Sell " + reasons[i].toString() +  " total " + count + ", $" + round(amount) + ". " + reasons[i].getDescription(), true);
         }
     }
 
@@ -150,10 +150,10 @@ public class TransactionHelper {
     }
 
     public static String getDescLost(Agent agent) {
-        return "Lost :" + getCount(agent, Result.Lose) + ", $" + formatValue(getAmount(agent, Result.Lose));
+        return "Lost :" + getCount(agent, Result.Lose) + ", $" + round(getAmount(agent, Result.Lose));
     }
 
     public static String getDescWins(Agent agent) {
-        return "Wins :" + getCount(agent, Result.Win) + ", $" + formatValue(getAmount(agent, Result.Win));
+        return "Wins :" + getCount(agent, Result.Win) + ", $" + round(getAmount(agent, Result.Win));
     }
 }
