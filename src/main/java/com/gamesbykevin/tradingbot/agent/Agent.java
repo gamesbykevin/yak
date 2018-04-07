@@ -53,6 +53,9 @@ public class Agent implements IAgent {
     //what is our hard stop amount
     private double hardStop = 0;
 
+    //what is our hard stop ratio when we sell our stock
+    private float hardStopRatio = 0;
+
     //let's keep track of how low and high our money goes
     private double fundsMin, fundsMax;
 
@@ -70,7 +73,7 @@ public class Agent implements IAgent {
         //store the product reference
         this.productId = productId;
 
-        //is this agent running simulations?
+        //is this a simulation
         this.simulation = simulation;
 
         //reset our information
@@ -87,14 +90,14 @@ public class Agent implements IAgent {
         if (!isSimulation())
             this.writer = LogFile.getPrintWriter(getFilenameAgent(), directory);
 
+        //set order null
+        this.order = null;
+
         //we don't want to buy when reset
         setBuy(false);
 
         //we don't want to sell either
         setReasonSell(null);
-
-        //set order null
-        this.order = null;
 
         //we don't want to stop trading
         setStopTrading(false);
@@ -112,8 +115,9 @@ public class Agent implements IAgent {
         this.setFundsMin(funds);
         this.setFundsMax(funds);
 
-        //display message and write to file
-        //displayMessage(this, "Starting $" + funds, true);
+        //display message
+        if (!isSimulation())
+            displayMessage(this, "Starting $" + funds, true);
     }
 
     @Override
@@ -144,8 +148,8 @@ public class Agent implements IAgent {
 
             if (getWallet().getQuantity() > 0) {
 
-                //if we bought successfully we need to submit a sell limit order for our hard stop value immediately
-                setOrder(createLimitOrder(this, Action.Sell, product, getHardStop()));
+                //check if we in position to sell our stock
+                checkSell(this, strategy, history, product, currentPrice);
 
             } else {
 
@@ -159,30 +163,16 @@ public class Agent implements IAgent {
 
         } else {
 
-            //are we selling
+            //are we selling?
             boolean selling = getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription());
 
-            //what is the status of our order
-            AgentHelper.Status status = null;
+            //what is the status of our order?
+            AgentHelper.Status status;
 
             if (Main.PAPER_TRADING || isSimulation()) {
 
-                if (selling && currentPrice <= getHardStop()) {
-
-                    //if we are selling and the price drops below the hard stop, mark this filled
-                    status = Status.Filled;
-                    setReasonSell(ReasonSell.Reason_Simulation);
-
-                } else if (!selling) {
-
-                    //if we are not selling then we are buying, mark this filled
-                    status = Status.Filled;
-
-                } else {
-
-                    //anything else we are pending
-                    status = Status.Pending;
-                }
+                //if paper trading or running a simulation assume this was filled
+                status = Status.Filled;
 
             } else {
 
@@ -190,23 +180,10 @@ public class Agent implements IAgent {
                 status = updateLimitOrder(this, getOrder().getId());
             }
 
-            //did we sell successfully
-            boolean sold = false;
-
             //so what do we do now
             switch (status) {
 
                 case Filled:
-
-                    //we are successful selling
-                    if (selling) {
-
-                        sold = true;
-
-                        //if nothing is set, assume hard stop
-                        if (getReasonSell() == null)
-                            setReasonSell(ReasonSell.Reason_HardStop);
-                    }
 
                     //update our wallet with the order info
                     fillOrder(getOrder(), product);
@@ -230,41 +207,9 @@ public class Agent implements IAgent {
                     break;
             }
 
-            if (selling) {
-
-                if (sold) {
-
-                    //check our agent's standing now that we have sold successfully
-                    checkStanding(this);
-
-                } else {
-
-                    //if we still have a pending sell order let's see if we need to adjust it
-                    if (getOrder() != null && selling) {
-
-                        //get our hard stop
-                        final double tmpHardStop = getHardStop();
-
-                        //check if the hard stop has changed
-                        checkSell(this, strategy, history, product, currentPrice);
-
-                        //if the hard stop value has increased we will cancel this order and submit a new sell order
-                        if (getHardStop() > tmpHardStop) {
-
-                            //cancel the existing order
-                            cancelOrder(this, getOrder().getId());
-
-                            //create a new limit order with the new hard stop value
-                            setOrder(createLimitOrder(this, Action.Sell, product, getHardStop()));
-                        }
-                    }
-                }
-            }
-
-            //if we still have a pending order
-            if (getOrder() != null)
-                displayMessage(this, "Waiting. Product " + product.getId() + " Current $" + currentPrice + ", Purchase $" + getWallet().getPurchasePrice() + ", Hard Stop $" + round(getHardStop()) + ", Quantity: " + getWallet().getQuantity(), true);
-
+            //check the standing of our agent now that we have sold successfully
+            if (selling && status == Status.Filled)
+                checkStanding(this);
         }
     }
 
@@ -408,5 +353,13 @@ public class Agent implements IAgent {
 
     public PrintWriter getWriter() {
         return this.writer;
+    }
+
+    public float getHardStopRatio() {
+        return this.hardStopRatio;
+    }
+
+    public void setHardStopRatio(float hardStopRatio) {
+        this.hardStopRatio = hardStopRatio;
     }
 }

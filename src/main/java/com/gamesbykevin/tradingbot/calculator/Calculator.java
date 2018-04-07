@@ -215,9 +215,6 @@ public class Calculator {
             //convert json text to multi array
             double[][] data = GSon.getGson().fromJson(json, double[][].class);
 
-            //get the size of our history
-            final int size = getHistory().size();
-
             //make sure we have data before we update
             if (data != null && data.length > 0) {
 

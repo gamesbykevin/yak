@@ -43,7 +43,7 @@ public class AgentHelper {
     /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
      */
-    public static float HARD_STOP_RATIO;
+    public static float[] HARD_STOP_RATIO;
 
     /**
      * Do we want to send a notification for every transaction?
@@ -51,7 +51,7 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     //how many times do we check to see if the limit order is successful
-    private static final int FAILURE_LIMIT = 20;
+    private static final int FAILURE_LIMIT = 10;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -97,15 +97,17 @@ public class AgentHelper {
 
     protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
-        //check for a sell signal, if we don't have a reason yet
-        if (agent.getReasonSell() == null)
-            strategy.checkSellSignal(agent, history, currentPrice);
+        //start without a reason to sell
+        agent.setReasonSell(null);
+
+        //check for a sell signal
+        strategy.checkSellSignal(agent, history, currentPrice);
 
         //if the current stock price is less than what we paid, we don't want to sell because we would lose $
         if (currentPrice < agent.getWallet().getPurchasePrice())
             agent.setReasonSell(null);
 
-        //if the price dropped below our hard stop, we will sell to cut our losses
+        //if the price dropped below our hard stop, we must sell to cut our losses
         if (currentPrice <= agent.getHardStop()) {
 
             //reason for selling is that we hit our hard stop
@@ -114,7 +116,7 @@ public class AgentHelper {
         } else {
 
             //what is the increase we check to see if we set a new hard stop amount
-            double increase = (agent.getWallet().getPurchasePrice() * HARD_STOP_RATIO);
+            double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
 
             //if the price has increased some more, let's set a new hard stop
             if (currentPrice > agent.getHardStop() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
@@ -137,21 +139,20 @@ public class AgentHelper {
             //if there is a reason, display message
             displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
-            if (agent.getReasonSell() == ReasonSell.Reason_HardStop) {
-
-                //if the reason for selling is we reached our hard stop price, sell for that hard stop price
-                //agent.setOrder(createLimitOrder(agent, Action.Sell, product, agent.getHardStop()));
-
-            } else {
-
-                //any other reason our hard stop will be the current price
-                agent.setHardStop(currentPrice);
-
-                //create and assign our limit order
-                //agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));aa
-            }
+            //create and assign our limit order
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
 
         } else {
+
+            //construct message
+            String message = "Waiting. Product " + product.getId();
+            message += " Current $" + currentPrice;
+            message += ", Purchase $" + agent.getWallet().getPurchasePrice();
+            message += ", Hard Stop $" + round(agent.getHardStop());
+            message += ", Quantity: " + agent.getWallet().getQuantity();
+
+            //we are waiting
+            displayMessage(agent, message, true);
 
         }
     }
@@ -172,7 +173,7 @@ public class AgentHelper {
 
             //let's set our hard stop if it hasn't been set already
             if (agent.getHardStop() == 0)
-                agent.setHardStop(currentPrice - (currentPrice * HARD_STOP_RATIO));
+                agent.setHardStop(currentPrice - (currentPrice * agent.getHardStopRatio()));
 
             //display which strategy we are using
             displayMessage(agent, " Details: " + strategy.getStrategyDesc(), true);
@@ -227,16 +228,9 @@ public class AgentHelper {
             return Status.Cancelled;
         }
 
-        //if we have exceeded our waiting limit and the order has not settled
-        if (agent.getAttempts() >= FAILURE_LIMIT && !order.getSettled()) {
-
-            //we will cancel the buy order if the order has not been resolved
-            if (order.getSide().equalsIgnoreCase(Action.Buy.getDescription())) {
-                cancelOrder(agent, orderId);
-            } else {
-                //we don't want to cancel the sell limit order, let's wait until it is created
-            }
-        }
+        //if we have exceeded our waiting limit and the order has not settled we will cancel the order
+        if (agent.getAttempts() >= FAILURE_LIMIT && !order.getSettled())
+            cancelOrder(agent, orderId);
 
         //let's say that we are still pending so we continue to wait until we have confirmation of something
         return Status.Pending;
@@ -323,23 +317,8 @@ public class AgentHelper {
         //our quantity
         newOrder.setSize(size);
 
-        //if we are selling set a hard stop
-        if (action == Action.Sell) {
-
-            //set as stop "loss"
-            newOrder.setStop(STOP_LOSS_DESC);
-
-            //our stop price will be slightly above the current sell price, and will be less than the current stock price
-            BigDecimal stopPrice = round(ROUND_DECIMALS_PRICE, price.add(new BigDecimal(currentPrice * (HARD_STOP_RATIO / 2))));
-
-            //set the stop price in addition to the order price above, it will be higher than the order price
-            newOrder.setStop_price(stopPrice);
-
-        } else {
-
-            //set to post only to avoid fees (buy only)
-            newOrder.setPost_only(true);
-        }
+        //set to post only to avoid fees
+        newOrder.setPost_only(true);
 
         //write order details to log
         displayMessage(agent, "Creating order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
@@ -356,6 +335,7 @@ public class AgentHelper {
             order = new Order();
             order.setPrice(price.toString());
             order.setSize(size.toString());
+            order.setFill_fees("0");
             order.setProduct_id(product.getId());
             order.setStatus(Status.Done.getDescription());
             order.setSide(action.getDescription());

@@ -173,7 +173,7 @@ public class AgentManager {
                     Strategy strategyObj = getCalculator().getStrategyObj(getAgentPrimary());
 
                     //write the chosen strategy to the console / log
-                    displayMessage("Strategy: " + getAgentPrimary().getTradingStrategy() + ", " + strategyObj.getStrategyDesc() + ")", getWriter());
+                    displayMessage("Strategy: " + getAgentPrimary().getTradingStrategy() + ", Stop Ratio: " + getAgentPrimary().getHardStopRatio() + ", " + strategyObj.getStrategyDesc(), getWriter());
 
                     //make sure the correct variables are set
                     StrategyHelper.setupValues(getAgentPrimary().getTradingStrategy(), strategyObj.getIndexStrategy());

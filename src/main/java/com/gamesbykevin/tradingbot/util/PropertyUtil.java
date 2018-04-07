@@ -23,6 +23,8 @@ public class PropertyUtil {
 
     public static final long MILLISECONDS_PER_SECOND = 1000L;
 
+    public static final String DELIMITER = ",";
+
     //how many milliseconds are there per minute
     public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
 
@@ -76,7 +78,7 @@ public class PropertyUtil {
         Main.PAPER_TRADING = Boolean.parseBoolean(getProperties().getProperty("paperTrading"));
 
         //which crypto currencies do we want to trade
-        Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(",");
+        Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(DELIMITER);
 
         //make sure we have something
         if (Main.TRADING_CURRENCIES.length < 1) {
@@ -92,7 +94,7 @@ public class PropertyUtil {
         }
 
         //what strategies are we trading with
-        Main.TRADING_STRATEGIES = getProperties().getProperty("tradingStrategies").split(",");
+        Main.TRADING_STRATEGIES = getProperties().getProperty("tradingStrategies").split(DELIMITER);
 
         //make sure we have something
         if (Main.TRADING_STRATEGIES.length < 1 || Main.TRADING_STRATEGIES[0].trim().length() < 1) {
@@ -105,6 +107,17 @@ public class PropertyUtil {
             }
         }
 
+        //what different hard stop ratios do we use to test our simulations
+        String[] values = getProperties().getProperty("hardStopRatio").split(DELIMITER);
+
+        //create our array of values
+        AgentHelper.HARD_STOP_RATIO = new float[values.length];
+
+        //populate our array
+        for (int i = 0; i < values.length; i++) {
+            AgentHelper.HARD_STOP_RATIO[i] = Float.parseFloat(values[i]);
+        }
+
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
 
@@ -114,9 +127,6 @@ public class PropertyUtil {
         } else {
             Main.NOTIFICATION_DELAY = Main.NOTIFICATION_DELAY * MILLISECONDS_PER_MINUTE;
         }
-
-        //what is our hard stop ratio, that we set as our purchased stock price rises
-        AgentHelper.HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
 
         //do we send a notification for every transaction?
         AgentHelper.NOTIFICATION_EVERY_TRANSACTION = Boolean.parseBoolean(getProperties().getProperty("notificationEveryTransaction"));
