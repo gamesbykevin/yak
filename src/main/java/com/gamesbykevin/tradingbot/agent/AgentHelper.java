@@ -51,7 +51,7 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     //how many times do we check to see if the limit order is successful
-    private static final int FAILURE_LIMIT = 10;
+    private static final int FAILURE_LIMIT = 25;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -104,8 +104,8 @@ public class AgentHelper {
         strategy.checkSellSignal(agent, history, currentPrice);
 
         //if the current stock price is less than what we paid, we don't want to sell because we would lose $
-        if (currentPrice < agent.getWallet().getPurchasePrice())
-            agent.setReasonSell(null);
+        //if (currentPrice < agent.getWallet().getPurchasePrice())
+        //    agent.setReasonSell(null);
 
         //if the price dropped below our hard stop, we must sell to cut our losses
         if (currentPrice <= agent.getHardStop()) {
@@ -162,6 +162,9 @@ public class AgentHelper {
         //flag buy false before we check
         agent.setBuy(false);
 
+        //we don't have a reason to sell just yet
+        agent.setReasonSell(null);
+
         //reset our hard stop until we actually buy
         agent.setHardStop(0);
 
@@ -183,9 +186,6 @@ public class AgentHelper {
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
-
-            //we don't have a reason to sell just yet
-            agent.setReasonSell(null);
 
         } else {
 

@@ -198,8 +198,18 @@ public class Transaction {
             //how much $ do we have left
             text += ", remaining funds $" + agent.getWallet().getFunds();
 
+            //what happened during this order
+            text += "\n\n";
+            text += "Order Attempt Summary" + "\n";
+            text += "Sell Reject: " + agent.getCountRejectedSell() + "\n";
+            text += "Sell Cancel: " + agent.getCountCancelSell() + "\n";
+            text += "Buy Reject: " + agent.getCountRejectedBuy() + "\n";
+            text += "Buy Cancel: " + agent.getCountCancelBuy() + "\n";
+
             //include the duration description
             summary = getDurationSummaryDesc(getDuration());
+
+            //write time summary to log
             displayMessage(agent, summary, true);
 
         } else {

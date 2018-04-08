@@ -97,7 +97,6 @@ public class EMAR extends Strategy {
         if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
-
         //display our data
         displayData(agent, agent.getReasonSell() != null);
     }

@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
@@ -55,7 +56,9 @@ public class LogFile {
             if (!file.exists())
                 file.mkdirs();
 
+            //create new print writer
             return new PrintWriter(directories + "\\" + filename, "UTF-8");
+
         } catch (Exception e) {
             e.printStackTrace();
         }

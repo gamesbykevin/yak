@@ -65,6 +65,10 @@ public class Agent implements IAgent {
     //is this agent used to run simulations
     private final boolean simulation;
 
+    //keep track of the reject/cancel, buy/sell orders
+    private int countRejectedBuy = 0, countRejectedSell = 0;
+    private int countCancelBuy = 0, countCancelSell = 0;
+
     protected Agent(double funds, String productId, boolean simulation) {
 
         //create new list of transactions
@@ -176,6 +180,16 @@ public class Agent implements IAgent {
 
             } else {
 
+                //construct message
+                String message = "Waiting. Product " + product.getId();
+                message += " Current $" + currentPrice;
+                message += ", Purchase $" + getWallet().getPurchasePrice();
+                message += ", Hard Stop $" + round(getHardStop());
+                message += ", Quantity: " + getWallet().getQuantity();
+
+                //we are waiting
+                displayMessage(this, message, true);
+
                 //let's check if our order is complete
                 status = updateLimitOrder(this, getOrder().getId());
             }
@@ -193,9 +207,28 @@ public class Agent implements IAgent {
                     break;
 
                 case Rejected:
+
+                    //keep track of the rejected orders
+                    if (selling) {
+                        countRejectedSell++;
+                    } else {
+                        countRejectedBuy++;
+                    }
+
+                    //if the order has been rejected we will remove it
+                    setOrder(null);
+                    break;
+
                 case Cancelled:
 
-                    //if the order has been rejected or cancelled we will remove it
+                    //keep track of the cancel orders
+                    if (selling) {
+                        countCancelSell++;
+                    } else {
+                        countCancelBuy++;
+                    }
+
+                    //if the order has been cancelled we will remove it
                     setOrder(null);
                     break;
 
@@ -207,9 +240,21 @@ public class Agent implements IAgent {
                     break;
             }
 
-            //check the standing of our agent now that we have sold successfully
-            if (selling && status == Status.Filled)
+            //if this is true we have finished a trade
+            if (selling && status == Status.Filled) {
+
+                //check the standing of our agent now that we have sold successfully
                 checkStanding(this);
+
+                //reset our order tracking for the next trade
+                setCountCancelBuy(0);
+                setCountCancelSell(0);
+                setCountRejectedBuy(0);
+                setCountRejectedSell(0);
+
+                //add empty line to separate transaction
+                displayMessage(this, "\n", true);
+            }
         }
     }
 
@@ -361,5 +406,37 @@ public class Agent implements IAgent {
 
     public void setHardStopRatio(float hardStopRatio) {
         this.hardStopRatio = hardStopRatio;
+    }
+
+    public int getCountRejectedBuy() {
+        return this.countRejectedBuy;
+    }
+
+    public void setCountRejectedBuy(int countRejectedBuy) {
+        this.countRejectedBuy = countRejectedBuy;
+    }
+
+    public int getCountRejectedSell() {
+        return this.countRejectedSell;
+    }
+
+    public void setCountRejectedSell(int countRejectedSell) {
+        this.countRejectedSell = countRejectedSell;
+    }
+
+    public int getCountCancelBuy() {
+        return this.countCancelBuy;
+    }
+
+    public void setCountCancelBuy(int countCancelBuy) {
+        this.countCancelBuy = countCancelBuy;
+    }
+
+    public int getCountCancelSell() {
+        return this.countCancelSell;
+    }
+
+    public void setCountCancelSell(int countCancelSell) {
+        this.countCancelSell = countCancelSell;
     }
 }

@@ -4,6 +4,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
+import com.gamesbykevin.tradingbot.util.History;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,19 +44,26 @@ public class Calculator {
      */
     public static int PERIOD_DURATION = 0;
 
+    //our json response string
+    private String json;
+
     public enum Duration {
 
-        OneMinute(60),
-        FiveMinutes(300),
-        FifteenMinutes(900),
-        OneHour(3600),
-        SixHours(21600),
-        TwentyFourHours(86400);
+        OneMinute(60, "one_minute"),
+        FiveMinutes(300, "five_minutes"),
+        FifteenMinutes(900, "fifteen_minutes"),
+        OneHour(3600, "one_hour"),
+        SixHours(21600, "six_hours"),
+        TwentyFourHours(86400, "one_day");
 
+        //how long (in seconds)
         public final long duration;
 
-        Duration(long duration) {
+        public final String description;
+
+        Duration(long duration, String description) {
             this.duration = duration;
+            this.description = description;
         }
     }
 
@@ -210,29 +218,16 @@ public class Calculator {
         try {
 
             //make our rest call and get the json response
-            final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration));
+            setJson(getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration)));
 
             //convert json text to multi array
-            double[][] data = GSon.getGson().fromJson(json, double[][].class);
+            double[][] data = GSon.getGson().fromJson(getJson(), double[][].class);
 
             //make sure we have data before we update
             if (data != null && data.length > 0) {
 
-                //parse each period from the data
-                for (int row = data.length - 1; row >= 0; row--) {
-
-                    //create and populate our period
-                    Period period = new Period();
-                    period.time = (long) data[row][0];
-                    period.low = data[row][1];
-                    period.high = data[row][2];
-                    period.open = data[row][3];
-                    period.close = data[row][4];
-                    period.volume = data[row][5];
-
-                    //check this period against our history and add if missing
-                    checkHistory(getHistory(), period);
-                }
+                //update our history list
+                updateHistory(getHistory(), data);
 
                 //sort the history
                 sortHistory(getHistory());
@@ -319,5 +314,13 @@ public class Calculator {
                     throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
             }
         }
+    }
+
+    private String getJson() {
+        return this.json;
+    }
+
+    private void setJson(String json) {
+        this.json = json;
     }
 }

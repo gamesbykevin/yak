@@ -145,17 +145,30 @@ public class PropertyUtil {
         displayMessage(message,null);
     }
 
-    public static synchronized void displayMessage(final String message, PrintWriter writer) {
+    public static synchronized void displayMessage(String message, PrintWriter writer) {
 
-        //don't continue if there is nothing to display
+        printConsole(message);
+        writeFile(message, writer);
+    }
+
+    public static synchronized void printConsole(String message) {
+
+        //don't continue if there is nothing
+        if (message == null)
+            return;
+
+        //print to console
+        System.out.println(message);
+        System.out.flush();
+    }
+
+    public static synchronized void writeFile(String message, PrintWriter writer) {
+
+        //don't continue if there is nothing
         if (message == null)
             return;
 
         try {
-
-            //print to console
-            System.out.println(message);
-            System.out.flush();
 
             if (writer != null) {
                 writer.println(getTextDateDesc() + ":  " + message);

@@ -6,7 +6,7 @@ import org.joda.time.format.ISODateTimeFormat;
 
 import java.lang.reflect.Type;
 
-public class GSon {
+public final class GSon {
 
     private static Gson GSON;
 
@@ -14,7 +14,7 @@ public class GSon {
      * Get GSon object
      * @return Object used to parse json string
      */
-    public static Gson getGson() {
+    public static final Gson getGson() {
 
         if (GSON == null) {
 

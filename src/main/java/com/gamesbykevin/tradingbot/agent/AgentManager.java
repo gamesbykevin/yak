@@ -6,6 +6,7 @@ import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper;
+import com.gamesbykevin.tradingbot.util.History;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
@@ -83,6 +84,9 @@ public class AgentManager {
         //create our calculator
         this.calculator = new Calculator();
 
+        //load any historic candles stored locally
+        History.load(this);
+
         //create our agents last
         createAgents();
     }
@@ -123,16 +127,22 @@ public class AgentManager {
                 boolean success = getCalculator().update(getMyDuration(), getProductId());
 
                 //get the size again so we can compare and see if it has changed
-                final int sizeNew = getCalculator().getHistory().size();
+                final int change = getCalculator().getHistory().size();
 
-                //if we haven't detected a change yet, check now
+                //if we haven't detected a change yet, check now for a change
                 if (!dirty)
-                    dirty = (size != sizeNew);
+                    dirty = (size != change);
+
+                //if a new candle has been added write to local storage
+                if (size != change) {
+                    displayMessage("Writing candle history", getWriter());
+                    History.write(this);
+                }
 
                 if (success) {
 
                     //rest call is successful
-                    displayMessage("Rest call successful. History size: " + sizeNew, (sizeNew != size) ? getWriter() : null);
+                    displayMessage("Rest call successful. History size: " + change, (change != size) ? getWriter() : null);
 
                 } else {
 
@@ -232,7 +242,7 @@ public class AgentManager {
         return agent.getAssets(getCurrentPrice());
     }
 
-    protected PrintWriter getWriter() {
+    public PrintWriter getWriter() {
         return this.writer;
     }
 
@@ -256,7 +266,7 @@ public class AgentManager {
         return this.currentPrice;
     }
 
-    public Calculator.Duration getMyDuration() {
+    public Duration getMyDuration() {
         return this.myDuration;
     }
 
@@ -264,7 +274,7 @@ public class AgentManager {
         return getProduct().getId();
     }
 
-    protected Calculator getCalculator() {
+    public Calculator getCalculator() {
         return this.calculator;
     }
 

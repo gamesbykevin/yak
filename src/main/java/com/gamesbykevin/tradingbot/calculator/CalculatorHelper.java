@@ -4,17 +4,30 @@ import java.util.List;
 
 public class CalculatorHelper {
 
-    /**
-     * Check the history <br>
-     * We will do 3 things<br>
-     * 1) Add the period if it doesn't exist in the history
-     * 2) Sort the list so the most recent period is at the end of the array list
-     * 3) Verify the list to make sure the gap between each period matches our duration
-     * @param history Our current list of history periods
-     * @param period The period we want to check
-     * @return true if no issues were found, false if there is a gap between periods
-     */
-    protected static void checkHistory(List<Period> history, Period period) {
+    public static void updateHistory(List<Period> history, double[][] data) {
+
+        //parse each period from the data
+        for (int row = data.length - 1; row >= 0; row--) {
+            updateHistory(history, data[row]);
+        }
+    }
+
+    public static void updateHistory(List<Period> history, double[] data) {
+
+        //create and populate our period
+        Period period = new Period();
+        period.time = (long) data[0];
+        period.low = data[1];
+        period.high = data[2];
+        period.open = data[3];
+        period.close = data[4];
+        period.volume = data[5];
+
+        //check this period against our history and add if missing
+        addHistory(history, period);
+    }
+
+    public static void addHistory(List<Period> history, Period period) {
 
         //check every period
         for (int i = 0; i < history.size(); i++) {
@@ -32,7 +45,7 @@ public class CalculatorHelper {
      * Sort the list so the most recent period is at the end of the array list
      * @param history Our current list of history periods
      */
-    protected static void sortHistory(List<Period> history) {
+    public static void sortHistory(List<Period> history) {
 
         //sort so the periods are in order from oldest to newest
         for (int x = 0; x < history.size(); x++) {
