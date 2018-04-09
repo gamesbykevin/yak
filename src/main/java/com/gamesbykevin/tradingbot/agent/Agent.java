@@ -19,7 +19,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameAgent;
+import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
 public class Agent implements IAgent {
 
@@ -51,7 +51,7 @@ public class Agent implements IAgent {
     private final String productId;
 
     //what is our hard stop amount
-    private double hardStop = 0;
+    private double hardStopPrice = 0;
 
     //what is our hard stop ratio when we sell our stock
     private float hardStopRatio = 0;
@@ -68,6 +68,9 @@ public class Agent implements IAgent {
     //keep track of the reject/cancel, buy/sell orders
     private int countRejectedBuy = 0, countRejectedSell = 0;
     private int countCancelBuy = 0, countCancelSell = 0;
+
+    //what is the  lowest price and highest price
+    private double priceLow = 0, priceHigh = 0;
 
     protected Agent(double funds, String productId, boolean simulation) {
 
@@ -87,12 +90,9 @@ public class Agent implements IAgent {
     @Override
     public void reset(double funds) {
 
-        //where to put our log file
-        String directory = LogFile.getLogDirectory() + "\\" + getProductId() + "\\";
-
-        //our simulation won't have a log file
+        //create our log file if we aren't a simulation
         if (!isSimulation())
-            this.writer = LogFile.getPrintWriter(getFilenameAgent(), directory);
+            createLogFile();
 
         //set order null
         this.order = null;
@@ -107,7 +107,7 @@ public class Agent implements IAgent {
         setStopTrading(false);
 
         //reset our hard stop
-        setHardStop(0);
+        setHardStopPrice(0);
 
         //clear our list
         this.transactions.clear();
@@ -167,6 +167,9 @@ public class Agent implements IAgent {
 
         } else {
 
+            //keep track of the price range during a single trade
+            checkPriceRange(currentPrice);
+
             //are we selling?
             boolean selling = getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription());
 
@@ -184,7 +187,7 @@ public class Agent implements IAgent {
                 String message = "Waiting. Product " + product.getId();
                 message += " Current $" + currentPrice;
                 message += ", Purchase $" + getWallet().getPurchasePrice();
-                message += ", Hard Stop $" + round(getHardStop());
+                message += ", Hard Stop $" + round(getHardStopPrice());
                 message += ", Quantity: " + getWallet().getQuantity();
 
                 //we are waiting
@@ -252,8 +255,8 @@ public class Agent implements IAgent {
                 setCountRejectedBuy(0);
                 setCountRejectedSell(0);
 
-                //add empty line to separate transaction
-                displayMessage(this, "\n", true);
+                //create new log file for the next trade
+                createLogFile();
             }
         }
     }
@@ -348,12 +351,12 @@ public class Agent implements IAgent {
         return this.transactions;
     }
 
-    public double getHardStop() {
-        return this.hardStop;
+    public double getHardStopPrice() {
+        return this.hardStopPrice;
     }
 
-    public void setHardStop(double hardStop) {
-        this.hardStop = hardStop;
+    public void setHardStopPrice(double hardStopPrice) {
+        this.hardStopPrice = hardStopPrice;
     }
 
     public double getFundsMax() {
@@ -438,5 +441,41 @@ public class Agent implements IAgent {
 
     public void setCountCancelSell(int countCancelSell) {
         this.countCancelSell = countCancelSell;
+    }
+
+    public String getDirectory() {
+        return LogFile.getLogDirectory() + "\\" + getProductId() + "\\" + "trades" + "\\";
+    }
+
+    public void createLogFile() {
+
+        //our simulation won't have a log file
+        if (!isSimulation())
+            this.writer = LogFile.getPrintWriter(getFileDateDesc() + ".log", getDirectory());
+    }
+
+    public double getPriceLow() {
+        return this.priceLow;
+    }
+
+    public void setPriceLow(double priceLow) {
+        this.priceLow = priceLow;
+    }
+
+    public double getPriceHigh() {
+        return this.priceHigh;
+    }
+
+    public void setPriceHigh(double priceHigh) {
+        this.priceHigh = priceHigh;
+    }
+
+    public void checkPriceRange(double currentPrice) {
+
+        //what is the lowest and highest price during this trade
+        if (currentPrice < getPriceLow())
+            setPriceLow(currentPrice);
+        if (currentPrice > getPriceHigh())
+            setPriceHigh(currentPrice);
     }
 }

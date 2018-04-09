@@ -61,7 +61,6 @@ public class AgentManager {
         ADL, ADX, BB, BBER, BBR, EMA, EMAR, EMAS, EMASV, EMV,
         EMVS, HA, MACD, MACDD, MACS, NP, NR, NVI, OA, OBV,
         PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA, SR, TWO_RSI
-
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -135,8 +134,18 @@ public class AgentManager {
 
                 //if a new candle has been added write to local storage
                 if (size != change) {
-                    displayMessage("Writing candle history", getWriter());
+
+                    //update local storage
                     History.write(this);
+
+                    //get the strategy related to the agent
+                    Strategy strObj = getCalculator().getStrategyObj(getAgentPrimary());
+
+                    //if we have a strategy we need to recalculate our strategy values
+                    if (strObj != null) {
+                        StrategyHelper.setupValues(getAgentPrimary().getTradingStrategy(), strObj.getIndexStrategy());
+                        strObj.calculate(getCalculator().getHistory());
+                    }
                 }
 
                 if (success) {

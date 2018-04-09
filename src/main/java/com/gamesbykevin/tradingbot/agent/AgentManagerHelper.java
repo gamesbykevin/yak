@@ -120,13 +120,13 @@ public class AgentManagerHelper {
                         if (agentSimulation.getOrder() != null) {
 
                             //if there is a pending order let's try to update and see what happens
-                            agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), agentSimulation.getHardStop());
+                            agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), agentSimulation.getHardStopPrice());
 
                         } else if (agentSimulation.getWallet().getQuantity() > 0) {
 
                             //if we have any stock we have to sell it now
                             agentSimulation.setReasonSell(ReasonSell.Reason_Simulation);
-                            agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), agentSimulation.getHardStop()));
+                            agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), agentSimulation.getHardStopPrice()));
                         }
                     }
 

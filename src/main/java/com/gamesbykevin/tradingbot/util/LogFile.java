@@ -16,10 +16,6 @@ public class LogFile {
         return "main.log";
     }
 
-    public static String getFilenameAgent() {
-        return "agent.log";
-    }
-
     public static String getFilenameManager() {
         return "manager.log";
     }

@@ -90,8 +90,8 @@ public class Transaction {
         BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
         price.setScale(AgentHelper.ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
 
-        //get the quantity from the order
-        BigDecimal quantity = BigDecimal.valueOf(Double.parseDouble(order.getSize()));
+        //get the quantity from the order (filled size)
+        BigDecimal quantity = BigDecimal.valueOf(Double.parseDouble(order.getFilled_size()));
         quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
 
         if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription())) {
@@ -196,10 +196,12 @@ public class Transaction {
             text += ", fees $" + fees;
 
             //how much $ do we have left
-            text += ", remaining funds $" + agent.getWallet().getFunds();
+            text += ", remaining funds $" + agent.getWallet().getFunds() + "\n";
+
+            //what was the low / high $ during the trade
+            text += "Stock High $" + agent.getPriceHigh() + ", Stock Low $" + agent.getPriceLow() + "\n";
 
             //what happened during this order
-            text += "\n\n";
             text += "Order Attempt Summary" + "\n";
             text += "Sell Reject: " + agent.getCountRejectedSell() + "\n";
             text += "Sell Cancel: " + agent.getCountCancelSell() + "\n";
