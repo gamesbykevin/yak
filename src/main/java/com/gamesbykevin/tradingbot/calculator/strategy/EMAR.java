@@ -7,6 +7,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 
 /**
@@ -63,10 +64,16 @@ public class EMAR extends Strategy {
             //if rsi is over the line and we have a bullish crossover
             agent.setBuy(true);
 
+            //write to log
+            displayMessage(agent, "current > RSI_LINE && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())", !agent.isSimulation());
+
         } else if (previous < RSI_LINE && current > RSI_LINE && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
 
             //if rsi JUST went over and ema short > ema long without checking for a crossover
             agent.setBuy(true);
+
+            //write to log
+            displayMessage(agent, "previous < RSI_LINE && current > RSI_LINE && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())", !agent.isSimulation());
         }
 
         //display our data
@@ -76,26 +83,44 @@ public class EMAR extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        /*
         //RSI values
         double current = getRecent(rsiObj.getRsiVal());
         double previous = getRecent(rsiObj.getRsiVal(), 2);
+
+        double emaShort = getRecent(emaObj.getEmaShort());
+        double emaLong = getRecent(emaObj.getEmaLong());
 
         if (current < RSI_LINE && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())) {
 
             //if rsi is under the line and we have a bearish crossover
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
-        } else if (previous > RSI_LINE && current < RSI_LINE && getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong())) {
+            //write to log
+            displayMessage(agent, "current < RSI_LINE && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())", !agent.isSimulation());
 
-            //if rsi JUST went under and ema short < ema long without checking for a crossover
+        } else if (previous > RSI_LINE && current < RSI_LINE && currentPrice < emaShort && emaShort < emaLong) {
+
+            //if rsi JUST went under and the current price is less than both ema's
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //write to log
+            displayMessage(agent, "previous > RSI_LINE && current < RSI_LINE && currentPrice < emaShort && emaShort < emaLong", !agent.isSimulation());
+        }
+
+        /*
+        else if (currentPrice < getRecent(emaObj.getEmaShort()) && currentPrice < getRecent(emaObj.getEmaLong())) {
+
+            //if the current price dropped below both ema's this is a sign of a downward trend
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //write to log
+            displayMessage(agent, "currentPrice < getRecent(emaObj.getEmaShort()) && currentPrice < getRecent(emaObj.getEmaLong())", !agent.isSimulation());
         }
         */
 
         //if we have bearish crossover
-        if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        //if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
+        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

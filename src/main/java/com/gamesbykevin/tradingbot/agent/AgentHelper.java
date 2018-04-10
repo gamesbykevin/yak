@@ -48,7 +48,7 @@ public class AgentHelper {
     /**
      * What is the initial hard stop ratio when we first buy
      */
-    public static final float INIT_HARD_STOP_RATIO_MULTIPLIER = 2.0f;
+    public static final float INIT_HARD_STOP_RATIO_MULTIPLIER = 3.0f;
 
     /**
      * Do we want to send a notification for every transaction?
@@ -56,7 +56,7 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     //how many times do we check to see if the limit order is successful
-    private static final int FAILURE_LIMIT = 25;
+    private static final int FAILURE_LIMIT = 30;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -254,10 +254,14 @@ public class AgentHelper {
         displayMessage(agent, "Canceling order: " + orderId, true);
 
         //cancel the order
-        Main.getOrderService().cancelOrder(orderId);
+        final String result = Main.getOrderService().cancelOrder(orderId);
 
         //notify we sent the message
         displayMessage(agent, "Cancel order message sent", true);
+
+        //if we receive a result back, display it
+        if (result != null)
+            displayMessage(agent, result, true);
     }
 
     protected static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
@@ -275,7 +279,9 @@ public class AgentHelper {
 
             case Buy:
 
-                //subtract 1 cent
+                //add 1 cent above the current price so the buy limit order executes immediately
+                //price = price.add(penny);
+
                 price = price.subtract(penny);
 
                 //see how much we can buy
@@ -284,7 +290,9 @@ public class AgentHelper {
 
             case Sell:
 
-                //add 1 cent
+                //subtract 1 cent below the current price so the sell limit order executes immediately
+                //price = price.subtract(penny);//.add(penny);
+
                 price = price.add(penny);
 
                 //sell all the quantity we have

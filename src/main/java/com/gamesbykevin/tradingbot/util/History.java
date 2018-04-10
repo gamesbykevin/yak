@@ -21,7 +21,7 @@ public class History {
 
     private static String FILENAME = "candles.txt";
 
-    public static void load(AgentManager manager) {
+    public static synchronized void load(AgentManager manager) {
 
         //get the directory where our history is stored
         File directory = new File(getDirectory(manager));
@@ -79,7 +79,7 @@ public class History {
         displayMessage("Done loading history: " + getDirectory(manager), manager.getWriter());
     }
 
-    public static void write(AgentManager manager) {
+    public static synchronized void write(AgentManager manager) {
 
         try {
 

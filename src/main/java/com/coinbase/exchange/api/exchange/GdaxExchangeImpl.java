@@ -110,14 +110,26 @@ public class GdaxExchangeImpl implements GdaxExchange {
     @Override
     public <T> T delete(String resourcePath, ParameterizedTypeReference<T> responseType) {
         try {
+
+            //display and write to log file
+            PropertyUtil.displayMessage("Endpoint:   " + resourcePath, LogFile.getPrintWriterJsonOrder());
+
             ResponseEntity<T> response = restTemplate.exchange(getBaseUrl() + resourcePath,
                 HttpMethod.DELETE,
                 securityHeaders(resourcePath, "DELETE", ""),
                 responseType);
+
+            //display and write to log file
+            PropertyUtil.displayMessage("Response:   " + new Gson().toJson(response.getBody()), LogFile.getPrintWriterJsonOrder());
+
             return response.getBody();
         } catch (HttpClientErrorException ex) {
             log.error("DELETE request Failed for '" + resourcePath + "': " + ex.getResponseBodyAsString());
+
+            //display and write to log file
+            PropertyUtil.displayMessage("Exception:  " + ex.getResponseBodyAsString(), LogFile.getPrintWriterJsonOrder());
         }
+
         return null;
     }
 
