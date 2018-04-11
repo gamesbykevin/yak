@@ -48,7 +48,7 @@ public class AgentHelper {
     /**
      * What is the initial hard stop ratio when we first buy
      */
-    public static final float INIT_HARD_STOP_RATIO_MULTIPLIER = 3.0f;
+    public static final float INIT_HARD_STOP_RATIO_MULTIPLIER = 2.5f;
 
     /**
      * Do we want to send a notification for every transaction?
@@ -112,8 +112,8 @@ public class AgentHelper {
         strategy.checkSellSignal(agent, history, currentPrice);
 
         //if the current stock price is less than what we paid, we don't want to sell because we would lose $
-        if (currentPrice < agent.getWallet().getPurchasePrice())
-            agent.setReasonSell(null);
+        //if (currentPrice < agent.getWallet().getPurchasePrice())
+        //    agent.setReasonSell(null);
 
         //if the price dropped below our hard stop, we must sell to cut our losses
         if (currentPrice <= agent.getHardStopPrice()) {
@@ -123,17 +123,27 @@ public class AgentHelper {
 
         } else {
 
-            //what is the increase we check to see if we set a new hard stop amount
-            double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
+            //if we aren't short trading adjust hard stop price
+            if (!agent.hasShortTrade()) {
 
-            //if the price has increased some more, let's set a new hard stop
-            if (currentPrice > agent.getHardStopPrice() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
+                //what is the increase we check to see if we set a new hard stop amount
+                double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
 
-                //set our new hard stop limit slightly below the current stock price
-                agent.setHardStopPrice(currentPrice - increase);
+                //if the price has increased some more, let's set a new hard stop
+                if (currentPrice > agent.getHardStopPrice() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
 
-                //write hard stop amount to our log file
-                displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
+                    //set our new hard stop limit slightly below the current stock price
+                    agent.setHardStopPrice(currentPrice - increase);
+
+                    //write hard stop amount to our log file
+                    displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
+                }
+
+            } else {
+
+                //if the price is higher than purchase sell it!!!!
+                if (currentPrice > agent.getWallet().getPurchasePrice())
+                    agent.setReasonSell(ReasonSell.Reason_ShortTrade);
             }
         }
 
@@ -351,7 +361,7 @@ public class AgentHelper {
             order = new Order();
             order.setPrice(price.toString());
             order.setSize(size.toString());
-            order.setFilled_size(order.getSize());
+            order.setFilled_size(size.toString());
             order.setFill_fees("0");
             order.setProduct_id(product.getId());
             order.setStatus(Status.Done.getDescription());

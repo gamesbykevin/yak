@@ -72,6 +72,9 @@ public class Agent implements IAgent {
     //what is the  lowest price and highest price
     private double priceLow = 0, priceHigh = 0;
 
+    //are we doing a short trade
+    private boolean shortTrade = false;
+
     protected Agent(double funds, String productId, boolean simulation) {
 
         //create new list of transactions
@@ -477,5 +480,13 @@ public class Agent implements IAgent {
             setPriceLow(currentPrice);
         if (currentPrice > getPriceHigh())
             setPriceHigh(currentPrice);
+    }
+
+    public void setShortTrade(boolean shortTrade) {
+        this.shortTrade = shortTrade;
+    }
+
+    public boolean hasShortTrade() {
+        return this.shortTrade;
     }
 }

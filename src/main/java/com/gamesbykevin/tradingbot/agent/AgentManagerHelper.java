@@ -47,6 +47,9 @@ public class AgentManagerHelper {
         //what is the hard stop ratio for our simulation
         float winningHardStopRatio = 0f;
 
+        //did the winning simulation yield positive results
+        boolean shortTrade = false;
+
         //simulate each of our specified trading strategies
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
@@ -139,9 +142,12 @@ public class AgentManagerHelper {
                     //get the agents assets
                     double assets = agentSimulation.getAssets(currentPrice);
 
+                    //do we have more money than which we started ?
+                    boolean pass = (assets > manager.getFunds());
+
                     //did we pass or fail?
                     message += "Status: ";
-                    message += (assets > manager.getFunds()) ? "PASS" : "FAIL";
+                    message += (pass) ? "PASS" : "FAIL";
 
                     //add our start and finish
                     message += ", End $" + AgentHelper.round(assets);
@@ -163,6 +169,9 @@ public class AgentManagerHelper {
                         winningStrategyIndex = strategyObj.getIndexStrategy();
                         winningStrategyObj = strategyObj;
                         winningHardStopRatio = AgentHelper.HARD_STOP_RATIO[j];
+
+                        //if we didn't yield positive results we will short trade
+                        shortTrade = (!pass);
                     }
 
                     //display our message
@@ -182,6 +191,7 @@ public class AgentManagerHelper {
             winningStrategyObj.setIndexStrategy(winningStrategyIndex);
             manager.getAgentPrimary().setTradingStrategy(winningStrategy);
             manager.getAgentPrimary().setHardStopRatio(winningHardStopRatio);
+            manager.getAgentPrimary().setShortTrade(shortTrade);
         }
 
         //display message

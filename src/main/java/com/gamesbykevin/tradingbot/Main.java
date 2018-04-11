@@ -367,15 +367,15 @@ public class Main implements Runnable {
         return this.products;
     }
 
-    protected PrintWriter getWriter() {
+    protected final PrintWriter getWriter() {
         return this.writer;
     }
 
-    protected HashMap<String, AgentManager> getAgentManagers() {
+    protected final HashMap<String, AgentManager> getAgentManagers() {
         return this.agentManagers;
     }
 
-    public static OrderService getOrderService() {
+    public static final OrderService getOrderService() {
         return ORDER_SERVICE;
     }
 }
