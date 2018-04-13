@@ -153,7 +153,8 @@ public class Agent implements IAgent {
         //if we don't have an active order look at the market data
         if (getOrder() == null) {
 
-            if (getWallet().getQuantity() > 0) {
+            //if we have quantity make sure we have the minimum or else we won't be able to sell
+            if (getWallet().getQuantity() > 0 && getWallet().getQuantity() >= product.getBase_min_size()) {
 
                 //check if we in position to sell our stock
                 checkSell(this, strategy, history, product, currentPrice);

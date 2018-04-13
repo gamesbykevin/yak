@@ -126,6 +126,9 @@ public class AgentHelper {
             //if we aren't short trading adjust hard stop price
             if (!agent.hasShortTrade()) {
 
+                /*
+                For right now don't worry about increasing the hard stop price
+
                 //what is the increase we check to see if we set a new hard stop amount
                 double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
 
@@ -138,6 +141,7 @@ public class AgentHelper {
                     //write hard stop amount to our log file
                     displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
                 }
+                */
 
             } else {
 
@@ -145,6 +149,7 @@ public class AgentHelper {
                 if (currentPrice > agent.getWallet().getPurchasePrice())
                     agent.setReasonSell(ReasonSell.Reason_ShortTrade);
             }
+
         }
 
         //if there is a reason then we will sell
@@ -289,9 +294,7 @@ public class AgentHelper {
 
             case Buy:
 
-                //add 1 cent above the current price so the buy limit order executes immediately
-                //price = price.add(penny);
-
+                //subtract a penny so when the price meets or goes below it executes
                 price = price.subtract(penny);
 
                 //see how much we can buy
@@ -300,9 +303,7 @@ public class AgentHelper {
 
             case Sell:
 
-                //subtract 1 cent below the current price so the sell limit order executes immediately
-                //price = price.subtract(penny);//.add(penny);
-
+                //add a penny so when the price meets or exceeds above it executes
                 price = price.add(penny);
 
                 //sell all the quantity we have
@@ -321,7 +322,20 @@ public class AgentHelper {
 
         //make sure we have enough quantity to buy or else we can't continue
         if (size.doubleValue() < product.getBase_min_size()) {
-            displayMessage(agent, "Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size(), true);
+
+            //create our message
+            final String message = "Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size();
+
+            //write message to log file
+            displayMessage(agent, message, true);
+
+            //stop trading
+            agent.setStopTrading(true);
+
+            //send notification message
+            Email.sendEmail("We stopped trading because we are unable to " + action.getDescription(), message);
+
+            //no order is created so we return null
             return null;
         }
 

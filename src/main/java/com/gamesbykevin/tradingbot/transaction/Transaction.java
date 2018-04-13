@@ -92,7 +92,14 @@ public class Transaction {
 
         //get the quantity from the order (filled size)
         BigDecimal quantity = BigDecimal.valueOf(Double.parseDouble(order.getSize()));
-        quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
+
+        //get the order size and the filled size
+        double orderSize = Double.parseDouble(order.getSize());
+        double filledSize = Double.parseDouble(order.getFilled_size());
+
+        //if the order size equals filled we can round
+        if (orderSize == filledSize)
+            quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
 
         if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription())) {
 
