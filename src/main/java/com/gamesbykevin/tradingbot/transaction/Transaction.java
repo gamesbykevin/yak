@@ -83,6 +83,9 @@ public class Transaction {
 
     public void update(final Agent agent, final Product product, final Order order) {
 
+		//is this transaction a buy or sell?
+		boolean buying  = order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription());
+	
         //our notification messages
         String subject = "", text = "", summary = "";
 
@@ -90,18 +93,30 @@ public class Transaction {
         BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
         price.setScale(AgentHelper.ROUND_DECIMALS_PRICE, RoundingMode.HALF_DOWN);
 
-        //get the quantity from the order (filled size)
-        BigDecimal quantity = BigDecimal.valueOf(Double.parseDouble(order.getSize()));
+        //what is the quantity result from the order
+        BigDecimal quantity;
 
         //get the order size and the filled size
         double orderSize = Double.parseDouble(order.getSize());
         double filledSize = Double.parseDouble(order.getFilled_size());
 
         //if the order size equals filled we can round
-        if (orderSize == filledSize)
+        if (orderSize == filledSize) {
+			
+			//we will use the order size
+			quantity = BigDecimal.valueOf(orderSize);
+			
+			//round the quantity
             quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
+			
+		} else {
+			
+			//we will use the filled size if there is no match and we won't round to avoid accuracy loss
+			quantity = BigDecimal.valueOf(filledSize);
+			
+		}
 
-        if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Buy.getDescription())) {
+        if (buying) {
 
             //assign our buy order
             setBuy(order);
@@ -122,7 +137,7 @@ public class Transaction {
             //display the transaction
             displayMessage(agent, text, true);
 
-        } else if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Sell.getDescription())) {
+        } else {
 
             //assign our sell order
             setSell(order);
@@ -221,8 +236,6 @@ public class Transaction {
             //write time summary to log
             displayMessage(agent, summary, true);
 
-        } else {
-            throw new RuntimeException("Side not handled here: " + order.getSide());
         }
 
         //display and write to log
