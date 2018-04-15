@@ -1,16 +1,18 @@
 package com.gamesbykevin.tradingbot.util;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.io.*;
+import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.addHistory;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.updateHistory;
 import static com.gamesbykevin.tradingbot.util.LogFile.getPrintWriter;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
-import static com.gamesbykevin.tradingbot.util.PropertyUtil.writeFile;
 
 /**
  * This class will manage the historical candle data we get from said exchange
@@ -22,19 +24,23 @@ public class History {
     private static String FILENAME = "candles.txt";
 
     public static synchronized void load(AgentManager manager) {
+        load(manager.getCalculator().getHistory(), manager.getProductId(), manager.getMyDuration(), manager.getWriter());
+    }
+
+    public static synchronized void load(List<Period> history, String productId, Duration duration, PrintWriter writer) {
 
         //get the directory where our history is stored
-        File directory = new File(getDirectory(manager));
+        File directory = new File(getDirectory(productId, duration));
 
         //if the directory does not exist, there is nothing to load
         if (!directory.exists())
             return;
 
         //start loading history
-        displayMessage("Loading history: " + getDirectory(manager), manager.getWriter());
+        displayMessage("Loading history: " + getDirectory(productId, duration), writer);
 
         //how big is our history
-        final int size = manager.getCalculator().getHistory().size();
+        final int size = history.size();
 
         //we will load from every file in the directory
         for (File file : directory.listFiles()) {
@@ -58,7 +64,7 @@ public class History {
                     Period data = GSon.getGson().fromJson(line, Period.class);
 
                     //add period to our history
-                    addHistory(manager.getCalculator().getHistory(), data);
+                    addHistory(history, data);
                 }
 
             } catch (Exception e) {
@@ -67,27 +73,31 @@ public class History {
         }
 
         //now let's make sure everything is sorted in order
-        sortHistory(manager.getCalculator().getHistory());
+        sortHistory(history);
 
         //any records loaded
-        final int change = manager.getCalculator().getHistory().size() - size;
+        final int change = history.size() - size;
 
         //display records loaded
-        displayMessage(change + " records added", manager.getWriter());
+        displayMessage(change + " records added", writer);
 
         //we are done loading history
-        displayMessage("Done loading history: " + getDirectory(manager), manager.getWriter());
+        displayMessage("Done loading history: " + getDirectory(productId, duration), writer);
     }
 
     public static synchronized void write(AgentManager manager) {
+        write(manager.getCalculator().getHistory(), manager.getProductId(), manager.getMyDuration());
+    }
+
+    public static synchronized void write(List<Period> history, String productId, Duration duration) {
 
         try {
 
             //create our print writer
-            PrintWriter pw = getPrintWriter(FILENAME, getDirectory(manager));
+            PrintWriter pw = getPrintWriter(FILENAME, getDirectory(productId, duration));
 
-            for (int i = 0; i < manager.getCalculator().getHistory().size(); i++) {
-                pw.println(GSon.getGson().toJson(manager.getCalculator().getHistory().get(i)));
+            for (int i = 0; i < history.size(); i++) {
+                pw.println(GSon.getGson().toJson(history.get(i)));
             }
 
             //write all remaining bytes
@@ -102,6 +112,10 @@ public class History {
     }
 
     private static String getDirectory(AgentManager manager) {
-        return (DIRECTORY + "\\" + manager.getProductId() + "\\" + manager.getMyDuration().description);
+        return getDirectory(manager.getProductId(), manager.getMyDuration());
+    }
+
+    private static String getDirectory(String productId, Duration duration) {
+        return (DIRECTORY + "\\" + productId + "\\" + duration.description);
     }
 }

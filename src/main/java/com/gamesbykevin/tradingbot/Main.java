@@ -11,6 +11,7 @@ import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.util.GSon;
+import com.gamesbykevin.tradingbot.util.HistoryTracker;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import com.gamesbykevin.tradingbot.websocket.MyWebsocketFeed;
@@ -361,6 +362,10 @@ public class Main implements Runnable {
 
             displayMessage("Websocket is not enabled...", getWriter());
         }
+
+        //create a new history tracker
+        displayMessage("Creating history tracker", getWriter());
+        new HistoryTracker();
     }
 
     private List<Product> getProducts() {
