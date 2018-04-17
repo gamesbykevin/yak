@@ -178,24 +178,57 @@ public class Agent implements IAgent {
             boolean selling = getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription());
 
             //what is the status of our order?
-            AgentHelper.Status status;
+            Status status = null;
 
-            if (Main.PAPER_TRADING || isSimulation()) {
+            //construct message
+            String message = "Waiting. Product " + product.getId();
+            message += " Current $" + currentPrice;
+            message += ", Purchase $" + getWallet().getPurchasePrice();
+            message += ", Hard Stop $" + round(getHardStopPrice());
+            message += ", Quantity: " + getWallet().getQuantity();
 
-                //if paper trading or running a simulation assume this was filled
+            //we are waiting
+            displayMessage(this, message, true);
+
+            //paper trading will try to treat same as live trading with limit orders
+            if (Main.PAPER_TRADING && !isSimulation()) {
+
+                //for now the status will be pending
+                status = Status.Pending;
+
+                //keep track of attempts
+                setAttempts(getAttempts() + 1);
+
+                //what is the price in the order
+                double orderPrice = Double.parseDouble(order.getPrice());
+
+                //the limit orders work different if buying or selling
+                if (selling) {
+
+                    //the limit order will fill when the price goes at or above the order price
+                    if (currentPrice >= orderPrice)
+                        status = Status.Filled;
+
+                } else {
+
+                    //the limit order will fill when the price goes at or below the order price
+                    if (currentPrice <= orderPrice)
+                        status = Status.Filled;
+
+                }
+
+                //if we were unsuccessful in our attempts, cancel the order
+                if (status == Status.Pending && getAttempts() >= FAILURE_LIMIT) {
+                    status = Status.Cancelled;
+                    displayMessage(this, "Cancelling order", true);
+                }
+
+            } else if (isSimulation()) {
+
+                //if running a simulation assume this was filled
                 status = Status.Filled;
 
             } else {
-
-                //construct message
-                String message = "Waiting. Product " + product.getId();
-                message += " Current $" + currentPrice;
-                message += ", Purchase $" + getWallet().getPurchasePrice();
-                message += ", Hard Stop $" + round(getHardStopPrice());
-                message += ", Quantity: " + getWallet().getQuantity();
-
-                //we are waiting
-                displayMessage(this, message, true);
 
                 //let's check if our order is complete
                 status = updateLimitOrder(this, getOrder().getId());

@@ -12,6 +12,7 @@ import com.gamesbykevin.tradingbot.util.Email;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
@@ -56,7 +57,7 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     //how many times do we check to see if the limit order is successful
-    private static final int FAILURE_LIMIT = 30;
+    public static final int FAILURE_LIMIT = 30;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -503,5 +504,41 @@ public class AgentHelper {
 
     protected static String getFileName() {
         return getFileDateDesc() + ".log";
+    }
+
+    protected static double predict(List<Period> history) {
+
+        //keep track of the % change between each period
+        List<Double> change = new ArrayList<>();
+
+        //calculate % change between each period
+        for (int i = 0; i < history.size() - 1; i++) {
+
+            //get the current and future closing prices
+            double current = history.get(i).close;
+            double future = history.get(i + 1).close;
+
+            //calculate % change
+            double percent = (future - current) / current;
+
+            //add to list
+            change.add(percent);
+        }
+
+        //count the # of times
+        int count = 0;
+
+        for (int i = 0; i < change.size(); i++) {
+
+            //count the number of increases
+            if (change.get(i) > 0)
+                count++;
+        }
+
+        //now that we know the count calculate probability for increase
+        double prob = ((double)count / change.size());
+
+        //return probability of increase
+        return prob;
     }
 }
