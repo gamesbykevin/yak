@@ -98,13 +98,13 @@ public class EMAR extends Strategy {
             //write to log
             displayMessage(agent, "current < RSI_LINE && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())", !agent.isSimulation());
 
-        } else if (previous > RSI_LINE && current < RSI_LINE && currentPrice < emaShort && emaShort < emaLong) {
+        } else if (previous > RSI_LINE && current < RSI_LINE && emaShort < emaLong) {
 
             //if rsi JUST went under and the current price is less than both ema's
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //write to log
-            displayMessage(agent, "previous > RSI_LINE && current < RSI_LINE && currentPrice < emaShort && emaShort < emaLong", !agent.isSimulation());
+            displayMessage(agent, "previous > RSI_LINE && current < RSI_LINE && emaShort < emaLong", !agent.isSimulation());
         }
 
         /*

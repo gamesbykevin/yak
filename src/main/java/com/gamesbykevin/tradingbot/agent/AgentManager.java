@@ -13,6 +13,8 @@ import java.io.PrintWriter;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.getFileName;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.getPrediction;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.getProbability;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.runSimulation;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
@@ -132,11 +134,8 @@ public class AgentManager {
                 if (!dirty)
                     dirty = (size != change);
 
-                //if a new candle has been added write to local storage
+                //if a new candle has been added update
                 if (size != change) {
-
-                    //update local storage
-                    History.write(this);
 
                     //get the strategy related to the agent
                     Strategy strObj = getCalculator().getStrategyObj(getAgentPrimary());
@@ -146,6 +145,15 @@ public class AgentManager {
                         StrategyHelper.setupValues(getAgentPrimary().getTradingStrategy(), strObj.getIndexStrategy());
                         strObj.calculate(getCalculator().getHistory());
                     }
+
+                    //get probability of price change
+                    double probabilityI = getProbability(getCalculator().getHistory(), true);
+                    double probabilityD = getProbability(getCalculator().getHistory(), false);
+
+                    //if we have new data calculate the probability of a price increase, and the forecast price
+                    displayMessage("Probability $ increase: " + probabilityI, getWriter());
+                    displayMessage("Probability $ decrease: " + probabilityD, getWriter());
+                    displayMessage("Price prediction of next period $" + getPrediction(getCalculator().getHistory()), getWriter());
                 }
 
                 if (success) {

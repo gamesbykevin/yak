@@ -47,9 +47,14 @@ public class AgentHelper {
     public static float[] HARD_STOP_RATIO;
 
     /**
+     * What smoothing factor do we use when forecasting stock price
+     */
+    public static float EXPONENTIAL_SMOOTHING = .25f;
+
+    /**
      * What is the initial hard stop ratio when we first buy
      */
-    public static final float INIT_HARD_STOP_RATIO_MULTIPLIER = 2.5f;
+    public static final float INIT_HARD_STOP_RATIO_MULTIPLIER = 3.0f;
 
     /**
      * Do we want to send a notification for every transaction?
@@ -61,6 +66,9 @@ public class AgentHelper {
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
+
+    //how many periods do we look at when calculating probability
+    public static int PERIODS_PROBABILITY = 30;
 
     public enum Action {
 
@@ -159,6 +167,12 @@ public class AgentHelper {
             //if there is a reason, display message
             displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
+            //display our price prediction
+            displayMessage(agent, "Price prediction of next period $" + getPrediction(history), true);
+
+            //display our probability of a price increase
+            displayMessage(agent, "Chances of price decrease: " + getProbability(history, false), true);
+
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
 
@@ -207,6 +221,12 @@ public class AgentHelper {
 
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStopPrice(), true);
+
+            //display our price prediction
+            displayMessage(agent, "Price prediction of next period $" + getPrediction(history), true);
+
+            //display our probability of a price increase
+            displayMessage(agent, "Chances of price increase: " + getProbability(history, true), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
@@ -334,7 +354,7 @@ public class AgentHelper {
             agent.setStopTrading(true);
 
             //send notification message
-            Email.sendEmail("We stopped trading because we are unable to " + action.getDescription(), message);
+            Email.sendEmail("We stopped trading because we are unable to " + action.getDescription() + " " + product.getId(), message);
 
             //no order is created so we return null
             return null;
@@ -506,13 +526,35 @@ public class AgentHelper {
         return getFileDateDesc() + ".log";
     }
 
-    protected static double predict(List<Period> history) {
+    protected static double getPrediction(List<Period> history) {
+
+        //we will start with the first closing price as our forecast
+        double forecast = history.get(0).close;
+
+        //calculate 1 day ema for every closing price
+        for (int i = 1; i < history.size(); i++) {
+
+            //forecast the next price based on the current close and our smoothing factor
+            forecast = (history.get(i).close * EXPONENTIAL_SMOOTHING) + (forecast * (1.0f - EXPONENTIAL_SMOOTHING));
+        }
+
+        //return our result
+        return forecast;
+    }
+
+    /**
+     * Get the probability
+     * @param history List of historical periods
+     * @param increase Are we calculating probability of a price increase or decrease
+     * @return The probability that the price will increase or decrease
+     */
+    protected static double getProbability(List<Period> history, boolean increase) {
 
         //keep track of the % change between each period
         List<Double> change = new ArrayList<>();
 
         //calculate % change between each period
-        for (int i = 0; i < history.size() - 1; i++) {
+        for (int i = history.size() - PERIODS_PROBABILITY; i < history.size() - 1; i++) {
 
             //get the current and future closing prices
             double current = history.get(i).close;
@@ -528,17 +570,29 @@ public class AgentHelper {
         //count the # of times
         int count = 0;
 
+        //count the number of % increase / decrease
         for (int i = 0; i < change.size(); i++) {
 
-            //count the number of increases
-            if (change.get(i) > 0)
-                count++;
+            if (increase) {
+
+                if (change.get(i) > 0)
+                    count++;
+
+            } else {
+
+                if (change.get(i) <= 0)
+                    count++;
+            }
         }
 
-        //now that we know the count calculate probability for increase
+        //if there is no count our probability is %0
+        if (count == 0)
+            return 0;
+
+        //now that we know the count calculate probability for a price increase /decrease
         double prob = ((double)count / change.size());
 
-        //return probability of increase
+        //return result
         return prob;
     }
 }

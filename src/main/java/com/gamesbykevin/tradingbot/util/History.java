@@ -85,10 +85,6 @@ public class History {
         displayMessage("Done loading history: " + getDirectory(productId, duration), writer);
     }
 
-    public static synchronized void write(AgentManager manager) {
-        write(manager.getCalculator().getHistory(), manager.getProductId(), manager.getMyDuration());
-    }
-
     public static synchronized void write(List<Period> history, String productId, Duration duration) {
 
         try {

@@ -134,9 +134,6 @@ public class Transaction {
             subject = "Purchase " + product.getId();
             text = "Buy " + product.getId() + " quantity: " + quantity + " @ $" + agent.getWallet().getPurchasePrice();
 
-            //display the transaction
-            displayMessage(agent, text, true);
-
         } else {
 
             //assign our sell order
