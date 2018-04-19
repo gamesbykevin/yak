@@ -68,7 +68,10 @@ public class AgentHelper {
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
 
     //how many periods do we look at when calculating probability
-    public static int PERIODS_PROBABILITY = 30;
+    public static int PERIODS_PROBABILITY;
+
+    //if the probability of the price increasing is less than this value we won't buy
+    public static float MINIMUM_INCREASE_PROBABILITY;
 
     public enum Action {
 
@@ -135,9 +138,6 @@ public class AgentHelper {
             //if we aren't short trading adjust hard stop price
             if (!agent.hasShortTrade()) {
 
-                /*
-                For right now don't worry about increasing the hard stop price
-
                 //what is the increase we check to see if we set a new hard stop amount
                 double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
 
@@ -150,7 +150,6 @@ public class AgentHelper {
                     //write hard stop amount to our log file
                     displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
                 }
-                */
 
             } else {
 
@@ -205,6 +204,13 @@ public class AgentHelper {
         //check for a buy signal
         strategy.checkBuySignal(agent, history, currentPrice);
 
+        //what is the probability of an increase
+        float probabilityIncrease = getProbability(history, true);
+
+        //if the chance of a price increase is less than our minimum, we won't buy
+        if (probabilityIncrease < MINIMUM_INCREASE_PROBABILITY)
+            agent.setBuy(false);
+
         //we will buy if there is a reason
         if (agent.hasBuy()) {
 
@@ -226,7 +232,7 @@ public class AgentHelper {
             displayMessage(agent, "Price prediction of next period $" + getPrediction(history), true);
 
             //display our probability of a price increase
-            displayMessage(agent, "Chances of price increase: " + getProbability(history, true), true);
+            displayMessage(agent, "Chances of price increase: " + probabilityIncrease, true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
@@ -548,10 +554,10 @@ public class AgentHelper {
      * @param increase Are we calculating probability of a price increase or decrease
      * @return The probability that the price will increase or decrease
      */
-    protected static double getProbability(List<Period> history, boolean increase) {
+    protected static float getProbability(List<Period> history, boolean increase) {
 
         //keep track of the % change between each period
-        List<Double> change = new ArrayList<>();
+        List<Float> change = new ArrayList<>();
 
         //calculate % change between each period
         for (int i = history.size() - PERIODS_PROBABILITY; i < history.size() - 1; i++) {
@@ -561,7 +567,7 @@ public class AgentHelper {
             double future = history.get(i + 1).close;
 
             //calculate % change
-            double percent = (future - current) / current;
+            float percent = (float)((future - current) / current);
 
             //add to list
             change.add(percent);
@@ -590,7 +596,7 @@ public class AgentHelper {
             return 0;
 
         //now that we know the count calculate probability for a price increase /decrease
-        double prob = ((double)count / change.size());
+        float prob = ((float)count / (float)change.size());
 
         //return result
         return prob;

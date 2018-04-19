@@ -183,7 +183,7 @@ public class Agent implements IAgent {
             //construct message
             String message = "Waiting. Product " + product.getId();
             message += " Current $" + currentPrice;
-            message += ", Purchase $" + getWallet().getPurchasePrice();
+            message += ", Purchase $" + round(Double.parseDouble(getOrder().getPrice()));
             message += ", Hard Stop $" + round(getHardStopPrice());
             message += ", Quantity: " + getWallet().getQuantity();
 
@@ -218,7 +218,7 @@ public class Agent implements IAgent {
                 }
 
                 //if we were unsuccessful in our attempts, cancel the order
-                if (status == Status.Pending && getAttempts() >= FAILURE_LIMIT) {
+                if (status != Status.Filled && getAttempts() >= FAILURE_LIMIT) {
                     status = Status.Cancelled;
                     displayMessage(this, "Cancelling order", true);
                 }

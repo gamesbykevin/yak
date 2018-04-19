@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.createLimitOrder;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 
@@ -50,148 +51,162 @@ public class AgentManagerHelper {
         //did the winning simulation yield positive results
         boolean shortTrade = false;
 
-        //simulate each of our specified trading strategies
-        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+        //we only need to simulate if there is more than 1 strategy
+        if (MY_TRADING_STRATEGIES.length > 1) {
 
-            //current trading strategy
-            TradingStrategy current = MY_TRADING_STRATEGIES[i];
+            //simulate each of our specified trading strategies
+            for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
-            //get the assigned strategy
-            Strategy strategyObj = manager.getCalculator().getStrategyObj(current);
+                //current trading strategy
+                TradingStrategy current = MY_TRADING_STRATEGIES[i];
 
-            //test each stop ratio as well
-            for (int j = 0; j < AgentHelper.HARD_STOP_RATIO.length; j++) {
+                //get the assigned strategy
+                Strategy strategyObj = manager.getCalculator().getStrategyObj(current);
 
-                //reset the index of the strategy assigned to the agent to 0
-                strategyObj.setIndexStrategy(0);
+                //test each stop ratio as well
+                for (int j = 0; j < HARD_STOP_RATIO.length; j++) {
 
-                while (true) {
+                    //reset the index of the strategy assigned to the agent to 0
+                    strategyObj.setIndexStrategy(0);
 
-                    //setup the correct values before we run our simulation
-                    boolean result = StrategyHelper.setupValues(current, strategyObj.getIndexStrategy());
+                    while (true) {
 
-                    //if false we checked all scenarios for this strategy and we can move to the next
-                    if (!result)
-                        break;
+                        //setup the correct values before we run our simulation
+                        boolean result = StrategyHelper.setupValues(current, strategyObj.getIndexStrategy());
 
-                    //reset the agent funds
-                    agentSimulation.reset(manager.getFunds());
+                        //if false we checked all scenarios for this strategy and we can move to the next
+                        if (!result)
+                            break;
 
-                    //assign the hard stop ratio
-                    agentSimulation.setHardStopRatio(AgentHelper.HARD_STOP_RATIO[j]);
+                        //reset the agent funds
+                        agentSimulation.reset(manager.getFunds());
 
-                    //assign the trading strategy
-                    agentSimulation.setTradingStrategy(current);
+                        //assign the hard stop ratio
+                        agentSimulation.setHardStopRatio(HARD_STOP_RATIO[j]);
 
-                    //clear the history
-                    tmpHistory.clear();
+                        //assign the trading strategy
+                        agentSimulation.setTradingStrategy(current);
 
-                    //start out with a minimum # of periods
-                    for (int index = 0; index <= SIMULATION_PERIODS_MIN; index++) {
-                        tmpHistory.add(history.get(index));
-                    }
+                        //clear the history
+                        tmpHistory.clear();
 
-                    //continue to simulate until we check all of our history
-                    while (tmpHistory.size() < history.size()) {
-
-                        //obtain the latest index
-                        int index = tmpHistory.size();
-
-                        //keep the index in bounds when simulating the last period
-                        if (index >= history.size())
-                            index = history.size() - 1;
-
-                        //the current price will be the closing price of the current period
-                        double currentPrice = history.get(index).close;
-
-                        //recalculate based on the current history
-                        strategyObj.calculate(tmpHistory);
-
-                        //simulate the agent
-                        agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), currentPrice);
-
-                        //add to the tmp history
-                        if (tmpHistory.size() < history.size())
+                        //start out with a minimum # of periods
+                        for (int index = 0; index <= SIMULATION_PERIODS_MIN; index++) {
                             tmpHistory.add(history.get(index));
-                    }
+                        }
 
-                    //finish the pending transaction (if any)
-                    while (agentSimulation.isPending()) {
+                        //continue to simulate until we check all of our history
+                        while (tmpHistory.size() < history.size()) {
 
+                            //obtain the latest index
+                            int index = tmpHistory.size();
+
+                            //keep the index in bounds when simulating the last period
+                            if (index >= history.size())
+                                index = history.size() - 1;
+
+                            //the current price will be the closing price of the current period
+                            double currentPrice = history.get(index).close;
+
+                            //recalculate based on the current history
+                            strategyObj.calculate(tmpHistory);
+
+                            //simulate the agent
+                            agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), currentPrice);
+
+                            //add to the tmp history
+                            if (tmpHistory.size() < history.size())
+                                tmpHistory.add(history.get(index));
+                        }
+
+                        //finish the pending transaction (if any)
+                        while (agentSimulation.isPending()) {
+
+                            double currentPrice = history.get(history.size() - 1).close;
+
+                            if (agentSimulation.getOrder() != null) {
+
+                                //if there is a pending order let's try to update and see what happens
+                                agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), agentSimulation.getHardStopPrice());
+
+                            } else if (agentSimulation.getWallet().getQuantity() > 0) {
+
+                                //if we have any stock we have to sell it now
+                                agentSimulation.setReasonSell(ReasonSell.Reason_Simulation);
+                                agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), agentSimulation.getHardStopPrice()));
+                            }
+                        }
+
+                        //display the results of our simulation
+                        String message = "";
+
+                        //the most recent period close will be the current price
                         double currentPrice = history.get(history.size() - 1).close;
 
-                        if (agentSimulation.getOrder() != null) {
+                        //get the agents assets
+                        double assets = agentSimulation.getAssets(currentPrice);
 
-                            //if there is a pending order let's try to update and see what happens
-                            agentSimulation.update(strategyObj, tmpHistory, manager.getProduct(), agentSimulation.getHardStopPrice());
+                        //do we have more money than which we started ?
+                        boolean pass = (assets > manager.getFunds());
 
-                        } else if (agentSimulation.getWallet().getQuantity() > 0) {
+                        //did we pass or fail?
+                        message += "Status: ";
+                        message += (pass) ? "PASS" : "FAIL";
 
-                            //if we have any stock we have to sell it now
-                            agentSimulation.setReasonSell(ReasonSell.Reason_Simulation);
-                            agentSimulation.setOrder(createLimitOrder(agentSimulation, AgentHelper.Action.Sell, manager.getProduct(), agentSimulation.getHardStopPrice()));
+                        //add our start and finish
+                        message += ", End $" + AgentHelper.round(assets);
+
+                        //show the total wins / losses
+                        message += ", " + TransactionHelper.getDescWins(agentSimulation);
+                        message += ", " + TransactionHelper.getDescLost(agentSimulation);
+
+                        //what is the hard stop ratio?
+                        message += ", Stop Ratio: " + agentSimulation.getHardStopRatio();
+
+                        //add product and strategy details to end of message
+                        message += ", " + manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - " + strategyObj.getStrategyDesc();
+
+                        //if the assets are greater we have a new winning strategy
+                        if (assets > winningFunds) {
+                            winningFunds = assets;
+                            winningStrategy = current;
+                            winningStrategyIndex = strategyObj.getIndexStrategy();
+                            winningStrategyObj = strategyObj;
+                            winningHardStopRatio = HARD_STOP_RATIO[j];
+
+                            //if we didn't yield positive results we will short trade
+                            shortTrade = (!pass);
                         }
+
+                        //display our message
+                        displayMessage(message, manager.getWriter());
+
+                        //increase the index and check another configuration of the same strategy
+                        strategyObj.setIndexStrategy(strategyObj.getIndexStrategy() + 1);
                     }
-
-                    //display the results of our simulation
-                    String message = "";
-
-                    //the most recent period close will be the current price
-                    double currentPrice = history.get(history.size() - 1).close;
-
-                    //get the agents assets
-                    double assets = agentSimulation.getAssets(currentPrice);
-
-                    //do we have more money than which we started ?
-                    boolean pass = (assets > manager.getFunds());
-
-                    //did we pass or fail?
-                    message += "Status: ";
-                    message += (pass) ? "PASS" : "FAIL";
-
-                    //add our start and finish
-                    message += ", End $" + AgentHelper.round(assets);
-
-                    //show the total wins / losses
-                    message += ", " + TransactionHelper.getDescWins(agentSimulation);
-                    message += ", " + TransactionHelper.getDescLost(agentSimulation);
-
-                    //what is the hard stop ratio?
-                    message += ", Stop Ratio: " + agentSimulation.getHardStopRatio();
-
-                    //add product and strategy details to end of message
-                    message += ", " + manager.getProductId() + " - " + agentSimulation.getTradingStrategy() + " - " + strategyObj.getStrategyDesc();
-
-                    //if the assets are greater we have a new winning strategy
-                    if (assets > winningFunds) {
-                        winningFunds = assets;
-                        winningStrategy = current;
-                        winningStrategyIndex = strategyObj.getIndexStrategy();
-                        winningStrategyObj = strategyObj;
-                        winningHardStopRatio = AgentHelper.HARD_STOP_RATIO[j];
-
-                        //if we didn't yield positive results we will short trade
-                        shortTrade = (!pass);
-                    }
-
-                    //display our message
-                    displayMessage(message, manager.getWriter());
-
-                    //increase the index and check another configuration of the same strategy
-                    strategyObj.setIndexStrategy(strategyObj.getIndexStrategy() + 1);
                 }
             }
-        }
 
-        tmpHistory.clear();
-        tmpHistory = null;
+            tmpHistory.clear();
+            tmpHistory = null;
 
-        //make sure we found a winning strategy before updating our agent
-        if (winningStrategy != null) {
-            winningStrategyObj.setIndexStrategy(winningStrategyIndex);
-            manager.getAgentPrimary().setTradingStrategy(winningStrategy);
-            manager.getAgentPrimary().setHardStopRatio(winningHardStopRatio);
-            manager.getAgentPrimary().setShortTrade(shortTrade);
+            //make sure we found a winning strategy before updating our agent
+            if (winningStrategy != null) {
+                winningStrategyObj.setIndexStrategy(winningStrategyIndex);
+                manager.getAgentPrimary().setTradingStrategy(winningStrategy);
+                manager.getAgentPrimary().setHardStopRatio(winningHardStopRatio);
+                manager.getAgentPrimary().setShortTrade(shortTrade);
+            }
+
+        } else {
+
+            //set the winning strategy by default since there is no need to run a simulation
+            manager.getCalculator().getStrategyObj(MY_TRADING_STRATEGIES[0]).setIndexStrategy(0);
+            manager.getAgentPrimary().setTradingStrategy(MY_TRADING_STRATEGIES[0]);
+            manager.getAgentPrimary().setHardStopRatio(HARD_STOP_RATIO[0]);
+            manager.getAgentPrimary().setShortTrade(false);
+
+            displayMessage("No simulations run because there is only 1 strategy specified", manager.getWriter());
         }
 
         //display message

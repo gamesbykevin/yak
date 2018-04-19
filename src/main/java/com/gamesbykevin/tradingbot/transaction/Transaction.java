@@ -23,6 +23,9 @@ public class Transaction {
     //store our buy and sell orders
     private Order buy, sell;
 
+    //how many decimals do we round when displaying the dollar description
+    private static final int DESCRIPTION_DECIMALS_ACCURACY = 4;
+
     /**
      * The result of the transaction
      */
@@ -185,7 +188,7 @@ public class Transaction {
                 setResult(Result.Lose);
 
                 //setup our subject
-                subject = "We lost $" + getAmount();
+                subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, getAmount());
 
             } else {
 
@@ -196,7 +199,7 @@ public class Transaction {
                 setResult(Result.Win);
 
                 //we win
-                subject = "We made $" + getAmount();
+                subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, getAmount());
             }
 
             //start off with the product to start the transaction description
@@ -215,7 +218,7 @@ public class Transaction {
             text += ", fees $" + fees;
 
             //how much $ do we have left
-            text += ", remaining funds $" + agent.getWallet().getFunds() + "\n";
+            text += ", remaining funds $" + AgentHelper.round(agent.getWallet().getFunds()) + "\n";
 
             //what was the low / high $ during the trade
             text += "Stock High $" + agent.getPriceHigh() + ", Stock Low $" + agent.getPriceLow() + "\n";

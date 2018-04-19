@@ -107,22 +107,8 @@ public class EMAR extends Strategy {
             displayMessage(agent, "previous > RSI_LINE && current < RSI_LINE && emaShort < emaLong", !agent.isSimulation());
         }
 
-        /*
-        else if (currentPrice < getRecent(emaObj.getEmaShort()) && currentPrice < getRecent(emaObj.getEmaLong())) {
-
-            //if the current price dropped below both ema's this is a sign of a downward trend
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-            //write to log
-            displayMessage(agent, "currentPrice < getRecent(emaObj.getEmaShort()) && currentPrice < getRecent(emaObj.getEmaLong())", !agent.isSimulation());
-        }
-        */
-
-        //if we have bearish crossover
-        //if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
-        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
-
         //display our data
+        displayMessage(agent, "RSI current: " + current + ", RSI previous: " + previous + ", EMA Short: " + emaShort + ", EMA Long: " + emaLong, !agent.isSimulation());
         displayData(agent, agent.getReasonSell() != null);
     }
 
