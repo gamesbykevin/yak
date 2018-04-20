@@ -513,10 +513,6 @@ public class AgentHelper {
         return "Owned Stock: " + round(agent.getWallet().getQuantity());
     }
 
-    protected static String getFileName() {
-        return getFileDateDesc() + ".log";
-    }
-
     protected static double getPrediction(List<Period> history) {
 
         //we will start with the first closing price as our forecast

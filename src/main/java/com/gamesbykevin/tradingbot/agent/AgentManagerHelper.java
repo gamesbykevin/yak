@@ -15,6 +15,6 @@ public class AgentManagerHelper {
     }
 
     public static void displayMessage(Agent agent, String message, boolean write) {
-        displayMessage(agent.getProductId() + "-" + agent.getTradingStrategy() + " " + agent.getHardStopRatio() + ": " + message, write ? agent.getWriter() : null);
+        displayMessage(agent.getProductId() + "-" + agent.getTradingStrategy() + " " + message, write ? agent.getWriter() : null);
     }
 }
