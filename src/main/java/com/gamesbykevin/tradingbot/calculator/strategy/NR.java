@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
@@ -12,35 +13,25 @@ public class NR extends Strategy {
     //the period with the smallest range
     private Period smallest;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_NR = {4, 7};
-
     //list of configurable values
     public static int PERIODS_NR = 4;
 
-    public NR() {
+    private final int periodsNR;
 
-        //call parent
-        super();
+    public NR() {
+        this(PERIODS_NR);
     }
 
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_NR = " + LIST_PERIODS_NR[getIndexStrategy()];
+    public NR(int periodsNR) {
+        this.periodsNR = periodsNR;
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the current $ breaks above high, we will buy
-        if (currentPrice > smallest.high) {
-
-            //assign our reason to buy
+        if (currentPrice > smallest.high)
             agent.setBuy(true);
-
-            //set our hard stop amount
-            //agent.setHardStop(smallest.low);
-        }
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -53,8 +44,8 @@ public class NR extends Strategy {
         if (currentPrice > agent.getWallet().getPurchasePrice()) {
 
             //if the next period closes above our purchase price, sell!!!!
-            //if (history.get(history.size() - 1).close > agent.getWallet().getPurchasePrice())
-            //    agent.setReasonSell(ReasonSell.Reason_9);
+            if (history.get(history.size() - 1).close > agent.getWallet().getPurchasePrice())
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data
@@ -65,7 +56,7 @@ public class NR extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        displayMessage(agent, "NR" + PERIODS_NR + ": High $" + smallest.high + ", Low $" + smallest.low, write);
+        displayMessage(agent, "NR" + periodsNR + ": High $" + smallest.high + ", Low $" + smallest.low, write);
     }
 
     @Override
@@ -75,7 +66,7 @@ public class NR extends Strategy {
         smallest = null;
 
         //check the previous # of periods to look for the smallest range
-        for (int i = history.size() - PERIODS_NR; i < history.size(); i++) {
+        for (int i = history.size() - periodsNR; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);

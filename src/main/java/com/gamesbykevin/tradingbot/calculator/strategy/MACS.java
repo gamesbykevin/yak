@@ -17,30 +17,27 @@ public class MACS extends Strategy {
     //our list of fast, slow, trending values
     private List<Double> emaFast, emaSlow, emaTrend;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_MACS_FAST = {10, 20, 5, 10, 5};
-    protected static int[] LIST_PERIODS_MACS_SLOW = {20, 60, 10, 30, 10};
-    protected static int[] LIST_PERIODS_MACS_TREND = {50, 100, 25, 150, 20};
-
     //list of configurable values
-    protected static int PERIODS_MACS_FAST = 10;
-    protected static int PERIODS_MACS_SLOW = 20;
-    protected static int PERIODS_MACS_TREND = 50;
+    private static int PERIODS_MACS_FAST = 10;
+    private static int PERIODS_MACS_SLOW = 20;
+    private static int PERIODS_MACS_TREND = 50;
+
+    private final int fast, slow, trend;
 
     public MACS() {
+        this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND);
+    }
 
-        //call parent
-        super();
+    public MACS(int fast, int slow, int trend) {
+
+        this.fast = fast;
+        this.slow = slow;
+        this.trend = trend;
 
         //create new list(s)
         this.emaFast = new ArrayList<>();
         this.emaSlow = new ArrayList<>();
         this.emaTrend = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_MACS_FAST = " + LIST_PERIODS_MACS_FAST[getIndexStrategy()] + ", PERIODS_MACS_SLOW = " + LIST_PERIODS_MACS_SLOW[getIndexStrategy()] + ", PERIODS_MACS_TREND = " + LIST_PERIODS_MACS_TREND[getIndexStrategy()];
     }
 
     @Override
@@ -86,8 +83,8 @@ public class MACS extends Strategy {
     public void calculate(List<Period> history) {
 
         //calculate the different ema values
-        EMA.calculateEMA(history, emaFast, PERIODS_MACS_FAST);
-        EMA.calculateEMA(history, emaSlow, PERIODS_MACS_SLOW);
-        EMA.calculateEMA(history, emaTrend, PERIODS_MACS_TREND);
+        EMA.calculateEMA(history, emaFast, fast);
+        EMA.calculateEMA(history, emaSlow, slow);
+        EMA.calculateEMA(history, emaTrend, trend);
     }
 }

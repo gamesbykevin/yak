@@ -27,37 +27,32 @@ public final class SO extends Strategy {
     //our simple moving average closing price for a short period
     private List<Double> smaPriceShort;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_SO = {12};
-    protected static int[] LIST_PERIODS_SMA_SO = {3};
-    protected static int[] LIST_PERIODS_SMA_PRICE_LONG = {50};
-    protected static int[] LIST_PERIODS_SMA_PRICE_SHORT = {10};
-    protected static double[] LIST_OVER_SOLD = {20.0d};
-    protected static double[] LIST_OVER_BOUGHT = {80.0d};
-
     //list of configurable values
-    protected static int PERIODS_SO = 12;
-    protected static int PERIODS_SMA_SO = 3;
-    protected static int PERIODS_SMA_PRICE_LONG = 50;
-    protected static int PERIODS_SMA_PRICE_SHORT = 10;
-    protected static double OVER_SOLD = 20.0d;
-    protected static double OVER_BOUGHT = 80.0d;
+    private static int PERIODS_SO = 12;
+    private static int PERIODS_SMA_SO = 3;
+    private static int PERIODS_SMA_PRICE_LONG = 50;
+    private static int PERIODS_SMA_PRICE_SHORT = 10;
+    private static double OVER_SOLD = 20.0d;
+    private static double OVER_BOUGHT = 80.0d;
+
+    private final int periodsSO, periodsSmaSo, periodsSmaLong, periodsSmaShort;
 
     public SO() {
+        this(PERIODS_SO, PERIODS_SMA_SO, PERIODS_SMA_PRICE_LONG, PERIODS_SMA_PRICE_SHORT);
+    }
 
-        //call parent
-        super();
+    public SO(int periodsSO, int periodsSmaSo, int periodsSmaLong, int periodsSmaShort) {
+
+        this.periodsSO = periodsSO;
+        this.periodsSmaSo = periodsSmaSo;
+        this.periodsSmaLong = periodsSmaLong;
+        this.periodsSmaShort = periodsSmaShort;
 
         //create new list(s)
         this.stochasticOscillator = new ArrayList<>();
         this.marketRate = new ArrayList<>();
         this.smaPriceLong = new ArrayList<>();
         this.smaPriceShort = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_SO = " + LIST_PERIODS_SO[getIndexStrategy()] + ", PERIODS_SMA_SO = " + LIST_PERIODS_SMA_SO[getIndexStrategy()] + ", PERIODS_SMA_PRICE_LONG = " + LIST_PERIODS_SMA_PRICE_LONG[getIndexStrategy()] + ", PERIODS_SMA_PRICE_SHORT = " + LIST_PERIODS_SMA_PRICE_SHORT[getIndexStrategy()] + ", OVER_SOLD = " + LIST_OVER_SOLD[getIndexStrategy()] + ", OVER_BOUGHT = " + LIST_OVER_BOUGHT[getIndexStrategy()];
     }
 
     public List<Double> getStochasticOscillator() {
@@ -125,7 +120,7 @@ public final class SO extends Strategy {
         for (int i = 0; i < history.size(); i++) {
 
             //we don't have enough data yet
-            if (i < PERIODS_SO)
+            if (i < periodsSO)
                 continue;
 
             //what is the high and low for our period range
@@ -140,11 +135,11 @@ public final class SO extends Strategy {
         }
 
         //calculate sma for our indicator
-        calculateSMA(getMarketRate(), getStochasticOscillator(), PERIODS_SMA_SO);
+        calculateSMA(getMarketRate(), getStochasticOscillator(), periodsSmaSo);
 
         //calculate sma's for the closing price
-        calculateSMA(history, getSmaPriceLong(), PERIODS_SMA_PRICE_LONG, Fields.Close);
-        calculateSMA(history, getSmaPriceShort(), PERIODS_SMA_PRICE_SHORT, Fields.Close);
+        calculateSMA(history, getSmaPriceLong(), periodsSmaLong, Fields.Close);
+        calculateSMA(history, getSmaPriceShort(), periodsSmaShort, Fields.Close);
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {
@@ -152,7 +147,7 @@ public final class SO extends Strategy {
         Period result = null;
 
         //check these periods for the high or low
-        for (int i = index - PERIODS_SO; i < index; i++) {
+        for (int i = index - periodsSO; i < index; i++) {
 
             //check the current period
             Period current = history.get(i);

@@ -19,15 +19,17 @@ public class EMA extends Strategy {
     //list of ema values for our short period
     private List<Double> emaShort;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {26, 31, 12, 30};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 13, 7, 10};
-
     //list of configurable values
-    protected static int PERIODS_EMA_LONG = 26;
-    protected static int PERIODS_EMA_SHORT = 12;
+    private static int PERIODS_EMA_LONG = 26;
+    private static int PERIODS_EMA_SHORT = 12;
+
+    private final int periodsLong, periodsShort;
 
     public EMA() {
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
+    }
+
+    public EMA(int periodsLong, int periodsShort) {
 
         //call parent
         super();
@@ -35,11 +37,9 @@ public class EMA extends Strategy {
         //create our lists
         this.emaLong = new ArrayList<>();
         this.emaShort = new ArrayList<>();
-    }
 
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()];
+        this.periodsLong = periodsLong;
+        this.periodsShort = periodsShort;
     }
 
     public List<Double> getEmaShort() {
@@ -68,10 +68,6 @@ public class EMA extends Strategy {
         if (currentEmaShort > currentEmaLong && previous < previousSma && current > currentSma)
             agent.setBuy(true);
 
-        //if we have a bullish crossover and stock price is above short ema, we expect price to go up
-        //if (hasCrossover(true, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) > getRecent(getEmaShort()))
-        //    agent.setBuy(true);
-
         //display data
         displayData(agent, agent.hasBuy());
     }
@@ -94,10 +90,6 @@ public class EMA extends Strategy {
         if (previous > previousSma && current < currentSma)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
-        //if we have a bearish crossover and stock price is below ema, we expect price to go down
-        //if (hasCrossover(false, getEmaShort(), getEmaLong()) && getRecent(history, Fields.Close) < getRecent(getEmaShort()))
-        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
-
         //display data
         displayData(agent, agent.getReasonSell() != null);
     }
@@ -114,8 +106,8 @@ public class EMA extends Strategy {
     public void calculate(List<Period> history) {
 
         //calculate ema for short and long periods
-        calculateEMA(history, getEmaShort(), PERIODS_EMA_SHORT);
-        calculateEMA(history, getEmaLong(), PERIODS_EMA_LONG);
+        calculateEMA(history, getEmaShort(), periodsShort);
+        calculateEMA(history, getEmaLong(), periodsLong);
     }
 
     private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {

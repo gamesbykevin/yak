@@ -243,7 +243,7 @@ public class Transaction {
         displayMessage(agent, text, true);
 
         //are we going to notify every transaction?
-        if (!agent.isSimulation() && NOTIFICATION_EVERY_TRANSACTION && subject.length() > 0 && text.length() > 0)
+        if (NOTIFICATION_EVERY_TRANSACTION && subject.length() > 0 && text.length() > 0)
             sendEmail(subject, text + "\n" + summary);
     }
 

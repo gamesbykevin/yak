@@ -12,14 +12,11 @@ import java.util.List;
 public class BBER extends Strategy {
 
     //our list of variations
-    protected static float[] LIST_RSI_LINE = {50.0f};
-    protected static int[] LIST_PERIODS_EMA_LONG = {60};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {10};
-    protected static int[] LIST_PERIODS_RSI = {14};
-    protected static int[] LIST_PERIODS_BB = {20};
-
-    //list of configurable values
-    protected static float RSI_LINE = 50.0f;
+    private static float RSI_LINE = 50.0f;
+    private static int PERIODS_EMA_LONG = 50;
+    private static int PERIODS_EMA_SHORT = 10;
+    private static int PERIODS_RSI = 14;
+    private static int PERIODS_BB = 20;
 
     //ema object
     private EMA emaObj;
@@ -30,19 +27,19 @@ public class BBER extends Strategy {
     //our rsi object
     private RSI rsiObj;
 
+    private final float rsiLine;
+
     public BBER() {
-
-        //call parent
-        super();
-
-        this.emaObj = new EMA();
-        this.bbObj = new BB();
-        this.rsiObj = new RSI();
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_BB, PERIODS_RSI, RSI_LINE);
     }
 
-    @Override
-    public String getStrategyDesc() {
-        return "RSI_LINE = " + LIST_RSI_LINE[getIndexStrategy()] + ", PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " +  LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", PERIODS_BB = " + LIST_PERIODS_BB[getIndexStrategy()];
+    public BBER(int emaLong, int emaShort, int periodsBB, int periodsRSI, float rsiLine) {
+
+        this.rsiLine = rsiLine;
+
+        this.emaObj = new EMA(emaLong, emaShort);
+        this.bbObj = new BB(periodsBB);
+        this.rsiObj = new RSI(1, periodsRSI, 0, 0);
     }
 
     @Override
@@ -55,7 +52,7 @@ public class BBER extends Strategy {
         boolean aboveBbMiddle = currentPrice > getRecent(bbObj.getMiddle());
 
         //is the rsi value above the rsi line
-        boolean aboveRsiSupport = getRecent(rsiObj.getRsiVal()) > RSI_LINE;
+        boolean aboveRsiSupport = getRecent(rsiObj.getRsiVal()) > rsiLine;
 
         //if all are true, let's buy
         if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport)
@@ -75,7 +72,7 @@ public class BBER extends Strategy {
         boolean belowBbMiddle = currentPrice < getRecent(bbObj.getMiddle());
 
         //is the rsi value below the rsi line
-        boolean belowRsiSupport = getRecent(rsiObj.getRsiVal()) < RSI_LINE;
+        boolean belowRsiSupport = getRecent(rsiObj.getRsiVal()) < rsiLine;
 
         //if all are true, let's sell
         if (belowEmaLong && belowBbMiddle && belowRsiSupport)

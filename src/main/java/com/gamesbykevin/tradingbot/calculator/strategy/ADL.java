@@ -17,9 +17,6 @@ public class ADL extends Strategy {
     //our data for each period
     private List<Double> accumulationDistributionLine;
 
-    //this is here by default
-    protected static int[] LIST_DEFAULT = {0};
-
     public ADL() {
 
         //call parent
@@ -27,11 +24,6 @@ public class ADL extends Strategy {
 
         //create a new list
         this.accumulationDistributionLine = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "N/A";
     }
 
     public List<Double> getAccumulationDistributionLine() {
@@ -50,10 +42,6 @@ public class ADL extends Strategy {
         if (previous > current && previousVal < currentVal)
             agent.setBuy(true);
 
-        //if we have a bullish divergence, let's buy
-        //if (hasDivergence(history, getPeriods(), true, getAccumulationDistributionLine()))
-        //    agent.setBuy(true);
-
         //display our data
         displayData(agent, agent.hasBuy());
     }
@@ -69,10 +57,6 @@ public class ADL extends Strategy {
 
         if (previous < current && previousVal > currentVal)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        //if we have a bearish divergence, let's sell
-        //if (hasDivergence(history, getPeriods(), false, getAccumulationDistributionLine()))
-        //    agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

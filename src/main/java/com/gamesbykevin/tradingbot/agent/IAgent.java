@@ -10,11 +10,6 @@ import java.util.List;
 public interface IAgent {
 
     /**
-     * Logic to reset our agent
-     */
-    void reset(double funds);
-
-    /**
      * Logic to update the agent (buy / sell / notification / etc...)
      * @param strategy Which strategy are we using to trade
      * @param history List of historical periods for our product

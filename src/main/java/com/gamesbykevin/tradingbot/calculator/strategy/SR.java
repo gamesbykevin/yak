@@ -24,37 +24,35 @@ public class SR extends Strategy {
     //list of stoch rsi values
     private List<Double> stochRsi;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_LONG = {60};
-    protected static int[] LIST_PERIODS_SHORT = {10};
-    protected static int[] LIST_PERIODS_STOCH_RSI = {14};
-    protected static double[] LIST_OVER_BOUGHT = {.90d};
-    protected static double[] LIST_OVER_SOLD = {.10d};
-
     //list of configurable values
-    protected static int PERIODS_LONG = 60;
-    protected static int PERIODS_SHORT = 10;
-    protected static int PERIODS_STOCH_RSI = 14;
-    protected static double OVER_BOUGHT = .90d;
-    protected static double OVER_SOLD = .10d;
+    private static int PERIODS_LONG = 60;
+    private static int PERIODS_SHORT = 10;
+    private static int PERIODS_STOCH_RSI = 14;
+    private static double OVER_BOUGHT = .90d;
+    private static double OVER_SOLD = .10d;
+
+    private final int periodsLong, periodsShort, periodsStochRsi;
+    private final double overBought, overSold;
 
     public SR() {
+        this(PERIODS_LONG, PERIODS_SHORT, PERIODS_STOCH_RSI, OVER_BOUGHT, OVER_SOLD);
+    }
 
-        //call parent
-        super();
+    public SR(int periodsLong, int periodsShort, int periodsStochRsi, double overBought, double overSold) {
 
         //create our rsi object
-        this.rsiObj = new RSI();
+        this.rsiObj = new RSI(1, PERIODS_STOCH_RSI, 0, 0);
 
         //create new lists
         this.stochRsi = new ArrayList<>();
         this.smaPriceLong = new ArrayList<>();
         this.smaPriceShort = new ArrayList<>();
-    }
 
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_LONG = " + LIST_PERIODS_LONG[getIndexStrategy()] + ", PERIODS_SHORT = " + LIST_PERIODS_SHORT[getIndexStrategy()] + ", PERIODS_STOCH_RSI = " + LIST_PERIODS_STOCH_RSI[getIndexStrategy()] + ", OVER_BOUGHT = " + LIST_OVER_BOUGHT[getIndexStrategy()] + ", OVER_SOLD = " + LIST_OVER_SOLD[getIndexStrategy()];
+        this.periodsLong = periodsLong;
+        this.periodsShort = periodsShort;
+        this.periodsStochRsi = periodsStochRsi;
+        this.overBought = overBought;
+        this.overSold = overSold;
     }
 
     public List<Double> getStochRsi() {
@@ -79,7 +77,7 @@ public class SR extends Strategy {
         if (dailyShort > dailyLong && getRecent(history, Fields.Close) < dailyShort) {
 
             //then if the rsi is showing over sold, we should buy
-            if (getRecent(getStochRsi()) < OVER_SOLD)
+            if (getRecent(getStochRsi()) < overSold)
                 agent.setBuy(true);
         }
 
@@ -97,7 +95,7 @@ public class SR extends Strategy {
         if (dailyShort < dailyLong && getRecent(history, Fields.Close) > dailyShort) {
 
             //then if the rsi is showing over bought, we should sell
-            if (getRecent(getStochRsi()) > OVER_BOUGHT)
+            if (getRecent(getStochRsi()) > overBought)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
@@ -126,13 +124,13 @@ public class SR extends Strategy {
         for (int i = 0; i < rsiObj.getRsiVal().size(); i++) {
 
             //skip until we have enough data
-            if (i < PERIODS_STOCH_RSI)
+            if (i < periodsStochRsi)
                 continue;
 
             double rsiHigh = -1, rsiLow = 101;
 
             //check the recent periods for our calculations
-            for (int x = i - PERIODS_STOCH_RSI; x < i; x++) {
+            for (int x = i - periodsStochRsi; x < i; x++) {
 
                 //get the current rsi value
                 double rsi = rsiObj.getRsiVal().get(x);
@@ -152,7 +150,7 @@ public class SR extends Strategy {
         }
 
         //calculate our short and long sma values
-        calculateSMA(history, smaPriceShort, PERIODS_SHORT, Fields.Close);
-        calculateSMA(history, smaPriceLong, PERIODS_LONG, Fields.Close);
+        calculateSMA(history, smaPriceShort, periodsShort, Fields.Close);
+        calculateSMA(history, smaPriceLong, periodsLong, Fields.Close);
     }
 }

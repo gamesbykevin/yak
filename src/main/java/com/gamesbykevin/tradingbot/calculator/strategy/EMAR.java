@@ -21,35 +21,25 @@ public class EMAR extends Strategy {
     //our rsi object reference
     private RSI rsiObj;
 
-    protected static int[] LIST_PERIODS_EMA_LONG = {12};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {5};
-    protected static int[] LIST_PERIODS_RSI = {21};
-    protected static float[] LIST_RSI_LINE = {50.0f};
-
-    /*
-    //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {12, 26, 28};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {5, 12, 14};
-    protected static int[] LIST_PERIODS_RSI = {21, 14, 12};
-    protected static float[] LIST_RSI_LINE = {50.0f, 50.0f, 50.0f};
-    */
-
     //list of configurable values
-    protected static float RSI_LINE = 50.0f;
+    private static int PERIODS_EMA_LONG = 12;
+    private static int PERIODS_EMA_SHORT = 5;
+    private static int PERIODS_RSI = 21;
+    private static float RSI_LINE = 50.0f;
+
+    private final float rsiLine;
 
     public EMAR() {
-
-        //call parent
-        super();
-
-        //create our objects
-        this.emaObj = new EMA();
-        this.rsiObj = new RSI();
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_RSI, RSI_LINE);
     }
 
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", RSI_LINE = " + LIST_RSI_LINE[getIndexStrategy()];
+    public EMAR(int emaLong, int emaShort, int periodsRSI, float rsiLine) {
+
+        this.rsiLine = rsiLine;
+
+        //create our objects
+        this.emaObj = new EMA(emaLong, emaShort);
+        this.rsiObj = new RSI(1, periodsRSI, 0, 0);
     }
 
     @Override
@@ -59,21 +49,21 @@ public class EMAR extends Strategy {
         double current = getRecent(rsiObj.getRsiVal());
         double previous = getRecent(rsiObj.getRsiVal(), 2);
 
-        if (current > RSI_LINE && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())) {
+        if (current > rsiLine && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())) {
 
             //if rsi is over the line and we have a bullish crossover
             agent.setBuy(true);
 
             //write to log
-            displayMessage(agent, "current > RSI_LINE && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())", !agent.isSimulation());
+            displayMessage(agent, "current > rsiLine && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())", true);
 
-        } else if (previous < RSI_LINE && current > RSI_LINE && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
+        } else if (previous < rsiLine && current > rsiLine && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
 
             //if rsi JUST went over and ema short > ema long without checking for a crossover
             agent.setBuy(true);
 
             //write to log
-            displayMessage(agent, "previous < RSI_LINE && current > RSI_LINE && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())", !agent.isSimulation());
+            displayMessage(agent, "previous < rsiLine && current > rsiLine && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())", true);
         }
 
         //display our data
@@ -90,25 +80,24 @@ public class EMAR extends Strategy {
         double emaShort = getRecent(emaObj.getEmaShort());
         double emaLong = getRecent(emaObj.getEmaLong());
 
-        if (current < RSI_LINE && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())) {
+        if (current < rsiLine && emaShort < emaLong) {
 
-            //if rsi is under the line and we have a bearish crossover
+            //if rsi is under the line and the fast line is below the slow long indicating a downward trend
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //write to log
-            displayMessage(agent, "current < RSI_LINE && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())", !agent.isSimulation());
+            displayMessage(agent, "current < rsiLine && emaShort < emaLong", true);
 
-        } else if (previous > RSI_LINE && current < RSI_LINE && emaShort < emaLong) {
+        } else if (currentPrice < agent.getWallet().getPurchasePrice() && emaShort < emaLong) {
 
-            //if rsi JUST went under and the current price is less than both ema's
+            //if the price is less than what we paid and the short is less than the long it is moving downwards we need to sell
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //write to log
-            displayMessage(agent, "previous > RSI_LINE && current < RSI_LINE && emaShort < emaLong", !agent.isSimulation());
+            displayMessage(agent, "currentPrice < agent.getWallet().getPurchasePrice() && emaShort < emaLong", true);
         }
 
         //display our data
-        displayMessage(agent, "RSI current: " + current + ", RSI previous: " + previous + ", EMA Short: " + emaShort + ", EMA Long: " + emaLong, !agent.isSimulation());
         displayData(agent, agent.getReasonSell() != null);
     }
 

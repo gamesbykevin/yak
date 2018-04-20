@@ -62,9 +62,6 @@ public class Agent implements IAgent {
     //do we buy stock?
     private boolean buy = false;
 
-    //is this agent used to run simulations
-    private final boolean simulation;
-
     //keep track of the reject/cancel, buy/sell orders
     private int countRejectedBuy = 0, countRejectedSell = 0;
     private int countCancelBuy = 0, countCancelSell = 0;
@@ -72,10 +69,7 @@ public class Agent implements IAgent {
     //what is the  lowest price and highest price
     private double priceLow = 0, priceHigh = 0;
 
-    //are we doing a short trade
-    private boolean shortTrade = false;
-
-    protected Agent(double funds, String productId, boolean simulation) {
+    protected Agent(double funds, String productId, TradingStrategy tradingStrategy) {
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
@@ -83,22 +77,11 @@ public class Agent implements IAgent {
         //store the product reference
         this.productId = productId;
 
-        //is this a simulation
-        this.simulation = simulation;
-
-        //reset our information
-        reset(funds);
-    }
-
-    @Override
-    public void reset(double funds) {
-
-        //create our log file if we aren't a simulation
-        if (!isSimulation())
-            createLogFile();
-
         //set order null
         this.order = null;
+
+        //set our initial trading strategy
+        setTradingStrategy(tradingStrategy);
 
         //we don't want to buy when reset
         setBuy(false);
@@ -121,10 +104,6 @@ public class Agent implements IAgent {
         //assign our min/max when we start
         this.setFundsMin(funds);
         this.setFundsMax(funds);
-
-        //display message
-        if (!isSimulation())
-            displayMessage(this, "Starting $" + funds, true);
     }
 
     @Override
@@ -191,7 +170,7 @@ public class Agent implements IAgent {
             displayMessage(this, message, true);
 
             //paper trading will try to treat same as live trading with limit orders
-            if (Main.PAPER_TRADING && !isSimulation()) {
+            if (Main.PAPER_TRADING) {
 
                 //for now the status will be pending
                 status = Status.Pending;
@@ -222,11 +201,6 @@ public class Agent implements IAgent {
                     status = Status.Cancelled;
                     displayMessage(this, "Cancelling order", true);
                 }
-
-            } else if (isSimulation()) {
-
-                //if running a simulation assume this was filled
-                status = Status.Filled;
 
             } else {
 
@@ -292,8 +266,8 @@ public class Agent implements IAgent {
                 setCountRejectedBuy(0);
                 setCountRejectedSell(0);
 
-                //create new log file for the next trade
-                createLogFile();
+                //set to null so next trade will create a new log file
+                this.writer = null;
             }
         }
     }
@@ -338,14 +312,6 @@ public class Agent implements IAgent {
 
     protected double getAssets(double currentPrice) {
         return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
-    }
-
-    /**
-     * Is this agent pending?
-     * @return true if it has an outstanding order, or if it has stock quantity
-     */
-    protected boolean isPending() {
-        return (getOrder() != null || getWallet().getQuantity() > 0.0d);
     }
 
     public void setOrder(final Order order) {
@@ -420,10 +386,6 @@ public class Agent implements IAgent {
         return this.buy;
     }
 
-    public boolean isSimulation() {
-        return this.simulation;
-    }
-
     public void setTradingStrategy(TradingStrategy tradingStrategy) {
         this.tradingStrategy = tradingStrategy;
     }
@@ -437,6 +399,10 @@ public class Agent implements IAgent {
     }
 
     public PrintWriter getWriter() {
+
+        if (this.writer == null)
+            this.writer = LogFile.getPrintWriter(getTradingStrategy() + "-" + getHardStopRatio() + "-" + getFileDateDesc() + ".log", getDirectory());
+
         return this.writer;
     }
 
@@ -484,13 +450,6 @@ public class Agent implements IAgent {
         return LogFile.getLogDirectory() + "\\" + getProductId() + "\\" + "trades" + "\\";
     }
 
-    public void createLogFile() {
-
-        //our simulation won't have a log file
-        if (!isSimulation())
-            this.writer = LogFile.getPrintWriter(getFileDateDesc() + ".log", getDirectory());
-    }
-
     public double getPriceLow() {
         return this.priceLow;
     }
@@ -514,13 +473,5 @@ public class Agent implements IAgent {
             setPriceLow(currentPrice);
         if (currentPrice > getPriceHigh())
             setPriceHigh(currentPrice);
-    }
-
-    public void setShortTrade(boolean shortTrade) {
-        this.shortTrade = shortTrade;
-    }
-
-    public boolean hasShortTrade() {
-        return this.shortTrade;
     }
 }

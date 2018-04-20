@@ -11,35 +11,35 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
+/**
+ * EMA / SMA
+ */
 public class EMAS extends Strategy {
 
     //our ema object reference
     private EMA emaObj;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_EMA_LONG = {26, 31, 12, 30, 26};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 13, 7, 10, 12};
-    protected static int[] LIST_PERIODS_SMA_PRICE = {50, 50, 50, 50, 100};
-
-    //list of configurable values
-    protected static int PERIODS_SMA_PRICE = 50;
+    private static int PERIODS_EMA_LONG = 26;
+    private static int PERIODS_EMA_SHORT = 12;
+    private static int PERIODS_SMA_PRICE = 50;
 
     //list of sma prices
     private List<Double> priceSMA;
 
+    private final int periodsSMA;
+
     public EMAS() {
-
-        //call parent
-        super();
-
-        //create new objects
-        this.emaObj = new EMA();
-        this.priceSMA = new ArrayList<>();
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_SMA_PRICE);
     }
 
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()] + ", PERIODS_SMA_PRICE = " + LIST_PERIODS_SMA_PRICE[getIndexStrategy()];
+    public EMAS(int emaLong, int emaShort, int periodsSMA) {
+
+        this.periodsSMA = periodsSMA;
+
+        //create new objects
+        this.emaObj = new EMA(emaLong, emaShort);
+        this.priceSMA = new ArrayList<>();
     }
 
     @Override
@@ -86,6 +86,6 @@ public class EMAS extends Strategy {
         this.emaObj.calculate(history);
 
         //calculate our sma price
-        calculateSMA(history, priceSMA, PERIODS_SMA_PRICE, Fields.Close);
+        calculateSMA(history, priceSMA, periodsSMA, Fields.Close);
     }
 }

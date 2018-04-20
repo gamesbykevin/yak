@@ -1,32 +1,28 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.Product;
-import com.gamesbykevin.tradingbot.MainHelper;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
-import com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper;
 import com.gamesbykevin.tradingbot.util.History;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.FUNDS;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.getFileName;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.getPrediction;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.getProbability;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.runSimulation;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
 
 public class AgentManager {
 
-    //our primary agent used to trade
-    private Agent agentPrimary;
-
-    //agent that we use for simulations
-    private Agent agentSimulation;
+    //our agent list
+    private List<Agent> agents;
 
     //our reference to calculate calculator
     private Calculator calculator;
@@ -52,17 +48,15 @@ public class AgentManager {
     //how many funds did we start with
     private final double funds;
 
-    //has the size of the historical data changed
-    private boolean dirty = false;
-
     /**
      * Different trading strategies we can use
      */
     public enum TradingStrategy {
 
-        ADL, ADX, BB, BBER, BBR, EMA, EMAR, EMAS, EMASV, EMV,
-        EMVS, HA, MACD, MACDD, MACS, NP, NR, NVI, OA, OBV,
-        PVI, RSI, RSIA, RSIM, SO, SOC, SOD, SOEMA, SR, TWO_RSI
+        ADL, ADX, BB, BBER, EMA,
+        EMAR, EMAS, EMV, HA, MACD,
+        MACS, NR, NVI, OBV, PVI,
+        RSI, SO, SOEMA, SR, TWO_RSI
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
@@ -94,11 +88,25 @@ public class AgentManager {
 
     private void createAgents() {
 
-        //create our primary agent
-        this.agentPrimary = new Agent(getFunds(), getProductId(), false);
+        //create our list of agents
+        this.agents = new ArrayList<>();
 
-        //create our simulation agent
-        this.agentSimulation = new Agent(FUNDS, getProductId(), true);
+        //create an agent for each strategy
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+
+            //create an agent for each hard stop ratio
+            for (int j = 0; j < HARD_STOP_RATIO.length; j++) {
+
+                //create our agent
+                Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i]);
+
+                //assign the hard stop ratio
+                agent.setHardStopRatio(HARD_STOP_RATIO[j]);
+
+                //add agent to the list
+                getAgents().add(agent);
+            }
+        }
     }
 
     public synchronized void update(final double price) {
@@ -130,21 +138,11 @@ public class AgentManager {
                 //get the size again so we can compare and see if it has changed
                 final int change = getCalculator().getHistory().size();
 
-                //if we haven't detected a change yet, check now for a change
-                if (!dirty)
-                    dirty = (size != change);
-
                 //if a new candle has been added update
                 if (size != change) {
 
-                    //get the strategy related to the agent
-                    Strategy strObj = getCalculator().getStrategyObj(getAgentPrimary());
-
-                    //if we have a strategy we need to recalculate our strategy values
-                    if (strObj != null) {
-                        StrategyHelper.setupValues(getAgentPrimary().getTradingStrategy(), strObj.getIndexStrategy());
-                        strObj.calculate(getCalculator().getHistory());
-                    }
+                    //recalculate our strategies
+                    getCalculator().calculate();
 
                     //get probability of price change
                     double probabilityI = getProbability(getCalculator().getHistory(), true);
@@ -154,6 +152,7 @@ public class AgentManager {
                     displayMessage("Probability $ increase: " + probabilityI, getWriter());
                     displayMessage("Probability $ decrease: " + probabilityD, getWriter());
                     displayMessage("Price prediction of next period $" + getPrediction(getCalculator().getHistory()), getWriter());
+                    displayMessage(getAgentDetails(), getWriter());
                 }
 
                 if (success) {
@@ -179,37 +178,17 @@ public class AgentManager {
 
             } else {
 
-                //trade with the agent as long as we have a strategy
-                if (getAgentPrimary().getTradingStrategy() != null) {
+                //update our agents
+                for (int i = 0; i < getAgents().size(); i++) {
 
-                    //get the strategy related to the agent
-                    Strategy strategy = getCalculator().getStrategyObj(getAgentPrimary());
+                    //get our agent
+                    Agent agent = getAgents().get(i);
 
-                    //update the agent
-                    getAgentPrimary().update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
+                    //get our trading strategy
+                    Strategy strategy = getCalculator().getStrategy(agent.getTradingStrategy());
 
-                }
-
-                //if the agent does not have a trading strategy or does not have any pending transactions and the size of the history has changed
-                if (getAgentPrimary().getTradingStrategy() == null || (!getAgentPrimary().isPending() && dirty)) {
-
-                    //if the agent doesn't have a strategy run the simulations to find and assign one
-                    runSimulation(this, getAgentSimulation());
-
-                    //get our winning strategy
-                    Strategy strategyObj = getCalculator().getStrategyObj(getAgentPrimary());
-
-                    //write the chosen strategy to the console / log
-                    displayMessage("Strategy: " + getAgentPrimary().getTradingStrategy() + ", Stop Ratio: " + getAgentPrimary().getHardStopRatio() + ", " + strategyObj.getStrategyDesc(), getWriter());
-
-                    //make sure the correct variables are set
-                    StrategyHelper.setupValues(getAgentPrimary().getTradingStrategy(), strategyObj.getIndexStrategy());
-
-                    //now perform our calculation
-                    strategyObj.calculate(getCalculator().getHistory());
-
-                    //turn our dirty flag off now that we have run a simulation
-                    dirty = false;
+                    //update the agent accordingly
+                    agent.update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
                 }
             }
 
@@ -224,22 +203,46 @@ public class AgentManager {
 
     public String getAgentDetails() {
 
+        String result = "\n";
+
         //message with all agent totals
-        String result = getProductId() + " : " + getAgentPrimary().getTradingStrategy();
-        result += " - $" + AgentHelper.round(getAssets(getAgentPrimary()));
+        for (int i = 0; i < getAgents().size(); i++) {
 
-        //add our min value
-        result += ",  Min $" + AgentHelper.round(getAgentPrimary().getFundsMin());
+            Agent agent = getAgents().get(i);
 
-        //add our max value
-        result += ",  Max $" + AgentHelper.round(getAgentPrimary().getFundsMax());
+            //start with product, strategy, and hard stop ratio
+            result += getProductId() + " : " + agent.getTradingStrategy() + ", " + agent.getHardStopRatio();
 
-        //if this agent has stopped trading, include it in the message
-        if (getAgentPrimary().hasStopTrading())
-            result += ", (Stopped)";
+            //how much $ does the agent currently have
+            result += " - $" + AgentHelper.round(getAssets(agent));
 
-        //make new line
-        result += "\n";
+            //add our min value
+            result += ",  Min $" + AgentHelper.round(agent.getFundsMin());
+
+            //add our max value
+            result += ",  Max $" + AgentHelper.round(agent.getFundsMax());
+
+            //if this agent has stopped trading, include it in the message
+            if (agent.hasStopTrading())
+                result += ", (Stopped)";
+
+            //make new line
+            result += "\n";
+        }
+
+        //return our result
+        return result;
+    }
+
+    public double getTotalAssets() {
+
+        //total assets
+        double result = 0;
+
+        //add all of our assets up
+        for (int i = 0; i < getAgents().size(); i++) {
+            result += getTotalAssets(getAgents().get(i));
+        }
 
         //return our result
         return result;
@@ -249,10 +252,10 @@ public class AgentManager {
      * Get the total assets
      * @return The total funds available + the quantity of stock we currently own @ the current stock price
      */
-    public double getTotalAssets() {
+    public double getTotalAssets(Agent agent) {
 
         //return the total amount
-        return getAssets(getAgentPrimary());
+        return getAssets(agent);
     }
 
     private double getAssets(Agent agent) {
@@ -265,14 +268,6 @@ public class AgentManager {
 
     public double getFunds() {
         return (this.funds);
-    }
-
-    private Agent getAgentSimulation() {
-        return this.agentSimulation;
-    }
-
-    protected Agent getAgentPrimary() {
-        return this.agentPrimary;
     }
 
     public void setCurrentPrice(final double currentPrice) {
@@ -297,5 +292,9 @@ public class AgentManager {
 
     public Product getProduct() {
         return this.product;
+    }
+
+    public List<Agent> getAgents() {
+        return this.agents;
     }
 }

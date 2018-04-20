@@ -24,31 +24,30 @@ public class ADX extends Strategy {
     private List<Double> dmPlusIndicator;
     private List<Double> dmMinusIndicator;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_SMA = {50};
-    protected static int[] LIST_PERIODS_ADX = {14};
-    protected static double[] LIST_TREND_ADX = {20.0d};
-
     //list of configurable values
-    protected static int PERIODS_SMA = 50;
-    protected static int PERIODS_ADX = 14;
-    protected static double TREND_ADX = 20.0d;
+    private static int PERIODS_SMA = 50;
+    private static int PERIODS_ADX = 14;
+    private static double TREND_ADX = 20.0d;
+
+    private final int periodsSMA, periodsADX;
+
+    private final double trendAdx;
 
     public ADX() {
+        this(PERIODS_SMA, PERIODS_ADX, TREND_ADX);
+    }
 
-        //call parent
-        super();
+    public ADX(int periodsSMA, int periodsADX, double trendAdx) {
 
         //create our lists
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();
         this.dmMinusIndicator = new ArrayList<>();
         this.smaPrice = new ArrayList<>();
-    }
 
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_SMA = " + LIST_PERIODS_SMA[getIndexStrategy()] + ", PERIODS_ADX = " + LIST_PERIODS_ADX[getIndexStrategy()] + ", TREND_ADX = " + LIST_TREND_ADX[getIndexStrategy()];
+        this.periodsSMA = periodsSMA;
+        this.periodsADX = periodsADX;
+        this.trendAdx = trendAdx;
     }
 
     public List<Double> getAdx() {
@@ -71,7 +70,7 @@ public class ADX extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) > TREND_ADX) {
+        if (getRecent(getAdx()) > trendAdx) {
 
             //if the current stock price is above our sma average
             if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
@@ -90,7 +89,7 @@ public class ADX extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) > TREND_ADX) {
+        if (getRecent(getAdx()) > trendAdx) {
 
             //if the current stock price is below our sma average
             if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
@@ -191,9 +190,9 @@ public class ADX extends Strategy {
         List<Double> trueRange = new ArrayList<>();
 
         //smooth the values
-        smooth(tmpDmMinus, dmMinus,     PERIODS_ADX);
-        smooth(tmpDmPlus, dmPlus,       PERIODS_ADX);
-        smooth(tmpTrueRange, trueRange, PERIODS_ADX);
+        smooth(tmpDmMinus, dmMinus,     periodsADX);
+        smooth(tmpDmPlus, dmPlus,       periodsADX);
+        smooth(tmpTrueRange, trueRange, periodsADX);
 
         for (int i = 0; i < dmPlus.size(); i++) {
 
@@ -219,28 +218,28 @@ public class ADX extends Strategy {
         double sum = 0;
 
         //get the average for the first value
-        for (int i = 0; i < PERIODS_ADX; i++) {
+        for (int i = 0; i < periodsADX; i++) {
             sum += dmIndex.get(i);
         }
 
         //our first value is the average
-        getAdx().add(sum / (double)PERIODS_ADX);
+        getAdx().add(sum / (double)periodsADX);
 
         //calculate the remaining average directional index values
-        for (int i = PERIODS_ADX; i < dmIndex.size(); i++) {
+        for (int i = periodsADX; i < dmIndex.size(); i++) {
 
             //get the most recent adx
             double previousAdx = getRecent(getAdx());
 
             //calculate the new adx value
-            double newAdx = ((previousAdx * (double)(PERIODS_ADX - 1)) + dmIndex.get(i)) / (double)PERIODS_ADX;
+            double newAdx = ((previousAdx * (double)(periodsADX - 1)) + dmIndex.get(i)) / (double)periodsADX;
 
             //add new value to our list
             getAdx().add(newAdx);
         }
 
         //calculate the sma
-        calculateSMA(history, getSmaPrice(), PERIODS_SMA, Fields.Close);
+        calculateSMA(history, getSmaPrice(), periodsSMA, Fields.Close);
     }
 
     /**

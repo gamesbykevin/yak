@@ -14,11 +14,8 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
  */
 public class EMV extends Strategy {
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_EMV = {14, 26, 10};
-
     //list of configurable values
-    protected static int PERIODS_EMV = 14;
+    private static int PERIODS_EMV = 14;
 
     /**
      * What is the default volume we used to calculate the box ratio
@@ -28,19 +25,19 @@ public class EMV extends Strategy {
     //list of emv values
     private List<Double> smaEmv, valEmv;
 
-    public EMV() {
+    private final int periods;
 
-        //call parent with default value
-        super();
+    public EMV() {
+        this(PERIODS_EMV);
+    }
+
+    public EMV(int periods) {
+
+        this.periods = periods;
 
         //create new lists
         this.smaEmv = new ArrayList<>();
         this.valEmv = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_EMV = " + LIST_PERIODS_EMV[getIndexStrategy()];
     }
 
     public List<Double> getSmaEmv() {
@@ -117,6 +114,6 @@ public class EMV extends Strategy {
         }
 
         //now that we have our list of emv values, calculate sma
-        calculateSMA(getValEmv(), getSmaEmv(), PERIODS_EMV);
+        calculateSMA(getValEmv(), getSmaEmv(), periods);
     }
 }

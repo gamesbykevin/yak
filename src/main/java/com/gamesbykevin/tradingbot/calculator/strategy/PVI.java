@@ -18,25 +18,22 @@ public class PVI extends Strategy {
     //our cumulative and ema lists
     private List<Double> pviCumulative, pviEma;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_EMA = {200};
-
     //list of configurable values
-    protected static int PERIODS_EMA = 200;
+    private static final int PERIODS_EMA = 200;
+
+    private final int periodsEma;
 
     public PVI() {
+        this(PERIODS_EMA);
+    }
 
-        //call parent
-        super();
+    public PVI(int periodsEMA) {
+
+        this.periodsEma = periodsEMA;
 
         //create new lists
         this.pviCumulative = new ArrayList<>();
         this.pviEma = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_EMA = " + LIST_PERIODS_EMA[getIndexStrategy()];
     }
 
     public List<Double> getPviCumulative() {
@@ -113,6 +110,6 @@ public class PVI extends Strategy {
         }
 
         //now that we have our standard list, let's calculate ema
-        calculateEmaList(getPviEma(), getPviCumulative(), PERIODS_EMA);
+        calculateEmaList(getPviEma(), getPviCumulative(), periodsEma);
     }
 }

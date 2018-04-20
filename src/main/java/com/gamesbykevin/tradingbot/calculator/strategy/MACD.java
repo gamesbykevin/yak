@@ -30,31 +30,28 @@ public class MACD extends Strategy {
     private EMA emaObj;
 
     //our list of variations
-    protected static int[] LIST_PERIODS_MACD = {9, 9, 9};
-    protected static int[] LIST_PERIODS_SMA_TREND = {50, 100, 100};
-    protected static int[] LIST_PERIODS_EMA_LONG = {26, 26, 28};
-    protected static int[] LIST_PERIODS_EMA_SHORT = {12, 12, 14};
-
-    //list of configurable values
-    protected static int PERIODS_MACD = 9;
-    protected static int PERIODS_SMA_TREND = 50;
+    private static int PERIODS_MACD = 9;
+    private static int PERIODS_SMA_TREND = 50;
+    private static int PERIODS_EMA_LONG = 26;
+    private static int PERIODS_EMA_SHORT = 12;
 
     public MACD() {
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD, PERIODS_SMA_TREND);
+    }
 
-        //call parent
-        super();
+    private final int periodsMacd, periodsSMA;
+
+    public MACD(int emaLong, int emaShort, int periodsMacd, int periodsSMA) {
+
+        this.periodsMacd = periodsMacd;
+        this.periodsSMA = periodsSMA;
 
         //create lists and objects
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
         this.histogram = new ArrayList<>();
         this.smaPrice = new ArrayList<>();
-        this.emaObj = new EMA();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_MACD = " + LIST_PERIODS_MACD[getIndexStrategy()] + ", PERIODS_SMA_TREND = " + LIST_PERIODS_SMA_TREND[getIndexStrategy()] + ", PERIODS_EMA_LONG = " + LIST_PERIODS_EMA_LONG[getIndexStrategy()] + ", PERIODS_EMA_SHORT = " + LIST_PERIODS_EMA_SHORT[getIndexStrategy()];
+        this.emaObj = new EMA(emaLong, emaShort);
     }
 
     public List<Double> getMacdLine() {
@@ -133,13 +130,13 @@ public class MACD extends Strategy {
         calculateMacdLine(this.emaObj.getEmaShort(), this.emaObj.getEmaLong(), getMacdLine());
 
         //then we can calculate our signal line
-        calculateEmaList(getSignalLine(), getMacdLine(), PERIODS_MACD);
+        calculateEmaList(getSignalLine(), getMacdLine(), periodsMacd);
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
 
         //calculate our sma price
-        calculateSMA(history, getSmaPrice(), PERIODS_SMA_TREND, Fields.Close);
+        calculateSMA(history, getSmaPrice(), periodsSMA, Fields.Close);
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {

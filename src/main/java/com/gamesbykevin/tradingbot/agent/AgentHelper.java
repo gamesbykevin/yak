@@ -135,29 +135,18 @@ public class AgentHelper {
 
         } else {
 
-            //if we aren't short trading adjust hard stop price
-            if (!agent.hasShortTrade()) {
+            //what is the increase we check to see if we set a new hard stop amount
+            double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
 
-                //what is the increase we check to see if we set a new hard stop amount
-                double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
+            //if the price has increased some more, let's set a new hard stop
+            if (currentPrice > agent.getHardStopPrice() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
 
-                //if the price has increased some more, let's set a new hard stop
-                if (currentPrice > agent.getHardStopPrice() + increase && currentPrice > agent.getWallet().getPurchasePrice() + increase) {
+                //set our new hard stop limit slightly below the current stock price
+                agent.setHardStopPrice(currentPrice - increase);
 
-                    //set our new hard stop limit slightly below the current stock price
-                    agent.setHardStopPrice(currentPrice - increase);
-
-                    //write hard stop amount to our log file
-                    displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
-                }
-
-            } else {
-
-                //if the price is higher than purchase sell it!!!!
-                if (currentPrice > agent.getWallet().getPurchasePrice())
-                    agent.setReasonSell(ReasonSell.Reason_ShortTrade);
+                //write hard stop amount to our log file
+                displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
             }
-
         }
 
         //if there is a reason then we will sell
@@ -221,9 +210,6 @@ public class AgentHelper {
             //let's set our hard stop if it hasn't been set already
             if (agent.getHardStopPrice() == 0)
                 agent.setHardStopPrice(currentPrice - (currentPrice * (agent.getHardStopRatio() * INIT_HARD_STOP_RATIO_MULTIPLIER)));
-
-            //display which strategy we are using
-            displayMessage(agent, " Details: " + strategy.getStrategyDesc(), true);
 
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStopPrice(), true);
@@ -289,7 +275,7 @@ public class AgentHelper {
     protected static synchronized void cancelOrder(Agent agent, String orderId) {
 
         //don't cancel if we are simulating or paper trading
-        if (Main.PAPER_TRADING || agent.isSimulation())
+        if (Main.PAPER_TRADING)
             return;
 
         //we are now going to cancel the order
@@ -396,7 +382,7 @@ public class AgentHelper {
         //how many attempts to try
         int attempts = 0;
 
-        if (Main.PAPER_TRADING || agent.isSimulation()) {
+        if (Main.PAPER_TRADING) {
 
             //if we are paper trading populate the order object ourselves
             order = new Order();
@@ -500,8 +486,7 @@ public class AgentHelper {
             message += TransactionHelper.getDescLost(agent) + "\n";
 
             //send email notification
-            if (!agent.isSimulation())
-                Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getTradingStrategy() + ")", message);
+            Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getTradingStrategy() + ")", message);
         }
     }
 

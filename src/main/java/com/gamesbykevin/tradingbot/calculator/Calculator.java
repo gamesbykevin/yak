@@ -97,10 +97,6 @@ public class Calculator {
                     strategy = new BBER();
                     break;
 
-                case BBR:
-                    strategy = new BBR();
-                    break;
-
                 case EMA:
                     strategy = new EMA();
                     break;
@@ -113,16 +109,8 @@ public class Calculator {
                     strategy = new EMAS();
                     break;
 
-                case EMASV:
-                    strategy = new EMASV();
-                    break;
-
                 case EMV:
                     strategy = new EMV();
-                    break;
-
-                case EMVS:
-                    strategy = new EMVS();
                     break;
 
                 case HA:
@@ -133,16 +121,8 @@ public class Calculator {
                     strategy = new MACD();
                     break;
 
-                case MACDD:
-                    strategy = new MACDD();
-                    break;
-
                 case MACS:
                     strategy = new MACS();
-                    break;
-
-                case NP:
-                    strategy = new NP();
                     break;
 
                 case NR:
@@ -151,10 +131,6 @@ public class Calculator {
 
                 case NVI:
                     strategy = new NVI();
-                    break;
-
-                case OA:
-                    strategy = new OA();
                     break;
 
                 case OBV:
@@ -169,24 +145,8 @@ public class Calculator {
                     strategy = new RSI();
                     break;
 
-                case RSIA:
-                    strategy = new RSIA();
-                    break;
-
-                case RSIM:
-                    strategy = new RSIM();
-                    break;
-
                 case SO:
                     strategy = new SO();
-                    break;
-
-                case SOC:
-                    strategy = new SOC();
-                    break;
-
-                case SOD:
-                    strategy = new SOD();
                     break;
 
                 case SOEMA:
@@ -248,20 +208,24 @@ public class Calculator {
         return result;
     }
 
+    public synchronized void calculate() {
+
+        //recalculate all our strategies
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+            getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(getHistory());
+        }
+    }
+
     public List<Period> getHistory() {
         return this.history;
     }
 
+    public Strategy getStrategy(TradingStrategy tradingStrategy) {
+        return getStrategies().get(tradingStrategy);
+    }
+
     private HashMap<TradingStrategy, Strategy> getStrategies() {
         return this.strategies;
-    }
-
-    public Strategy getStrategyObj(Agent agent) {
-        return getStrategyObj(agent.getTradingStrategy());
-    }
-
-    public Strategy getStrategyObj(TradingStrategy strategy) {
-        return getStrategies().get(strategy);
     }
 
     /**

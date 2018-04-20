@@ -12,29 +12,26 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class BB extends Strategy {
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_BB = {20};
-
     //list of configurable values
     protected static int PERIODS_BB = 20;
+
+    private final int periodsBB;
 
     //our lists
     private List<Double> middle, upper, lower;
 
     public BB() {
+        this(PERIODS_BB);
+    }
 
-        //call parent
-        super();
+    public BB(int periodsBB) {
+
+        this.periodsBB = periodsBB;
 
         //create our lists
         this.middle = new ArrayList<>();
         this.upper = new ArrayList<>();
         this.lower = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_BB = " + LIST_PERIODS_BB[getIndexStrategy()];
     }
 
     public List<Double> getUpper() {
@@ -84,7 +81,7 @@ public class BB extends Strategy {
     public void calculate(List<Period> history) {
 
         //calculate our sma values
-        calculateSMA(history, getMiddle(), PERIODS_BB, Fields.Close);
+        calculateSMA(history, getMiddle(), periodsBB, Fields.Close);
 
         for (int index = 0; index < getMiddle().size(); index++) {
 
@@ -92,7 +89,7 @@ public class BB extends Strategy {
             double sma = getMiddle().get(index);
 
             //get the standard deviation
-            double standardDeviation = calculateStandardDeviation(history, sma, index + PERIODS_BB);
+            double standardDeviation = calculateStandardDeviation(history, sma, index + periodsBB);
 
             //add our upper value
             getUpper().add(sma + (standardDeviation * 2.0d));
@@ -106,14 +103,14 @@ public class BB extends Strategy {
 
         double sum = 0;
 
-        for (int x = index - PERIODS_BB; x < index; x++) {
+        for (int x = index - periodsBB; x < index; x++) {
 
             //subtract the simple moving average from the price, then square it, now add it to our total sum
             sum += (Math.pow(history.get(x).close - sma, 2));
         }
 
         //calculate the new average
-        double average = sum / (double)PERIODS_BB;
+        double average = sum / (double)periodsBB;
 
         //return the square root of our average aka standard deviation
         return Math.sqrt(average);

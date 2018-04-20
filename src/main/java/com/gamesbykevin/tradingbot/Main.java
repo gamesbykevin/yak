@@ -27,6 +27,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.MainHelper.displayNextStatusUpdateDesc;
 import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIOD_DURATION;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
@@ -133,9 +134,9 @@ public class Main implements Runnable {
 
         } else {
 
-            //if we are using real money, let's only focus on 1 trading strategy
-            if (TRADING_STRATEGIES.length != 1)
-                throw new RuntimeException("You should only focus on 1 trading strategy, this doesn't seem right.");
+            //if we are using real money, let's only focus on 1 trading strategy and 1 ratio
+            if (TRADING_STRATEGIES.length != 1 || HARD_STOP_RATIO.length != 1)
+                throw new RuntimeException("When using real money you can only have 1 strategy and 1 hard stop ratio.");
 
             //display message and pause if using real money
             displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", getWriter());
@@ -366,6 +367,7 @@ public class Main implements Runnable {
         //create a new history tracker
         displayMessage("Creating history tracker", getWriter());
         new HistoryTracker();
+        displayMessage("History tracker created", getWriter());
     }
 
     private List<Product> getProducts() {

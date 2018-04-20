@@ -18,31 +18,28 @@ public class RSI extends Strategy {
     //keep an average of the price
     private List<Double> smaPrice;
 
-    //our list of variations
-    protected static int[] LIST_PERIODS_SMA_PRICE = {50, 50, 50, 100};
-    protected static int[] LIST_PERIODS_RSI = {5, 5, 14, 14};
-    protected static float[] LIST_SUPPORT_LINE = {30.0f, 20.0f, 30.0f, 30.0f};
-    protected static float[] LIST_RESISTANCE_LINE = {70.0f, 80.0f, 70.0f, 70.0f};
-
     //list of configurable values
-    protected static int PERIODS_SMA_PRICE = 50;
-    protected static int PERIODS_RSI = 5;
-    protected static float SUPPORT_LINE = 30.0f;
-    protected static float RESISTANCE_LINE = 70.0f;
+    private static int PERIODS_SMA_PRICE = 50;
+    private static int PERIODS_RSI = 14;
+    private static float SUPPORT_LINE = 30.0f;
+    private static float RESISTANCE_LINE = 70.0f;
+
+    private final int periodsSMA, periodsRSI;
+    private final float supportLine, resistanceLine;
 
     public RSI() {
+        this(PERIODS_SMA_PRICE, PERIODS_RSI, SUPPORT_LINE, RESISTANCE_LINE);
+    }
 
-        //call parent
-        super();
+    public RSI(int periodsSMA, int periodsRSI, float supportLine, float resistanceLine) {
 
         //create new list(s)
         this.rsiVal = new ArrayList<>();
         this.smaPrice = new ArrayList<>();
-    }
-
-    @Override
-    public String getStrategyDesc() {
-        return "PERIODS_SMA_PRICE = " + LIST_PERIODS_SMA_PRICE[getIndexStrategy()] + ", PERIODS_RSI = " + LIST_PERIODS_RSI[getIndexStrategy()] + ", SUPPORT_LINE = " + LIST_SUPPORT_LINE[getIndexStrategy()] + ", RESISTANCE_LINE = " + LIST_RESISTANCE_LINE[getIndexStrategy()];
+        this.periodsRSI = periodsRSI;
+        this.periodsSMA = periodsSMA;
+        this.supportLine = supportLine;
+        this.resistanceLine = resistanceLine;
     }
 
     public List<Double> getRsiVal() {
@@ -57,7 +54,7 @@ public class RSI extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we need to make sure we are below the support line
-        if (getRecent(getRsiVal()) < SUPPORT_LINE) {
+        if (getRecent(getRsiVal()) < supportLine) {
 
             //now we need to check that price is in an overall uptrend
             if (getRecent(history, Fields.Close) > getRecent(getSmaPrice()))
@@ -72,7 +69,7 @@ public class RSI extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //first we need to make sure we are above the resistance line
-        if (getRecent(getRsiVal()) > RESISTANCE_LINE) {
+        if (getRecent(getRsiVal()) > resistanceLine) {
 
             //now we need to check that price is in an overall downtrend
             if (getRecent(history, Fields.Close) < getRecent(getSmaPrice()))
@@ -95,10 +92,10 @@ public class RSI extends Strategy {
     public void calculate(List<Period> history) {
 
         //calculate rsi values
-        calculateRsi(history, getRsiVal(), PERIODS_RSI);
+        calculateRsi(history, getRsiVal(), periodsRSI);
 
         //calculate sma of price
-        calculateSMA(history, getSmaPrice(), PERIODS_SMA_PRICE, Fields.Close);
+        calculateSMA(history, getSmaPrice(), periodsSMA, Fields.Close);
     }
 
     protected static void calculateRsi(List<Period> history, List<Double> populate, int periods) {

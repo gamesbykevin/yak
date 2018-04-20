@@ -37,10 +37,10 @@ public class PropertyUtil {
             try {
 
                 //call this when running the project in intellij
-                //PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
+                PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
 
                 //call this when you create an executable .jar and place the application.properties file in the same directory as the .jar
-                PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
+                //PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
 
             } catch(Exception ex) {
                 ex.printStackTrace();

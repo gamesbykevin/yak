@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 
@@ -9,9 +10,6 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 public abstract class Strategy {
-
-    //which data are we using to do our calculations
-    private int indexStrategy = 0;
 
     /**
      * When displaying data how many periods do we print/write to the console/log
@@ -30,21 +28,7 @@ public abstract class Strategy {
 
     protected abstract void displayData(Agent agent, boolean write);
 
-    public void setIndexStrategy(final int indexStrategy) {
-        this.indexStrategy = indexStrategy;
-    }
-
-    public int getIndexStrategy() {
-        return this.indexStrategy;
-    }
-
-    public abstract String getStrategyDesc();
-
     public static void display(Agent agent, String desc, List<Double> list, boolean write) {
-
-        //don't display / write if simulation
-        if (agent.isSimulation())
-            return;
 
         int size = RECENT_PERIODS;
 
@@ -108,7 +92,7 @@ public abstract class Strategy {
     }
 
     protected double getRecent(List<Double> list) {
-        return list.get(list.size() - 1);
+        return getRecent(list, 1);
     }
 
     protected double getRecent(List<Double> list, int index) {
