@@ -62,8 +62,8 @@ public class EMAS extends Strategy {
         //if the fast ema is less than the simple moving average
         if (getRecent(emaObj.getEmaShort()) < getRecent(priceSMA)) {
 
-            //then if we have crossover let's sell
-            if (hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong()))
+            //if the fast ema is less than the long ema we will sell
+            if (getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong()))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 

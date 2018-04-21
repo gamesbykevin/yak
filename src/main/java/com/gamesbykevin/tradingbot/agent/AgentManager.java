@@ -111,6 +111,10 @@ public class AgentManager {
 
     public synchronized void update(final double price) {
 
+        //if all agents have stopped trading don't continue
+        if (hasStoppedTrading())
+            return;
+
         //don't continue if we are currently working
         if (working)
             return;
@@ -152,7 +156,7 @@ public class AgentManager {
                     displayMessage("Probability $ increase: " + probabilityI, getWriter());
                     displayMessage("Probability $ decrease: " + probabilityD, getWriter());
                     displayMessage("Price prediction of next period $" + getPrediction(getCalculator().getHistory()), getWriter());
-                    displayMessage(getAgentDetails(), getWriter());
+                    displayMessage("Price current period $" + getCalculator().getHistory().get(getCalculator().getHistory().size() - 1).close, getWriter());
                 }
 
                 if (success) {
@@ -165,6 +169,10 @@ public class AgentManager {
                     //rest call isn't successful
                     displayMessage("Rest call is NOT successful.", getWriter());
                 }
+
+                //write empty line
+                if (size != change)
+                    displayMessage("", getWriter());
 
                 //store the last run time for our next update
                 this.previous = System.currentTimeMillis();
@@ -181,24 +189,37 @@ public class AgentManager {
                 //update our agents
                 for (int i = 0; i < getAgents().size(); i++) {
 
-                    //get our agent
-                    Agent agent = getAgents().get(i);
+                    try {
 
-                    //get our trading strategy
-                    Strategy strategy = getCalculator().getStrategy(agent.getTradingStrategy());
+                        //get our agent
+                        Agent agent = getAgents().get(i);
 
-                    //update the agent accordingly
-                    agent.update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
+                        //get our trading strategy
+                        Strategy strategy = getCalculator().getStrategy(agent.getTradingStrategy());
+
+                        //update the agent accordingly
+                        agent.update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
+
+                    } catch (Exception ex1) {
+
+                        //if there is an exception we don't want to impact all agents
+                        ex1.printStackTrace();
+                        displayMessage(ex1, getWriter());
+                    }
                 }
             }
 
         } catch (Exception ex) {
+
+            //print stack trace and write exception to log file
             ex.printStackTrace();
             displayMessage(ex, getWriter());
-        }
 
-        //flag that we are no longer working
-        working = false;
+        } finally {
+
+            //last step is to makr that we are done working
+            working = false;
+        }
     }
 
     public String getAgentDetails() {
@@ -296,5 +317,23 @@ public class AgentManager {
 
     public List<Agent> getAgents() {
         return this.agents;
+    }
+
+    /**
+     * Have all the agents stopped trading?
+     * @return true = yes, false = no
+     */
+    public boolean hasStoppedTrading() {
+
+        //check every agent
+        for (int i = 0; i < getAgents().size(); i++) {
+
+            //if one agent is still trading, return false
+            if (!getAgents().get(i).hasStopTrading())
+                return false;
+        }
+
+        //all agents are done return true
+        return true;
     }
 }
