@@ -55,8 +55,9 @@ public class AgentManager {
 
         ADL, ADX, BB, BBER, EMA,
         EMAR, EMAS, EMV, HA, MACD,
-        MACS, NR, NVI, OBV, PVI,
-        RSI, SO, SOEMA, SR, TWO_RSI
+        MACS, MARS, NR, NVI, OBV,
+        PVI, RSI, SO, SOEMA, SR,
+        TWO_RSI
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {

@@ -6,6 +6,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -19,8 +20,8 @@ public class MACS extends Strategy {
 
     //list of configurable values
     private static int PERIODS_MACS_FAST = 5;
-    private static int PERIODS_MACS_SLOW = 20;
-    private static int PERIODS_MACS_TREND = 50;
+    private static int PERIODS_MACS_SLOW = 10;
+    private static int PERIODS_MACS_TREND = 20;
 
     private final int fast, slow, trend;
 
@@ -43,12 +44,12 @@ public class MACS extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //we want a crossover where the fast is greater than slow
-        if (hasCrossover(true, emaFast, emaSlow)) {
-
-            //lets also check that the current price is above the trending data
-            if (currentPrice > getRecent(emaTrend))
-                agent.setBuy(true);
+        if (hasCrossover(true, emaFast, emaSlow) && getRecent(emaSlow) > getRecent(emaTrend)) {
+            agent.setBuy(true);
+            displayMessage(agent, "hasCrossover(true, emaFast, emaSlow) && getRecent(emaSlow) > getRecent(emaTrend)", true);
+        } else if (hasCrossover(true, emaFast, emaTrend) && getRecent(emaFast) > getRecent(emaSlow)) {
+            agent.setBuy(true);
+            displayMessage(agent, "hasCrossover(true, emaFast, emaTrend) && getRecent(emaFast) > getRecent(emaSlow)", true);
         }
 
         //display our data for what it is worth
@@ -58,13 +59,8 @@ public class MACS extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //we want a crossover where the slow is greater than fast
-        if (hasCrossover(false, emaFast, emaSlow)) {
-
-            //lets also check that the current price is below the trending data
-            if (currentPrice < getRecent(emaTrend))
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
-        }
+        if (getRecent(emaFast) < getRecent(emaSlow) && getRecent(emaFast) < getRecent(emaTrend))
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data for what it is worth
         displayData(agent, agent.getReasonSell() != null);

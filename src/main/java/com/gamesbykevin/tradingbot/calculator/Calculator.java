@@ -125,6 +125,10 @@ public class Calculator {
                     strategy = new MACS();
                     break;
 
+                case MARS:
+                    strategy = new MARS();
+                    break;
+
                 case NR:
                     strategy = new NR();
                     break;
