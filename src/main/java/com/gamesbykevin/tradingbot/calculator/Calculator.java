@@ -49,21 +49,25 @@ public class Calculator {
 
     public enum Duration {
 
-        OneMinute(60, "one_minute"),
-        FiveMinutes(300, "five_minutes"),
-        FifteenMinutes(900, "fifteen_minutes"),
-        OneHour(3600, "one_hour"),
-        SixHours(21600, "six_hours"),
-        TwentyFourHours(86400, "one_day");
+        OneMinute(60, "one_minute", 6),             //check every 10 seconds
+        FiveMinutes(300, "five_minutes", 20),       //check every 15 seconds
+        FifteenMinutes(900, "fifteen_minutes", 30), //check every 30 seconds
+        OneHour(3600, "one_hour", 90),              //check every 40 seconds
+        SixHours(21600, "six_hours", 240),          //check every 90 seconds
+        TwentyFourHours(86400, "one_day", 720);     //check every 120 seconds
 
         //how long (in seconds)
         public final long duration;
 
+        //how often we check
+        public final int frequency;
+
         public final String description;
 
-        Duration(long duration, String description) {
+        Duration(long duration, String description, int frequency) {
             this.duration = duration;
             this.description = description;
+            this.frequency = frequency;
         }
     }
 

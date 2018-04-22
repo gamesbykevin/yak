@@ -132,7 +132,7 @@ public class AgentManager {
             final int size = getCalculator().getHistory().size();
 
             //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (getMyDuration().duration / 6) * 1000) {
+            if (System.currentTimeMillis() - previous >= (getMyDuration().duration / getMyDuration().frequency) * 1000) {
 
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + getProductId(), null);

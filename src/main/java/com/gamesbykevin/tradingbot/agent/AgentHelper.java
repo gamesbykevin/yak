@@ -215,11 +215,23 @@ public class AgentHelper {
         //write order status to log
         displayMessage(agent, "Checking order status: " + order.getStatus() + ", settled: " + order.getSettled() + ", attempt(s): " + agent.getAttempts(), true);
 
+        //if the order was successful, update our local order instance
+        if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription()) ||
+            order.getStatus().equalsIgnoreCase(Status.Done.getDescription()) && order.getSettled()) {
+            agent.getOrder().setFilled_size(order.getFilled_size());
+            agent.getOrder().setFill_fees(order.getFill_fees());
+            agent.getOrder().setPrice(order.getPrice());
+            agent.getOrder().setSize(order.getSize());
+        }
+
         if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription())) {
+
+            //return that the order has been filled
             return Status.Filled;
+
         } else if (order.getStatus().equalsIgnoreCase(Status.Done.getDescription())) {
 
-            //if an order is done an settled we assume success
+            //if an order is done and settled we assume success
             if (order.getSettled())
                 return Status.Filled;
 

@@ -185,13 +185,13 @@ public class Agent implements IAgent {
                 if (selling) {
 
                     //the limit order will fill when the price goes at or above the order price
-                    if (currentPrice >= orderPrice)
+                    if (currentPrice > orderPrice)
                         status = Status.Filled;
 
                 } else {
 
                     //the limit order will fill when the price goes at or below the order price
-                    if (currentPrice <= orderPrice)
+                    if (currentPrice < orderPrice)
                         status = Status.Filled;
 
                 }
