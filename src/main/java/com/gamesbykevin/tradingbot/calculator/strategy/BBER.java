@@ -12,11 +12,12 @@ import java.util.List;
 public class BBER extends Strategy {
 
     //our list of variations
-    private static float RSI_LINE = 50.0f;
-    private static int PERIODS_EMA_LONG = 50;
-    private static int PERIODS_EMA_SHORT = 10;
-    private static int PERIODS_RSI = 14;
-    private static int PERIODS_BB = 20;
+    private static final float RSI_LINE = 50.0f;
+    private static final int PERIODS_EMA_LONG = 50;
+    private static final int PERIODS_EMA_SHORT = 10;
+    private static final int PERIODS_RSI = 14;
+    private static final int PERIODS_BB = 20;
+    private static final float MULTIPLIER_BB = 2.0f;
 
     //ema object
     private EMA emaObj;
@@ -30,15 +31,15 @@ public class BBER extends Strategy {
     private final float rsiLine;
 
     public BBER() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_BB, PERIODS_RSI, RSI_LINE);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_BB, MULTIPLIER_BB, PERIODS_RSI, RSI_LINE);
     }
 
-    public BBER(int emaLong, int emaShort, int periodsBB, int periodsRSI, float rsiLine) {
+    public BBER(int emaLong, int emaShort, int periodsBB, float multiplierBB, int periodsRSI, float rsiLine) {
 
         this.rsiLine = rsiLine;
 
         this.emaObj = new EMA(emaLong, emaShort);
-        this.bbObj = new BB(periodsBB);
+        this.bbObj = new BB(periodsBB, multiplierBB);
         this.rsiObj = new RSI(1, periodsRSI, 0, 0);
     }
 

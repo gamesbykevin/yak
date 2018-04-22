@@ -18,7 +18,7 @@ public class HA extends Strategy {
     private List<Period> haPeriods;
 
     //list of configurable values
-    private static int PERIODS_HA = 7;
+    private static final int PERIODS_HA = 7;
 
     private final int periods;
 
@@ -34,7 +34,7 @@ public class HA extends Strategy {
         this.haPeriods = new ArrayList<>();
     }
 
-    private List<Period> getHaPeriods() {
+    public List<Period> getHaPeriods() {
         return this.haPeriods;
     }
 
@@ -205,7 +205,7 @@ public class HA extends Strategy {
      * @param period The period we want to check
      * @return true if the close is less than when the period opened, false otherwise
      */
-    private boolean isBearish(Period period) {
+    public boolean isBearish(Period period) {
         return (period.close < period.open);
     }
 
@@ -214,7 +214,7 @@ public class HA extends Strategy {
      * @param period The period we want to check
      * @return true if the open is less than when the period closed, false otherwise
      */
-    private boolean isBullish(Period period) {
+    public boolean isBullish(Period period) {
         return (period.close > period.open);
     }
 }

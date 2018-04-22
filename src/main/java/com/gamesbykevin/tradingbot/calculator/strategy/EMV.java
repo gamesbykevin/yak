@@ -15,7 +15,7 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 public class EMV extends Strategy {
 
     //list of configurable values
-    private static int PERIODS_EMV = 14;
+    private static final int PERIODS_EMV = 14;
 
     /**
      * What is the default volume we used to calculate the box ratio

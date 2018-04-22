@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.getPrediction;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.getProbability;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
@@ -53,8 +51,8 @@ public class AgentManager {
      */
     public enum TradingStrategy {
 
-        ADL, ADX, BB, BBER, EMA,
-        EMAR, EMAS, EMV, HA, MACD,
+        ADL, ADX, BBER, EMA, EMAR,
+        EMAS, EMV, HA, HAE, MACD,
         MACS, MARS, NR, NVI, OBV,
         PVI, RSI, SO, SOEMA, SR,
         TWO_RSI
@@ -82,6 +80,9 @@ public class AgentManager {
 
         //load any historic candles stored locally
         History.load(this);
+
+        //do our initial calculations after history has been loaded
+        getCalculator().calculate();
 
         //create our agents last
         createAgents();
@@ -143,22 +144,9 @@ public class AgentManager {
                 //get the size again so we can compare and see if it has changed
                 final int change = getCalculator().getHistory().size();
 
-                //if a new candle has been added update
-                if (size != change) {
-
-                    //recalculate our strategies
+                //if a new candle has been added recalculate our strategies
+                if (size != change)
                     getCalculator().calculate();
-
-                    //get probability of price change
-                    double probabilityI = getProbability(getCalculator().getHistory(), true);
-                    double probabilityD = getProbability(getCalculator().getHistory(), false);
-
-                    //if we have new data calculate the probability of a price increase, and the forecast price
-                    displayMessage("Probability $ increase: " + probabilityI, getWriter());
-                    displayMessage("Probability $ decrease: " + probabilityD, getWriter());
-                    displayMessage("Price prediction of next period $" + getPrediction(getCalculator().getHistory()), getWriter());
-                    displayMessage("Price current period $" + getCalculator().getHistory().get(getCalculator().getHistory().size() - 1).close, getWriter());
-                }
 
                 if (success) {
 
@@ -226,6 +214,27 @@ public class AgentManager {
     public String getAgentDetails() {
 
         String result = "\n";
+
+        //sort the agents to show which are most profitable
+        for (int i = 0; i < getAgents().size(); i++) {
+            for (int j = i; j <  getAgents().size(); j++) {
+
+                //don't check the same agent
+                if (i == j)
+                    continue;
+
+                Agent agent1 = getAgents().get(i);
+                Agent agent2 = getAgents().get(j);
+
+                //if the next agent has more funds, switch
+                if (getAssets(agent2) > getAssets(agent1)) {
+
+                    //switch positions of our agents
+                    getAgents().set(i, agent2);
+                    getAgents().set(j, agent1);
+                }
+            }
+        }
 
         //message with all agent totals
         for (int i = 0; i < getAgents().size(); i++) {

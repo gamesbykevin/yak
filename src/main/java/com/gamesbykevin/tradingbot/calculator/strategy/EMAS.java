@@ -20,9 +20,9 @@ public class EMAS extends Strategy {
     private EMA emaObj;
 
     //our list of variations
-    private static int PERIODS_EMA_LONG = 26;
-    private static int PERIODS_EMA_SHORT = 12;
-    private static int PERIODS_SMA_PRICE = 50;
+    private static final int PERIODS_EMA_LONG = 26;
+    private static final int PERIODS_EMA_SHORT = 12;
+    private static final int PERIODS_SMA_PRICE = 50;
 
     //list of sma prices
     private List<Double> priceSMA;

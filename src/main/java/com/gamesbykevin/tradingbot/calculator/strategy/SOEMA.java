@@ -18,11 +18,11 @@ public class SOEMA extends Strategy {
     private SO soObj;
 
     //list of configurable values
-    private static int PERIODS_EMA_LONG = 2;
-    private static int PERIODS_EMA_SHORT = 4;
-    private static int SO_INDICATOR = 50;
-    private static int PERIODS_SO = 5;
-    private static int PERIODS_SMA_SO = 3;
+    private static final int PERIODS_EMA_LONG = 2;
+    private static final int PERIODS_EMA_SHORT = 4;
+    private static final int SO_INDICATOR = 50;
+    private static final int PERIODS_SO = 5;
+    private static final int PERIODS_SMA_SO = 3;
 
     private final int soIndicator;
 

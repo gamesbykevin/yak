@@ -14,7 +14,7 @@ public abstract class Strategy {
     /**
      * When displaying data how many periods do we print/write to the console/log
      */
-    private static int RECENT_PERIODS = 5;
+    private static final int RECENT_PERIODS = 5;
 
     protected Strategy() {
         //default constructor

@@ -28,12 +28,12 @@ public final class SO extends Strategy {
     private List<Double> smaPriceShort;
 
     //list of configurable values
-    private static int PERIODS_SO = 12;
-    private static int PERIODS_SMA_SO = 3;
-    private static int PERIODS_SMA_PRICE_LONG = 50;
-    private static int PERIODS_SMA_PRICE_SHORT = 10;
-    private static double OVER_SOLD = 20.0d;
-    private static double OVER_BOUGHT = 80.0d;
+    private static final int PERIODS_SO = 12;
+    private static final int PERIODS_SMA_SO = 3;
+    private static final int PERIODS_SMA_PRICE_LONG = 50;
+    private static final int PERIODS_SMA_PRICE_SHORT = 10;
+    private static final double OVER_SOLD = 20.0d;
+    private static final double OVER_BOUGHT = 80.0d;
 
     private final int periodsSO, periodsSmaSo, periodsSmaLong, periodsSmaShort;
 

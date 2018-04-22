@@ -19,10 +19,10 @@ public class RSI extends Strategy {
     private List<Double> smaPrice;
 
     //list of configurable values
-    private static int PERIODS_SMA_PRICE = 50;
-    private static int PERIODS_RSI = 14;
-    private static float SUPPORT_LINE = 30.0f;
-    private static float RESISTANCE_LINE = 70.0f;
+    private static final int PERIODS_SMA_PRICE = 50;
+    private static final int PERIODS_RSI = 14;
+    private static final float SUPPORT_LINE = 30.0f;
+    private static final float RESISTANCE_LINE = 70.0f;
 
     private final int periodsSMA, periodsRSI;
     private final float supportLine, resistanceLine;
@@ -129,7 +129,7 @@ public class RSI extends Strategy {
      * @param endIndex Ending period
      * @return The rsi value
      */
-    private static double calculateRsi(List<Period> history, int startIndex, int endIndex) {
+    private static final double calculateRsi(List<Period> history, int startIndex, int endIndex) {
 
         //track total gains and losses
         float gain = 0, loss = 0;

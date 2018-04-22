@@ -25,9 +25,9 @@ public class ADX extends Strategy {
     private List<Double> dmMinusIndicator;
 
     //list of configurable values
-    private static int PERIODS_SMA = 50;
-    private static int PERIODS_ADX = 14;
-    private static double TREND_ADX = 20.0d;
+    private static final int PERIODS_SMA = 50;
+    private static final int PERIODS_ADX = 14;
+    private static final double TREND_ADX = 20.0d;
 
     private final int periodsSMA, periodsADX;
 
@@ -247,7 +247,7 @@ public class ADX extends Strategy {
      * @param tmp Our temp list of values
      * @param result Our final result of smoothed values
      */
-    private static void smooth(List<Double> tmp, List<Double> result, int periods) {
+    private static final void smooth(List<Double> tmp, List<Double> result, int periods) {
 
         double sum = 0;
 

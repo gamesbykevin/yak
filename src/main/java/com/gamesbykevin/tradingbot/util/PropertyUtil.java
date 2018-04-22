@@ -131,12 +131,6 @@ public class PropertyUtil {
         //do we send a notification for every transaction?
         AgentHelper.NOTIFICATION_EVERY_TRANSACTION = Boolean.parseBoolean(getProperties().getProperty("notificationEveryTransaction"));
 
-        //how many periods do we look at to calculate probability
-        AgentHelper.PERIODS_PROBABILITY = Integer.parseInt(getProperties().getProperty("probabilityPeriods"));
-
-        //if the probability of a price increase is less than this we won't buy
-        AgentHelper.MINIMUM_INCREASE_PROBABILITY = Float.parseFloat(getProperties().getProperty("probabilityMinimum"));
-
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 

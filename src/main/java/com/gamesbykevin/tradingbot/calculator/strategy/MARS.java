@@ -18,7 +18,7 @@ public class MARS extends Strategy {
     private List<List<Double>> emas;
 
     //our multiple periods in ascending order
-    private static final int[] PERIODS = {3, 5, 7, 10, 12, 14, 16};
+    private static final int[] PERIODS = {5, 10, 14, 20};
 
     public MARS() {
 
@@ -65,7 +65,7 @@ public class MARS extends Strategy {
         //is there a downward trend
         boolean trend = true;
 
-        //check half the periods when selling
+        //check only some of the periods when selling
         for (int i = 0; i < (PERIODS.length / 2); i++) {
 
             //get the short and fast ema

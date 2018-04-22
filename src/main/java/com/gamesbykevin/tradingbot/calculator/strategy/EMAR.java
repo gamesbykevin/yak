@@ -22,10 +22,10 @@ public class EMAR extends Strategy {
     private RSI rsiObj;
 
     //list of configurable values
-    private static int PERIODS_EMA_LONG = 12;
-    private static int PERIODS_EMA_SHORT = 5;
-    private static int PERIODS_RSI = 21;
-    private static float RSI_LINE = 50.0f;
+    private static final int PERIODS_EMA_LONG = 12;
+    private static final int PERIODS_EMA_SHORT = 5;
+    private static final int PERIODS_RSI = 21;
+    private static final float RSI_LINE = 50.0f;
 
     private final float rsiLine;
 
@@ -80,21 +80,14 @@ public class EMAR extends Strategy {
         double emaShort = getRecent(emaObj.getEmaShort());
         double emaLong = getRecent(emaObj.getEmaLong());
 
-        if (current < rsiLine && emaShort < emaLong) {
+        if (current < rsiLine || emaShort < emaLong) {
 
             //if rsi is under the line and the fast line is below the slow long indicating a downward trend
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //write to log
-            displayMessage(agent, "current < rsiLine && emaShort < emaLong", true);
+            displayMessage(agent, "current < rsiLine || emaShort < emaLong", true);
 
-        } else if (currentPrice < agent.getWallet().getPurchasePrice() && emaShort < emaLong) {
-
-            //if the price is less than what we paid and the short is less than the long it is moving downwards we need to sell
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-            //write to log
-            displayMessage(agent, "currentPrice < agent.getWallet().getPurchasePrice() && emaShort < emaLong", true);
         }
 
         //display our data

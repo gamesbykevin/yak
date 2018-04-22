@@ -19,10 +19,10 @@ public class TWO_RSI extends Strategy {
     private RSI rsiObj;
 
     //list of configurable values
-    private static int PERIODS_SMA = 50;
-    private static double MIN_RSI = 5.0d;
-    private static double MAX_RSI = 95.0d;
-    private static int PERIODS_RSI = 2;
+    private static final int PERIODS_SMA = 50;
+    private static final double MIN_RSI = 5.0d;
+    private static final double MAX_RSI = 95.0d;
+    private static final int PERIODS_RSI = 2;
 
     private final double minRSI, maxRSI;
 

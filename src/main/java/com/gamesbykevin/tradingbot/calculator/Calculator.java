@@ -89,10 +89,6 @@ public class Calculator {
                     strategy = new ADX();
                     break;
 
-                case BB:
-                    strategy = new BB();
-                    break;
-
                 case BBER:
                     strategy = new BBER();
                     break;
@@ -115,6 +111,10 @@ public class Calculator {
 
                 case HA:
                     strategy = new HA();
+                    break;
+
+                case HAE:
+                    strategy = new HAE();
                     break;
 
                 case MACD:

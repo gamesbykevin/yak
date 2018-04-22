@@ -20,8 +20,8 @@ public class EMA extends Strategy {
     private List<Double> emaShort;
 
     //list of configurable values
-    private static int PERIODS_EMA_LONG = 26;
-    private static int PERIODS_EMA_SHORT = 12;
+    private static final int PERIODS_EMA_LONG = 12;
+    private static final int PERIODS_EMA_SHORT = 5;
 
     private final int periodsLong, periodsShort;
 
@@ -110,7 +110,7 @@ public class EMA extends Strategy {
         calculateEMA(history, getEmaLong(), periodsLong);
     }
 
-    private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
+    private static final double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
 
         //what is our multiplier
         final float multiplier = ((float)2 / ((float)periods + 1.0f));

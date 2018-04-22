@@ -13,20 +13,25 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 public class BB extends Strategy {
 
     //list of configurable values
-    protected static int PERIODS_BB = 20;
+    protected static int PERIODS_BB = 10;
 
     private final int periodsBB;
+
+    private final float multiplier;
 
     //our lists
     private List<Double> middle, upper, lower;
 
+    private static final float MULTIPLIER = 1.9f;
+
     public BB() {
-        this(PERIODS_BB);
+        this(PERIODS_BB, MULTIPLIER);
     }
 
-    public BB(int periodsBB) {
+    public BB(int periodsBB, float multiplier) {
 
         this.periodsBB = periodsBB;
+        this.multiplier = multiplier;
 
         //create our lists
         this.middle = new ArrayList<>();
@@ -49,8 +54,13 @@ public class BB extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if the current price goes below our lower line, let's buy
-        if (currentPrice < getRecent(getLower()))
+        //get the current and previous values
+        double previousLower = getRecent(getLower(), 2);
+        double currentLower = getRecent(getLower());
+        double previousPrice = getRecent(history, Fields.Close);
+
+        //if the previous price was below lower and just crossed above it let's buy
+        if (previousPrice < previousLower && currentPrice > currentLower)
             agent.setBuy(true);
 
         //display our data
@@ -59,6 +69,20 @@ public class BB extends Strategy {
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //get the current and previous values
+        double currentLower = getRecent(getLower());
+        double previousMiddle = getRecent(getMiddle(), 2);
+        double currentMiddle = getRecent(getMiddle());
+        double previousPrice = getRecent(history, Fields.Close);
+
+        //if we fall below the lower, we need to sell
+        if (currentPrice < currentLower)
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //if we were above the middle and just fell below it
+        if (previousPrice > previousMiddle && currentPrice < currentMiddle)
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //if the current price goes above our upper line, let's sell
         if (currentPrice > getRecent(getUpper()))
@@ -80,6 +104,11 @@ public class BB extends Strategy {
     @Override
     public void calculate(List<Period> history) {
 
+        //clear our lists
+        getMiddle().clear();
+        getUpper().clear();
+        getLower().clear();
+
         //calculate our sma values
         calculateSMA(history, getMiddle(), periodsBB, Fields.Close);
 
@@ -89,24 +118,24 @@ public class BB extends Strategy {
             double sma = getMiddle().get(index);
 
             //get the standard deviation
-            double standardDeviation = calculateStandardDeviation(history, sma, index + periodsBB);
+            double standardDeviation = getStandardDeviation(history, sma, index + periodsBB);
 
             //add our upper value
-            getUpper().add(sma + (standardDeviation * 2.0d));
+            getUpper().add(sma + (standardDeviation * multiplier));
 
             //add our lower value
-            getLower().add(sma - (standardDeviation * 2.0d));
+            getLower().add(sma - (standardDeviation * multiplier));
         }
     }
 
-    private double calculateStandardDeviation(List<Period> history, double sma, int index) {
+    private double getStandardDeviation(List<Period> history, double sma, int index) {
 
         double sum = 0;
 
         for (int x = index - periodsBB; x < index; x++) {
 
             //subtract the simple moving average from the price, then square it, now add it to our total sum
-            sum += (Math.pow(history.get(x).close - sma, 2));
+            sum += Math.pow(history.get(x).close - sma, 2);
         }
 
         //calculate the new average
