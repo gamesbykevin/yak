@@ -109,10 +109,6 @@ public class Calculator {
                     strategy = new EMV();
                     break;
 
-                case HA:
-                    strategy = new HA();
-                    break;
-
                 case HAE:
                     strategy = new HAE();
                     break;

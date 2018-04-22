@@ -52,10 +52,9 @@ public class AgentManager {
     public enum TradingStrategy {
 
         ADL, ADX, BBER, EMA, EMAR,
-        EMAS, EMV, HA, HAE, MACD,
-        MACS, MARS, NR, NVI, OBV,
-        PVI, RSI, SO, SOEMA, SR,
-        TWO_RSI
+        EMAS, EMV, HAE, MACD, MACS,
+        MARS, NR, NVI, OBV, PVI,
+        RSI, SO, SOEMA, SR, TWO_RSI
     }
 
     public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
