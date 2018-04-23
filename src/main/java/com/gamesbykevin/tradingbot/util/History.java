@@ -1,8 +1,6 @@
 package com.gamesbykevin.tradingbot.util;
 
-import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
@@ -22,10 +20,6 @@ public class History {
     private static String DIRECTORY = "history";
 
     private static String FILENAME = "candles.txt";
-
-    public static synchronized void load(AgentManager manager) {
-        load(manager.getCalculator().getHistory(), manager.getProductId(), manager.getMyDuration(), manager.getWriter());
-    }
 
     public static synchronized void load(List<Period> history, String productId, Duration duration, PrintWriter writer) {
 
@@ -105,10 +99,6 @@ public class History {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private static String getDirectory(AgentManager manager) {
-        return getDirectory(manager.getProductId(), manager.getMyDuration());
     }
 
     private static String getDirectory(String productId, Duration duration) {

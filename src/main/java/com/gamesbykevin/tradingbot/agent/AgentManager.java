@@ -3,17 +3,19 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
-import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.util.History;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateAgents;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateCalculators;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
 
@@ -23,16 +25,10 @@ public class AgentManager {
     private List<Agent> agents;
 
     //our reference to calculate calculator
-    private Calculator calculator;
-
-    //when is the last time we loaded historical data
-    private long previous;
+    private HashMap<Duration, Calculator> calculators;
 
     //are we updating the agent?
     private boolean working = false;
-
-    //the duration of data we are checking
-    private final Duration myDuration;
 
     //the product we are trading
     private final Product product;
@@ -51,13 +47,13 @@ public class AgentManager {
      */
     public enum TradingStrategy {
 
-        ADL, ADX, BBER, EMA, EMAR,
+        ADX, AO, BBER, EMA, EMAR,
         EMAS, EMV, HAE, MACD, MACS,
-        MARS, NR, NVI, OBV, PVI,
-        RSI, SO, SOEMA, SR, TWO_RSI
+        MARS, NR, NVI, PVI, RSI,
+        SO, SOEMA, SR, TWO_RSI
     }
 
-    public AgentManager(final Product product, final double funds, final Calculator.Duration myDuration) {
+    public AgentManager(final Product product, final double funds) {
 
         //store the product this agent is trading
         this.product = product;
@@ -68,20 +64,21 @@ public class AgentManager {
         //create our object to write to a text file
         this.writer = LogFile.getPrintWriter(getFilenameManager(), LogFile.getLogDirectory() + "\\" + getProductId());
 
-        //store our period duration
-        this.myDuration = myDuration;
+        //create new list
+        this.calculators = new HashMap<>();
 
-        //update the previous run time, so it runs immediately since we don't have data yet
-        this.previous = System.currentTimeMillis() - (getMyDuration().duration * 1000);
+        //create our calculator(s) for each duration
+        for (int i = 0; i < MY_PERIOD_DURATIONS.length; i++) {
 
-        //create our calculator
-        this.calculator = new Calculator();
+            //create our the calculator for the specified duration
+            getCalculators().put(MY_PERIOD_DURATIONS[i], new Calculator(MY_PERIOD_DURATIONS[i]));
 
-        //load any historic candles stored locally
-        History.load(this);
+            //now we want to load any historical data that we may have
+            History.load(getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory(), getProductId(), MY_PERIOD_DURATIONS[i], getWriter());
 
-        //do our initial calculations after history has been loaded
-        getCalculator().calculate();
+            //now that we have data do the initial calculations
+            getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate();
+        }
 
         //create our agents last
         createAgents();
@@ -98,14 +95,18 @@ public class AgentManager {
             //create an agent for each hard stop ratio
             for (int j = 0; j < HARD_STOP_RATIO.length; j++) {
 
-                //create our agent
-                Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i]);
+                //create an agent for each candle duration
+                for (int k = 0; k < MY_PERIOD_DURATIONS.length; k++) {
 
-                //assign the hard stop ratio
-                agent.setHardStopRatio(HARD_STOP_RATIO[j]);
+                    //create our agent
+                    Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], MY_PERIOD_DURATIONS[k]);
 
-                //add agent to the list
-                getAgents().add(agent);
+                    //assign the hard stop ratio
+                    agent.setHardStopRatio(HARD_STOP_RATIO[j]);
+
+                    //add agent to the list
+                    getAgents().add(agent);
+                }
             }
         }
     }
@@ -128,74 +129,11 @@ public class AgentManager {
 
         try {
 
-            //get the size of the history
-            final int size = getCalculator().getHistory().size();
+            //update our calculator data and calculate, etc...
+            updateCalculators(this);
 
-            //we don't need to update every second
-            if (System.currentTimeMillis() - previous >= (getMyDuration().duration / getMyDuration().frequency) * 1000) {
-
-                //display message as sometimes the call is not successful
-                displayMessage("Making rest call to retrieve history " + getProductId(), null);
-
-                //update our historical data and update the last update
-                boolean success = getCalculator().update(getMyDuration(), getProductId());
-
-                //get the size again so we can compare and see if it has changed
-                final int change = getCalculator().getHistory().size();
-
-                //if a new candle has been added recalculate our strategies
-                if (size != change)
-                    getCalculator().calculate();
-
-                if (success) {
-
-                    //rest call is successful
-                    displayMessage("Rest call successful. History size: " + change, (change != size) ? getWriter() : null);
-
-                } else {
-
-                    //rest call isn't successful
-                    displayMessage("Rest call is NOT successful.", getWriter());
-                }
-
-                //write empty line
-                if (size != change)
-                    displayMessage("", getWriter());
-
-                //store the last run time for our next update
-                this.previous = System.currentTimeMillis();
-            }
-
-            //make sure we have enough data before we start trading
-            if (getCalculator().getHistory().size() < HISTORICAL_PERIODS_MINIMUM) {
-
-                //we are not ready to trade yet
-                displayMessage(getProductId() + ": Not enough periods to trade yet - " + getCalculator().getHistory().size() + " < " + HISTORICAL_PERIODS_MINIMUM, null);
-
-            } else {
-
-                //update our agents
-                for (int i = 0; i < getAgents().size(); i++) {
-
-                    try {
-
-                        //get our agent
-                        Agent agent = getAgents().get(i);
-
-                        //get our trading strategy
-                        Strategy strategy = getCalculator().getStrategy(agent.getTradingStrategy());
-
-                        //update the agent accordingly
-                        agent.update(strategy, getCalculator().getHistory(), getProduct(), getCurrentPrice());
-
-                    } catch (Exception ex1) {
-
-                        //if there is an exception we don't want to impact all agents
-                        ex1.printStackTrace();
-                        displayMessage(ex1, getWriter());
-                    }
-                }
-            }
+            //update our agents
+            updateAgents(this);
 
         } catch (Exception ex) {
 
@@ -205,7 +143,7 @@ public class AgentManager {
 
         } finally {
 
-            //last step is to makr that we are done working
+            //last step is to make that we are done working
             working = false;
         }
     }
@@ -240,8 +178,8 @@ public class AgentManager {
 
             Agent agent = getAgents().get(i);
 
-            //start with product, strategy, and hard stop ratio
-            result += getProductId() + " : " + agent.getTradingStrategy() + ", " + agent.getHardStopRatio();
+            //start with product, strategy, hard stop ratio, and candle duration
+            result += getProductId() + " : " + agent.getTradingStrategy() + ", " + agent.getDuration().description + ", " + agent.getHardStopRatio();
 
             //how much $ does the agent currently have
             result += " - $" + AgentHelper.round(getAssets(agent));
@@ -308,16 +246,8 @@ public class AgentManager {
         return this.currentPrice;
     }
 
-    public Duration getMyDuration() {
-        return this.myDuration;
-    }
-
     public String getProductId() {
         return getProduct().getId();
-    }
-
-    public Calculator getCalculator() {
-        return this.calculator;
     }
 
     public Product getProduct() {
@@ -344,5 +274,9 @@ public class AgentManager {
 
         //all agents are done return true
         return true;
+    }
+
+    protected HashMap<Duration, Calculator> getCalculators() {
+        return this.calculators;
     }
 }

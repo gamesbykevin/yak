@@ -2,12 +2,9 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
 
 /**
  * Accumulation Distribution Line
@@ -19,28 +16,16 @@ public class ADL extends Strategy {
 
     public ADL() {
 
-        //call parent
-        super();
-
         //create a new list
         this.accumulationDistributionLine = new ArrayList<>();
     }
 
-    public List<Double> getAccumulationDistributionLine() {
+    public List<Double> getVolume() {
         return this.accumulationDistributionLine;
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        double previous = getRecent(history, Period.Fields.Close, 2);
-        double current = getRecent(history, Period.Fields.Close);
-
-        double previousVal = getRecent(getAccumulationDistributionLine(), 2);
-        double currentVal = getRecent(getAccumulationDistributionLine());
-
-        if (previous > current && previousVal < currentVal)
-            agent.setBuy(true);
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -48,15 +33,6 @@ public class ADL extends Strategy {
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        double previous = getRecent(history, Period.Fields.Close, 2);
-        double current = getRecent(history, Period.Fields.Close);
-
-        double previousVal = getRecent(getAccumulationDistributionLine(), 2);
-        double currentVal = getRecent(getAccumulationDistributionLine());
-
-        if (previous < current && previousVal > currentVal)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -66,36 +42,33 @@ public class ADL extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "ADL: ", getAccumulationDistributionLine(), write);
+        display(agent, "ADL: ", getVolume(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //clear our list
-        getAccumulationDistributionLine().clear();
+        getVolume().clear();
 
         for (int i = 0; i < history.size(); i++) {
 
-            //calculate our money flow multiplier
-            double multiplier = getMultiplier(history.get(i));
-
             //calculate our money flow volume
-            double volume = (history.get(i).volume * multiplier);
+            double volume = getMultiplier(history.get(i)) * history.get(i).volume;
 
             //calculate Accumulation Distribution Line
-            if (getAccumulationDistributionLine().isEmpty()) {
+            if (getVolume().isEmpty()) {
 
                 //if no previous values, the volume will be the initial
-                getAccumulationDistributionLine().add(volume);
+                getVolume().add(volume);
 
             } else {
 
                 //add the previous volume to the current
-                double newVolume = getRecent(getAccumulationDistributionLine()) + volume;
+                double newVolume = getRecent(getVolume()) + volume;
 
                 //add our new volume to the list
-                getAccumulationDistributionLine().add(newVolume);
+                getVolume().add(newVolume);
             }
         }
     }

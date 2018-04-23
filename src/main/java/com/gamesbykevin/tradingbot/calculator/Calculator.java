@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
+import static com.gamesbykevin.tradingbot.Main.PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
@@ -19,6 +20,9 @@ public class Calculator {
 
     //keep a list of our periods
     private List<Period> history;
+
+    //how long do we pause after our service call, this is to help prevent 429 errors (rate limit exceeded)
+    private static final long DELAY = 500L;
 
     /**
      * How many historical periods do we need in order to start trading
@@ -40,21 +44,27 @@ public class Calculator {
     public static TradingStrategy[] MY_TRADING_STRATEGIES;
 
     /**
-     * How long is each period?
+     * How long is each period we want to trade?
      */
-    public static int PERIOD_DURATION = 0;
+    public static Duration[] MY_PERIOD_DURATIONS;
 
     //our json response string
     private String json;
 
+    //last time calculator was updated
+    private long previous;
+
+    //the chosen duration
+    private final Duration duration;
+
     public enum Duration {
 
         OneMinute(60, "one_minute", 6),             //check every 10 seconds
-        FiveMinutes(300, "five_minutes", 20),       //check every 15 seconds
-        FifteenMinutes(900, "fifteen_minutes", 30), //check every 30 seconds
-        OneHour(3600, "one_hour", 90),              //check every 40 seconds
-        SixHours(21600, "six_hours", 240),          //check every 90 seconds
-        TwentyFourHours(86400, "one_day", 720);     //check every 120 seconds
+        FiveMinutes(300, "five_minutes", 10),       //check every 30 seconds
+        FifteenMinutes(900, "fifteen_minutes", 10), //check every 90 seconds  (1 minute 30 seconds)
+        OneHour(3600, "one_hour", 24),              //check every 150 seconds (2 minutes 30 seconds)
+        SixHours(21600, "six_hours", 45),          //check every 480 seconds  (8 minutes)
+        TwentyFourHours(86400, "one_day", 60);     //check every 1440 seconds (24 minutes)
 
         //how long (in seconds)
         public final long duration;
@@ -71,7 +81,10 @@ public class Calculator {
         }
     }
 
-    public Calculator() {
+    public Calculator(Duration duration) {
+
+        //store the selected duration
+        this.duration = duration;
 
         //create new list(s)
         this.history = new ArrayList<>();
@@ -85,12 +98,12 @@ public class Calculator {
 
             switch (MY_TRADING_STRATEGIES[i]) {
 
-                case ADL:
-                    strategy = new ADL();
-                    break;
-
                 case ADX:
                     strategy = new ADX();
+                    break;
+
+                case AO:
+                    strategy = new AO();
                     break;
 
                 case BBER:
@@ -137,10 +150,6 @@ public class Calculator {
                     strategy = new NVI();
                     break;
 
-                case OBV:
-                    strategy = new OBV();
-                    break;
-
                 case PVI:
                     strategy = new PVI();
                     break;
@@ -172,9 +181,20 @@ public class Calculator {
             //add to hash map
             getStrategies().put(MY_TRADING_STRATEGIES[i], strategy);
         }
+
+        //update the previous run time, so it runs immediately since we don't have data yet
+        this.previous = System.currentTimeMillis() - (getDuration().duration * 1000);
     }
 
-    public synchronized boolean update(Duration key, String productId) {
+    public Duration getDuration() {
+        return this.duration;
+    }
+
+    public boolean canExecute() {
+        return System.currentTimeMillis() - previous >= (getDuration().duration / getDuration().frequency) * 1000;
+    }
+
+    public synchronized boolean update(String productId) {
 
         //were we successful
         boolean result = false;
@@ -182,7 +202,7 @@ public class Calculator {
         try {
 
             //make our rest call and get the json response
-            setJson(getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, key.duration)));
+            setJson(getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getDuration())));
 
             //convert json text to multi array
             double[][] data = GSon.getGson().fromJson(getJson(), double[][].class);
@@ -199,10 +219,16 @@ public class Calculator {
                 //we are successful
                 result = true;
 
+                //update the last successful run
+                this.previous = System.currentTimeMillis();
+
             } else {
 
                 result = false;
             }
+
+            //we want to limit the time between each service call to prevent too many request errors
+            Thread.sleep(DELAY);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -230,6 +256,51 @@ public class Calculator {
 
     private HashMap<TradingStrategy, Strategy> getStrategies() {
         return this.strategies;
+    }
+
+    public static void populateDurations() {
+
+        //create a new array which will contain our candle durations
+        if (MY_PERIOD_DURATIONS == null) {
+
+            //make sure we aren't using duplicate durations
+            for (int i = 0; i < PERIOD_DURATIONS.length; i++) {
+                for (int j = 0; j < PERIOD_DURATIONS.length; j++) {
+
+                    //don't check the same element
+                    if (i == j)
+                        continue;
+
+                    //if the value already exists we have duplicate strategies
+                    if (PERIOD_DURATIONS[i] == PERIOD_DURATIONS[j])
+                        throw new RuntimeException("Duplicate period durations in your property file \"" + PERIOD_DURATIONS[i] + "\"");
+                }
+            }
+
+            //create new list
+            MY_PERIOD_DURATIONS = new Duration[PERIOD_DURATIONS.length];
+
+            //populate the array list
+            for (int i = 0; i < PERIOD_DURATIONS.length; i++) {
+
+                //we must have a match
+                boolean match = false;
+
+                for (Duration duration : Duration.values()) {
+
+                    //check if we have a match
+                    if (duration.duration == PERIOD_DURATIONS[i]) {
+                        MY_PERIOD_DURATIONS[i] = duration;
+                        match = true;
+                        break;
+                    }
+                }
+
+                //throw exception if no match
+                if (!match)
+                    throw new RuntimeException("Duration not valid: " + PERIOD_DURATIONS[i]);
+            }
+        }
     }
 
     /**

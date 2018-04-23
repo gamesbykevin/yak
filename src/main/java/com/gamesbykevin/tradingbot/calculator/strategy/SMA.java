@@ -71,7 +71,12 @@ public class SMA {
 
             //what field are we adding to our sum
             switch (field) {
+
                 case Open:
+                    sum += period.open;
+                    break;
+
+                case Close:
                     sum += period.close;
                     break;
 
@@ -85,10 +90,6 @@ public class SMA {
 
                 case Time:
                     sum += period.time;
-                    break;
-
-                case Close:
-                    sum += period.close;
                     break;
 
                 case Volume:

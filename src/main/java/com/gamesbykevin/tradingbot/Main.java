@@ -8,7 +8,6 @@ import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.HistoryTracker;
@@ -29,8 +28,6 @@ import static com.gamesbykevin.tradingbot.MainHelper.displayNextStatusUpdateDesc
 import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIOD_DURATION;
-import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameMain;
@@ -72,13 +69,16 @@ public class Main implements Runnable {
     //which strategies do we want to trade with (separated by comma)
     public static String[] TRADING_STRATEGIES;
 
+    //list of desired durations to trade
+    public static long[] PERIOD_DURATIONS;
+
     /**
      * Are we paper trading? default true
      */
     public static boolean PAPER_TRADING = true;
 
     /**
-     * Are we using the websocket connection?
+     * Are we using the web socket connection?
      */
     public static boolean WEBSOCKET_ENABLED = false;
 
@@ -134,9 +134,9 @@ public class Main implements Runnable {
 
         } else {
 
-            //if we are using real money, let's only focus on 1 trading strategy and 1 ratio
-            if (TRADING_STRATEGIES.length != 1 || HARD_STOP_RATIO.length != 1)
-                throw new RuntimeException("When using real money you can only have 1 strategy and 1 hard stop ratio.");
+            //if we are using real money, let's only focus on 1 trading strategy and 1 ratio and 1 candle
+            if (TRADING_STRATEGIES.length != 1 || HARD_STOP_RATIO.length != 1 || PERIOD_DURATIONS.length != 1)
+                throw new RuntimeException("When using real money you can only have 1 strategy, 1 hard stop ratio, and 1 candle");
 
             //display message and pause if using real money
             displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", getWriter());
@@ -304,31 +304,14 @@ public class Main implements Runnable {
         //populate our specified strategies
         Calculator.populateStrategies();
 
-        //identify our duration
-        Calculator.Duration duration = null;
-
-        //get the list of durations
-        Duration[] durations = Calculator.Duration.values();
-
-        //check if the duration matches our selection
-        for (int i = 0; i < durations.length; i++) {
-
-            //if the numbers match we found it
-            if (durations[i].duration == PERIOD_DURATION) {
-                duration = durations[i];
-                break;
-            }
-        }
-
-        //we can't start until we find our duration
-        if (duration == null)
-            throw new RuntimeException("Desired duration doesn't match: " + PERIOD_DURATION);
+        //populate our desired candle durations
+        Calculator.populateDurations();
 
         //add an agent for each product we are trading
         for (int i = 0; i < getProducts().size(); i++) {
 
             //create new manager agent
-            AgentManager agentManager = new AgentManager(getProducts().get(i), funds, duration);
+            AgentManager agentManager = new AgentManager(getProducts().get(i), funds);
 
             //add manager to list
             getAgentManagers().put(getProducts().get(i).getId(), agentManager);

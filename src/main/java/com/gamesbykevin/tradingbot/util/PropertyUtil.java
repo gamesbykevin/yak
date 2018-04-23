@@ -135,7 +135,19 @@ public class PropertyUtil {
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 
         //how long is each candle?
-        Calculator.PERIOD_DURATION = Integer.parseInt(getProperties().getProperty("periodDuration"));
+        String[] durations = getProperties().getProperty("periodDuration").split(DELIMITER);
+
+        //make sure we have at least 1
+        if (durations.length < 1)
+            throw new RuntimeException("You don't have any durations specified");
+
+        //create our list of durations
+        Main.PERIOD_DURATIONS = new long[durations.length];
+
+        //populate our array
+        for (int i = 0; i < durations.length; i++) {
+            Main.PERIOD_DURATIONS[i] = Long.parseLong(durations[i]);
+        }
 
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));

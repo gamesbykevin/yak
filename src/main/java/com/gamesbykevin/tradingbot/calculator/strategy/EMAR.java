@@ -4,6 +4,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 
 import java.util.List;
 
@@ -80,13 +81,13 @@ public class EMAR extends Strategy {
         double emaShort = getRecent(emaObj.getEmaShort());
         double emaLong = getRecent(emaObj.getEmaLong());
 
-        if (current < rsiLine || emaShort < emaLong) {
+        if (current < rsiLine && emaShort < emaLong) {
 
             //if rsi is under the line and the fast line is below the slow long indicating a downward trend
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //write to log
-            displayMessage(agent, "current < rsiLine || emaShort < emaLong", true);
+            displayMessage(agent, "current < rsiLine && emaShort < emaLong", true);
 
         }
 

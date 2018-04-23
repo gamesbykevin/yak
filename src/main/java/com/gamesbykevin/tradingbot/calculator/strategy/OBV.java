@@ -2,30 +2,16 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasDivergence;
-
 public class OBV extends Strategy {
 
-    //list of configurable values
-    protected static int PERIODS_OBV = 10;
-
-    //keep a historical list of the volume so we can check for divergence
+    //keep a historical list of the indicator
     private List<Double> volume;
 
-    private final int periodsOBV;
-
     public OBV() {
-        this(PERIODS_OBV);
-    }
-
-    public OBV(int periodsOBV) {
-
-        this.periodsOBV = periodsOBV;
 
         //create list
         this.volume = new ArrayList<>();
@@ -38,20 +24,12 @@ public class OBV extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if there is a bullish divergence let's buy
-        if (hasDivergence(history, periodsOBV, true, getVolume()))
-            agent.setBuy(true);
-
         //display our data
         displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //if there is a bearish divergence let's sell
-        if (hasDivergence(history, periodsOBV, false, getVolume()))
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -71,44 +49,32 @@ public class OBV extends Strategy {
         getVolume().clear();
 
         //calculate the obv for each period
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = 1; i < history.size(); i++) {
 
-            //skip if not enough info
-            if (i < periodsOBV)
-                continue;
+            //get the latest volume value
+            double volume = getVolume().isEmpty() ? history.get(i).volume : getRecent(getVolume());
 
-            //get the obv for this period
-            final double tmpVolume = calculateOBV(history, i);
+            //what is the current volume change
+            double change;
 
-            //add the obv calculation to the list
-            getVolume().add(tmpVolume);
-        }
-    }
+            if (history.get(i).close > history.get(i - 1).close) {
 
-    private double calculateOBV(List<Period> history, int currentPeriod) {
+                //if the current $ is greater than previous $ change is positive
+                change = history.get(i).volume;
 
-        //the total sum
-        double sum = 0;
+            } else if (history.get(i).close < history.get(i - 1).close) {
 
-        //check every period
-        for (int i = currentPeriod - periodsOBV; i < currentPeriod - 1; i++) {
+                //if the current $ is less than previous $ change is negative
+                change = -history.get(i).volume;
 
-            Period prev = history.get(i);
-            Period next = history.get(i + 1);
+            } else {
 
-            if (next.close > prev.close) {
-
-                //add to the total volume
-                sum = sum + history.get(i).volume;
-
-            } else if (next.close < prev.close) {
-
-                //subtract from the total volume
-                sum = sum - history.get(i).volume;
+                //no change
+                change = 0;
             }
-        }
 
-        //return the on balance volume
-        return sum;
+            //add the change to the latest volume value
+            getVolume().add(volume + change);
+        }
     }
 }

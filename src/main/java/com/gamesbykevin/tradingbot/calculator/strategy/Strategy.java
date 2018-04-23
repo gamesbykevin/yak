@@ -8,6 +8,7 @@ import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.getValue;
 
 public abstract class Strategy {
 
@@ -63,32 +64,7 @@ public abstract class Strategy {
      * @return The value of the desired data for the specified recent index
      */
     protected double getRecent(List<Period> periods, Fields field, int previous) {
-
-        Period period = periods.get(periods.size() - previous);
-
-        switch (field) {
-
-            case Volume:
-                return period.volume;
-
-            case Close:
-                return period.close;
-
-            case Time:
-                return period.time;
-
-            case Low:
-                return period.low;
-
-            case Open:
-                return period.open;
-
-            case High:
-                return period.high;
-
-            default:
-                throw new RuntimeException("Field not handled: " + field);
-        }
+        return getValue(periods, field, periods.size() - previous);
     }
 
     protected double getRecent(List<Double> list) {

@@ -31,7 +31,7 @@ public class HistoryTracker implements Runnable {
     /**
      * How long do we wait between our json calls
      */
-    private static final long DELAY = 5000L;
+    private static final long DELAY = (120L * 1000L);
 
     /**
      * Default constructor

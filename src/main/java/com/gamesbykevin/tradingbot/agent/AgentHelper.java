@@ -468,7 +468,7 @@ public class AgentHelper {
             message += TransactionHelper.getDescLost(agent) + "\n";
 
             //send email notification
-            Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getTradingStrategy() + ")", message);
+            Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getTradingStrategy() + "-" + agent.getDuration().description + "-" + agent.getHardStopRatio() + ")", message);
         }
     }
 

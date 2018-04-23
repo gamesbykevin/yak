@@ -1,5 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+
 import java.util.List;
 
 public class CalculatorHelper {
@@ -66,63 +68,88 @@ public class CalculatorHelper {
         }
     }
 
-    /**
-     * Do we have divergence?
-     *
-     * What we do to detect bullish divergence:
-     * a) The first period the price is highest and each period afterwards is lower
-     * b) The first period our data is the lowest and each period afterwards is higher
-     *
-     * What we do to detect bearish divergence:
-     * a) The first period the price is the lowest and each period afterwards is higher
-     * b) The first period the data is the highest and each period afterwards is lower
-     *
-     * @param history Stock price history
-     * @param periods How many periods do we check
-     * @param bullish Are we looking for a bullish sign of divergence, if false we are looking for bearish
-     * @param data Array data of our indicator
-     * @return true if divergence is found, false otherwise
-     */
-    public static synchronized boolean hasDivergence(List<Period> history, int periods, boolean bullish, List<Double> data) {
+    public static synchronized double getValue(List<Period> data, Fields field, int index) {
 
-        if (bullish) {
+        Period period = data.get(index);
 
-            for (int i = history.size() - periods; i < history.size(); i++) {
+        //which field do we want
+        switch (field) {
 
-                //at this point we want prices that are lower than the starting price
-                if (history.get(i).close > history.get(history.size() - periods).close)
-                    return false;
-            }
+            case Close:
+                return period.close;
 
-            for (int i = data.size() - periods; i < data.size(); i++) {
+            case High:
+                return period.high;
 
-                //at this point we want every data point to be larger than the first
-                if (data.get(i) < data.get(data.size() - periods))
-                    return false;
-            }
+            case Open:
+                return period.open;
 
-            //the prices are lower and the indicator data is higher
-            return true;
+            case Low:
+                return period.low;
 
-        } else {
+            case Time:
+                return period.time;
 
-            for (int i = history.size() - periods; i < history.size(); i++) {
+            case Volume:
+                return period.volume;
 
-                //at this point we want prices that are higher than the starting price
-                if (history.get(i).close < history.get(history.size() - periods).close)
-                    return false;
-            }
-
-            for (int i = data.size() - periods; i < data.size(); i++) {
-
-                //at this point we want every data point to be smaller than the first
-                if (data.get(i) > data.get(data.size() - periods))
-                    return false;
-            }
-
-            //the price are higher and the indicator data is lower
-            return true;
+            default:
+                throw new RuntimeException("Field not defined: " + field);
         }
+    }
+
+    public static synchronized boolean hasTrend(List<Period> data, Fields field, int periods, boolean upward) {
+
+        //the trend line
+        double line = getValue(data, field, data.size() - periods);
+
+        //check every recent value to confirm the trend
+        for (int i = data.size() - periods; i < data.size(); i++) {
+
+            if (upward) {
+
+                //if the value is less than the line we don't have a trend
+                if (getValue(data, field, i) < line)
+                    return false;
+
+            } else {
+
+                //if the value is more than the line we don't have a trend
+                if (getValue(data, field, i) > line)
+                    return false;
+
+            }
+        }
+
+        //we have found a trend
+        return true;
+    }
+
+    public static synchronized boolean hasTrend(List<Double> data, int periods, boolean upward) {
+
+        //the trend line
+        double line = data.get(data.size() - periods);
+
+        //check every recent value to confirm the trend
+        for (int i = data.size() - periods; i < data.size(); i++) {
+
+            if (upward) {
+
+                //if the value is less than the line we don't have a trend
+                if (data.get(i) < line)
+                    return false;
+
+            } else {
+
+                //if the value is more than the line we don't have a trend
+                if (data.get(i) > line)
+                    return false;
+
+            }
+        }
+
+        //we have found a trend
+        return true;
     }
 
     /**

@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.transaction.Transaction;
@@ -69,7 +70,13 @@ public class Agent implements IAgent {
     //what is the  lowest price and highest price
     private double priceLow = 0, priceHigh = 0;
 
-    protected Agent(double funds, String productId, TradingStrategy tradingStrategy) {
+    //what duration are we trading on?
+    private final Duration duration;
+
+    protected Agent(double funds, String productId, TradingStrategy tradingStrategy, Duration duration) {
+
+        //assign our duration
+        this.duration = duration;
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
@@ -401,7 +408,7 @@ public class Agent implements IAgent {
     public PrintWriter getWriter() {
 
         if (this.writer == null)
-            this.writer = LogFile.getPrintWriter(getTradingStrategy() + "-" + getHardStopRatio() + "-" + getFileDateDesc() + ".log", getDirectory());
+            this.writer = LogFile.getPrintWriter(getTradingStrategy() + "-" + getDuration().description + "-" + getHardStopRatio() + "-" + getFileDateDesc() + ".log", getDirectory());
 
         return this.writer;
     }
@@ -473,5 +480,9 @@ public class Agent implements IAgent {
             setPriceLow(currentPrice);
         if (currentPrice > getPriceHigh())
             setPriceHigh(currentPrice);
+    }
+
+    public Duration getDuration() {
+        return this.duration;
     }
 }
