@@ -27,9 +27,9 @@ public class MACD extends Strategy {
     private EMA emaObj;
 
     //our list of variations
-    private static final int PERIODS_MACD = 9;
-    private static final int PERIODS_EMA_LONG = 30;
-    private static final int PERIODS_EMA_SHORT = 5;
+    private static final int PERIODS_MACD = 7;
+    private static final int PERIODS_EMA_LONG = 25;
+    private static final int PERIODS_EMA_SHORT = 4;
 
     public MACD() {
         this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD);

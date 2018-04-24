@@ -13,10 +13,10 @@ public class BBER extends Strategy {
 
     //our list of variations
     private static final float RSI_LINE = 50.0f;
-    private static final int PERIODS_EMA_LONG = 50;
-    private static final int PERIODS_EMA_SHORT = 10;
-    private static final int PERIODS_RSI = 14;
-    private static final int PERIODS_BB = 20;
+    private static final int PERIODS_EMA_LONG = 45;
+    private static final int PERIODS_EMA_SHORT = 9;
+    private static final int PERIODS_RSI = 12;
+    private static final int PERIODS_BB = 18;
     private static final float MULTIPLIER_BB = 2.0f;
 
     //ema object
@@ -46,18 +46,32 @@ public class BBER extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        //get the current values
+        double emaLongCurrent = getRecent(emaObj.getEmaLong());
+        double middleCurrent = getRecent(bbObj.getMiddle());
+        double rsiCurrent = getRecent(rsiObj.getRsiVal());
+
+        //get the previous values
+        double emaLongPrevious = getRecent(emaObj.getEmaLong(), 2);
+        double middlePrevious = getRecent(bbObj.getMiddle(), 2);
+        double rsiPrevious = getRecent(rsiObj.getRsiVal(), 2);
+
         //is the current price above our ema long?
-        boolean aboveEmaLong = currentPrice > getRecent(emaObj.getEmaLong());
+        boolean aboveEmaLong = currentPrice > emaLongCurrent;
 
         //is the current price above our bollinger bands middle line?
-        boolean aboveBbMiddle = currentPrice > getRecent(bbObj.getMiddle());
+        boolean aboveBbMiddle = currentPrice > middleCurrent;
 
         //is the rsi value above the rsi line
-        boolean aboveRsiSupport = getRecent(rsiObj.getRsiVal()) > rsiLine;
+        boolean aboveRsiSupport = rsiCurrent > rsiLine;
 
         //if all are true, let's buy
-        if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport)
-            agent.setBuy(true);
+        if (aboveEmaLong && aboveBbMiddle && aboveRsiSupport) {
+
+            //but wait let's make sure we enter at the start of a trend before we buy
+            if (rsiPrevious <= rsiLine || currentPrice < middlePrevious || currentPrice < emaLongPrevious)
+                agent.setBuy(true);
+        }
 
         //display our data
         displayData(agent, agent.hasBuy());

@@ -29,7 +29,7 @@ public class AgentHelper {
     /**
      * How much do we round the decimals when choosing quantity
      */
-    public static final int ROUND_DECIMALS_QUANTITY = 2;
+    public static final int ROUND_DECIMALS_QUANTITY = 3;
 
     /**
      * Our orders are limit orders in order to not have to pay a fee
@@ -57,7 +57,7 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     //how many times do we check to see if the limit order is successful
-    public static final int FAILURE_LIMIT = 30;
+    public static final int FAILURE_LIMIT = 5;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -147,6 +147,9 @@ public class AgentHelper {
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
 
+            //we want to wait until the next candle period before we check to buy stock again after this sells
+            strategy.setWait(true);
+
         } else {
 
             //construct message
@@ -173,8 +176,9 @@ public class AgentHelper {
         //reset our hard stop until we actually buy
         agent.setHardStopPrice(0);
 
-        //check for a buy signal
-        strategy.checkBuySignal(agent, history, currentPrice);
+        //if the strategy does not need to wait for new candle data, check for a buy signal
+        if (!strategy.hasWait())
+            strategy.checkBuySignal(agent, history, currentPrice);
 
         //we will buy if there is a reason
         if (agent.hasBuy()) {

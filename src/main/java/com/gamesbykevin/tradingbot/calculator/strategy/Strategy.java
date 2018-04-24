@@ -17,6 +17,9 @@ public abstract class Strategy {
      */
     private static final int RECENT_PERIODS = 5;
 
+    //does this strategy need to wait for new candle data to check for a buy signal?
+    private boolean wait = false;
+
     protected Strategy() {
         //default constructor
     }
@@ -73,5 +76,21 @@ public abstract class Strategy {
 
     protected double getRecent(List<Double> list, int index) {
         return list.get(list.size() - index);
+    }
+
+    /**
+     * Does the strategy need to wait?
+     * @return true = we need to wait for new candle data, false = otherwise
+     */
+    public boolean hasWait() {
+        return this.wait;
+    }
+
+    /**
+     * Set the strategy to wait for new candle data
+     * @param wait true = we want this strategy to wait for new candle data, false = otherwise
+     */
+    public void setWait(boolean wait) {
+        this.wait = wait;
     }
 }

@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
+
 public class JSon {
 
     /**
@@ -24,6 +26,9 @@ public class JSon {
         HttpURLConnection connection = null;
 
         try {
+
+            //display our endpoint
+            displayMessage(link);
 
             URL url = new URL(link);
             connection = (HttpURLConnection)url.openConnection();

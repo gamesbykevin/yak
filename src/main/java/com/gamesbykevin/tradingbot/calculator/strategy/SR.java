@@ -70,15 +70,28 @@ public class SR extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double dailyShort = getRecent(getSmaPriceShort());
-        double dailyLong = getRecent(getSmaPriceLong());
+        //get the current values
+        double priceShort = getRecent(getSmaPriceShort());
+        double priceLong = getRecent(getSmaPriceLong());
+        double stochRsi = getRecent(getStochRsi());
+        double closePrice = getRecent(history, Fields.Close);
+
+        //also get the previous values
+        double priceShortPrevious = getRecent(getSmaPriceShort(), 2);
+        double priceLongPrevious = getRecent(getSmaPriceLong(), 2);
+        double stochRsiPrevious = getRecent(getStochRsi(), 2);
+        double closePricePrevious = getRecent(history, Fields.Close, 2);
 
         //if our short sma is greater than our long sma and our current close is less than the short sma
-        if (dailyShort > dailyLong && getRecent(history, Fields.Close) < dailyShort) {
+        if (priceShort > priceLong && closePrice < priceShort) {
 
             //then if the rsi is showing over sold, we should buy
-            if (getRecent(getStochRsi()) < overSold)
-                agent.setBuy(true);
+            if (stochRsi < overSold) {
+
+                //last thing we want to verify is that we are at the start of a trend, we don't want to enter a trade late
+                if (priceShortPrevious < priceLongPrevious || closePricePrevious > priceShortPrevious || stochRsiPrevious >= overSold)
+                    agent.setBuy(true);
+            }
         }
 
         //display our data
@@ -88,11 +101,11 @@ public class SR extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double dailyShort = getRecent(getSmaPriceShort());
-        double dailyLong = getRecent(getSmaPriceLong());
+        double priceShort = getRecent(getSmaPriceShort());
+        double priceLong = getRecent(getSmaPriceLong());
 
         //if our short sma is less than our long sma and our current close is greater than the short sma
-        if (dailyShort < dailyLong && getRecent(history, Fields.Close) > dailyShort) {
+        if (priceShort < priceLong && priceShort < getRecent(history, Fields.Close)) {
 
             //then if the rsi is showing over bought, we should sell
             if (getRecent(getStochRsi()) > overBought)

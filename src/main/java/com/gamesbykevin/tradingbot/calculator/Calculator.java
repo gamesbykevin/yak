@@ -1,10 +1,8 @@
 package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
-import com.gamesbykevin.tradingbot.util.History;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -202,7 +200,7 @@ public class Calculator {
         try {
 
             //make our rest call and get the json response
-            setJson(getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getDuration())));
+            setJson(getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getDuration().duration)));
 
             //convert json text to multi array
             double[][] data = GSon.getGson().fromJson(getJson(), double[][].class);
@@ -242,6 +240,11 @@ public class Calculator {
 
         //recalculate all our strategies
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+
+            //flag the strategy as no longer waiting for new candle data
+            getStrategies().get(MY_TRADING_STRATEGIES[i]).setWait(false);
+
+            //calculate based on the current strategy
             getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(getHistory());
         }
     }

@@ -18,7 +18,7 @@ public class MARS extends Strategy {
     private List<List<Double>> emas;
 
     //our multiple periods in ascending order
-    private static final int[] PERIODS = {5, 10, 14, 20};
+    private static final int[] PERIODS = {4, 8, 12, 16};
 
     public MARS() {
 

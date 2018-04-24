@@ -53,12 +53,24 @@ public class RSI extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        //get current values
+        double rsiCurrent = getRecent(getRsiVal());
+        double smaCurrent = getRecent(getSmaPrice());
+
+        //get previous values
+        double rsiPrevious = getRecent(getRsiVal(), 2);
+        double smaPrevious = getRecent(getSmaPrice(), 2);
+
         //first we need to make sure we are below the support line
-        if (getRecent(getRsiVal()) < supportLine) {
+        if (rsiCurrent < supportLine) {
 
             //now we need to check that price is in an overall uptrend
-            if (getRecent(history, Fields.Close) > getRecent(getSmaPrice()))
-                agent.setBuy(true);
+            if (getRecent(history, Fields.Close) > smaCurrent) {
+
+                //one last thing to check is that we are entering a trend instead of in the middle of one
+                if (rsiPrevious > supportLine || getRecent(history, Fields.Close, 2) < smaPrevious)
+                    agent.setBuy(true);
+            }
         }
 
         //display our data
