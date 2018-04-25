@@ -59,7 +59,7 @@ public class PVI extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if we have crossover and cumulative value is < than previous period value that is signal to sell
-        if (hasCrossover(false, getPviCumulative(), getPviEma()) && getRecent(getPviCumulative()) < getRecent(getPviCumulative(), 2))
+        if (getRecent(getPviCumulative()) < getRecent(getPviEma()) && getRecent(getPviCumulative()) < getRecent(getPviCumulative(), 2))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data

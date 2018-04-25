@@ -74,11 +74,16 @@ public final class SO extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        double soPrevious = getRecent(getStochasticOscillator(), 2);
+        double soCurrent = getRecent(getStochasticOscillator());
+
+        double priceCurrent = getRecent(history, Fields.Close);
+
         //if the close is above the sma averages
-        if (getRecent(history, Fields.Close) > getRecent(getSmaPriceLong()) && getRecent(history, Fields.Close) > getRecent(getSmaPriceShort())) {
+        if (priceCurrent > getRecent(getSmaPriceLong()) && priceCurrent > getRecent(getSmaPriceShort())) {
 
             //if previously oversold, and no longer
-            if (getRecent(getStochasticOscillator(), 2) < OVER_SOLD && getRecent(getStochasticOscillator()) > OVER_SOLD)
+            if (soPrevious < OVER_SOLD && soCurrent > OVER_SOLD)
                 agent.setBuy(true);
         }
 

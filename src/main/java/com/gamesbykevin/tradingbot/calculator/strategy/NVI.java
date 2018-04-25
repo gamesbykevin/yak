@@ -60,8 +60,8 @@ public class NVI extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we have crossover and cumulative value is < than previous period value that is signal to sell
-        if (hasCrossover(false, getNviCumulative(), getNviEma()) && getRecent(getNviCumulative()) < getRecent(getNviCumulative(), 2))
+        //if we are below the ema and the cumulative value is less than the previous period
+        if (getRecent(getNviCumulative()) < getRecent(getNviEma()) && getRecent(getNviCumulative()) < getRecent(getNviCumulative(), 2))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data

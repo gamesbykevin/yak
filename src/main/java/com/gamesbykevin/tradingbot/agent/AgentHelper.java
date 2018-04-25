@@ -124,6 +124,7 @@ public class AgentHelper {
 
         } else {
 
+            /*
             //what is the increase we check to see if we set a new hard stop amount
             double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
 
@@ -136,6 +137,7 @@ public class AgentHelper {
                 //write hard stop amount to our log file
                 displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
             }
+            */
         }
 
         //if there is a reason then we will sell

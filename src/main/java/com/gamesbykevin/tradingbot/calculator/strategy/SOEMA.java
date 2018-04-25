@@ -63,19 +63,9 @@ public class SOEMA extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double previousSO = getRecent(soObj.getStochasticOscillator(), 2);
-        double currentSO = getRecent(soObj.getStochasticOscillator());
-
-        if (currentSO > soIndicator && hasCrossover(false, emaObj.getEmaShort(), emaObj.getEmaLong())) {
-
-            //make sure we are above the indicator and we have a bearish crossover
+        //if we are above the indicator and the ema short is below the ema long
+        if (getRecent(soObj.getStochasticOscillator()) > soIndicator && getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong()))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        } else if (previousSO < soIndicator && currentSO > soIndicator && getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong())) {
-
-            //confirm we just crossed above the indicator and the ema short is < ema long
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-        }
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

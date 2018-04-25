@@ -25,11 +25,11 @@ public class SR extends Strategy {
     private List<Double> stochRsi;
 
     //list of configurable values
-    private static final int PERIODS_LONG = 60;
-    private static final int PERIODS_SHORT = 10;
-    private static final int PERIODS_STOCH_RSI = 14;
-    private static final double OVER_BOUGHT = .90d;
-    private static final double OVER_SOLD = .10d;
+    private static final int PERIODS_LONG = 50;
+    private static final int PERIODS_SHORT = 8;
+    private static final int PERIODS_STOCH_RSI = 12;
+    private static final double OVER_BOUGHT = .80d;
+    private static final double OVER_SOLD = .20d;
 
     private final int periodsLong, periodsShort, periodsStochRsi;
     private final double overBought, overSold;
@@ -104,13 +104,20 @@ public class SR extends Strategy {
         double priceShort = getRecent(getSmaPriceShort());
         double priceLong = getRecent(getSmaPriceLong());
 
+        //if the price is below the sma we need to sell
+        if (priceShort < priceLong)
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        /*
         //if our short sma is less than our long sma and our current close is greater than the short sma
         if (priceShort < priceLong && priceShort < getRecent(history, Fields.Close)) {
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //then if the rsi is showing over bought, we should sell
             if (getRecent(getStochRsi()) > overBought)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
+        */
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

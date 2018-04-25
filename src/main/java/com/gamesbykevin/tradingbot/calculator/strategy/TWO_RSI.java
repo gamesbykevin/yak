@@ -73,26 +73,16 @@ public class TWO_RSI extends Strategy {
 
         //get the current and previous rsi values
         double rsiCurrent = getRecent(rsiObj.getRsiVal());
-        double rsiPrevious = getRecent(rsiObj.getRsiVal(), 2);
 
         //get the current and previous sma values
         double smaCurrent = getRecent(rsiObj.getSmaPrice());
-        double smaPrevious = getRecent(rsiObj.getSmaPrice(), 2);
 
         //get the current and previous stock price
         double priceCurrent = getRecent(history, Fields.Close);
-        double pricePrevious = getRecent(history, Fields.Close, 2);
 
-        if (rsiCurrent > maxRSI && smaPrevious < pricePrevious && smaCurrent > priceCurrent) {
-
-            //if we are above the rsi resistance line and the stock price crosses below the sma average
+        //if we are above the rsi resistance line and the stock price crosses below the sma average
+        if (rsiCurrent > maxRSI && smaCurrent > priceCurrent)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        } else if (smaCurrent > priceCurrent && rsiPrevious < maxRSI && rsiCurrent > maxRSI) {
-
-            //if the stock price is below the sma average and the rsi crosses above the resistance line
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-        }
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
