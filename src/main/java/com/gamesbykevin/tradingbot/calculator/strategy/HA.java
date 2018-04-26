@@ -10,25 +10,19 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 /**
- * Heikin-Ashi
+ * Heiken-Ashi
  */
 public class HA extends Strategy {
 
     //we will create our own candles
     private List<Period> haPeriods;
 
-    //list of configurable values
-    private static final int PERIODS_HA = 7;
-
-    private final int periods;
+    /**
+     * We only want to calculate the latest heiken ashi candles for accurate results
+     */
+    private static final int PERIODS = 10;
 
     public HA() {
-        this(PERIODS_HA);
-    }
-
-    public HA(int periods) {
-
-        this.periods = periods;
 
         //create new list
         this.haPeriods = new ArrayList<>();
@@ -41,68 +35,12 @@ public class HA extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        boolean confirmBearish = true;
-        boolean confirmBullish = false;
-
-        //check each candle to confirm they are bearish
-        for (int i = history.size() - periods; i < history.size() - 2; i++) {
-
-            //all candles should be bearish
-            if (isBearish(history.get(i))) {
-                confirmBearish = false;
-                break;
-            }
-        }
-
-        //if we confirmed a previous bearish trend, let's check for bullish
-        if (confirmBearish) {
-
-            //if the 2 recent periods are bullish, we are good
-            if (isBullish(history.get(history.size() - 2)) && isBullish(history.get(history.size() - 1))) {
-                confirmBullish = true;
-            } else {
-                confirmBullish = false;
-            }
-        }
-
-        //if we confirm bullish, let's buy
-        if (confirmBullish)
-            agent.setBuy(true);
-
         //display our data
         displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        boolean confirmBearish = false;
-        boolean confirmBullish = true;
-
-        //check each candle to confirm they are bullish
-        for (int i = history.size() - periods; i < history.size() - 2; i++) {
-
-            //all candles should be bullish
-            if (isBullish(history.get(i))) {
-                confirmBullish = false;
-                break;
-            }
-        }
-
-        //if we confirmed a previous bullish trend, let's check for bearish
-        if (confirmBullish) {
-
-            //if the 2 recent periods are bearish, we are good
-            if (isBearish(history.get(history.size() - 2)) && isBearish(history.get(history.size() - 1))) {
-                confirmBearish = true;
-            } else {
-                confirmBearish = false;
-            }
-        }
-
-        //if we confirm bullish, let's sell
-        if (confirmBearish)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -113,7 +51,7 @@ public class HA extends Strategy {
 
         String desc = "";
 
-        for (int i = getHaPeriods().size() - periods; i < getHaPeriods().size(); i++) {
+        for (int i = getHaPeriods().size() - PERIODS; i < getHaPeriods().size(); i++) {
 
             if (desc.length() > 0)
                 desc = desc + ", ";
@@ -134,8 +72,8 @@ public class HA extends Strategy {
         //clear the list
         getHaPeriods().clear();
 
-        //check every period possible
-        for (int i = 0; i < history.size(); i++) {
+        //check the latest periods only for accurate results
+        for (int i = history.size() - PERIODS; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);
@@ -172,13 +110,12 @@ public class HA extends Strategy {
                  * 2. The current Heikin-Ashi candlestick open
                  * 3. The current Heikin-Ashi candlestick close
                  */
-                if (current.high >= haPeriod.open && current.high >= haPeriod.close) {
-                    haPeriod.high = current.high;
-                } else if (haPeriod.open >= current.high && haPeriod.open >= haPeriod.close) {
+                haPeriod.high = current.high;
+
+                if (haPeriod.open > haPeriod.high)
                     haPeriod.high = haPeriod.open;
-                } else if (haPeriod.close >= current.high && haPeriod.close >= haPeriod.open) {
+                if (haPeriod.close > haPeriod.high)
                     haPeriod.high = haPeriod.close;
-                }
 
                 /**
                  * The Heikin-Ashi Low is the minimum of three data points:
@@ -186,13 +123,12 @@ public class HA extends Strategy {
                  * 2. The current Heikin-Ashi candlestick open
                  * 3. The current Heikin-Ashi candlestick close
                  */
-                if (current.high <= haPeriod.open && current.high <= haPeriod.close) {
-                    haPeriod.low = current.high;
-                } else if (haPeriod.open <= current.high && haPeriod.open <= haPeriod.close) {
+                haPeriod.low = current.low;
+
+                if (haPeriod.open < haPeriod.low)
                     haPeriod.low = haPeriod.open;
-                } else if (haPeriod.close <= current.high && haPeriod.close <= haPeriod.open) {
+                if (haPeriod.close < haPeriod.low)
                     haPeriod.low = haPeriod.close;
-                }
             }
 
             //add the period to the list

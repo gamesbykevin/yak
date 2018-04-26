@@ -226,6 +226,22 @@ public class AgentManager {
         return getAssets(agent);
     }
 
+    public double getTotalAssets(TradingStrategy strategy, Duration duration, float ratio) {
+
+        for (int i = 0; i < getAgents().size(); i++) {
+
+            Agent agent = getAgents().get(i);
+
+            if (agent.getDuration() == duration &&
+                agent.getHardStopRatio() == ratio &&
+                agent.getTradingStrategy() == strategy)
+                return getAssets(agent);
+        }
+
+        return 0;
+    }
+
+
     private double getAssets(Agent agent) {
         return agent.getAssets(getCurrentPrice());
     }

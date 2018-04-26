@@ -353,7 +353,7 @@ public class Main implements Runnable {
         displayMessage("History tracker created", getWriter());
     }
 
-    private List<Product> getProducts() {
+    public List<Product> getProducts() {
         return this.products;
     }
 

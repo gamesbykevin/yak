@@ -20,8 +20,8 @@ public class EMA extends Strategy {
     private List<Double> emaShort;
 
     //list of configurable values
-    private static final int PERIODS_EMA_LONG = 11;
-    private static final int PERIODS_EMA_SHORT = 4;
+    private static final int PERIODS_EMA_LONG = 26;
+    private static final int PERIODS_EMA_SHORT = 12;
 
     private final int periodsLong, periodsShort;
 

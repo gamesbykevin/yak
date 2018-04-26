@@ -108,16 +108,15 @@ public class Transaction {
 			
 			//we will use the order size
 			quantity = BigDecimal.valueOf(orderSize);
-			
-			//round the quantity
-            quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
-			
+
 		} else {
 			
 			//we will use the filled size if there is no match and we won't round to avoid accuracy loss
 			quantity = BigDecimal.valueOf(filledSize);
-			
 		}
+
+        //round the quantity
+        quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
 
         if (buying) {
 

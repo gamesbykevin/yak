@@ -26,8 +26,8 @@ public class SR extends Strategy {
 
     //list of configurable values
     private static final int PERIODS_LONG = 50;
-    private static final int PERIODS_SHORT = 8;
-    private static final int PERIODS_STOCH_RSI = 12;
+    private static final int PERIODS_SHORT = 10;
+    private static final int PERIODS_STOCH_RSI = 14;
     private static final double OVER_BOUGHT = .80d;
     private static final double OVER_SOLD = .20d;
 

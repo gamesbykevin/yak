@@ -37,7 +37,9 @@ public class HAE extends Strategy {
         Period period = getRecent();
 
         //if the latest candle is bullish and the closing price is above both short and long ema's lets buy
-        if (haObj.isBullish(period) && period.close > getRecent(emaObj.getEmaShort()) && period.close > getRecent(emaObj.getEmaLong()))
+        if (haObj.isBullish(period) &&
+                period.close > getRecent(emaObj.getEmaShort()) &&
+                period.close > getRecent(emaObj.getEmaLong()))
             agent.setBuy(true);
 
         //display our data

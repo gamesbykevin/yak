@@ -23,9 +23,9 @@ public class EMAR extends Strategy {
     private RSI rsiObj;
 
     //list of configurable values
-    private static final int PERIODS_EMA_LONG = 11;
-    private static final int PERIODS_EMA_SHORT = 4;
-    private static final int PERIODS_RSI = 20;
+    private static final int PERIODS_EMA_LONG = 12;
+    private static final int PERIODS_EMA_SHORT = 5;
+    private static final int PERIODS_RSI = 21;
     private static final float RSI_LINE = 50.0f;
 
     private final float rsiLine;
@@ -76,7 +76,6 @@ public class EMAR extends Strategy {
 
         //RSI values
         double current = getRecent(rsiObj.getRsiVal());
-        double previous = getRecent(rsiObj.getRsiVal(), 2);
 
         double emaShort = getRecent(emaObj.getEmaShort());
         double emaLong = getRecent(emaObj.getEmaLong());

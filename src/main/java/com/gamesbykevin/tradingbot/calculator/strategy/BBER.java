@@ -13,10 +13,10 @@ public class BBER extends Strategy {
 
     //our list of variations
     private static final float RSI_LINE = 50.0f;
-    private static final int PERIODS_EMA_LONG = 45;
-    private static final int PERIODS_EMA_SHORT = 9;
-    private static final int PERIODS_RSI = 12;
-    private static final int PERIODS_BB = 18;
+    private static final int PERIODS_EMA_LONG = 50;
+    private static final int PERIODS_EMA_SHORT = 10;
+    private static final int PERIODS_RSI = 14;
+    private static final int PERIODS_BB = 20;
     private static final float MULTIPLIER_BB = 2.0f;
 
     //ema object
