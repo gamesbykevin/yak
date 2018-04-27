@@ -2,13 +2,10 @@ package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
 import com.gamesbykevin.tradingbot.calculator.*;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
-import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
