@@ -15,7 +15,7 @@ public abstract class Strategy {
     /**
      * When displaying data how many periods do we print/write to the console/log
      */
-    private static final int RECENT_PERIODS = 5;
+    private static final int RECENT_PERIODS = 10;
 
     //does this strategy need to wait for new candle data to check for a buy signal?
     private boolean wait = false;

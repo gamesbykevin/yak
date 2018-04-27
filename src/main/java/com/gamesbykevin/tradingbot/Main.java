@@ -78,6 +78,11 @@ public class Main implements Runnable {
     public static boolean PAPER_TRADING = true;
 
     /**
+     * When we paper trade are we tracking fees? if yes we will treat paper trading like a market order
+     */
+    public static boolean PAPER_TRADING_FEES = true;
+
+    /**
      * Are we using the web socket connection?
      */
     public static boolean WEBSOCKET_ENABLED = false;

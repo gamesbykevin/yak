@@ -155,4 +155,17 @@ public class TransactionHelper {
     public static String getDescWins(Agent agent) {
         return "Wins :" + getCount(agent, Result.Win) + ", $" + round(getAmount(agent, Result.Win));
     }
+
+    public static String getTotalFees(Agent agent) {
+
+        //how many fees have we paid?
+        double fees = 0;
+
+        //total the fees from all of our transactions
+        for (int i = 0; i < agent.getTransactions().size(); i++) {
+            fees += (agent.getTransactions().get(i).getFeeBuy() + agent.getTransactions().get(i).getFeeSell());
+        }
+
+        return "Fees $" + fees;
+    }
 }

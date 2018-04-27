@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
+import com.coinbase.exchange.api.entity.NewOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
@@ -15,6 +16,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
@@ -56,6 +58,11 @@ public class AgentHelper {
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
+
+    /**
+     * Each trade has a 0.25% transaction fee
+     */
+    private static final float FEE_RATE = .0025f;
 
     public enum Action {
 
@@ -285,7 +292,14 @@ public class AgentHelper {
         final double quantity;
 
         //create a penny in case we need to alter the current price
-        BigDecimal penny = new BigDecimal(.01);
+        BigDecimal penny;
+
+        //if we are treating this as a market order we don't need to adjust the $
+        if (PAPER_TRADING_FEES) {
+            penny = new BigDecimal(0);
+        } else {
+            penny = new BigDecimal(.01);
+        }
 
         switch (action) {
 
@@ -373,7 +387,18 @@ public class AgentHelper {
             order.setPrice(price.toString());
             order.setSize(size.toString());
             order.setFilled_size(size.toString());
-            order.setFill_fees("0");
+
+            //are we applying fees to this order
+            if (PAPER_TRADING_FEES) {
+
+                //fees are 0.25% of the total dollar amount you are investing
+                double fee = (price.doubleValue() * size.doubleValue()) * FEE_RATE;
+                order.setFill_fees(fee + "");
+
+            } else {
+                order.setFill_fees("0");
+            }
+
             order.setProduct_id(product.getId());
             order.setStatus(Status.Done.getDescription());
             order.setSide(action.getDescription());

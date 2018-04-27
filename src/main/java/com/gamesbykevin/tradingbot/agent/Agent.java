@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
@@ -179,34 +180,44 @@ public class Agent implements IAgent {
             //paper trading will try to treat same as live trading with limit orders
             if (Main.PAPER_TRADING) {
 
-                //for now the status will be pending
-                status = Status.Pending;
+                //if we are applying fees to paper trades we will treat them as a market order
+                if (PAPER_TRADING_FEES) {
 
-                //keep track of attempts
-                setAttempts(getAttempts() + 1);
-
-                //what is the price in the order
-                double orderPrice = Double.parseDouble(order.getPrice());
-
-                //the limit orders work different if buying or selling
-                if (selling) {
-
-                    //the limit order will fill when the price goes at or above the order price
-                    if (currentPrice > orderPrice)
-                        status = Status.Filled;
+                    //automatically mark as filled
+                    status = Status.Filled;
 
                 } else {
 
-                    //the limit order will fill when the price goes at or below the order price
-                    if (currentPrice < orderPrice)
-                        status = Status.Filled;
+                    //for now the status will be pending
+                    status = Status.Pending;
 
-                }
+                    //keep track of attempts
+                    setAttempts(getAttempts() + 1);
 
-                //if we were unsuccessful in our attempts, cancel the order
-                if (status != Status.Filled && getAttempts() >= FAILURE_LIMIT) {
-                    status = Status.Cancelled;
-                    displayMessage(this, "Cancelling order", true);
+                    //what is the price in the order
+                    double orderPrice = Double.parseDouble(order.getPrice());
+
+                    //the limit orders work different if buying or selling
+                    if (selling) {
+
+                        //the limit order will fill when the price goes at or above the order price
+                        if (currentPrice > orderPrice)
+                            status = Status.Filled;
+
+                    } else {
+
+                        //the limit order will fill when the price goes at or below the order price
+                        if (currentPrice < orderPrice)
+                            status = Status.Filled;
+
+                    }
+
+                    //if we were unsuccessful in our attempts, cancel the order
+                    if (status != Status.Filled && getAttempts() >= FAILURE_LIMIT) {
+                        status = Status.Cancelled;
+                        displayMessage(this, "Cancelling order", true);
+                    }
+
                 }
 
             } else {
@@ -303,6 +314,9 @@ public class Agent implements IAgent {
             //display wins and losses
             displayMessage(this, TransactionHelper.getDescWins(this), true);
             displayMessage(this, TransactionHelper.getDescLost(this), true);
+
+            //display the total fees paid
+            displayMessage(this, TransactionHelper.getTotalFees(this), true);
 
             //display average transaction time
             displayMessage(this, TransactionHelper.getAverageDurationDesc(this), true);

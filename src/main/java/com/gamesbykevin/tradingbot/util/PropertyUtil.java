@@ -6,6 +6,7 @@ import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
 import com.gamesbykevin.tradingbot.calculator.*;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.io.FileInputStream;
 import java.io.PrintWriter;
@@ -76,6 +77,9 @@ public class PropertyUtil {
 
         //are we paper trading, or using real money
         Main.PAPER_TRADING = Boolean.parseBoolean(getProperties().getProperty("paperTrading"));
+
+        //do we apply fees when paper trading? if yes each order will be treated as a market order
+        Main.PAPER_TRADING_FEES = Boolean.parseBoolean(getProperties().getProperty("paperTradingFees"));
 
         //which crypto currencies do we want to trade
         Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(DELIMITER);

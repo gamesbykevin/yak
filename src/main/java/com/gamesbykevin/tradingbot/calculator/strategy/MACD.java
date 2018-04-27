@@ -31,15 +31,19 @@ public class MACD extends Strategy {
     private static final int PERIODS_EMA_LONG = 26;
     private static final int PERIODS_EMA_SHORT = 12;
 
+    private static final int PERIODS_CONFIRM_TREND = 4;
+
     public MACD() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD, PERIODS_CONFIRM_TREND);
     }
 
-    private final int periodsMacd;
+    private final int periodsMacd, periodsConfirmTrend;
 
-    public MACD(int emaLong, int emaShort, int periodsMacd) {
+    public MACD(int emaLong, int emaShort, int periodsMacd, int periodsConfirmTrend) {
 
+        //store our settings
         this.periodsMacd = periodsMacd;
+        this.periodsConfirmTrend = periodsConfirmTrend;
 
         //create lists and objects
         this.macdLine = new ArrayList<>();
@@ -63,9 +67,29 @@ public class MACD extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if the histogram crossed from below 0 to above 0
-        if (getRecent(getHistogram(), 2) < 0 && getRecent(getHistogram()) > 0)
-            agent.setBuy(true);
+        //make sure the histogram crossed above 0
+        if (getRecent(getHistogram(), 2) < 0 && getRecent(getHistogram()) > 0) {
+
+            //we will start here and check backwards to confirm uptrend
+            int start = getHistogram().size() - 2;
+
+            //did we confirm the uptrend?
+            boolean confirm = true;
+
+            //check the periods leading up to the crossover to verify the trend
+            for (int i = start - periodsConfirmTrend; i < start; i++) {
+
+                //the next period should be greater than the current or else we don't have a strong trend
+                if (getHistogram().get(start) > getHistogram().get(start + 1)) {
+                    confirm = false;
+                    break;
+                }
+            }
+
+            //if we confirmed the trend we will buy
+            if (confirm)
+                agent.setBuy(true);
+        }
 
         //display our data
         displayData(agent, agent.hasBuy());

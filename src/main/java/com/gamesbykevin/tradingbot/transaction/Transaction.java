@@ -39,6 +39,9 @@ public class Transaction {
     //the amount of the transaction
     private double amount;
 
+    //how much were the fees
+    private double feeBuy = 0, feeSell = 0;
+
     //the reason why we sold
     private TransactionHelper.ReasonSell reason;
 
@@ -109,14 +112,31 @@ public class Transaction {
 			//we will use the order size
 			quantity = BigDecimal.valueOf(orderSize);
 
+            //round the quantity
+            quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
+
 		} else {
 			
 			//we will use the filled size if there is no match and we won't round to avoid accuracy loss
 			quantity = BigDecimal.valueOf(filledSize);
+
 		}
 
-        //round the quantity
-        quantity.setScale(AgentHelper.ROUND_DECIMALS_QUANTITY, RoundingMode.HALF_DOWN);
+        try {
+
+            //parse our fees to double
+            double fee = Double.parseDouble(order.getFill_fees());
+
+            //we pay fees for buying and selling
+            if (buying) {
+                setFeeBuy(fee);
+            } else {
+                setFeeSell(fee);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         if (buying) {
 
@@ -129,29 +149,31 @@ public class Transaction {
             //update our available funds based on our purchase
             agent.getWallet().setFunds(agent.getWallet().getFunds() - (price.doubleValue() * quantity.doubleValue()));
 
+            //subtract our purchase fees
+            agent.getWallet().setFunds(agent.getWallet().getFunds() - getFeeBuy());
+
             //add the quantity to our wallet
             agent.getWallet().setQuantity(agent.getWallet().getQuantity() + quantity.doubleValue());
 
             //setup our notification message
             subject = "Purchase " + product.getId();
-            text = "Buy " + product.getId() + " quantity: " + quantity + " @ $" + agent.getWallet().getPurchasePrice();
+
+            //start off with the product to start the transaction description
+            text = "Buy " + product.getId();
+
+            //what is the quantity
+            text += ", quantity: " + quantity;
+
+            //what is the price
+            text += " @ $" + agent.getWallet().getPurchasePrice();
+
+            //display our fees
+            text += ", buy fee $" + getFeeBuy();
 
         } else {
 
             //assign our sell order
             setSell(order);
-
-            //did we pay any fees?
-            double fees = 0;
-
-            try {
-
-                //parse our fees to double
-                fees = Double.parseDouble(order.getFill_fees());
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
             //assign our reason for selling
             setReasonSell(agent.getReasonSell());
@@ -159,8 +181,8 @@ public class Transaction {
             //if our sell order has been filled, update our wallet with our new funds
             agent.getWallet().setFunds(agent.getWallet().getFunds() + (price.doubleValue() * quantity.doubleValue()));
 
-            //also subtract our fees
-            agent.getWallet().setFunds(agent.getWallet().getFunds() - fees);
+            //subtract our selling fees
+            agent.getWallet().setFunds(agent.getWallet().getFunds() - getFeeSell());
 
             //update the quantity as well
             agent.getWallet().setQuantity(agent.getWallet().getQuantity() - quantity.doubleValue());
@@ -171,17 +193,20 @@ public class Transaction {
             //figure out the total price we sold the stock for
             final double sold = (price.doubleValue() * quantity.doubleValue());
 
+            //what is the total amount of fees paid
+            final double totalFees = getFeeBuy() + getFeeSell();
+
             //what is the reason for selling
             displayMessage(agent, "Reason sell: " + agent.getReasonSell().getDescription(), true);
 
             //display the amount of fees that we paid
-            displayMessage(agent, "Fees $" + fees, true);
+            displayMessage(agent, "Fees $" + getFeeSell(), true);
 
             //did we win or lose?
-            if (bought > sold) {
+            if (bought > sold - totalFees) {
 
                 //track our amount
-                setAmount(bought - sold);
+                setAmount((bought - sold) + totalFees);
 
                 //assign the result
                 setResult(Result.Lose);
@@ -192,7 +217,7 @@ public class Transaction {
             } else {
 
                 //track our amount
-                setAmount(sold - bought);
+                setAmount((sold - bought) - totalFees);
 
                 //assign the result
                 setResult(Result.Win);
@@ -213,8 +238,11 @@ public class Transaction {
             //how much did we pay initially
             text += ", purchase $" + agent.getWallet().getPurchasePrice();
 
-            //display our fees
-            text += ", fees $" + fees;
+            //display our fee
+            text += ", sell fee $" + getFeeSell();
+
+            //include the total fees paid as well
+            text += ", total fees $" + totalFees;
 
             //how much $ do we have left
             text += ", remaining funds $" + AgentHelper.round(agent.getWallet().getFunds()) + "\n";
@@ -272,5 +300,21 @@ public class Transaction {
 
     public ReasonSell getReasonSell() {
         return this.reason;
+    }
+
+    public double getFeeBuy() {
+        return this.feeBuy;
+    }
+
+    public void setFeeBuy(double feeBuy) {
+        this.feeBuy = feeBuy;
+    }
+
+    public double getFeeSell() {
+        return this.feeSell;
+    }
+
+    public void setFeeSell(double feeSell) {
+        this.feeSell = feeSell;
     }
 }
