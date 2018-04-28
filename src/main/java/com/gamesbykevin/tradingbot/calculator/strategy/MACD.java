@@ -37,6 +37,7 @@ public class MACD extends Strategy {
         this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD, PERIODS_CONFIRM_TREND);
     }
 
+    //how many periods to calculate our macd line, and how many periods do we confirm the trend
     private final int periodsMacd, periodsConfirmTrend;
 
     public MACD(int emaLong, int emaShort, int periodsMacd, int periodsConfirmTrend) {
@@ -70,17 +71,16 @@ public class MACD extends Strategy {
         //make sure the histogram crossed above 0
         if (getRecent(getHistogram(), 2) < 0 && getRecent(getHistogram()) > 0) {
 
-            //we will start here and check backwards to confirm uptrend
-            int start = getHistogram().size() - 2;
-
             //did we confirm the uptrend?
             boolean confirm = true;
 
+            int end = (getHistogram().size() - 2);
+
             //check the periods leading up to the crossover to verify the trend
-            for (int i = start - periodsConfirmTrend; i < start; i++) {
+            for (int i = end - periodsConfirmTrend; i < end; i++) {
 
                 //the next period should be greater than the current or else we don't have a strong trend
-                if (getHistogram().get(start) > getHistogram().get(start + 1)) {
+                if (getHistogram().get(i) > getHistogram().get(i + 1)) {
                     confirm = false;
                     break;
                 }
@@ -98,8 +98,27 @@ public class MACD extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if macd goes below the signal line then it is time to sell
-        if (getRecent(getHistogram()) < 0)
+        /**
+         * If the gains of the past confirm periods are slowing down let's sell before something bad happens
+         */
+
+        //did we confirm the downtrend?
+        boolean confirm = true;
+
+        int end = getHistogram().size() - 1;
+
+        //check the recent periods leading up to the most recent to verify the trend
+        for (int i = end - periodsConfirmTrend; i < end; i++) {
+
+            //the next period should be less than the current if we are confirming a down trend
+            if (getHistogram().get(i) < getHistogram().get(i + 1)) {
+                confirm = false;
+                break;
+            }
+        }
+
+        //if macd goes below the signal line or we confirmed a downtrend then it is time to sell
+        if (getRecent(getHistogram()) < 0 || confirm)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data

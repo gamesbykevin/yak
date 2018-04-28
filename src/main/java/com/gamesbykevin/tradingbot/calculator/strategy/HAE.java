@@ -6,6 +6,9 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
+/**
+ * Heiken Ashi / EMA
+ */
 public class HAE extends Strategy {
 
     //our indicators
@@ -15,6 +18,8 @@ public class HAE extends Strategy {
     private final static int EMA_LONG = 12;
     private final static int EMA_SHORT = 5;
 
+    private final static int PERIODS = 10;
+
     public HAE() {
         this(EMA_LONG, EMA_SHORT);
     }
@@ -22,7 +27,7 @@ public class HAE extends Strategy {
     public HAE(int emaLong, int emaShort) {
 
         //create our indicators
-        this.haObj = new HA();
+        this.haObj = new HA(PERIODS);
         this.emaObj = new EMA(emaLong, emaShort);
     }
 

@@ -22,7 +22,16 @@ public class HA extends Strategy {
      */
     private static final int PERIODS = 10;
 
+    private final int periods;
+
     public HA() {
+        this(PERIODS);
+    }
+
+    public HA(int periods) {
+
+        //save the periods
+        this.periods = periods;
 
         //create new list
         this.haPeriods = new ArrayList<>();
@@ -51,7 +60,7 @@ public class HA extends Strategy {
 
         String desc = "";
 
-        for (int i = getHaPeriods().size() - PERIODS; i < getHaPeriods().size(); i++) {
+        for (int i = getHaPeriods().size() - periods; i < getHaPeriods().size(); i++) {
 
             if (desc.length() > 0)
                 desc = desc + ", ";
@@ -73,7 +82,7 @@ public class HA extends Strategy {
         getHaPeriods().clear();
 
         //check the latest periods only for accurate results
-        for (int i = history.size() - PERIODS; i < history.size(); i++) {
+        for (int i = history.size() - periods; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);

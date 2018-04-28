@@ -53,8 +53,10 @@ public class AgentHelper {
      */
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
-    //how many times do we check to see if the limit order is successful
-    public static final int FAILURE_LIMIT = 5;
+    /**
+     * How many times do we check to see if the limit order is filled before cancelling
+     */
+    public static int FAILURE_LIMIT = 5;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
