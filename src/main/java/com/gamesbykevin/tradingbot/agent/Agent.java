@@ -40,9 +40,6 @@ public class Agent implements IAgent {
     //do we stop trading
     private boolean stopTrading = false;
 
-    //number of attempts we try to verify the order
-    private int attempts = 0;
-
     //the reason why we are selling
     private ReasonSell reason;
 
@@ -73,6 +70,9 @@ public class Agent implements IAgent {
 
     //what duration are we trading on?
     private final Duration duration;
+
+    //keep track so we know when the history has changed
+    private int historySize = 0;
 
     protected Agent(double funds, String productId, TradingStrategy tradingStrategy, Duration duration) {
 
@@ -137,6 +137,20 @@ public class Agent implements IAgent {
 
         }
 
+        //do we cancel the order
+        boolean cancel = false;
+
+        //if the history changed a new period has passed
+        if (history.size() > historySize) {
+
+            //update the new size
+            historySize = history.size();
+
+            //flag cancel true if an order exists
+            if (getOrder() != null)
+                cancel = true;
+        }
+
         //if we don't have an active order look at the market data
         if (getOrder() == null) {
 
@@ -152,9 +166,6 @@ public class Agent implements IAgent {
                 checkBuy(this, strategy, history, product, currentPrice);
 
             }
-
-            //reset our attempts counter, which is used when we create a limit order
-            setAttempts(0);
 
         } else {
 
@@ -177,7 +188,7 @@ public class Agent implements IAgent {
             //we are waiting
             displayMessage(this, message, true);
 
-            //paper trading will try to treat same as live trading with limit orders
+            //paper trading will try to treat same as live trading with limit/market orders
             if (Main.PAPER_TRADING) {
 
                 //if we are applying fees to paper trades we will treat them as a market order
@@ -191,9 +202,6 @@ public class Agent implements IAgent {
                     //for now the status will be pending
                     status = Status.Pending;
 
-                    //keep track of attempts
-                    setAttempts(getAttempts() + 1);
-
                     //what is the price in the order
                     double orderPrice = Double.parseDouble(order.getPrice());
 
@@ -204,6 +212,12 @@ public class Agent implements IAgent {
                         if (currentPrice > orderPrice)
                             status = Status.Filled;
 
+                    } else if (cancel) {
+
+                        //if we were unsuccessful in our attempts, cancel the order
+                        status = Status.Cancelled;
+                        displayMessage(this, "Cancelling order", true);
+
                     } else {
 
                         //the limit order will fill when the price goes at or below the order price
@@ -211,19 +225,17 @@ public class Agent implements IAgent {
                             status = Status.Filled;
 
                     }
-
-                    //if we were unsuccessful in our attempts, cancel the order
-                    if (status != Status.Filled && getAttempts() >= FAILURE_LIMIT) {
-                        status = Status.Cancelled;
-                        displayMessage(this, "Cancelling order", true);
-                    }
-
                 }
 
             } else {
 
                 //let's check if our order is complete
                 status = updateLimitOrder(this, getOrder().getId());
+
+                //if we have exceeded our waiting limit and the order has not settled we will cancel the order
+                if (cancel && !getOrder().getSettled())
+                    cancelOrder(this, getOrder().getId());
+
             }
 
             //so what do we do now
@@ -353,14 +365,6 @@ public class Agent implements IAgent {
 
     public boolean hasStopTrading() {
         return this.stopTrading;
-    }
-
-    protected void setAttempts(final int attempts) {
-        this.attempts = attempts;
-    }
-
-    protected int getAttempts() {
-        return this.attempts;
     }
 
     public void setReasonSell(final ReasonSell reason) {

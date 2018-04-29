@@ -31,7 +31,7 @@ public class MACD extends Strategy {
     private static final int PERIODS_EMA_LONG = 26;
     private static final int PERIODS_EMA_SHORT = 12;
 
-    private static final int PERIODS_CONFIRM_TREND = 4;
+    private static final int PERIODS_CONFIRM_TREND = 3;
 
     public MACD() {
         this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD, PERIODS_CONFIRM_TREND);
@@ -71,6 +71,7 @@ public class MACD extends Strategy {
         //make sure the histogram crossed above 0
         if (getRecent(getHistogram(), 2) < 0 && getRecent(getHistogram()) > 0) {
 
+            /*
             //did we confirm the uptrend?
             boolean confirm = true;
 
@@ -89,6 +90,9 @@ public class MACD extends Strategy {
             //if we confirmed the trend we will buy
             if (confirm)
                 agent.setBuy(true);
+            */
+
+            agent.setBuy(true);
         }
 
         //display our data

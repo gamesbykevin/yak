@@ -1,7 +1,6 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
-import com.coinbase.exchange.api.entity.NewOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
@@ -13,12 +12,10 @@ import com.gamesbykevin.tradingbot.util.Email;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class AgentHelper {
@@ -54,9 +51,9 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     /**
-     * How many times do we check to see if the limit order is filled before cancelling
+     * How many times do we check to see if the order was created before failing
      */
-    public static int FAILURE_LIMIT = 5;
+    private static final int FAILURE_LIMIT = 5;
 
     //how long do we wait until between creating orders
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
@@ -151,8 +148,8 @@ public class AgentHelper {
             //if there is a reason, display message
             displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
-            //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
+            //create and assign our limit order at the last period closing price
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice < closePrice ? currentPrice : closePrice));
 
             //we want to wait until the next candle period before we check to buy stock again after this sells
             strategy.setWait(true);
@@ -220,11 +217,8 @@ public class AgentHelper {
         if (order == null)
             return Status.Cancelled;
 
-        //keep track of the number of attempts
-        agent.setAttempts(agent.getAttempts() + 1);
-
         //write order status to log
-        displayMessage(agent, "Checking order status: " + order.getStatus() + ", settled: " + order.getSettled() + ", attempt(s): " + agent.getAttempts(), true);
+        displayMessage(agent, "Checking order status: " + order.getStatus() + ", settled: " + order.getSettled(), true);
 
         //if the order was successful, update our local order instance
         if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription()) ||
@@ -234,6 +228,9 @@ public class AgentHelper {
             agent.getOrder().setPrice(order.getPrice());
             agent.getOrder().setSize(order.getSize());
         }
+
+        //is this order settled
+        agent.getOrder().setSettled(order.getSettled());
 
         if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription())) {
 
@@ -256,10 +253,6 @@ public class AgentHelper {
         } else if (order.getStatus().equalsIgnoreCase(Status.Cancelled.getDescription())) {
             return Status.Cancelled;
         }
-
-        //if we have exceeded our waiting limit and the order has not settled we will cancel the order
-        if (agent.getAttempts() >= FAILURE_LIMIT && !order.getSettled())
-            cancelOrder(agent, orderId);
 
         //let's say that we are still pending so we continue to wait until we have confirmation of something
         return Status.Pending;
