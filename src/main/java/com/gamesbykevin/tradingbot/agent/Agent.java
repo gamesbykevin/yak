@@ -212,12 +212,6 @@ public class Agent implements IAgent {
                         if (currentPrice > orderPrice)
                             status = Status.Filled;
 
-                    } else if (cancel) {
-
-                        //if we were unsuccessful in our attempts, cancel the order
-                        status = Status.Cancelled;
-                        displayMessage(this, "Cancelling order", true);
-
                     } else {
 
                         //the limit order will fill when the price goes at or below the order price
@@ -225,6 +219,15 @@ public class Agent implements IAgent {
                             status = Status.Filled;
 
                     }
+
+                    if (cancel) {
+
+                        //if we were unsuccessful in our attempts, cancel the order
+                        status = Status.Cancelled;
+                        displayMessage(this, "Cancelling order", true);
+
+                    }
+
                 }
 
             } else {
