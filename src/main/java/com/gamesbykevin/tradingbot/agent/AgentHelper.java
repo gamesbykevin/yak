@@ -114,7 +114,7 @@ public class AgentHelper {
         strategy.checkSellSignal(agent, history, currentPrice);
 
         //get the latest closing price
-        double closePrice = history.get(history.size() - 1).close;
+        final double closePrice = history.get(history.size() - 1).close;
 
         //if the current stock price is less than what we paid, we don't want to sell because we would lose $
         //if (currentPrice < agent.getWallet().getPurchasePrice())
@@ -149,7 +149,7 @@ public class AgentHelper {
             displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
             //create and assign our limit order at the last period closing price
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice < closePrice ? currentPrice : closePrice));
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice > closePrice ? currentPrice : closePrice));
 
             //we want to wait until the next candle period before we check to buy stock again after this sells
             strategy.setWait(true);
@@ -180,6 +180,9 @@ public class AgentHelper {
         //reset our hard stop until we actually buy
         agent.setHardStopPrice(0);
 
+        //get the latest closing price
+        final double closePrice = history.get(history.size() - 1).close;
+
         //if the strategy does not need to wait for new candle data, check for a buy signal
         if (!strategy.hasWait())
             strategy.checkBuySignal(agent, history, currentPrice);
@@ -199,7 +202,7 @@ public class AgentHelper {
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStopPrice(), true);
 
             //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
+            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice < closePrice ? currentPrice : closePrice));
 
         } else {
 
