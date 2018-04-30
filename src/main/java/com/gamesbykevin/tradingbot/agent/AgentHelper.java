@@ -287,7 +287,7 @@ public class AgentHelper {
         BigDecimal price = new BigDecimal(currentPrice);
 
         //what is the quantity that we are buying/selling
-        final double quantity;
+        final float size;
 
         //create a penny in case we need to alter the current price
         BigDecimal penny;
@@ -307,7 +307,7 @@ public class AgentHelper {
                 price = price.subtract(penny);
 
                 //see how much we can buy
-                quantity = (agent.getWallet().getFunds() / currentPrice);
+                size = (float)(agent.getWallet().getFunds() / currentPrice);
                 break;
 
             case Sell:
@@ -316,7 +316,7 @@ public class AgentHelper {
                 price = price.add(penny);
 
                 //sell all the quantity we have
-                quantity = agent.getWallet().getQuantity();
+                size = agent.getWallet().getQuantity();
                 break;
 
             default:
@@ -327,13 +327,13 @@ public class AgentHelper {
         price = round(ROUND_DECIMALS_PRICE, price);
 
         //the quantity we want to purchase
-        BigDecimal size = round(ROUND_DECIMALS_QUANTITY, quantity);
+        BigDecimal quantity = round(ROUND_DECIMALS_QUANTITY, size);
 
         //make sure we have enough quantity to buy or else we can't continue
-        if (size.doubleValue() < product.getBase_min_size()) {
+        if (quantity.floatValue() < product.getBase_min_size()) {
 
             //create our message
-            final String message = "Not enough quantity: " + size.doubleValue() + ", min: " + product.getBase_min_size();
+            final String message = "Not enough quantity: " + quantity.floatValue() + ", min: " + product.getBase_min_size();
 
             //write message to log file
             displayMessage(agent, message, true);
@@ -364,13 +364,13 @@ public class AgentHelper {
         newOrder.setPrice(price);
 
         //our quantity
-        newOrder.setSize(size);
+        newOrder.setSize(quantity);
 
         //set to post only to avoid fees
         newOrder.setPost_only(true);
 
         //write order details to log
-        displayMessage(agent, "Creating order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + size.doubleValue(), true);
+        displayMessage(agent, "Creating order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + quantity.floatValue(), true);
 
         //our order object
         Order order = null;
@@ -383,14 +383,14 @@ public class AgentHelper {
             //if we are paper trading populate the order object ourselves
             order = new Order();
             order.setPrice(price.toString());
-            order.setSize(size.toString());
-            order.setFilled_size(size.toString());
+            order.setSize(quantity.toString());
+            order.setFilled_size(quantity.toString());
 
             //are we applying fees to this order
             if (PAPER_TRADING_FEES) {
 
                 //fees are 0.25% of the total dollar amount you are investing
-                double fee = (price.doubleValue() * size.doubleValue()) * FEE_RATE;
+                double fee = (price.doubleValue() * quantity.floatValue()) * FEE_RATE;
                 order.setFill_fees(fee + "");
 
             } else {
@@ -499,6 +499,10 @@ public class AgentHelper {
 
     public static BigDecimal round(double number) {
         return round(ROUND_DECIMALS_QUANTITY, number);
+    }
+
+    public static BigDecimal round(int decimals, float number) {
+        return round(decimals, BigDecimal.valueOf(number));
     }
 
     public static BigDecimal round(int decimals, double number) {

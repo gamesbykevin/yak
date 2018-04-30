@@ -6,7 +6,7 @@ public class Wallet {
     private double funds = 0;
 
     //quantity of stock we bought
-    private double quantity = 0;
+    private float quantity = 0;
 
     //the price we bought the stock
     private double purchasePrice = 0;
@@ -40,11 +40,11 @@ public class Wallet {
         return this.funds;
     }
 
-    public void setQuantity(double quantity) {
+    public void setQuantity(float quantity) {
         this.quantity = quantity;
     }
 
-    public double getQuantity() {
+    public float getQuantity() {
         return this.quantity;
     }
 

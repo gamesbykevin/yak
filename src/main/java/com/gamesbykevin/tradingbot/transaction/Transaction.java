@@ -147,13 +147,13 @@ public class Transaction {
             agent.getWallet().setPurchasePrice(price.doubleValue());
 
             //update our available funds based on our purchase
-            agent.getWallet().setFunds(agent.getWallet().getFunds() - (price.doubleValue() * quantity.doubleValue()));
+            agent.getWallet().setFunds(agent.getWallet().getFunds() - (price.doubleValue() * quantity.floatValue()));
 
             //subtract our purchase fees
             agent.getWallet().setFunds(agent.getWallet().getFunds() - getFeeBuy());
 
             //add the quantity to our wallet
-            agent.getWallet().setQuantity(agent.getWallet().getQuantity() + quantity.doubleValue());
+            agent.getWallet().setQuantity(agent.getWallet().getQuantity() + quantity.floatValue());
 
             //setup our notification message
             subject = "Purchase " + product.getId();
@@ -179,19 +179,19 @@ public class Transaction {
             setReasonSell(agent.getReasonSell());
 
             //if our sell order has been filled, update our wallet with our new funds
-            agent.getWallet().setFunds(agent.getWallet().getFunds() + (price.doubleValue() * quantity.doubleValue()));
+            agent.getWallet().setFunds(agent.getWallet().getFunds() + (price.doubleValue() * quantity.floatValue()));
 
             //subtract our selling fees
             agent.getWallet().setFunds(agent.getWallet().getFunds() - getFeeSell());
 
             //update the quantity as well
-            agent.getWallet().setQuantity(agent.getWallet().getQuantity() - quantity.doubleValue());
+            agent.getWallet().setQuantity(agent.getWallet().getQuantity() - quantity.floatValue());
 
             //figure out the total price we bought the stock for
-            final double bought = (agent.getWallet().getPurchasePrice() * quantity.doubleValue());
+            final double bought = (agent.getWallet().getPurchasePrice() * quantity.floatValue());
 
             //figure out the total price we sold the stock for
-            final double sold = (price.doubleValue() * quantity.doubleValue());
+            final double sold = (price.doubleValue() * quantity.floatValue());
 
             //what is the total amount of fees paid
             final double totalFees = getFeeBuy() + getFeeSell();
@@ -281,7 +281,7 @@ public class Transaction {
     private String getDurationSummaryDesc(final long duration) {
 
         //display the time it took to sell the stock
-        return "Duration of the order from buy to sell: " + getDurationDesc(duration);
+        return "Duration of the order from buy to sell (HH:MM:SS): " + getDurationDesc(duration);
     }
 
     public static String getDurationDesc(final long duration) {
