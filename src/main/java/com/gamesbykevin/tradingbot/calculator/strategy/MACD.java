@@ -2,16 +2,13 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateEmaList;
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
 public class MACD extends Strategy {
 
@@ -74,36 +71,6 @@ public class MACD extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //find the latest crossover
-        for (int i = getHistogram().size() - 1; i >= 0; i--) {
-
-            //if the current is greater than 0 and the previous is below we have found the crossover
-            if (getHistogram().get(i) > 0 && getHistogram().get(i - 1) < 0) {
-                setX2(i);
-                break;
-            }
-        }
-
-        //find the crossover before the latest
-        for (int i = getX2() - 1; i >= 0; i--) {
-
-            //if the current is greater than 0 and the previous is below we have found the crossover
-            if (getHistogram().get(i) > 0 && getHistogram().get(i - 1) < 0) {
-                setX1(i);
-                break;
-            }
-        }
-
-        //we are checking the close price for slope
-        final double y1 = history.get(getX1()).close;
-        final double y2 = history.get(getX2()).close;
-
-        //the slope between the 2 recent crossovers will be our support line
-        setSlope( (float)(y2 - y1) / (float)(getX2() - getX1()) );
-
-        //our value when x = 0
-        final double yIntercept = history.get(getX1()).close;
-
         //macd line crosses above signal line and both values are below 0
         final boolean crossBelow = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) < 0 && getRecent(getSignalLine()) < 0);
 
@@ -113,22 +80,26 @@ public class MACD extends Strategy {
         //ensure previous 2 histogram values are increasing
         final boolean increase = getRecent(getHistogram(), 1) > getRecent(getHistogram(), 2) && getRecent(getHistogram(), 2) >  getRecent(getHistogram(), 3);
 
+        //based on our slope that is the support line for closing price
+        final double slopePrice = getSlopePrice(history);
+
         //get the latest period
         final Period period = history.get(history.size() - 1);
 
-        //based on our slope that is the support line for closing price
-        final double slopePrice = (getSlope() * (getHistogram().size() - x1)) + yIntercept;
-
         //here are our buy signals
         if (getSlope() > 0) {
+
             if (increase && crossBelow && period.close > period.open) {
                 agent.setBuy(true);
+                displayMessage(agent, "increase && crossBelow && period.close > period.open", true);
             } else if (increase && crossAbove && period.close > period.open && period.close >= slopePrice) {
                 agent.setBuy(true);
+                displayMessage(agent, "increase && crossAbove && period.close > period.open && period.close >= slopePrice && getSlope() > 0", true);
             }
         }
 
         //display our data
+        displayMessage(agent, "x1 = " + getX1() + ", x2 = " + getX2() + ", y1 $" + history.get(getX1()).close + ", y2 $" + history.get(getX2()).close, agent.hasBuy());
         displayMessage(agent,"Period Close $" + period.close + ", Slope $" + slopePrice, agent.hasBuy());
         displayData(agent, agent.hasBuy());
     }
@@ -137,19 +108,20 @@ public class MACD extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the latest period
-        Period period = history.get(history.size() - 1);
+        Period periodCurrent = history.get(history.size() - 1);
+        Period periodPrevious = history.get(history.size() - 2);
 
-        //our value when x = 0
-        final double yIntercept = history.get(getX1()).close;
+        //ensure previous 2 histogram values are decreasing
+        final boolean decrease = (getRecent(getHistogram(), 1) < getRecent(getHistogram(), 2)) &&
+                                (getRecent(getHistogram(), 2) <  getRecent(getHistogram(), 3)) &&
+                                (getRecent(getHistogram(), 3) < 0);
 
-        //based on our slope that is the support line for closing price
-        final double slopePrice = (getSlope() * (getHistogram().size() - getX1())) + yIntercept;
-
-        //if macd goes below the signal line and our close is below the slope price it is time to sell
-        if (getRecent(getHistogram()) < 0 && period.close < slopePrice)
+        //when we confirm our histogram is decreasing and our current close is less than the previous
+        if (decrease && periodCurrent.close < periodPrevious.close)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
+        displayMessage(agent,"Period Close $" + periodCurrent.close + ", Slope $" + getSlopePrice(history), agent.hasBuy());
         displayData(agent, agent.getReasonSell() != null);
     }
 
@@ -180,6 +152,9 @@ public class MACD extends Strategy {
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
+
+        //calculate the slope
+        calculateSlope(history);
     }
 
     protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {
@@ -210,6 +185,43 @@ public class MACD extends Strategy {
         }
     }
 
+    private void calculateSlope(List<Period> history) {
+
+        //did we find the 2 latest crossovers
+        boolean foundLatest = false, foundPrevious = false;
+
+        //we need the difference so we are checking the correct historical periods
+        int difference = history.size() - getHistogram().size();
+
+        //find the latest crossover
+        for (int index = getHistogram().size() - 1; index >= 0; index--) {
+
+            //if the current is greater than 0 and the previous is below we have found the crossover
+            if (getHistogram().get(index) > 0 && getHistogram().get(index - 1) < 0) {
+
+                if (!foundLatest) {
+                    setX2(difference + index);
+                    foundLatest = true;
+                } else {
+                    setX1(difference + index);
+                    foundPrevious = true;
+                    break;
+                }
+            }
+        }
+
+        //this should never happen
+        if (!foundLatest || !foundPrevious)
+            throw new RuntimeException("Unable to locate latest crossover. foundLatest=" + foundLatest + ", foundPrevious=" + foundPrevious);
+
+        //we are checking the close price for slope
+        final double y1 = history.get(getX1()).close;
+        final double y2 = history.get(getX2()).close;
+
+        //the slope between the 2 recent crossovers will be our support line
+        setSlope((float)(y2 - y1) / (float)(getX2() - getX1()));
+    }
+
     public float getSlope() {
         return this.slope;
     }
@@ -232,5 +244,14 @@ public class MACD extends Strategy {
 
     public void setX2(int x2) {
         this.x2 = x2;
+    }
+
+    private double getSlopePrice(List<Period> history) {
+
+        //we assume x1 is where x = 0
+        final double yIntercept = history.get(getX1()).close;
+
+        //the slope price given how many periods have elapsed since the x1 crossover
+        return (getSlope() * (history.size() - getX1())) + yIntercept;
     }
 }

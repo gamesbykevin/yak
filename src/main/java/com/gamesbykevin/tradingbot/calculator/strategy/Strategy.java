@@ -30,7 +30,7 @@ public abstract class Strategy {
 
     public abstract void calculate(List<Period> history);
 
-    protected abstract void displayData(Agent agent, boolean write);
+    public abstract void displayData(Agent agent, boolean write);
 
     public static void display(Agent agent, String desc, List<Double> list, boolean write) {
 

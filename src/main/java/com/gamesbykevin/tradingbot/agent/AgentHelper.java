@@ -126,6 +126,9 @@ public class AgentHelper {
             //reason for selling is that we hit our hard stop
             agent.setReasonSell(ReasonSell.Reason_HardStop);
 
+            //display our data for reference
+            strategy.displayData(agent, true);
+
         } else {
 
             //what is the increase we check to see if we set a new hard stop amount
