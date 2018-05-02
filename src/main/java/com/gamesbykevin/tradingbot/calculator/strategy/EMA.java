@@ -95,7 +95,7 @@ public class EMA extends Strategy {
     }
 
     @Override
-    protected void displayData(Agent agent, boolean write) {
+    public void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
         display(agent, "EMA Short: ", getEmaShort(), write);

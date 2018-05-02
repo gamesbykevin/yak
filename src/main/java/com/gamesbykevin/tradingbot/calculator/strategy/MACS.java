@@ -67,7 +67,7 @@ public class MACS extends Strategy {
     }
 
     @Override
-    protected void displayData(Agent agent, boolean write) {
+    public void displayData(Agent agent, boolean write) {
 
         //display values
         display(agent, "EMA Fast: ", emaFast, write);

@@ -72,19 +72,19 @@ public class MACD extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //macd line crosses above signal line and both values are below 0
-        final boolean crossBelow = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) < 0 && getRecent(getSignalLine()) < 0);
+        boolean crossBelow = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) < 0 && getRecent(getSignalLine()) < 0);
 
         //macd line crosses above signal line and both values are above 0
-        final boolean crossAbove = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) > 0 && getRecent(getSignalLine()) > 0);
+        boolean crossAbove = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) > 0 && getRecent(getSignalLine()) > 0);
 
         //ensure previous 2 histogram values are increasing
-        final boolean increase = getRecent(getHistogram(), 1) > getRecent(getHistogram(), 2) && getRecent(getHistogram(), 2) >  getRecent(getHistogram(), 3);
+        boolean increase = getRecent(getHistogram(), 1) > getRecent(getHistogram(), 2) && getRecent(getHistogram(), 2) >  getRecent(getHistogram(), 3);
 
         //based on our slope that is the support line for closing price
-        final double slopePrice = getSlopePrice(history);
+        double slopePrice = getSlopePrice(history);
 
         //get the latest period
-        final Period period = history.get(history.size() - 1);
+        Period period = history.get(history.size() - 1);
 
         //here are our buy signals
         if (getSlope() > 0) {
@@ -111,14 +111,23 @@ public class MACD extends Strategy {
         Period periodCurrent = history.get(history.size() - 1);
         Period periodPrevious = history.get(history.size() - 2);
 
+        //get the current slope price
+        double slopePrice = getSlopePrice(history);
+
         //ensure previous 2 histogram values are decreasing
         final boolean decrease = (getRecent(getHistogram(), 1) < getRecent(getHistogram(), 2)) &&
                                 (getRecent(getHistogram(), 2) <  getRecent(getHistogram(), 3)) &&
                                 (getRecent(getHistogram(), 3) < 0);
 
         //when we confirm our histogram is decreasing and our current close is less than the previous
-        if (decrease && periodCurrent.close < periodPrevious.close)
+        if (decrease && periodCurrent.close < slopePrice)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        /*
+        //if the histogram is less than 0 and the current close price is below the slope price
+        if (getRecent(getHistogram()) < 0 && periodCurrent.close <= slopePrice)
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        */
 
         //display our data
         displayMessage(agent,"Period Close $" + periodCurrent.close + ", Slope $" + getSlopePrice(history), agent.hasBuy());
@@ -219,7 +228,7 @@ public class MACD extends Strategy {
         final double y2 = history.get(getX2()).close;
 
         //the slope between the 2 recent crossovers will be our support line
-        setSlope((float)(y2 - y1) / (float)(getX2() - getX1()));
+        setSlope(SL.getSlope(getX1(), getX2(), y1, y2));
     }
 
     public float getSlope() {

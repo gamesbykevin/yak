@@ -88,7 +88,7 @@ public class MARS extends Strategy {
     }
 
     @Override
-    protected void displayData(Agent agent, boolean write) {
+    public void displayData(Agent agent, boolean write) {
 
         //display values
         for (int i = 0; i < emas.size(); i++) {

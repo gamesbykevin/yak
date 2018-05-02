@@ -93,4 +93,5 @@ public abstract class Strategy {
     public void setWait(boolean wait) {
         this.wait = wait;
     }
+
 }

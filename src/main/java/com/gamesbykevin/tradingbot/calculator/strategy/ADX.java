@@ -105,7 +105,7 @@ public class ADX extends Strategy {
     }
 
     @Override
-    protected void displayData(Agent agent, boolean write) {
+    public void displayData(Agent agent, boolean write) {
 
         //display the recent values which we use as a signal
         display(agent, "+DI: ", getDmPlusIndicator(), write);

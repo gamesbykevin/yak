@@ -128,6 +128,10 @@ public class Calculator {
                     strategy = new HAE();
                     break;
 
+                case LR:
+                    strategy = new LR();
+                    break;
+
                 case MACD:
                     strategy = new MACD();
                     break;
