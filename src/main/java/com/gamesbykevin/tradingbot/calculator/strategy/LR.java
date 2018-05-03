@@ -21,16 +21,13 @@ public class LR extends Strategy {
     //how many periods do we calculate slope
     private final int periods;
 
-    //the slope
+    //the slope of our regression line
     private float slope;
 
-    //the slope over a longer period
-    private float slopeLong;
+    //the y-intercept
+    private double yIntercept;
 
-    //the price on the slope line from the most recent period
-    private double slopePrice;
-
-    //the distance from the regression line
+    //the largest distance from the middle regression line
     private double difference;
 
     public LR() {
@@ -41,16 +38,16 @@ public class LR extends Strategy {
         this.periods = periods;
     }
 
+    public int getPeriods() {
+        return this.periods;
+    }
+
     public float getSlope() {
         return this.slope;
     }
 
-    public float getSlopeLong() {
-        return this.slopeLong;
-    }
-
-    public double getSlopePrice() {
-        return this.slopePrice;
+    public double getYintercept() {
+        return this.yIntercept;
     }
 
     public double getDifference() {
@@ -61,14 +58,14 @@ public class LR extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //find our lower regression line
-        final double lower = getSlopePrice() - getDifference();
+        final double lower = calculateY(getPeriods()) - getDifference();
 
         //the slope is in an uptrend and the price touched the lower regression line
-        if (getSlopeLong() > 0 && history.get(history.size() - 1).close <= lower)
+        if (getSlope() > 0 && history.get(history.size() - 1).close <= lower)
             agent.setBuy(true);
 
         //display our info
-        displayMessage(agent, "Close  $" + history.get(history.size() - 1).close, agent.hasBuy());
+        displayMessage(agent, "Close $ " + history.get(history.size() - 1).close, agent.hasBuy());
         displayData(agent, agent.hasBuy());
     }
 
@@ -76,14 +73,14 @@ public class LR extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //find our upper regression line
-        final double upper = getSlopePrice() + getDifference();
+        final double upper = calculateY(getPeriods()) + getDifference();
 
         //the slope is in a downtrend and the price touched the upper regression line
-        if (getSlopeLong() < 0 && history.get(history.size() - 1).close >= upper)
+        if (getSlope() < 0 && history.get(history.size() - 1).close >= upper)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our info
-        displayMessage(agent, "Close  $" + history.get(history.size() - 1).close, agent.getReasonSell() != null);
+        displayMessage(agent, "Close $ " + history.get(history.size() - 1).close, agent.getReasonSell() != null);
         displayData(agent, agent.getReasonSell() != null);
     }
 
@@ -91,58 +88,73 @@ public class LR extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display info
-        displayMessage(agent, "Slope  $" + getSlopePrice(), write);
-        displayMessage(agent, "Slope  :" + getSlope(), write);
-        displayMessage(agent, "Long SL:" + getSlopeLong(), write);
-        displayMessage(agent, "Diff   : " + getDifference(), write);
-        displayMessage(agent, "Upper  : " + (getSlopePrice() + getDifference()), write);
-        displayMessage(agent, "Lower  : " + (getSlopePrice() - getDifference()), write);
+        displayMessage(agent, "Slope $ " + calculateY(getPeriods()), write);
+        displayMessage(agent, "Upper : " + (calculateY(getPeriods()) + getDifference()), write);
+        displayMessage(agent, "Lower : " + (calculateY(getPeriods()) - getDifference()), write);
+        displayMessage(agent, "Slope : " + getSlope(), write);
+        displayMessage(agent, "yInt  : " + getYintercept(), write);
+        displayMessage(agent, "Diff  : " + getDifference(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
-        //check back a little ways
-        int index1 = history.size() - (periods * 2) - 2;
-        int index2 = history.size() - (periods * 1) - 2;
+        //the number of periods
+        double n = getPeriods();
 
-        //we need this data to get our slope
-        double x1 = index1;
-        double x2 = index2;
-        double y1 = history.get(index1).close;
-        double y2 = history.get(index2).close;
+        //calculate the sum of x, the sum of y, the sum of x squared, the sum of y squared, the sum of x times y
+        double sumX = 0;
+        double sumY = 0;
+        double sumX2 = 0;
+        double sumY2 = 0;
+        double sumXY = 0;
 
-        //calculate slope
-        this.slope = SL.getSlope(x1, x2, y1, y2);
+        //our start and end
+        int start = history.size() - getPeriods();
+        int end = history.size();
 
-        //calculate the slope for a longer period of time
-        this.slopeLong = SL.getSlope(x1, history.size() - 1, y1, history.get(history.size() - 1).close);
+        //loop through our periods to calculate our data
+        for (int index = start; index < end; index++) {
 
-        //what is the largest difference
+            //get our x,y
+            double x = index - start;
+            double y = history.get(index).close;
+
+            //calculate our data
+            sumX += x;
+            sumY += y;
+            sumX2 += (x * x);
+            sumY2 += (y * y);
+            sumXY += (x * y);
+        }
+
+        //now lets calculate our slope
+        this.slope = (float)(((n * sumXY) - (sumX * sumY)) / ((n * sumX2) - (sumX * sumX)));
+
+        //lets get the yIntercept
+        this.yIntercept = ((sumY / n) - (getSlope() * (sumX / n)));
+
+        //what is the largest difference?
         this.difference = 0;
 
         //now check the periods to identify the most of (high / low)
-        for (int i = index1; i <= index2; i++) {
+        for (int index = start; index < end; index++) {
 
             //what is the x coordinate
-            float x = index2 - i;
-            float m = getSlope();
-            double b = y1;
+            float x = index - start;
 
-            //what is the current y-coordinate (aka $)
-            double y = (m * x) + b;
+            //what is the current y-coordinate
+            double y = calculateY(x);
 
             //always check for the larger difference
-            if (history.get(i).high - y > this.difference)
-                this.difference = history.get(i).high - y;
-            if (y - history.get(i).low > this.difference)
-                this.difference = y - history.get(i).low;
+            if (history.get(index).high - y > this.difference)
+                this.difference = history.get(index).high - y;
+            if (y - history.get(index).low > this.difference)
+                this.difference = y - history.get(index).low;
         }
+    }
 
-        //how many periods since the slope started
-        float x = (history.size() - 1 - index1);
-
-        //calculate the slope price of the most recent period
-        this.slopePrice = (getSlope() * x) + y1;
+    private double calculateY(float x) {
+        return (getSlope() * x) + getYintercept();
     }
 }

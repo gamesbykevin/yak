@@ -100,7 +100,8 @@ public class MACD extends Strategy {
 
         //display our data
         displayMessage(agent, "x1 = " + getX1() + ", x2 = " + getX2() + ", y1 $" + history.get(getX1()).close + ", y2 $" + history.get(getX2()).close, agent.hasBuy());
-        displayMessage(agent,"Period Close $" + period.close + ", Slope $" + slopePrice, agent.hasBuy());
+        displayMessage(agent,"Close $" + period.close, agent.hasBuy());
+        displayMessage(agent,"Slope $" + getSlopePrice(history), agent.hasBuy());
         displayData(agent, agent.hasBuy());
     }
 
@@ -116,11 +117,11 @@ public class MACD extends Strategy {
 
         //ensure previous 2 histogram values are decreasing
         final boolean decrease = (getRecent(getHistogram(), 1) < getRecent(getHistogram(), 2)) &&
-                                (getRecent(getHistogram(), 2) <  getRecent(getHistogram(), 3)) &&
-                                (getRecent(getHistogram(), 3) < 0);
+                                (getRecent(getHistogram(), 2) < getRecent(getHistogram(), 3)) &&
+                                (getRecent(getHistogram(), 2) <= 0);
 
         //when we confirm our histogram is decreasing and our current close is less than the previous
-        if (decrease && periodCurrent.close < slopePrice)
+        if (decrease && periodCurrent.close <= slopePrice)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         /*
@@ -130,7 +131,8 @@ public class MACD extends Strategy {
         */
 
         //display our data
-        displayMessage(agent,"Period Close $" + periodCurrent.close + ", Slope $" + getSlopePrice(history), agent.hasBuy());
+        displayMessage(agent,"Close $" + periodCurrent.close, agent.hasBuy());
+        displayMessage(agent,"Slope $" + getSlopePrice(history), agent.hasBuy());
         displayData(agent, agent.getReasonSell() != null);
     }
 
@@ -203,7 +205,7 @@ public class MACD extends Strategy {
         int difference = history.size() - getHistogram().size();
 
         //find the latest crossover
-        for (int index = getHistogram().size() - 1; index >= 0; index--) {
+        for (int index = getHistogram().size() - 2; index >= 0; index--) {
 
             //if the current is greater than 0 and the previous is below we have found the crossover
             if (getHistogram().get(index) > 0 && getHistogram().get(index - 1) < 0) {

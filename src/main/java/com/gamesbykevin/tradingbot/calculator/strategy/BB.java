@@ -22,7 +22,7 @@ public class BB extends Strategy {
     //our lists
     private List<Double> middle, upper, lower;
 
-    private static final float MULTIPLIER = 1.9f;
+    private static final float MULTIPLIER = 2.0f;
 
     public BB() {
         this(PERIODS_BB, MULTIPLIER);
