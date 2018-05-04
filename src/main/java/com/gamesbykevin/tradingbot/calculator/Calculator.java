@@ -112,6 +112,10 @@ public class Calculator {
                     strategy = new BBO();
                     break;
 
+                case BBR:
+                    strategy = new BBR();
+                    break;
+
                 case EMA:
                     strategy = new EMA();
                     break;
