@@ -13,30 +13,35 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 public class BB extends Strategy {
 
     //list of configurable values
-    protected static int PERIODS_BB = 10;
+    protected static int PERIODS = 10;
 
-    private final int periodsBB;
+    private final int periods;
 
     private final float multiplier;
 
     //our lists
-    private List<Double> middle, upper, lower;
+    private List<Double> middle, upper, lower, width;
 
     private static final float MULTIPLIER = 2.0f;
 
     public BB() {
-        this(PERIODS_BB, MULTIPLIER);
+        this(PERIODS, MULTIPLIER);
     }
 
-    public BB(int periodsBB, float multiplier) {
+    public BB(int periods, float multiplier) {
 
-        this.periodsBB = periodsBB;
+        this.periods = periods;
         this.multiplier = multiplier;
 
         //create our lists
         this.middle = new ArrayList<>();
         this.upper = new ArrayList<>();
         this.lower = new ArrayList<>();
+        this.width = new ArrayList<>();
+    }
+
+    public int getPeriods() {
+        return this.periods;
     }
 
     public List<Double> getUpper() {
@@ -49,6 +54,10 @@ public class BB extends Strategy {
 
     public List<Double> getLower() {
         return this.lower;
+    }
+
+    public List<Double> getWidth() {
+        return this.width;
     }
 
     @Override
@@ -96,9 +105,10 @@ public class BB extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Upper: ", getUpper(), write);
+        display(agent, "Upper:  ", getUpper(), write);
         display(agent, "Middle: ", getMiddle(), write);
-        display(agent, "Lower: ", getLower(), write);
+        display(agent, "Lower:  ", getLower(), write);
+        display(agent, "Width:  ", getWidth(), write);
     }
 
     @Override
@@ -108,9 +118,10 @@ public class BB extends Strategy {
         getMiddle().clear();
         getUpper().clear();
         getLower().clear();
+        getWidth().clear();
 
         //calculate our sma values
-        calculateSMA(history, getMiddle(), periodsBB, Fields.Close);
+        calculateSMA(history, getMiddle(), getPeriods(), Fields.Close);
 
         for (int index = 0; index < getMiddle().size(); index++) {
 
@@ -118,13 +129,22 @@ public class BB extends Strategy {
             double sma = getMiddle().get(index);
 
             //get the standard deviation
-            double standardDeviation = getStandardDeviation(history, sma, index + periodsBB);
+            double standardDeviation = getStandardDeviation(history, sma, index + getPeriods());
+
+            //calculate our upper value
+            double upper = sma + (standardDeviation * multiplier);
+
+            //calculate our lower value
+            double lower = sma - (standardDeviation * multiplier);
 
             //add our upper value
-            getUpper().add(sma + (standardDeviation * multiplier));
+            getUpper().add(upper);
 
             //add our lower value
-            getLower().add(sma - (standardDeviation * multiplier));
+            getLower().add(lower);
+
+            //our width is the difference between the upper and lower
+            getWidth().add(upper - lower);
         }
     }
 
@@ -132,14 +152,14 @@ public class BB extends Strategy {
 
         double sum = 0;
 
-        for (int x = index - periodsBB; x < index; x++) {
+        for (int x = index - getPeriods(); x < index; x++) {
 
             //subtract the simple moving average from the price, then square it, now add it to our total sum
             sum += Math.pow(history.get(x).close - sma, 2);
         }
 
         //calculate the new average
-        double average = sum / (double)periodsBB;
+        double average = sum / (double)getPeriods();
 
         //return the square root of our average aka standard deviation
         return Math.sqrt(average);

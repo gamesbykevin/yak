@@ -41,7 +41,7 @@ public class SR extends Strategy {
     public SR(int periodsLong, int periodsShort, int periodsStochRsi, double overBought, double overSold) {
 
         //create our rsi object
-        this.rsiObj = new RSI(1, PERIODS_STOCH_RSI, 0, 0);
+        this.rsiObj = new RSI(PERIODS_STOCH_RSI);
 
         //create new lists
         this.stochRsi = new ArrayList<>();

@@ -40,7 +40,7 @@ public class BBER extends Strategy {
 
         this.emaObj = new EMA(emaLong, emaShort);
         this.bbObj = new BB(periodsBB, multiplierBB);
-        this.rsiObj = new RSI(1, periodsRSI, 0, 0);
+        this.rsiObj = new RSI(periodsRSI);
     }
 
     @Override

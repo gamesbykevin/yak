@@ -15,63 +15,29 @@ public class RSI extends Strategy {
     //keep a historical list of the rsi so we can check for divergence
     private List<Double> rsiVal;
 
-    //keep an average of the price
-    private List<Double> smaPrice;
-
     //list of configurable values
-    private static final int PERIODS_SMA_PRICE = 50;
-    private static final int PERIODS_RSI = 14;
-    private static final float SUPPORT_LINE = 30.0f;
-    private static final float RESISTANCE_LINE = 70.0f;
+    private static final int PERIODS = 14;
 
-    private final int periodsSMA, periodsRSI;
-    private final float supportLine, resistanceLine;
+    //the number of periods when calculating rsi
+    private final int periods;
 
     public RSI() {
-        this(PERIODS_SMA_PRICE, PERIODS_RSI, SUPPORT_LINE, RESISTANCE_LINE);
+        this(PERIODS);
     }
 
-    public RSI(int periodsSMA, int periodsRSI, float supportLine, float resistanceLine) {
+    public RSI(int periods) {
 
         //create new list(s)
         this.rsiVal = new ArrayList<>();
-        this.smaPrice = new ArrayList<>();
-        this.periodsRSI = periodsRSI;
-        this.periodsSMA = periodsSMA;
-        this.supportLine = supportLine;
-        this.resistanceLine = resistanceLine;
+        this.periods = periods;
     }
 
     public List<Double> getRsiVal() {
         return this.rsiVal;
     }
 
-    public List<Double> getSmaPrice() {
-        return this.smaPrice;
-    }
-
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //get current values
-        double rsiCurrent = getRecent(getRsiVal());
-        double smaCurrent = getRecent(getSmaPrice());
-
-        //get previous values
-        double rsiPrevious = getRecent(getRsiVal(), 2);
-        double smaPrevious = getRecent(getSmaPrice(), 2);
-
-        //first we need to make sure we are below the support line
-        if (rsiCurrent < supportLine) {
-
-            //now we need to check that price is in an overall uptrend
-            if (getRecent(history, Fields.Close) > smaCurrent) {
-
-                //one last thing to check is that we are entering a trend instead of in the middle of one
-                if (rsiPrevious > supportLine || getRecent(history, Fields.Close, 2) < smaPrevious)
-                    agent.setBuy(true);
-            }
-        }
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -79,14 +45,6 @@ public class RSI extends Strategy {
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //first we need to make sure we are above the resistance line
-        if (getRecent(getRsiVal()) > resistanceLine) {
-
-            //now we need to check that price is in an overall downtrend
-            if (getRecent(history, Fields.Close) < getRecent(getSmaPrice()))
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
-        }
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
@@ -97,17 +55,13 @@ public class RSI extends Strategy {
 
         //display the volume
         display(agent, "RSI: ", getRsiVal(), write);
-        display(agent, "SMA: ", getSmaPrice(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate rsi values
-        calculateRsi(history, getRsiVal(), periodsRSI);
-
-        //calculate sma of price
-        calculateSMA(history, getSmaPrice(), periodsSMA, Fields.Close);
+        calculateRsi(history, getRsiVal(), periods);
     }
 
     protected static void calculateRsi(List<Period> history, List<Double> populate, int periods) {
@@ -154,18 +108,18 @@ public class RSI extends Strategy {
         for (int i = startIndex; i < endIndex; i++) {
 
             //get the close prices to compare
-            double previous = history.get(i - 1).close;
-            double next     = history.get(i).close;
+            double prev = history.get(i-1).close;
+            double next = history.get(i).close;
 
-            if (next > previous) {
+            if (next > prev) {
 
                 //here we have a gain
-                gain += (next - previous);
+                gain += (next - prev);
 
             } else {
 
                 //here we have a loss
-                loss += (previous - next);
+                loss += (prev - next);
             }
         }
 
@@ -173,7 +127,7 @@ public class RSI extends Strategy {
         float avgGain = (gain / (float)size);
         float avgLoss = (loss / (float)size);
 
-        //get the latest price in our list so we can compare to the current price
+        //get the previous price in our list so we can compare to the current price
         final double recentPrice = history.get(endIndex - 1).close;
 
         //the recent period will be the current price

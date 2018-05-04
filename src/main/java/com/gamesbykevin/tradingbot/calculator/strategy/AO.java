@@ -16,8 +16,8 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 public class AO extends Strategy {
 
     //period length
-    private static final int PERIODS_SMA_SHORT = 15;
-    private static final int PERIODS_SMA_LONG = 60;
+    private static final int PERIODS_SMA_SHORT = 20;
+    private static final int PERIODS_SMA_LONG = 50;
 
     //list of averages
     private List<Double> smaShortADL, smaShortOBV, smaShortPrice;
@@ -55,10 +55,6 @@ public class AO extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if a indicator is below 0 we won't trade
-        if (getRecent(objADL.getVolume()) < 0 || getRecent(objOBV.getVolume()) < 0)
-            return;
-
         //get recent closing $
         double close = getRecent(history, Fields.Close);
 
@@ -68,18 +64,21 @@ public class AO extends Strategy {
         //get current obv value
         double volumeOBV = getRecent(objOBV.getVolume());
 
-        //if price is below sma's and indicators are above their sma's
-        if (close < getRecent(smaShortPrice) && close < getRecent(smaLongPrice) &&
-                volumeADL > getRecent(smaShortADL) && volumeADL > getRecent(smaLongADL) &&
-                volumeOBV > getRecent(smaShortOBV) && volumeOBV > getRecent(smaLongOBV))
-            agent.setBuy(true);
+        //if a indicator is below 0 we won't trade
+        if (volumeADL < 0 || volumeOBV < 0)
+            return;
 
-        /*
-        //if the price and indicator are both in an uptrend
-        if (hasTrend(history, Fields.Close, periodsSmaShort, true) &&
-            hasTrend(getAccumulationDistributionLine(), periodsSmaShort, true))
-            agent.setBuy(true);
-        */
+        //for bullish divergence the closing price needs to be less than both short and long averages
+        if (close < getRecent(smaShortPrice) && close < getRecent(smaLongPrice)) {
+
+            //we also need our adl to be above the short and long
+            if (volumeADL > getRecent(smaShortADL) && volumeADL > getRecent(smaLongADL)) {
+
+                //finally we also need our obv to be above the short and long
+                if (volumeOBV > getRecent(smaShortOBV) && volumeOBV > getRecent(smaLongOBV))
+                    agent.setBuy(true);
+            }
+        }
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -133,6 +132,5 @@ public class AO extends Strategy {
         //calculate adl sma
         calculateSMA(objADL.getVolume(), smaShortADL, periodsSmaShort);
         calculateSMA(objADL.getVolume(), smaLongADL, periodsSmaLong);
-
     }
 }

@@ -181,7 +181,7 @@ public class Agent implements IAgent {
             //construct message
             String message = "Waiting. Product " + product.getId();
             message += " Current $" + currentPrice;
-            message += ", Purchase $" + round(Double.parseDouble(getOrder().getPrice()));
+            message += ", Purchase $" + round(getWallet().getPurchasePrice());
             message += ", Hard Stop $" + round(getHardStopPrice());
             message += ", Quantity: " + getWallet().getQuantity();
 

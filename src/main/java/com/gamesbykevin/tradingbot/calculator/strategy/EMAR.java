@@ -40,7 +40,7 @@ public class EMAR extends Strategy {
 
         //create our objects
         this.emaObj = new EMA(emaLong, emaShort);
-        this.rsiObj = new RSI(1, periodsRSI, 0, 0);
+        this.rsiObj = new RSI(periodsRSI);
     }
 
     @Override

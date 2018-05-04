@@ -108,6 +108,10 @@ public class Calculator {
                     strategy = new BBER();
                     break;
 
+                case BBO:
+                    strategy = new BBO();
+                    break;
+
                 case EMA:
                     strategy = new EMA();
                     break;
@@ -154,10 +158,6 @@ public class Calculator {
 
                 case PVI:
                     strategy = new PVI();
-                    break;
-
-                case RSI:
-                    strategy = new RSI();
                     break;
 
                 case SO:
