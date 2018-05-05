@@ -8,54 +8,66 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasTrendDownward;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasTrendUpward;
 
-public class BBO extends Strategy {
+public class BBAR extends Strategy {
 
     //list of configurable values
-    protected static int PERIODS = 10;
+    protected static int PERIODS_BB = 10;
+    protected static int PERIODS_RSI = 14;
+
+    //how many periods do we check to confirm trend
+    private static final int PERIOD_TREND = 5;
 
     //multiplier for standard deviation
     private static final float MULTIPLIER = 2.0f;
 
     //what is the bollinger band squeeze ratio
-    private static final float SQUEEZE_RATIO = .04f;
+    private static final float SQUEEZE_RATIO = .040f;
 
     //our bollinger bands object
     private BB objBB;
 
-    //our on balance volume
-    private OBV objOBV;
+    //our relative strength index
+    private RSI objRSI;
 
-    public BBO() {
-        this(PERIODS, MULTIPLIER);
+    //our accumulation distribution line
+    private ADL objADL;
+
+    public BBAR() {
+        this(PERIODS_BB, MULTIPLIER, PERIODS_RSI);
     }
 
-    public BBO(int periods, float multiplier) {
+    public BBAR(int periodsBB, float multiplier, int periodsRSI) {
 
         //create our indicator objects
-        this.objBB = new BB(periods, multiplier);
-        this.objOBV = new OBV();
+        this.objBB = new BB(periodsBB, multiplier);
+        this.objRSI = new RSI(periodsRSI);
+        this.objADL = new ADL();
     }
 
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //what is the price percentage
-        float percentageCurrent = (float)(getRecent(this.objBB.getWidth()) / getRecent(history, Fields.Close));
-        float percentagePrevious = (float)(getRecent(this.objBB.getWidth(), 2) / getRecent(history, Fields.Close, 2));
+        float percentage = (float)(getRecent(this.objBB.getWidth()) / getRecent(history, Fields.Close));
 
-        //the previous and current volume
-        double volumeCurrent = getRecent(this.objOBV.getVolume());
-        double volumePrevious = getRecent(this.objOBV.getVolume(), 2);
+        //if the squeeze is on, then let's try to figure out bullish divergence
+        if (percentage <= SQUEEZE_RATIO) {
 
-        //catch when the bb width is narrow and then starts to expand and our volume is increasing
-        if (percentagePrevious <= SQUEEZE_RATIO && percentageCurrent > SQUEEZE_RATIO && volumeCurrent > volumePrevious)
-            agent.setBuy(true);
+            //make sure both indicators are going up
+            if (hasTrendUpward(this.objADL.getVolume(), PERIOD_TREND) &&
+                    hasTrendUpward(this.objRSI.getRsiVal(), PERIOD_TREND)) {
+
+                //check that the price is heading down, then we have a bullish divergence
+                if (hasTrendDownward(history, Fields.Close, PERIOD_TREND))
+                    agent.setBuy(true);
+            }
+        }
 
         //display our data
-        displayMessage(agent, "Curr Volume:" + volumeCurrent, agent.hasBuy());
-        displayMessage(agent, "Prev Volume:" + volumePrevious, agent.hasBuy());
-        displayMessage(agent, "Prev Price %" + percentagePrevious, agent.hasBuy());
-        displayMessage(agent, "Curr Price %" + percentageCurrent, agent.hasBuy());
+        displayMessage(agent, "Ratio %" + SQUEEZE_RATIO, agent.hasBuy());
+        displayMessage(agent, "Price %" + percentage, agent.hasBuy());
         displayData(agent, agent.hasBuy());
     }
 
@@ -93,7 +105,8 @@ public class BBO extends Strategy {
 
         //display our data
         this.objBB.displayData(agent, write);
-        this.objOBV.displayData(agent, write);
+        this.objADL.displayData(agent, write);
+        this.objRSI.displayData(agent, write);
     }
 
     @Override
@@ -101,6 +114,7 @@ public class BBO extends Strategy {
 
         //do our calculations
         this.objBB.calculate(history);
-        this.objOBV.calculate(history);
+        this.objADL.calculate(history);
+        this.objRSI.calculate(history);
     }
 }

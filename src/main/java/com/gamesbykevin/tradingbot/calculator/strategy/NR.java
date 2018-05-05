@@ -8,6 +8,9 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
+/**
+ * Narrow Range
+ */
 public class NR extends Strategy {
 
     //the period with the smallest range

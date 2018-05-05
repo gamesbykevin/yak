@@ -47,7 +47,7 @@ public class AgentManager {
      */
     public enum TradingStrategy {
 
-        ADX, AO, BBER, BBO, BBR,
+        ADX, AO, BBAR, BBER, BBR,
         EMA, EMAR, EMAS, EMV, HAE,
         LR, MACD, MACS, MARS, NR,
         NVI, PVI, SO, SOEMA, SR,

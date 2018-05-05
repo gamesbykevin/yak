@@ -63,6 +63,11 @@ public class AgentHelper {
      */
     private static final float FEE_RATE = .0025f;
 
+    /**
+     * How many times do we wait for the sell order to fill before we cancel
+     */
+    public static int SELL_ATTEMPT_LIMIT = 10;
+
     public enum Action {
 
         Buy("buy"),
@@ -145,14 +150,20 @@ public class AgentHelper {
             }
         }
 
-        //if there is a reason then we will sell
+        //if there is a reason to sell then we will sell
         if (agent.getReasonSell() != null) {
 
             //if there is a reason, display message
             displayMessage(agent, agent.getReasonSell().getDescription(), true);
 
+            //reset our attempt counter for our sell order
+            agent.setAttempts(0);
+
+            //we need to adjust our sell price to increase the chance of filling
+            //final double sellPrice = currentPrice > closePrice ? currentPrice : closePrice;
+
             //create and assign our limit order at the last period closing price
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice > closePrice ? currentPrice : closePrice));
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
 
             //we want to wait until the next candle period before we check to buy stock again after this sells
             strategy.setWait(true);
@@ -204,8 +215,11 @@ public class AgentHelper {
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStopPrice(), true);
 
+            //the price we want to buy
+            //final double buyPrice = currentPrice < closePrice ? currentPrice : closePrice;
+
             //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice < closePrice ? currentPrice : closePrice));
+            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
 
         } else {
 

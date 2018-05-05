@@ -74,6 +74,9 @@ public class Agent implements IAgent {
     //keep track so we know when the history has changed
     private int historySize = 0;
 
+    //how many times have we checked to see if our sell order is filled
+    private int attempts = 0;
+
     protected Agent(double funds, String productId, TradingStrategy tradingStrategy, Duration duration) {
 
         //assign our duration
@@ -178,15 +181,29 @@ public class Agent implements IAgent {
             //what is the status of our order?
             Status status = null;
 
+            //what is the price of the order
+            final double orderPrice = Double.parseDouble(order.getPrice());
+
             //construct message
             String message = "Waiting. Product " + product.getId();
             message += " Current $" + currentPrice;
-            message += ", Purchase $" + round(getWallet().getPurchasePrice());
+            message += ", Purchase $" + round(orderPrice);
             message += ", Hard Stop $" + round(getHardStopPrice());
             message += ", Quantity: " + getWallet().getQuantity();
 
             //we are waiting
             displayMessage(this, message, true);
+
+            //if we are selling and the sell price is less than the purchase price we will chase the sell
+            if (selling && orderPrice < getWallet().getPurchasePrice()) {
+
+                //if we exceeded our attempts we will cancel the limit order
+                if (getAttempts() >= SELL_ATTEMPT_LIMIT)
+                    cancel = true;
+
+                //keep track of our attempts
+                setAttempts(getAttempts() + 1);
+            }
 
             //paper trading will try to treat same as live trading with limit/market orders
             if (Main.PAPER_TRADING) {
@@ -201,9 +218,6 @@ public class Agent implements IAgent {
 
                     //for now the status will be pending
                     status = Status.Pending;
-
-                    //what is the price in the order
-                    double orderPrice = Double.parseDouble(order.getPrice());
 
                     //the limit orders work different if buying or selling
                     if (selling) {
@@ -220,7 +234,8 @@ public class Agent implements IAgent {
 
                     }
 
-                    if (cancel) {
+                    //if the order hasn't been filled and we want to cancel
+                    if (cancel && status != Status.Filled) {
 
                         //if we were unsuccessful in our attempts, cancel the order
                         status = Status.Cancelled;
@@ -505,5 +520,13 @@ public class Agent implements IAgent {
 
     public Duration getDuration() {
         return this.duration;
+    }
+
+    public int getAttempts() {
+        return this.attempts;
+    }
+
+    public void setAttempts(int attempts) {
+        this.attempts = attempts;
     }
 }

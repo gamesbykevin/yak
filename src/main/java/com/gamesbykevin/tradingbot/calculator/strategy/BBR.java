@@ -19,7 +19,7 @@ public class BBR extends Strategy {
     private static final float MULTIPLIER = 2.0f;
 
     //what is the bollinger band squeeze ratio
-    private static final float SQUEEZE_RATIO = .04f;
+    private static final float SQUEEZE_RATIO = .040f;
 
     //our rsi signal values
     private static final float RSI_TREND = 50.0f;
@@ -55,18 +55,9 @@ public class BBR extends Strategy {
         //first make sure the rsi value is above the trend
         if (getRecent(this.objRSI.getRsiVal()) >= RSI_TREND) {
 
-            /**
-             * Catch when the bb width is narrow and then starts to expand and
-             * our close price went above the upper band
-             */
-            if (percentagePrevious <= SQUEEZE_RATIO && percentageCurrent > SQUEEZE_RATIO && close > getRecent(this.objBB.getUpper())
-                    ||
-                percentageCurrent <= SQUEEZE_RATIO && close > getRecent(this.objBB.getUpper())) {
-
-                //we can buy now
+            //if the price is narrow and the close is above our upper band
+            if (percentageCurrent <= SQUEEZE_RATIO && close > getRecent(this.objBB.getUpper()))
                 agent.setBuy(true);
-
-            }
         }
 
         //display our data

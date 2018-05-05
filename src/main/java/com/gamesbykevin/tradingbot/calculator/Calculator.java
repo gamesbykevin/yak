@@ -104,12 +104,12 @@ public class Calculator {
                     strategy = new AO();
                     break;
 
-                case BBER:
-                    strategy = new BBER();
+                case BBAR:
+                    strategy = new BBAR();
                     break;
 
-                case BBO:
-                    strategy = new BBO();
+                case BBER:
+                    strategy = new BBER();
                     break;
 
                 case BBR:

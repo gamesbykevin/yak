@@ -132,6 +132,9 @@ public class PropertyUtil {
         //do we send a notification for every transaction?
         AgentHelper.NOTIFICATION_EVERY_TRANSACTION = Boolean.parseBoolean(getProperties().getProperty("notificationEveryTransaction"));
 
+        //how many attempts do we sell before we cancel
+        AgentHelper.SELL_ATTEMPT_LIMIT = Integer.parseInt(getProperties().getProperty("sellAttemptLimit"));
+
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 
