@@ -24,7 +24,6 @@ public class BBR extends Strategy {
     //our rsi signal values
     private static final float RSI_TREND = 50.0f;
     private static final float RSI_OVERBOUGHT = 70.0f;
-    private static final float RSI_OVERSOLD = 30.0f;
 
     //our bollinger bands object
     private BB objBB;
@@ -46,44 +45,66 @@ public class BBR extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //what is the price percentage
-        float percentageCurrent = (float)(getRecent(this.objBB.getWidth()) / getRecent(history, Fields.Close));
-        float percentagePrevious = (float)(getRecent(this.objBB.getWidth(), 2) / getRecent(history, Fields.Close, 2));
+        float percentage = (float)(getRecent(objBB.getWidth()) / getRecent(history, Fields.Close));
 
         //current closing price
-        double close = getRecent(history, Fields.Close);
+        final double close = getRecent(history, Fields.Close);
+
+        //current rsi value
+        final double rsi = getRecent(objRSI.getRsiVal());
+
+        //current upper band
+        final double upper = getRecent(objBB.getUpper());
 
         //first make sure the rsi value is above the trend
-        if (getRecent(this.objRSI.getRsiVal()) >= RSI_TREND) {
+        if (rsi >= RSI_TREND) {
 
             //if the price is narrow and the close is above our upper band
-            if (percentageCurrent <= SQUEEZE_RATIO && close > getRecent(this.objBB.getUpper()))
+            if (percentage <= SQUEEZE_RATIO && close > upper)
                 agent.setBuy(true);
         }
 
         //display our data
-        displayMessage(agent, "RSI Value  :" + getRecent(this.objRSI.getRsiVal()), agent.hasBuy());
-        displayMessage(agent, "Curr Close $" + close, agent.hasBuy());
-        displayMessage(agent, "Curr Upper :" + getRecent(this.objBB.getUpper()), agent.hasBuy());
-        displayMessage(agent, "Prev Price %" + percentagePrevious, agent.hasBuy());
-        displayMessage(agent, "Curr Price %" + percentageCurrent, agent.hasBuy());
+        displayMessage(agent, "RSI   :" + rsi, agent.hasBuy());
+        displayMessage(agent, "Close $" + close, agent.hasBuy());
+        displayMessage(agent, "Upper :" + upper, agent.hasBuy());
+        displayMessage(agent, "Price %" + percentage, agent.hasBuy());
         displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
+        //indicator values
+        double rsi = getRecent(objRSI.getRsiVal());
+        double middleCurr = getRecent(objBB.getMiddle());
+        double middlePrev = getRecent(objBB.getMiddle(), 2);
+        double close = getRecent(history, Fields.Close);
+
         //if the rsi is overbought ....
-        if (getRecent(this.objRSI.getRsiVal()) >= RSI_OVERBOUGHT) {
+        if (rsi >= RSI_OVERBOUGHT) {
 
             //if the middle band is not up-trending compared to previous we can exit our trade now
-            if (getRecent(this.objBB.getMiddle(), 2) > getRecent(this.objBB.getMiddle()))
+            if (middlePrev > middleCurr)
+                agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //add the increase
+            double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio()) * .5f;
+
+            //if we are in overbought territory set our hard stop now to protect our profit
+            agent.adjustHardStopPrice(currentPrice + increase);
+        } else if (rsi < RSI_TREND) {
+
+            //if the rsi is going towards oversold territory, let's see if the close drops below our middle band
+            if (close < middleCurr)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //display our data
-        displayMessage(agent, "Curr Mid Val :" + getRecent(this.objBB.getMiddle()), agent.hasBuy());
-        displayMessage(agent, "Prev Mid Val :" + getRecent(this.objBB.getMiddle(), 2), agent.hasBuy());
-        displayMessage(agent, "RSI Value    :" + getRecent(this.objRSI.getRsiVal()), agent.hasBuy());
+        displayMessage(agent, "Close    $" + close, agent.getReasonSell() != null);
+        displayMessage(agent, "Curr Mid :" + middleCurr, agent.getReasonSell() != null);
+        displayMessage(agent, "Prev Mid :" + middlePrev, agent.getReasonSell() != null);
+        displayMessage(agent, "RSI Val  :" + rsi, agent.getReasonSell() != null);
         displayData(agent, agent.getReasonSell() != null);
     }
 

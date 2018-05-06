@@ -11,6 +11,9 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
+/**
+ * Exponential moving average
+ */
 public class EMA extends Strategy {
 
     //list of ema values for our long period
@@ -53,19 +56,13 @@ public class EMA extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double previousEmaShort = getRecent(getEmaShort(), 2);
-        double previousEmaLong = getRecent(getEmaLong(), 2);
-        double currentEmaShort = getRecent(getEmaShort());
-        double currentEmaLong = getRecent(getEmaLong());
+        double prevEmaS = getRecent(getEmaShort(), 2);
+        double prevEmaL = getRecent(getEmaLong(), 2);
+        double currEmaS = getRecent(getEmaShort());
+        double currEmaL = getRecent(getEmaLong());
 
-        double previous = getRecent(history, Fields.Close, 2);
-        double previousSma = getRecent(getEmaShort(), 2);
-        double current = getRecent(history, Fields.Close);
-        double currentSma = getRecent(getEmaShort());
-
-        if (previousEmaShort < previousEmaLong && currentEmaShort > currentEmaLong && current > currentSma)
-            agent.setBuy(true);
-        if (currentEmaShort > currentEmaLong && previous < previousSma && current > currentSma)
+        //if the short ema crossed above the long ema we will buy
+        if (prevEmaS < prevEmaL && currEmaS > currEmaL)
             agent.setBuy(true);
 
         //display data
@@ -75,19 +72,12 @@ public class EMA extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double previousEmaShort = getRecent(getEmaShort(), 2);
-        double previousEmaLong = getRecent(getEmaLong(), 2);
-        double currentEmaShort = getRecent(getEmaShort());
-        double currentEmaLong = getRecent(getEmaLong());
+        double emaShort = getRecent(getEmaShort());
+        double emaLong = getRecent(getEmaLong());
+        double close =  getRecent(history, Fields.Close);
 
-        double previous = getRecent(history, Fields.Close, 2);
-        double previousSma = getRecent(getEmaShort(), 2);
-        double current = getRecent(history, Fields.Close);
-        double currentSma = getRecent(getEmaShort());
-
-        if (previousEmaShort > previousEmaLong && currentEmaShort < currentEmaLong)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-        if (previous > previousSma && current < currentSma)
+        //if the current candle is below both short and long, let's sell
+        if (close < emaShort && close < emaLong)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display data
@@ -98,8 +88,8 @@ public class EMA extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short: ", getEmaShort(), write);
-        display(agent, "EMA Long: ", getEmaLong(), write);
+        display(agent, "EMA Short :", getEmaShort(), write);
+        display(agent, "EMA Long  :", getEmaLong(), write);
     }
 
     @Override

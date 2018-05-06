@@ -128,10 +128,6 @@ public class Calculator {
                     strategy = new EMAS();
                     break;
 
-                case EMV:
-                    strategy = new EMV();
-                    break;
-
                 case HAE:
                     strategy = new HAE();
                     break;
@@ -152,6 +148,10 @@ public class Calculator {
                     strategy = new MARS();
                     break;
 
+                case MES:
+                    strategy = new MES();
+                    break;
+
                 case NR:
                     strategy = new NR();
                     break;
@@ -162,10 +162,6 @@ public class Calculator {
 
                 case PVI:
                     strategy = new PVI();
-                    break;
-
-                case SO:
-                    strategy = new SO();
                     break;
 
                 case SOEMA:

@@ -2,8 +2,10 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
@@ -14,46 +16,48 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
 public class SOEMA extends Strategy {
 
     //our reference object(s)
-    private EMA emaObj;
-    private SO soObj;
+    private SO objSoFast, objSoSlow;
+
+    //our list of ema values
+    private List<Double> ema;
 
     //list of configurable values
-    private static final int PERIODS_EMA_LONG = 2;
-    private static final int PERIODS_EMA_SHORT = 4;
-    private static final int SO_INDICATOR = 50;
-    private static final int PERIODS_SO = 5;
-    private static final int PERIODS_SMA_SO = 3;
+    private static final int PERIODS_EMA = 20;
+    private static final int PERIODS_SO_SLOW = 21;
+    private static final int PERIODS_SO_SLOW_SMA = 4;
+    private static final int PERIODS_SO_FAST = 5;
+    private static final int PERIODS_SO_FAST_SMA = 2;
+    private static final double OVER_SOLD = 20.0d;
+    private static final double OVER_BOUGHT = 80.0d;
 
-    private final int soIndicator;
+    //how many periods do we calculate ema
+    private final int periodsEMA;
 
     public SOEMA() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, SO_INDICATOR, PERIODS_SO, PERIODS_SMA_SO);
+        this(PERIODS_EMA, PERIODS_SO_SLOW, PERIODS_SO_SLOW_SMA, PERIODS_SO_FAST, PERIODS_SO_FAST_SMA);
     }
 
-    public SOEMA(int emaLong, int emaShort, int soIndicator, int periodsSO, int periodsSMA) {
+    public SOEMA(int periodsEMA, int periodsSoSlow, int periodsSoSlowSMA, int periodsSoFast, int periodsSoFastSMA) {
 
-        //create new object
-        this.emaObj = new EMA(emaLong, emaShort);
-        this.soObj = new SO(periodsSO, periodsSMA, 1000, 1000);
+        //store our values
+        this.periodsEMA = periodsEMA;
 
-        this.soIndicator = soIndicator;
+        //create new object(s)
+        this.objSoSlow = new SO(periodsSoSlow, periodsSoSlowSMA);
+        this.objSoFast = new SO(periodsSoFast, periodsSoFastSMA);
+        this.ema = new ArrayList<>();
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        double previousSO = getRecent(soObj.getStochasticOscillator(), 2);
-        double currentSO = getRecent(soObj.getStochasticOscillator());
+        //first we check that both indicators are at the extreme opposite of each other
+        if (getRecent(objSoFast.getStochasticOscillator()) <= OVER_SOLD &&
+            getRecent(objSoSlow.getStochasticOscillator()) >= OVER_BOUGHT) {
 
-        if (currentSO < soIndicator && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())) {
-
-            //make sure we are below the indicator and we have a bullish crossover
-            agent.setBuy(true);
-
-        } else if (previousSO > soIndicator && currentSO < soIndicator && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
-
-            //confirm we just crossed below the indicator and the ema short is > ema long
-            agent.setBuy(true);
+            //if the price is above the ema average
+            if (getRecent(history, Fields.Close) > getRecent(ema))
+                agent.setBuy(true);
         }
 
         //display our data
@@ -63,8 +67,8 @@ public class SOEMA extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we are above the indicator and the ema short is below the ema long
-        if (getRecent(soObj.getStochasticOscillator()) > soIndicator && getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong()))
+        //if the price is below the ema average
+        if (getRecent(history, Fields.Close) < getRecent(ema))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
@@ -75,15 +79,17 @@ public class SOEMA extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        this.soObj.displayData(agent, write);
-        this.emaObj.displayData(agent, write);
+        this.objSoSlow.displayData(agent, write);
+        this.objSoFast.displayData(agent, write);
+        display(agent, "EMA :", ema, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //calculate our value(s)
-        this.soObj.calculate(history);
-        this.emaObj.calculate(history);
+        this.objSoSlow.calculate(history);
+        this.objSoFast.calculate(history);
+        EMA.calculateEMA(history, ema, periodsEMA);
     }
 }

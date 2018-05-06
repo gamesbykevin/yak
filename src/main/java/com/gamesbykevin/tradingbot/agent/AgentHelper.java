@@ -136,18 +136,8 @@ public class AgentHelper {
 
         } else {
 
-            //what is the increase we check to see if we set a new hard stop amount
-            double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio());
-
-            //if the price has increased some more, let's set a new hard stop
-            if (closePrice > agent.getHardStopPrice() + increase && closePrice > agent.getWallet().getPurchasePrice() + increase) {
-
-                //set our new hard stop limit slightly below the current stock price
-                agent.setHardStopPrice(closePrice - increase);
-
-                //write hard stop amount to our log file
-                displayMessage(agent, "New hard stop $" + agent.getHardStopPrice(), true);
-            }
+            //since the close price is above the hard stop price, let's see if we can adjust
+            agent.adjustHardStopPrice(closePrice);
         }
 
         //if there is a reason to sell then we will sell

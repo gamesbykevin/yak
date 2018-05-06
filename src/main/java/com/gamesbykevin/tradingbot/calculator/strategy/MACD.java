@@ -31,23 +31,21 @@ public class MACD extends Strategy {
     private EMA emaObj;
 
     //our list of variations
-    private static final int PERIODS_MACD = 9;
+    private static final int PERIODS_MACD_SIGNAL = 9;
     private static final int PERIODS_EMA_LONG = 26;
     private static final int PERIODS_EMA_SHORT = 12;
-    private static final int PERIODS_CONFIRM_TREND = 3;
 
     public MACD() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD, PERIODS_CONFIRM_TREND);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD_SIGNAL);
     }
 
     //how many periods to calculate our macd line, and how many periods do we confirm the trend
-    private final int periodsMacd, periodsConfirmTrend;
+    private final int periodsMacdSignal;
 
-    public MACD(int emaLong, int emaShort, int periodsMacd, int periodsConfirmTrend) {
+    public MACD(int emaLong, int emaShort, int periodsMacdSignal) {
 
         //store our settings
-        this.periodsMacd = periodsMacd;
-        this.periodsConfirmTrend = periodsConfirmTrend;
+        this.periodsMacdSignal = periodsMacdSignal;
 
         //create lists and objects
         this.macdLine = new ArrayList<>();
@@ -159,7 +157,7 @@ public class MACD extends Strategy {
         calculateMacdLine(this.emaObj.getEmaShort(), this.emaObj.getEmaLong(), getMacdLine());
 
         //then we can calculate our signal line
-        calculateEmaList(getSignalLine(), getMacdLine(), periodsMacd);
+        calculateEmaList(getSignalLine(), getMacdLine(), periodsMacdSignal);
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());

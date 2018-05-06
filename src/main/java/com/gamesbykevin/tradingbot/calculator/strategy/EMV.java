@@ -51,20 +51,12 @@ public class EMV extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if the sma crosses above 0, let's buy
-        if (getRecent(getSmaEmv(), 2) < 0 && getRecent(getSmaEmv()) > 0)
-            agent.setBuy(true);
-
         //display our data
         displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //if the sma crosses below 0, let's sell
-        if (getRecent(getSmaEmv()) < 0)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

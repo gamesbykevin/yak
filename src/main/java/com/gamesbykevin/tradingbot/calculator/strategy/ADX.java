@@ -3,7 +3,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
+import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +12,9 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
 
+/**
+ * Average Directional Index
+ */
 public class ADX extends Strategy {
 
     //list of sma prices
@@ -76,7 +79,7 @@ public class ADX extends Strategy {
             if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
 
                 //if dm plus crosses above dm minus, that is our signal to buy
-                if (hasCrossover(true, getDmPlusIndicator(), getDmMinusIndicator()))
+                if (getRecent(getDmPlusIndicator()) > getRecent(getDmMinusIndicator()))
                     agent.setBuy(true);
             }
         }
@@ -95,8 +98,8 @@ public class ADX extends Strategy {
             if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
 
                 //if the minus has crossed below the plus that is our signal to sell
-                if (hasCrossover(false, getDmPlusIndicator(), getDmMinusIndicator()))
-                    agent.setReasonSell(TransactionHelper.ReasonSell.Reason_Strategy);
+                if (getRecent(getDmPlusIndicator()) < getRecent(getDmMinusIndicator()))
+                    agent.setReasonSell(ReasonSell.Reason_Strategy);
             }
         }
 

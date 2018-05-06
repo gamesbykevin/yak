@@ -361,8 +361,117 @@ public class Agent implements IAgent {
         }
     }
 
+    public void adjustHardStopPrice(double newPrice) {
+
+        //what is the increase we check to see if we set a new hard stop amount
+        double increase = (getWallet().getPurchasePrice() * getHardStopRatio());
+
+        //if the price has increased some more, let's set a new hard stop
+        if (newPrice > getHardStopPrice() + increase && newPrice > getWallet().getPurchasePrice() + increase) {
+
+            //set our new hard stop limit slightly below the current stock price
+            setHardStopPrice(newPrice - increase);
+
+            //write hard stop amount to our log file
+            displayMessage(this, "New hard stop $" + getHardStopPrice(), true);
+        }
+    }
+
     protected double getAssets(double currentPrice) {
         return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
+    }
+
+    public void checkPriceRange(double currentPrice) {
+
+        //what is the lowest and highest price during this trade
+        if (currentPrice < getPriceLow())
+            setPriceLow(currentPrice);
+        if (currentPrice > getPriceHigh())
+            setPriceHigh(currentPrice);
+    }
+
+    public PrintWriter getWriter() {
+
+        if (this.writer == null)
+            this.writer = LogFile.getPrintWriter(getTradingStrategy() + "-" + getDuration().description + "-" + getHardStopRatio() + "-" + getFileDateDesc() + ".log", getDirectory());
+
+        return this.writer;
+    }
+
+    public String getProductId() {
+        return this.productId;
+    }
+
+    public float getHardStopRatio() {
+        return this.hardStopRatio;
+    }
+
+    public void setHardStopRatio(float hardStopRatio) {
+        this.hardStopRatio = hardStopRatio;
+    }
+
+    public int getCountRejectedBuy() {
+        return this.countRejectedBuy;
+    }
+
+    public void setCountRejectedBuy(int countRejectedBuy) {
+        this.countRejectedBuy = countRejectedBuy;
+    }
+
+    public int getCountRejectedSell() {
+        return this.countRejectedSell;
+    }
+
+    public void setCountRejectedSell(int countRejectedSell) {
+        this.countRejectedSell = countRejectedSell;
+    }
+
+    public int getCountCancelBuy() {
+        return this.countCancelBuy;
+    }
+
+    public void setCountCancelBuy(int countCancelBuy) {
+        this.countCancelBuy = countCancelBuy;
+    }
+
+    public int getCountCancelSell() {
+        return this.countCancelSell;
+    }
+
+    public void setCountCancelSell(int countCancelSell) {
+        this.countCancelSell = countCancelSell;
+    }
+
+    public String getDirectory() {
+        return LogFile.getLogDirectory() + "\\" + getProductId() + "\\" + "trades" + "\\";
+    }
+
+    public double getPriceLow() {
+        return this.priceLow;
+    }
+
+    public void setPriceLow(double priceLow) {
+        this.priceLow = priceLow;
+    }
+
+    public double getPriceHigh() {
+        return this.priceHigh;
+    }
+
+    public void setPriceHigh(double priceHigh) {
+        this.priceHigh = priceHigh;
+    }
+
+    public Duration getDuration() {
+        return this.duration;
+    }
+
+    public int getAttempts() {
+        return this.attempts;
+    }
+
+    public void setAttempts(int attempts) {
+        this.attempts = attempts;
     }
 
     public void setOrder(final Order order) {
@@ -435,98 +544,5 @@ public class Agent implements IAgent {
 
     public TradingStrategy getTradingStrategy() {
         return this.tradingStrategy;
-    }
-
-    public String getProductId() {
-        return this.productId;
-    }
-
-    public PrintWriter getWriter() {
-
-        if (this.writer == null)
-            this.writer = LogFile.getPrintWriter(getTradingStrategy() + "-" + getDuration().description + "-" + getHardStopRatio() + "-" + getFileDateDesc() + ".log", getDirectory());
-
-        return this.writer;
-    }
-
-    public float getHardStopRatio() {
-        return this.hardStopRatio;
-    }
-
-    public void setHardStopRatio(float hardStopRatio) {
-        this.hardStopRatio = hardStopRatio;
-    }
-
-    public int getCountRejectedBuy() {
-        return this.countRejectedBuy;
-    }
-
-    public void setCountRejectedBuy(int countRejectedBuy) {
-        this.countRejectedBuy = countRejectedBuy;
-    }
-
-    public int getCountRejectedSell() {
-        return this.countRejectedSell;
-    }
-
-    public void setCountRejectedSell(int countRejectedSell) {
-        this.countRejectedSell = countRejectedSell;
-    }
-
-    public int getCountCancelBuy() {
-        return this.countCancelBuy;
-    }
-
-    public void setCountCancelBuy(int countCancelBuy) {
-        this.countCancelBuy = countCancelBuy;
-    }
-
-    public int getCountCancelSell() {
-        return this.countCancelSell;
-    }
-
-    public void setCountCancelSell(int countCancelSell) {
-        this.countCancelSell = countCancelSell;
-    }
-
-    public String getDirectory() {
-        return LogFile.getLogDirectory() + "\\" + getProductId() + "\\" + "trades" + "\\";
-    }
-
-    public double getPriceLow() {
-        return this.priceLow;
-    }
-
-    public void setPriceLow(double priceLow) {
-        this.priceLow = priceLow;
-    }
-
-    public double getPriceHigh() {
-        return this.priceHigh;
-    }
-
-    public void setPriceHigh(double priceHigh) {
-        this.priceHigh = priceHigh;
-    }
-
-    public void checkPriceRange(double currentPrice) {
-
-        //what is the lowest and highest price during this trade
-        if (currentPrice < getPriceLow())
-            setPriceLow(currentPrice);
-        if (currentPrice > getPriceHigh())
-            setPriceHigh(currentPrice);
-    }
-
-    public Duration getDuration() {
-        return this.duration;
-    }
-
-    public int getAttempts() {
-        return this.attempts;
-    }
-
-    public void setAttempts(int attempts) {
-        this.attempts = attempts;
     }
 }
