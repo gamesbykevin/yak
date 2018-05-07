@@ -3,6 +3,9 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.volume.ADL;
+import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -95,6 +98,10 @@ public class BBAR extends Strategy {
         //if the current close goes below the upper line, let's sell
         if (closePrev > upPrev && closeCurr < upCurr)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //adjust our hard stop price to protect our investment
+        if (agent.getReasonSell() != null)
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

@@ -1,24 +1,20 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Average Directional Index
  */
-public class ADX extends Strategy {
-
-    //list of sma prices
-    private List<Double> smaPrice;
+public class ADX extends Indicator {
 
     //the average directional index
     private List<Double> adx;
@@ -28,29 +24,28 @@ public class ADX extends Strategy {
     private List<Double> dmMinusIndicator;
 
     //list of configurable values
-    private static final int PERIODS_SMA = 50;
-    private static final int PERIODS_ADX = 14;
-    private static final double TREND_ADX = 20.0d;
+    public static final int PERIODS = 14;
+    public static final double TREND = 20.0d;
 
-    private final int periodsSMA, periodsADX;
-
-    private final double trendAdx;
+    private final int periods;
 
     public ADX() {
-        this(PERIODS_SMA, PERIODS_ADX, TREND_ADX);
+        this(PERIODS);
     }
 
-    public ADX(int periodsSMA, int periodsADX, double trendAdx) {
+    public ADX(int periods) {
 
         //create our lists
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();
         this.dmMinusIndicator = new ArrayList<>();
-        this.smaPrice = new ArrayList<>();
 
-        this.periodsSMA = periodsSMA;
-        this.periodsADX = periodsADX;
-        this.trendAdx = trendAdx;
+        //save our settings
+        this.periods = periods;
+    }
+
+    private int getPeriods() {
+        return this.periods;
     }
 
     public List<Double> getAdx() {
@@ -65,48 +60,6 @@ public class ADX extends Strategy {
         return this.dmMinusIndicator;
     }
 
-    public List<Double> getSmaPrice() {
-        return this.smaPrice;
-    }
-
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) > trendAdx) {
-
-            //if the current stock price is above our sma average
-            if (getRecent(history, Fields.Close) > getRecent(getSmaPrice())) {
-
-                //if dm plus crosses above dm minus, that is our signal to buy
-                if (getRecent(getDmPlusIndicator()) > getRecent(getDmMinusIndicator()))
-                    agent.setBuy(true);
-            }
-        }
-
-        //display data
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //if the most recent adx value is above the trend
-        if (getRecent(getAdx()) > trendAdx) {
-
-            //if the current stock price is below our sma average
-            if (getRecent(history, Fields.Close) < getRecent(getSmaPrice())) {
-
-                //if the minus has crossed below the plus that is our signal to sell
-                if (getRecent(getDmPlusIndicator()) < getRecent(getDmMinusIndicator()))
-                    agent.setReasonSell(ReasonSell.Reason_Strategy);
-            }
-        }
-
-        //display data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
     @Override
     public void displayData(Agent agent, boolean write) {
 
@@ -114,7 +67,6 @@ public class ADX extends Strategy {
         display(agent, "+DI: ", getDmPlusIndicator(), write);
         display(agent, "-DI: ", getDmMinusIndicator(), write);
         displayMessage(agent, "ADX: " + getRecent(getAdx()), write);
-        display(agent, "SMA: ", getSmaPrice(), write);
     }
 
     @Override
@@ -193,9 +145,9 @@ public class ADX extends Strategy {
         List<Double> trueRange = new ArrayList<>();
 
         //smooth the values
-        smooth(tmpDmMinus, dmMinus,     periodsADX);
-        smooth(tmpDmPlus, dmPlus,       periodsADX);
-        smooth(tmpTrueRange, trueRange, periodsADX);
+        smooth(tmpDmMinus, dmMinus,     getPeriods());
+        smooth(tmpDmPlus, dmPlus,       getPeriods());
+        smooth(tmpTrueRange, trueRange, getPeriods());
 
         for (int i = 0; i < dmPlus.size(); i++) {
 
@@ -221,28 +173,25 @@ public class ADX extends Strategy {
         double sum = 0;
 
         //get the average for the first value
-        for (int i = 0; i < periodsADX; i++) {
+        for (int i = 0; i < getPeriods(); i++) {
             sum += dmIndex.get(i);
         }
 
         //our first value is the average
-        getAdx().add(sum / (double)periodsADX);
+        getAdx().add(sum / (double)getPeriods());
 
         //calculate the remaining average directional index values
-        for (int i = periodsADX; i < dmIndex.size(); i++) {
+        for (int i = getPeriods(); i < dmIndex.size(); i++) {
 
             //get the most recent adx
             double previousAdx = getRecent(getAdx());
 
             //calculate the new adx value
-            double newAdx = ((previousAdx * (double)(periodsADX - 1)) + dmIndex.get(i)) / (double)periodsADX;
+            double newAdx = ((previousAdx * (double)(getPeriods() - 1)) + dmIndex.get(i)) / (double)getPeriods();
 
             //add new value to our list
             getAdx().add(newAdx);
         }
-
-        //calculate the sma
-        calculateSMA(history, getSmaPrice(), periodsSMA, Fields.Close);
     }
 
     /**

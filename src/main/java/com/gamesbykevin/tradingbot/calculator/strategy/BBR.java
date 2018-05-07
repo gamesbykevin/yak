@@ -3,6 +3,8 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -88,17 +90,16 @@ public class BBR extends Strategy {
             if (middlePrev > middleCurr)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
 
-            //add the increase
-            double increase = (agent.getWallet().getPurchasePrice() * agent.getHardStopRatio()) * .5f;
-
-            //if we are in overbought territory set our hard stop now to protect our profit
-            agent.adjustHardStopPrice(currentPrice + increase);
         } else if (rsi < RSI_TREND) {
 
-            //if the rsi is going towards oversold territory, let's see if the close drops below our middle band
-            if (close < middleCurr)
+            //if the rsi is going towards oversold territory, let's see if the close drops below our middle band or if the middle band is decreasing
+            if (middlePrev > middleCurr || close < middleCurr)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
+
+        //adjust our hard stop price to protect our investment
+        if (close < middleCurr)
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data
         displayMessage(agent, "Close    $" + close, agent.getReasonSell() != null);

@@ -36,11 +36,6 @@ public class AgentHelper {
     private static final String LIMIT_ORDER_DESC = "limit";
 
     /**
-     * This is when we need to specify a hard stop
-     */
-    private static final String STOP_LOSS_DESC = "loss";
-
-    /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
      */
     public static float[] HARD_STOP_RATIO;
@@ -55,13 +50,13 @@ public class AgentHelper {
      */
     private static final int FAILURE_LIMIT = 5;
 
-    //how long do we wait until between creating orders
+    //after creating a limit order, how long do we wait before we check if created (in milliseconds)
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
 
     /**
-     * Each trade has a 0.25% transaction fee
+     * Assume each trade has a 0.3% transaction fee
      */
-    private static final float FEE_RATE = .0025f;
+    private static final float FEE_RATE = .003f;
 
     /**
      * How many times do we wait for the sell order to fill before we cancel
@@ -121,10 +116,6 @@ public class AgentHelper {
         //get the latest closing price
         final double closePrice = history.get(history.size() - 1).close;
 
-        //if the current stock price is less than what we paid, we don't want to sell because we would lose $
-        //if (currentPrice < agent.getWallet().getPurchasePrice())
-        //    agent.setReasonSell(null);
-
         //if the price dropped below our hard stop, we must sell to cut our losses
         if (closePrice <= agent.getHardStopPrice()) {
 
@@ -149,9 +140,6 @@ public class AgentHelper {
             //reset our attempt counter for our sell order
             agent.setAttempts(0);
 
-            //we need to adjust our sell price to increase the chance of filling
-            //final double sellPrice = currentPrice > closePrice ? currentPrice : closePrice;
-
             //create and assign our limit order at the last period closing price
             agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
 
@@ -169,7 +157,6 @@ public class AgentHelper {
 
             //we are waiting
             displayMessage(agent, message, true);
-
         }
     }
 
@@ -204,9 +191,6 @@ public class AgentHelper {
 
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStopPrice(), true);
-
-            //the price we want to buy
-            //final double buyPrice = currentPrice < closePrice ? currentPrice : closePrice;
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));

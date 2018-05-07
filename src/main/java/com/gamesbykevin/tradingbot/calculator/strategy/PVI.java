@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateEmaList;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEmaList;
 
 /**
  * Positive volume index
@@ -61,6 +61,10 @@ public class PVI extends Strategy {
         //if we have crossover and cumulative value is < than previous period value that is signal to sell
         if (getRecent(getPviCumulative()) < getRecent(getPviEma()) && getRecent(getPviCumulative()) < getRecent(getPviCumulative(), 2))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //adjust our hard stop price to protect our investment
+        if (getRecent(getPviCumulative()) < getRecent(getPviEma()))
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

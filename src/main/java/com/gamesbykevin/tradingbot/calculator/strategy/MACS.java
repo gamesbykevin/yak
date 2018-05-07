@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,13 +45,8 @@ public class MACS extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        if (hasCrossover(true, emaFast, emaSlow) && getRecent(emaSlow) > getRecent(emaTrend)) {
+        if (getRecent(emaFast) > getRecent(emaSlow) && getRecent(emaSlow) > getRecent(emaTrend))
             agent.setBuy(true);
-            displayMessage(agent, "hasCrossover(true, emaFast, emaSlow) && getRecent(emaSlow) > getRecent(emaTrend)", true);
-        } else if (hasCrossover(true, emaFast, emaTrend) && getRecent(emaFast) > getRecent(emaSlow)) {
-            agent.setBuy(true);
-            displayMessage(agent, "hasCrossover(true, emaFast, emaTrend) && getRecent(emaFast) > getRecent(emaSlow)", true);
-        }
 
         //display our data for what it is worth
         displayData(agent, agent.hasBuy());
@@ -62,6 +58,10 @@ public class MACS extends Strategy {
         if (getRecent(emaFast) < getRecent(emaSlow) && getRecent(emaFast) < getRecent(emaTrend))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
+        //adjust our hard stop price to protect our investment
+        if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) < getRecent(emaTrend))
+            adjustHardStopPrice(agent, currentPrice);
+
         //display our data for what it is worth
         displayData(agent, agent.getReasonSell() != null);
     }
@@ -70,9 +70,9 @@ public class MACS extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display values
-        display(agent, "EMA Fast: ", emaFast, write);
-        display(agent, "EMA Slow: ", emaSlow, write);
-        display(agent, "EMA Trend: ", emaTrend, write);
+        display(agent, "EMA Fast :", emaFast, write);
+        display(agent, "EMA Slow :", emaSlow, write);
+        display(agent, "EMA Trend:", emaTrend, write);
     }
 
     @Override

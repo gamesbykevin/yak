@@ -3,6 +3,8 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -43,8 +45,8 @@ public class SOEMA extends Strategy {
         this.periodsEMA = periodsEMA;
 
         //create new object(s)
-        this.objSoSlow = new SO(periodsSoSlow, periodsSoSlowSMA);
-        this.objSoFast = new SO(periodsSoFast, periodsSoFastSMA);
+        this.objSoSlow = new SO(periodsSoSlow, periodsSoSlowSMA, 1);
+        this.objSoFast = new SO(periodsSoFast, periodsSoFastSMA, 1);
         this.ema = new ArrayList<>();
     }
 
@@ -68,8 +70,12 @@ public class SOEMA extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the price is below the ema average
-        if (getRecent(history, Fields.Close) < getRecent(ema))
+        if (getRecent(history, Fields.Close) < getRecent(ema)) {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //adjust our hard stop price to protect our investment
+            adjustHardStopPrice(agent, currentPrice);
+        }
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

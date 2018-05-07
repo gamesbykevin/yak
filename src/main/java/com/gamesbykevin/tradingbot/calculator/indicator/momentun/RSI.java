@@ -1,16 +1,15 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.momentun;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
-public class RSI extends Strategy {
+public class RSI extends Indicator {
 
     //keep a historical list of the rsi so we can check for divergence
     private List<Double> rsiVal;
@@ -37,20 +36,6 @@ public class RSI extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
@@ -64,7 +49,7 @@ public class RSI extends Strategy {
         calculateRsi(history, getRsiVal(), periods);
     }
 
-    protected static void calculateRsi(List<Period> history, List<Double> populate, int periods) {
+    public static void calculateRsi(List<Period> history, List<Double> populate, int periods) {
 
         //clear our historical rsi list
         populate.clear();

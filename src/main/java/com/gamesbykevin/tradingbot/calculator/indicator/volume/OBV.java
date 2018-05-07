@@ -1,12 +1,17 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.volume;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class OBV extends Strategy {
+/**
+ * On balance volume
+ */
+public class OBV extends Indicator {
 
     //keep a historical list of the indicator
     private List<Double> volume;
@@ -19,20 +24,6 @@ public class OBV extends Strategy {
 
     public List<Double> getVolume() {
         return this.volume;
-    }
-
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
     }
 
     @Override

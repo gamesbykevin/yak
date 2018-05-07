@@ -1,20 +1,20 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Exponential moving average
  */
-public class EMA extends Strategy {
+public class EMA extends Indicator {
 
     //list of ema values for our long period
     private List<Double> emaLong;
@@ -23,8 +23,8 @@ public class EMA extends Strategy {
     private List<Double> emaShort;
 
     //list of configurable values
-    private static final int PERIODS_EMA_LONG = 26;
-    private static final int PERIODS_EMA_SHORT = 12;
+    public static final int PERIODS_EMA_LONG = 26;
+    public static final int PERIODS_EMA_SHORT = 12;
 
     private final int periodsLong, periodsShort;
 
@@ -41,6 +41,7 @@ public class EMA extends Strategy {
         this.emaLong = new ArrayList<>();
         this.emaShort = new ArrayList<>();
 
+        //store our periods
         this.periodsLong = periodsLong;
         this.periodsShort = periodsShort;
     }
@@ -51,37 +52,6 @@ public class EMA extends Strategy {
 
     public List<Double> getEmaLong() {
         return this.emaLong;
-    }
-
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        double prevEmaS = getRecent(getEmaShort(), 2);
-        double prevEmaL = getRecent(getEmaLong(), 2);
-        double currEmaS = getRecent(getEmaShort());
-        double currEmaL = getRecent(getEmaLong());
-
-        //if the short ema crossed above the long ema we will buy
-        if (prevEmaS < prevEmaL && currEmaS > currEmaL)
-            agent.setBuy(true);
-
-        //display data
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        double emaShort = getRecent(getEmaShort());
-        double emaLong = getRecent(getEmaLong());
-        double close =  getRecent(history, Fields.Close);
-
-        //if the current candle is below both short and long, let's sell
-        if (close < emaShort && close < emaLong)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        //display data
-        displayData(agent, agent.getReasonSell() != null);
     }
 
     @Override
@@ -128,7 +98,7 @@ public class EMA extends Strategy {
         return ema;
     }
 
-    protected static void calculateEMA(List<Period> history, List<Double> emaList, int periods) {
+    public static void calculateEMA(List<Period> history, List<Double> emaList, int periods) {
 
         //clear our list
         emaList.clear();
@@ -157,7 +127,7 @@ public class EMA extends Strategy {
      * @param data The list of values we will use to do the calculations
      * @param periods The range of periods to make each calculation
      */
-    protected static void calculateEmaList(List<Double> populate, List<Double> data, int periods) {
+    public static void calculateEmaList(List<Double> populate, List<Double> data, int periods) {
 
         //clear list
         populate.clear();

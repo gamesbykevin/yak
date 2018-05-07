@@ -1,0 +1,110 @@
+package com.gamesbykevin.tradingbot.calculator.indicator.momentun;
+
+import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
+
+/**
+ * Stoch RSI
+ */
+public class SR extends Indicator {
+
+    //our rsi object
+    private RSI objRsi;
+
+    //list of stoch rsi values
+    private List<Double> stochRsi;
+
+    //list of configurable values
+    public static final int PERIODS = 14;
+    public static final double OVER_BOUGHT = .80d;
+    public static final double OVER_SOLD = .20d;
+
+    private final int periods;
+
+    public SR() {
+        this(PERIODS);
+    }
+
+    public SR(int periods) {
+
+        //store the number of periods
+        this.periods = periods;
+
+        //create our rsi object
+        this.objRsi = new RSI(periods);
+
+        //create new list
+        this.stochRsi = new ArrayList<>();
+    }
+
+    private RSI getObjRsi() {
+        return this.objRsi;
+    }
+
+    private int getPeriods() {
+        return this.periods;
+    }
+
+    public List<Double> getStochRsi() {
+        return this.stochRsi;
+    }
+
+    @Override
+    public void displayData(Agent agent, boolean write) {
+
+        //display the information
+        getObjRsi().displayData(agent, write);
+        display(agent, "STOCH RSI: ", getStochRsi(), write);
+    }
+
+    @Override
+    public void calculate(List<Period> history) {
+
+        //calculate
+        getObjRsi().calculate(history);
+
+        //clear our list
+        getStochRsi().clear();
+
+        //check every period
+        for (int i = 0; i < getObjRsi().getRsiVal().size(); i++) {
+
+            //skip until we have enough data
+            if (i < getPeriods())
+                continue;
+
+            double rsiHigh = -1, rsiLow = 101;
+
+            //check the recent periods for our calculations
+            for (int x = i - getPeriods(); x < i; x++) {
+
+                //get the current rsi value
+                double rsi = getObjRsi().getRsiVal().get(x);
+
+                //locate our high and low
+                if (rsi < rsiLow)
+                    rsiLow = rsi;
+                if (rsi > rsiHigh)
+                    rsiHigh = rsi;
+            }
+
+            //calculate the numerator and the denominator
+            double numerator = getObjRsi().getRsiVal().get(i) - rsiLow;
+            double denominator = rsiHigh - rsiLow;
+            double stochRsi = 0;
+
+            if (numerator != 0 && denominator != 0)
+                stochRsi = (numerator / denominator);
+
+            //add our new value to the list
+            getStochRsi().add(stochRsi);
+        }
+    }
+}

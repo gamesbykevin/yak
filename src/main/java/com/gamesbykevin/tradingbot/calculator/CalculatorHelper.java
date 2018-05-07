@@ -212,7 +212,7 @@ public class CalculatorHelper {
             //if the current is > we are checking for lower gain
             if (curr > prev) {
 
-                if (low != null && curr > low) {
+                if (low != null && curr >= low) {
 
                     //if the current loss is higher than the previous low, we don't have success
                     success = false;
@@ -227,7 +227,7 @@ public class CalculatorHelper {
 
             } else {
 
-                if (high != null && curr > high) {
+                if (high != null && curr >= high) {
 
                     //if the current gain is higher than the previous high, we don't have success
                     success = false;
@@ -263,7 +263,7 @@ public class CalculatorHelper {
             //if the current is > we are checking for lower gain
             if (curr > prev) {
 
-                if (low != null && curr > low) {
+                if (low != null && curr >= low) {
 
                     //if the current loss is higher than the previous low, we don't have success
                     success = false;
@@ -278,7 +278,7 @@ public class CalculatorHelper {
 
             } else {
 
-                if (high != null && curr > high) {
+                if (high != null && curr >= high) {
 
                     //if the current gain is higher than the previous high, we don't have success
                     success = false;
@@ -350,7 +350,7 @@ public class CalculatorHelper {
             //if current is > we are checking for a higher high
             if (curr > prev) {
 
-                if (high != null && curr < high) {
+                if (high != null && curr <= high) {
 
                     //if the current gain is lower than the previous high, we don't have success
                     success = false;
@@ -364,9 +364,9 @@ public class CalculatorHelper {
 
             } else {
 
-                if (low != null && curr < low) {
+                if (low != null && curr <= low) {
 
-                    //if the current loss is lower than the previous high, we don't have success
+                    //if the current loss is lower than the previous low, we don't have success
                     success = false;
                     break;
 
@@ -400,7 +400,7 @@ public class CalculatorHelper {
             //if current is > we are checking for a higher high
             if (curr > prev) {
 
-                if (high != null && curr < high) {
+                if (high != null && curr <= high) {
 
                     //if the current gain is lower than the previous high, we don't have success
                     success = false;
@@ -414,7 +414,7 @@ public class CalculatorHelper {
 
             } else {
 
-                if (low != null && curr < low) {
+                if (low != null && curr <= low) {
 
                     //if the current loss is lower than the previous high, we don't have success
                     success = false;

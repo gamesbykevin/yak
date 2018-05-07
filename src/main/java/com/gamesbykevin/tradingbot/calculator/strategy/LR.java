@@ -76,8 +76,12 @@ public class LR extends Strategy {
         final double upper = calculateY(getPeriods()) + getDifference();
 
         //the slope is in a downtrend and the price touched the upper regression line
-        if (getSlope() < 0 && history.get(history.size() - 1).close >= upper)
+        if (getSlope() < 0 && history.get(history.size() - 1).close >= upper) {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //adjust our hard stop price to protect our investment
+            adjustHardStopPrice(agent, currentPrice);
+        }
 
         //display our info
         displayMessage(agent, "Close $ " + history.get(history.size() - 1).close, agent.getReasonSell() != null);

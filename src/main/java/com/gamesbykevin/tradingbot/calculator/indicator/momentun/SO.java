@@ -1,19 +1,18 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.momentun;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Stochastic Oscillator
  */
-public final class SO extends Strategy {
+public final class SO extends Indicator {
 
     //indicator list
     private List<Double> stochasticOscillator;
@@ -21,60 +20,72 @@ public final class SO extends Strategy {
     //our market rate
     private List<Double> marketRate;
 
-    //list of configurable values
-    private static final int PERIODS = 12;
-    private static final int PERIODS_SMA = 3;
+    //the sma of our market rate
+    private List<Double> marketRateSma;
 
-    private final int periods, periodsSMA;
+    //list of configurable values
+    private static final int PERIODS_MARKET_RATE = 14;
+    private static final int PERIODS_MARKET_RATE_SMA = 3;
+    private static final int PERIODS_STOCHASTIC_SMA = 3;
+
+    private final int periodsMR, periodsMarketRateSMA, periodsStochasticSMA;
 
     public SO() {
-        this(PERIODS, PERIODS_SMA);
+        this(PERIODS_MARKET_RATE, PERIODS_MARKET_RATE_SMA, PERIODS_STOCHASTIC_SMA);
     }
 
-    public SO(int periods, int periodsSMA) {
+    public SO(int periodsMR, int periodsMarketRateSMA, int periodsStochasticSMA) {
 
-        this.periods = periods;
-        this.periodsSMA = periodsSMA;
+        this.periodsMR = periodsMR;
+        this.periodsMarketRateSMA = periodsMarketRateSMA;
+        this.periodsStochasticSMA = periodsStochasticSMA;
 
         //create new list(s)
         this.stochasticOscillator = new ArrayList<>();
         this.marketRate = new ArrayList<>();
+        this.marketRateSma = new ArrayList<>();
+    }
+
+    public int getPeriodsStochasticSMA() {
+        return this.periodsStochasticSMA;
+    }
+
+    public int getPeriodsMarketRateSMA() {
+        return this.periodsMarketRateSMA;
+    }
+
+    public int getPeriodsMR() {
+        return this.periodsMR;
     }
 
     /**
-     * Get the stochastic osciallator %D
+     * Get the stochastic oscillator %D
      */
     public List<Double> getStochasticOscillator() {
         return this.stochasticOscillator;
     }
 
     /**
-     * Get the market rate %K
+     * Get the market rate %K (not smoothed with sma)
      */
     public List<Double> getMarketRate() {
         return this.marketRate;
     }
 
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display info
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display info
-        displayData(agent, agent.getReasonSell() != null);
+    /**
+     * Get the specified period sma of the market rate %K
+     */
+    public List<Double> getMarketRateSma() {
+        return this.marketRateSma;
     }
 
     @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "SO: %D ", getStochasticOscillator(), write);
-        display(agent, "MR: %K ", getMarketRate(), write);
+        display(agent, "Market Rate:     %K ", getMarketRate(), write);
+        display(agent, "Market Rate Sma: %K ", getMarketRateSma(), write);
+        display(agent, "Stochastic:      %D ", getStochasticOscillator(), write);
     }
 
     @Override
@@ -86,7 +97,7 @@ public final class SO extends Strategy {
         for (int i = 0; i < history.size(); i++) {
 
             //we don't have enough data yet
-            if (i < periods)
+            if (i < getPeriodsMR())
                 continue;
 
             //what is the high and low for our period range
@@ -100,8 +111,11 @@ public final class SO extends Strategy {
             getMarketRate().add(marketValue);
         }
 
-        //calculate sma for our indicator
-        calculateSMA(getMarketRate(), getStochasticOscillator(), periodsSMA);
+        //now we use a sma to create our market rate values
+        calculateSMA(getMarketRate(), getMarketRateSma(), getPeriodsMarketRateSMA());
+
+        //now we use a sma of that to create our stochastic oscillator values
+        calculateSMA(getMarketRateSma(), getStochasticOscillator(), getPeriodsStochasticSMA());
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {
@@ -109,7 +123,7 @@ public final class SO extends Strategy {
         Period result = null;
 
         //check these periods for the high or low
-        for (int i = index - periods; i < index; i++) {
+        for (int i = index - getPeriodsMR(); i < index; i++) {
 
             //check the current period
             Period current = history.get(i);

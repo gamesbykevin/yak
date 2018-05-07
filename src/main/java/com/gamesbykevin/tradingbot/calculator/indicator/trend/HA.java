@@ -1,7 +1,9 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -12,7 +14,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 /**
  * Heiken-Ashi
  */
-public class HA extends Strategy {
+public class HA extends Indicator {
 
     //we will create our own candles
     private List<Period> haPeriods;
@@ -20,7 +22,7 @@ public class HA extends Strategy {
     /**
      * We only want to calculate the latest heiken ashi candles for accurate results
      */
-    private static final int PERIODS = 10;
+    private static final int PERIODS = 5;
 
     private final int periods;
 
@@ -39,20 +41,6 @@ public class HA extends Strategy {
 
     public List<Period> getHaPeriods() {
         return this.haPeriods;
-    }
-
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
     }
 
     @Override

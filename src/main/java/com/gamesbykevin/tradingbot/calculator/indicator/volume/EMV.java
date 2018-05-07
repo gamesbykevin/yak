@@ -1,18 +1,18 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.volume;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Ease of Movement
  */
-public class EMV extends Strategy {
+public class EMV extends Indicator {
 
     //list of configurable values
     private static final int PERIODS_EMV = 14;
@@ -40,41 +40,27 @@ public class EMV extends Strategy {
         this.valEmv = new ArrayList<>();
     }
 
-    public List<Double> getSmaEmv() {
+    public List<Double> getEmvSma() {
         return this.smaEmv;
     }
 
-    public List<Double> getValEmv() {
+    public List<Double> getEmv() {
         return this.valEmv;
-    }
-
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.hasBuy());
-    }
-
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
     }
 
     @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "SMA EMV: ", getSmaEmv(), write);
-        display(agent, "Val EMV: ", getValEmv(), write);
+        display(agent, "    EMV: ", getEmv(), write);
+        display(agent, "SMA EMV: ", getEmvSma(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //clear our list
-        getValEmv().clear();
+        getEmv().clear();
 
         for (int i = 0; i < history.size(); i++) {
 
@@ -96,10 +82,10 @@ public class EMV extends Strategy {
             double emv = (distance / ratio);
 
             //add the new value to our list
-            getValEmv().add(emv);
+            getEmv().add(emv);
         }
 
         //now that we have our list of emv values, calculate sma
-        calculateSMA(getValEmv(), getSmaEmv(), periods);
+        calculateSMA(getEmv(), getEmvSma(), periods);
     }
 }

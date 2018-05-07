@@ -1,4 +1,4 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
@@ -7,7 +7,7 @@ import java.util.List;
 
 public class SMA {
 
-    protected static void calculateSMA(List<Double> data, List<Double> populate, int periods) {
+    public static void calculateSMA(List<Double> data, List<Double> populate, int periods) {
 
         //clear the list
         populate.clear();
@@ -30,7 +30,7 @@ public class SMA {
         }
     }
 
-    protected static void calculateSMA(List<Period> history, List<Double> populate, int periods, Fields field) {
+    public static void calculateSMA(List<Period> history, List<Double> populate, int periods, Fields field) {
 
         //clear the list
         populate.clear();
@@ -58,7 +58,7 @@ public class SMA {
      * @param field The field we want to calculate
      * @return The average of the sum of the specified field within the specified period
      */
-    protected static double calculateSMA(List<Period> history, int currentPeriod, int periods, Fields field) {
+    public static double calculateSMA(List<Period> history, int currentPeriod, int periods, Fields field) {
 
         //the total sum
         double sum = 0;

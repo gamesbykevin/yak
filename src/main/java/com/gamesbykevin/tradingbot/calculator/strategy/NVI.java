@@ -2,15 +2,13 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateEmaList;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEmaList;
 
 /**
  * Negative volume index
@@ -63,6 +61,11 @@ public class NVI extends Strategy {
         //if we are below the ema and the cumulative value is less than the previous period
         if (getRecent(getNviCumulative()) < getRecent(getNviEma()) && getRecent(getNviCumulative()) < getRecent(getNviCumulative(), 2))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //adjust our hard stop price to protect our investment
+        if (getRecent(getNviCumulative()) < getRecent(getNviEma()))
+            adjustHardStopPrice(agent, currentPrice);
+
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

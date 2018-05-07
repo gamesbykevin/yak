@@ -96,10 +96,6 @@ public class Calculator {
 
             switch (MY_TRADING_STRATEGIES[i]) {
 
-                case ADX:
-                    strategy = new ADX();
-                    break;
-
                 case AO:
                     strategy = new AO();
                     break;
@@ -116,10 +112,6 @@ public class Calculator {
                     strategy = new BBR();
                     break;
 
-                case EMA:
-                    strategy = new EMA();
-                    break;
-
                 case EMAR:
                     strategy = new EMAR();
                     break;
@@ -128,8 +120,8 @@ public class Calculator {
                     strategy = new EMAS();
                     break;
 
-                case HAE:
-                    strategy = new HAE();
+                case HASO:
+                    strategy = new HASO();
                     break;
 
                 case LR:
@@ -166,14 +158,6 @@ public class Calculator {
 
                 case SOEMA:
                     strategy = new SOEMA();
-                    break;
-
-                case SR:
-                    strategy = new SR();
-                    break;
-
-                case TWO_RSI:
-                    strategy = new TWO_RSI();
                     break;
 
                 default:

@@ -2,9 +2,9 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
-import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 
 import java.util.List;
 
@@ -46,26 +46,9 @@ public class EMAR extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //RSI values
-        double current = getRecent(rsiObj.getRsiVal());
-        double previous = getRecent(rsiObj.getRsiVal(), 2);
-
-        if (current > rsiLine && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())) {
-
-            //if rsi is over the line and we have a bullish crossover
+        //if rsi is over the line and we have a bullish crossover
+        if (getRecent(rsiObj.getRsiVal()) > rsiLine && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()))
             agent.setBuy(true);
-
-            //write to log
-            displayMessage(agent, "current > rsiLine && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong())", true);
-
-        } else if (previous < rsiLine && current > rsiLine && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
-
-            //if rsi JUST went over and ema short > ema long without checking for a crossover
-            agent.setBuy(true);
-
-            //write to log
-            displayMessage(agent, "previous < rsiLine && current > rsiLine && getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())", true);
-        }
 
         //display our data
         displayData(agent, agent.hasBuy());
@@ -74,21 +57,18 @@ public class EMAR extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //RSI values
+        //recent values
         double current = getRecent(rsiObj.getRsiVal());
-
         double emaShort = getRecent(emaObj.getEmaShort());
         double emaLong = getRecent(emaObj.getEmaLong());
 
-        if (current < rsiLine && emaShort < emaLong) {
-
-            //if rsi is under the line and the fast line is below the slow long indicating a downward trend
+        //if rsi is under the line and the fast line is below the slow long indicating a downward trend
+        if (current < rsiLine && emaShort < emaLong)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
-            //write to log
-            displayMessage(agent, "current < rsiLine && emaShort < emaLong", true);
-
-        }
+        //adjust our hard stop price to protect our investment
+        if (emaShort < emaLong || current < rsiLine)
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

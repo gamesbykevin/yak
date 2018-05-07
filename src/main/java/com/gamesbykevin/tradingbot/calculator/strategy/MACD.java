@@ -2,24 +2,17 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Slope;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.strategy.EMA.calculateEmaList;
 
+/**
+ * Moving Average Crossover Divergence
+ */
 public class MACD extends Strategy {
-
-    //macdLine values
-    private List<Double> macdLine;
-
-    //list of ema values from the macd line
-    private List<Double> signalLine;
-
-    //our histogram (macdLine - signalLine)
-    private List<Double> histogram;
 
     //what is our slope line
     private float slope = 0f;
@@ -27,8 +20,8 @@ public class MACD extends Strategy {
     //the index where our crossover happens
     private int x1, x2;
 
-    //our ema object
-    private EMA emaObj;
+    //our macd indicator object
+    private com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD objMacd;
 
     //our list of variations
     private static final int PERIODS_MACD_SIGNAL = 9;
@@ -39,44 +32,27 @@ public class MACD extends Strategy {
         this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD_SIGNAL);
     }
 
-    //how many periods to calculate our macd line, and how many periods do we confirm the trend
-    private final int periodsMacdSignal;
+    public MACD(int emaLong, int emaShort, int macdSignal) {
 
-    public MACD(int emaLong, int emaShort, int periodsMacdSignal) {
-
-        //store our settings
-        this.periodsMacdSignal = periodsMacdSignal;
-
-        //create lists and objects
-        this.macdLine = new ArrayList<>();
-        this.signalLine = new ArrayList<>();
-        this.histogram = new ArrayList<>();
-        this.emaObj = new EMA(emaLong, emaShort);
+        //create object
+        this.objMacd = new com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD(emaLong, emaShort, macdSignal);
     }
 
-    public List<Double> getMacdLine() {
-        return this.macdLine;
-    }
-
-    public List<Double> getSignalLine() {
-        return this.signalLine;
-    }
-
-    public List<Double> getHistogram() {
-        return this.histogram;
+    private com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD getObjMacd() {
+        return this.objMacd;
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //macd line crosses above signal line and both values are below 0
-        boolean crossBelow = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) < 0 && getRecent(getSignalLine()) < 0);
+        boolean crossBelow = getRecent(getObjMacd().getMacdLine()) > getRecent(getObjMacd().getSignalLine()) && (getRecent(getObjMacd().getMacdLine()) < 0 && getRecent(getObjMacd().getSignalLine()) < 0);
 
         //macd line crosses above signal line and both values are above 0
-        boolean crossAbove = getRecent(getMacdLine()) > getRecent(getSignalLine()) && (getRecent(getMacdLine()) > 0 && getRecent(getSignalLine()) > 0);
+        boolean crossAbove = getRecent(getObjMacd().getMacdLine()) > getRecent(getObjMacd().getSignalLine()) && (getRecent(getObjMacd().getMacdLine()) > 0 && getRecent(getObjMacd().getSignalLine()) > 0);
 
         //ensure previous 2 histogram values are increasing
-        boolean increase = getRecent(getHistogram(), 1) > getRecent(getHistogram(), 2) && getRecent(getHistogram(), 2) >  getRecent(getHistogram(), 3);
+        boolean increase = getRecent(getObjMacd().getHistogram(), 1) > getRecent(getObjMacd().getHistogram(), 2) && getRecent(getObjMacd().getHistogram(), 2) >  getRecent(getObjMacd().getHistogram(), 3);
 
         //based on our slope that is the support line for closing price
         double slopePrice = getSlopePrice(history);
@@ -114,13 +90,17 @@ public class MACD extends Strategy {
         double slopePrice = getSlopePrice(history);
 
         //ensure previous 2 histogram values are decreasing
-        final boolean decrease = (getRecent(getHistogram(), 1) < getRecent(getHistogram(), 2)) &&
-                                (getRecent(getHistogram(), 2) < getRecent(getHistogram(), 3)) &&
-                                (getRecent(getHistogram(), 2) <= 0);
+        final boolean decrease = (getRecent(getObjMacd().getHistogram(), 1) < getRecent(getObjMacd().getHistogram(), 2)) &&
+                                (getRecent(getObjMacd().getHistogram(), 2) < getRecent(getObjMacd().getHistogram(), 3)) &&
+                                (getRecent(getObjMacd().getHistogram(), 2) <= 0);
 
         //when we confirm our histogram is decreasing and our current close is less than the previous
         if (decrease && periodCurrent.close <= slopePrice)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //adjust our hard stop price to protect our investment
+        if (periodCurrent.close <= slopePrice)
+            adjustHardStopPrice(agent, currentPrice);
 
         /*
         //if the histogram is less than 0 and the current close price is below the slope price
@@ -138,60 +118,16 @@ public class MACD extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the recent MACD values which we use as a signal
-        display(agent, "MACD Line: ",   getMacdLine(),   write);
-        display(agent, "Signal Line: ", getSignalLine(), write);
-        display(agent, "Histogram: ", getHistogram(), write);
         displayMessage(agent, "Slope: " + getSlope(), write);
-
-        //display values
-        this.emaObj.displayData(agent, write);
+        getObjMacd().displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
-        //calculate our short and long ema values first
-        this.emaObj.calculate(history);
-
-        //now we can calculate our macd line
-        calculateMacdLine(this.emaObj.getEmaShort(), this.emaObj.getEmaLong(), getMacdLine());
-
-        //then we can calculate our signal line
-        calculateEmaList(getSignalLine(), getMacdLine(), periodsMacdSignal);
-
-        //last we can calculate the histogram
-        calculateHistogram(getMacdLine(), getSignalLine(), getHistogram());
-
-        //calculate the slope
+        //calculate
+        getObjMacd().calculate(history);
         calculateSlope(history);
-    }
-
-    protected static void calculateMacdLine(List<Double> emaShort, List<Double> emaLong, List<Double> macdLine) {
-
-        //clear the list
-        macdLine.clear();
-
-        //where do we start
-        int length = (emaShort.size() > emaLong.size()) ? emaLong.size() - 1 : emaShort.size() - 1;
-
-        //calculate the macd line
-        for (int i = length; i > 0; i--) {
-            macdLine.add(emaShort.get(emaShort.size() - i) - emaLong.get(emaLong.size() - i));
-        }
-    }
-
-    protected static void calculateHistogram(List<Double> macdLine, List<Double> signalLine, List<Double> histogram) {
-
-        //clear list
-        histogram.clear();
-
-        //determine how long back we can calculate the histogram since the list sizes may vary
-        int length = (macdLine.size() > signalLine.size()) ? signalLine.size() - 1 : macdLine.size() - 1;
-
-        //loop through and calculate the histogram
-        for (int i = length; i > 0; i--) {
-            histogram.add(macdLine.get(macdLine.size() - i) - signalLine.get(signalLine.size() - i));
-        }
     }
 
     private void calculateSlope(List<Period> history) {
@@ -200,13 +136,13 @@ public class MACD extends Strategy {
         boolean foundLatest = false, foundPrevious = false;
 
         //we need the difference so we are checking the correct historical periods
-        int difference = history.size() - getHistogram().size();
+        int difference = history.size() - getObjMacd().getHistogram().size();
 
         //find the latest crossover
-        for (int index = getHistogram().size() - 2; index >= 0; index--) {
+        for (int index = getObjMacd().getHistogram().size() - 2; index >= 0; index--) {
 
             //if the current is greater than 0 and the previous is below we have found the crossover
-            if (getHistogram().get(index) > 0 && getHistogram().get(index - 1) < 0) {
+            if (getObjMacd().getHistogram().get(index) > 0 && getObjMacd().getHistogram().get(index - 1) < 0) {
 
                 if (!foundLatest) {
                     setX2(difference + index);
@@ -228,7 +164,7 @@ public class MACD extends Strategy {
         final double y2 = history.get(getX2()).close;
 
         //the slope between the 2 recent crossovers will be our support line
-        setSlope(SL.getSlope(getX1(), getX2(), y1, y2));
+        setSlope(Slope.getSlope(getX1(), getX2(), y1, y2));
     }
 
     public float getSlope() {

@@ -49,6 +49,9 @@ public class NR extends Strategy {
             //if the next period closes above our purchase price, sell!!!!
             if (history.get(history.size() - 1).close > agent.getWallet().getPurchasePrice())
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //adjust our hard stop price to protect our investment
+            adjustHardStopPrice(agent, currentPrice);
         }
 
         //display our data

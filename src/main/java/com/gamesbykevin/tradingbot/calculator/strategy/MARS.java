@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -18,16 +19,47 @@ public class MARS extends Strategy {
     private List<List<Double>> emas;
 
     //our multiple periods in ascending order
-    private static final int[] PERIODS = {4, 8, 12, 16};
+    private static final int[] PERIODS = {10, 20, 30, 40, 50, 60, 70, 80};
 
     public MARS() {
 
         //create new list(s)
         this.emas = new ArrayList<>();
 
+        //sort the periods
+        sortPeriods();
+
         //add a new array list for each period
         for (int i = 0; i < PERIODS.length; i++) {
             this.emas.add(new ArrayList<>());
+        }
+    }
+
+    /**
+     * Sort the periods array to ensure they are in ascending order
+     */
+    private void sortPeriods() {
+
+        //make sure periods are in ascending order by sorting
+        for (int i = 0; i < PERIODS.length; i++) {
+
+            for (int j = i + 1; j < PERIODS.length; j++) {
+
+                //don't check same element (this shouldn't happen)
+                if (i == j)
+                    continue;
+
+                final int tmp1 = PERIODS[i];
+                final int tmp2 = PERIODS[j];
+
+                //the first number should be less
+                if (tmp2 < tmp1) {
+
+                    //switch values
+                    PERIODS[j] = tmp1;
+                    PERIODS[i] = tmp2;
+                }
+            }
         }
     }
 
@@ -82,6 +114,10 @@ public class MARS extends Strategy {
         //if we confirm the data is heading downward, sell
         if (trend)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //adjust our hard stop price to protect our investment checking the first 2 lists
+        if (emas.size() >= 2 && getRecent(emas.get(0)) < getRecent(emas.get(1)))
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data for what it is worth
         displayData(agent, agent.getReasonSell() != null);

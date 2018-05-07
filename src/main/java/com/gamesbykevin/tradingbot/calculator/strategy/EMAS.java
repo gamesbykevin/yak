@@ -3,13 +3,14 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.strategy.SMA.calculateSMA;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * EMA / SMA
@@ -65,7 +66,12 @@ public class EMAS extends Strategy {
             //if the fast ema is less than the long ema we will sell
             if (getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong()))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
+
         }
+
+        //adjust our hard stop price to protect our investment
+        if (getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong()) || getRecent(emaObj.getEmaShort()) < getRecent(priceSMA))
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);

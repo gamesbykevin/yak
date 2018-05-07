@@ -2,6 +2,9 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
@@ -81,6 +84,10 @@ public class BBER extends Strategy {
         //if the close price is below our long ema, middle bollinger band, and the rsi is below the trend
         if (close < ema && close < middle && rsi <= rsiLine)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //adjust our hard stop price to protect our investment
+        if (close < ema || close < middle)
+            adjustHardStopPrice(agent, currentPrice);
 
         //display our data
         displayData(agent, agent.getReasonSell() != null);
