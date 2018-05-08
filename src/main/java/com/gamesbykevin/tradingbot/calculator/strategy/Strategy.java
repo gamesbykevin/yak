@@ -16,6 +16,9 @@ public abstract class Strategy extends Calculation {
     //does this strategy need to wait for new candle data to check for a buy signal?
     private boolean wait = false;
 
+    //adjust our price increase by half
+    private static final float ADJUST_HARD_STOP_RATIO = .5f;
+
     protected Strategy() {
         //default constructor
     }
@@ -23,7 +26,7 @@ public abstract class Strategy extends Calculation {
     public void adjustHardStopPrice(Agent agent, double currentPrice) {
 
         //figure out our increase and get half of that
-        double increase = ((agent.getWallet().getPurchasePrice() * agent.getHardStopRatio()) * .5f);
+        double increase = ((agent.getWallet().getPurchasePrice() * agent.getHardStopRatio()) * ADJUST_HARD_STOP_RATIO);
 
         //adjust our hard stop price around the current price to protect our investment
         agent.adjustHardStopPrice(currentPrice + increase);

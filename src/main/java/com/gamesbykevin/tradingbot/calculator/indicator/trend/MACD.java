@@ -74,8 +74,8 @@ public class MACD extends Indicator {
     @Override
     public void displayData(Agent agent, boolean write) {
 
-        //display the recent MACD values which we use as a signal
-        display(agent, "MACD Line: ",   getMacdLine(),   write);
+        //display the recent MSL values which we use as a signal
+        display(agent, "MSL Line: ",   getMacdLine(),   write);
         display(agent, "Signal Line: ", getSignalLine(), write);
         display(agent, "Histogram: ", getHistogram(), write);
 

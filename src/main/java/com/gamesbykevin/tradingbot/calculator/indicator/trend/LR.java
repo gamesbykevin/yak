@@ -1,7 +1,9 @@
-package com.gamesbykevin.tradingbot.calculator.strategy;
+package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -11,7 +13,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 /**
  * Linear Regression
  */
-public class LR extends Strategy {
+public class LR extends Indicator {
 
     /**
      * How many periods are we calculating slope?
@@ -54,38 +56,12 @@ public class LR extends Strategy {
         return this.difference;
     }
 
-    @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //find our lower regression line
-        final double lower = calculateY(getPeriods()) - getDifference();
-
-        //the slope is in an uptrend and the price touched the lower regression line
-        if (getSlope() > 0 && history.get(history.size() - 1).close <= lower)
-            agent.setBuy(true);
-
-        //display our info
-        displayMessage(agent, "Close $ " + history.get(history.size() - 1).close, agent.hasBuy());
-        displayData(agent, agent.hasBuy());
+    public double getUpper() {
+        return calculateY(getPeriods()) + getDifference();
     }
 
-    @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //find our upper regression line
-        final double upper = calculateY(getPeriods()) + getDifference();
-
-        //the slope is in a downtrend and the price touched the upper regression line
-        if (getSlope() < 0 && history.get(history.size() - 1).close >= upper) {
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-            //adjust our hard stop price to protect our investment
-            adjustHardStopPrice(agent, currentPrice);
-        }
-
-        //display our info
-        displayMessage(agent, "Close $ " + history.get(history.size() - 1).close, agent.getReasonSell() != null);
-        displayData(agent, agent.getReasonSell() != null);
+    public double getLower() {
+        return calculateY(getPeriods()) - getDifference();
     }
 
     @Override

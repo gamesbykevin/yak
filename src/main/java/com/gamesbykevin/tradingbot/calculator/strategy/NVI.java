@@ -66,7 +66,6 @@ public class NVI extends Strategy {
         if (getRecent(getNviCumulative()) < getRecent(getNviEma()))
             adjustHardStopPrice(agent, currentPrice);
 
-
         //display our data
         displayData(agent, agent.getReasonSell() != null);
     }

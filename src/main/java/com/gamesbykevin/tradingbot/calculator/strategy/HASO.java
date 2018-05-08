@@ -21,8 +21,6 @@ public class HASO extends Strategy {
     private SO objSO;
 
     //configurable values
-    private static final int SMA_SHORT = 10;
-    private static final int SMA_LONG = 50;
     private static final int PERIODS_MARKET_RATE = 14;
     private static final int PERIODS_MARKET_RATE_SMA = 7;
     private static final int PERIODS_STOCHASTIC_SMA = 3;
@@ -30,25 +28,15 @@ public class HASO extends Strategy {
     private static final float STOCHASTIC_MAX = 70.0f;
     private static final float STOCHASTIC_MIN = 30.0f;
 
-    //list of sma values
-    private List<Double> smaShort, smaLong;
-
-    private final int periodsSmaShort, periodsSmaLong;
-
     public HASO() {
-        this(PERIODS_MARKET_RATE, PERIODS_MARKET_RATE_SMA, PERIODS_STOCHASTIC_SMA, SMA_SHORT, SMA_LONG, HA_PERIODS);
+        this(PERIODS_MARKET_RATE, PERIODS_MARKET_RATE_SMA, PERIODS_STOCHASTIC_SMA, HA_PERIODS);
     }
 
-    public HASO(int periodsMarketRate, int periodsMarketRateSma, int periodsStochasticSma, int smaShort, int smaLong, int periodsHa) {
-
-        this.periodsSmaShort = smaShort;
-        this.periodsSmaLong = smaLong;
+    public HASO(int periodsMarketRate, int periodsMarketRateSma, int periodsStochasticSma, int periodsHa) {
 
         //create our indicators
         this.objHA = new HA(periodsHa);
         this.objSO = new SO(periodsMarketRate, periodsMarketRateSma, periodsStochasticSma);
-        this.smaShort = new ArrayList<>();
-        this.smaLong = new ArrayList<>();
     }
 
     @Override
@@ -109,7 +97,5 @@ public class HASO extends Strategy {
         //calculate
         objHA.calculate(history);
         objSO.calculate(history);
-        SMA.calculateSMA(history, smaShort, periodsSmaShort, Fields.Close);
-        SMA.calculateSMA(history, smaLong, periodsSmaLong, Fields.Close);
     }
 }

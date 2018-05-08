@@ -10,6 +10,8 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+
 /**
  * Bollinger Bands, EMA, & RSI
  */
@@ -17,7 +19,8 @@ public class BBER extends Strategy {
 
     //our list of variations
     private static final float RSI_LINE = 50.0f;
-    private static final int PERIODS_EMA = 75;
+    private static final int PERIODS_EMA_LONG = 75;
+    private static final int PERIODS_EMA_SHORT = 5;
     private static final int PERIODS_RSI = 14;
     private static final int PERIODS_BB = 20;
     private static final float MULTIPLIER_BB = 2.0f;
@@ -28,31 +31,23 @@ public class BBER extends Strategy {
     //our rsi object
     private RSI rsiObj;
 
+    //our ema object
+    private EMA emaObj;
+
     //our rsi line
     private final float rsiLine;
 
-    //# of periods to calculate ema
-    private final int periodsEMA;
-
-    //list of ema values
-    private List<Double> emaList;
-
     public BBER() {
-        this(PERIODS_EMA, PERIODS_BB, MULTIPLIER_BB, PERIODS_RSI, RSI_LINE);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_BB, MULTIPLIER_BB, PERIODS_RSI, RSI_LINE);
     }
 
-    public BBER(int periodsEMA, int periodsBB, float multiplierBB, int periodsRSI, float rsiLine) {
+    public BBER(int periodsEmaLong, int periodsEmaShort, int periodsBB, float multiplierBB, int periodsRSI, float rsiLine) {
 
         this.rsiLine = rsiLine;
-        this.periodsEMA = periodsEMA;
 
         this.bbObj = new BB(periodsBB, multiplierBB);
         this.rsiObj = new RSI(periodsRSI);
-        this.emaList = new ArrayList<>();
-    }
-
-    private List<Double> getEmaList() {
-        return this.emaList;
+        this.emaObj = new EMA(periodsEmaLong, periodsEmaShort);
     }
 
     @Override
@@ -60,15 +55,16 @@ public class BBER extends Strategy {
 
         //get the current values
         double close = getRecent(history, Period.Fields.Close);
-        double ema = getRecent(getEmaList());
-        double middle = getRecent(bbObj.getMiddle());
+        double ema = getRecent(emaObj.getEmaLong());
+        double middle = getRecent(bbObj.getMiddle().getSma());
         double rsi = getRecent(rsiObj.getRsiVal());
 
-        //if the close price is above our long ema, middle bollinger band, and the rsi is above the trend
-        if (close > ema && close > middle && rsi >= rsiLine)
-            agent.setBuy(true);
+        //if the candle closed above our long ema and above the bollinger bands middle line, and our rsi is above the line
+        if (close > ema && close > middle && rsi >= RSI_LINE)
+                agent.setBuy(true);
 
         //display our data
+        displayMessage(agent, "Close $" + close, agent.hasBuy());
         displayData(agent, agent.hasBuy());
     }
 
@@ -77,19 +73,20 @@ public class BBER extends Strategy {
 
         //get the current values
         double close = getRecent(history, Period.Fields.Close);
-        double ema = getRecent(getEmaList());
-        double middle = getRecent(bbObj.getMiddle());
+        double ema = getRecent(emaObj.getEmaLong());
+        double middle = getRecent(bbObj.getMiddle().getSma());
         double rsi = getRecent(rsiObj.getRsiVal());
 
-        //if the close price is below our long ema, middle bollinger band, and the rsi is below the trend
-        if (close < ema && close < middle && rsi <= rsiLine)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        //adjust our hard stop price to protect our investment
-        if (close < ema || close < middle)
+        //if at least one of our values are below trending set the hard stop $
+        if (close < ema || close < middle || rsi <= RSI_LINE)
             adjustHardStopPrice(agent, currentPrice);
 
+        //if the close is below the ema long and bb middle and rsi is heading towards oversold
+        if (close < ema && close < middle && rsi <= RSI_LINE)
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+
         //display our data
+        displayMessage(agent, "Close $" + close, agent.hasBuy());
         displayData(agent, agent.getReasonSell() != null);
     }
 
@@ -97,7 +94,7 @@ public class BBER extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "EMA : ", getEmaList(), write);
+        this.emaObj.displayData(agent, write);
         this.bbObj.displayData(agent, write);
         this.rsiObj.displayData(agent, write);
     }
@@ -106,7 +103,7 @@ public class BBER extends Strategy {
     public void calculate(List<Period> history) {
 
         //do our calculations
-        EMA.calculateEMA(history, getEmaList(), periodsEMA);
+        this.emaObj.calculate(history);
         this.bbObj.calculate(history);
         this.rsiObj.calculate(history);
     }

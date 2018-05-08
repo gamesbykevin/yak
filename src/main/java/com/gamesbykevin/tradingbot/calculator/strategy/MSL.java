@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Slope;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
@@ -10,9 +11,9 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 /**
- * Moving Average Crossover Divergence
+ * Moving Average Crossover Divergence / Slope
  */
-public class MACD extends Strategy {
+public class MSL extends Strategy {
 
     //what is our slope line
     private float slope = 0f;
@@ -21,24 +22,24 @@ public class MACD extends Strategy {
     private int x1, x2;
 
     //our macd indicator object
-    private com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD objMacd;
+    private MACD objMacd;
 
     //our list of variations
     private static final int PERIODS_MACD_SIGNAL = 9;
     private static final int PERIODS_EMA_LONG = 26;
     private static final int PERIODS_EMA_SHORT = 12;
 
-    public MACD() {
+    public MSL() {
         this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD_SIGNAL);
     }
 
-    public MACD(int emaLong, int emaShort, int macdSignal) {
+    public MSL(int emaLong, int emaShort, int macdSignal) {
 
         //create object
-        this.objMacd = new com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD(emaLong, emaShort, macdSignal);
+        this.objMacd = new MACD(emaLong, emaShort, macdSignal);
     }
 
-    private com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD getObjMacd() {
+    private MACD getObjMacd() {
         return this.objMacd;
     }
 
@@ -117,7 +118,7 @@ public class MACD extends Strategy {
     @Override
     public void displayData(Agent agent, boolean write) {
 
-        //display the recent MACD values which we use as a signal
+        //display the recent MSL values which we use as a signal
         displayMessage(agent, "Slope: " + getSlope(), write);
         getObjMacd().displayData(agent, write);
     }

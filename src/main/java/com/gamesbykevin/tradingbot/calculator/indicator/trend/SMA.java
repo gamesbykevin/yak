@@ -1,11 +1,65 @@
 package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
+import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class SMA {
+public class SMA extends Indicator {
+
+    //our list of sma values
+    private final List<Double> sma;
+
+    //how many periods so we cover
+    private final int periods;
+
+    //the field we want to calculate
+    private final Fields field;
+
+    public SMA(int periods) {
+        this(periods, Fields.Close);
+    }
+
+    public SMA(int periods, Fields field) {
+
+        //save the periods
+        this.periods = periods;
+
+        //which field are we calculating
+        this.field = field;
+
+        //create new list
+        this.sma = new ArrayList<>();
+    }
+
+    public int getPeriods() {
+        return this.periods;
+    }
+
+    public Fields getField() {
+        return this.field;
+    }
+
+    public List<Double> getSma() {
+        return this.sma;
+    }
+
+    @Override
+    public void displayData(Agent agent, boolean write) {
+
+        //display our data
+        display(agent, "SMA (" + getPeriods() + ") :", getSma(), write);
+    }
+
+    @Override
+    public void calculate(List<Period> history) {
+
+        //calculate the sma
+        calculateSMA(history, getSma(), getPeriods(), getField());
+    }
 
     public static void calculateSMA(List<Double> data, List<Double> populate, int periods) {
 

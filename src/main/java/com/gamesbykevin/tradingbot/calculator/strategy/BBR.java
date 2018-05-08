@@ -79,8 +79,8 @@ public class BBR extends Strategy {
 
         //indicator values
         double rsi = getRecent(objRSI.getRsiVal());
-        double middleCurr = getRecent(objBB.getMiddle());
-        double middlePrev = getRecent(objBB.getMiddle(), 2);
+        double middleCurr = getRecent(objBB.getMiddle().getSma());
+        double middlePrev = getRecent(objBB.getMiddle().getSma(), 2);
         double close = getRecent(history, Fields.Close);
 
         //if the rsi is overbought ....

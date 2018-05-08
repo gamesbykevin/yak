@@ -14,6 +14,9 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasTrendDownward;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasTrendUpward;
 
+/**
+ * Bollinger Bands / Accumulation Distribution Line / Relative Strength Index
+ */
 public class BBAR extends Strategy {
 
     //list of configurable values
@@ -82,8 +85,8 @@ public class BBAR extends Strategy {
         double closePrev = getRecent(history, Fields.Close, 2);
         double lowPrev = getRecent(objBB.getLower(), 2);
         double lowCurr = getRecent(objBB.getLower());
-        double midPrev = getRecent(objBB.getMiddle(), 2);
-        double midCurr = getRecent(objBB.getMiddle());
+        double midPrev = getRecent(objBB.getMiddle().getSma(), 2);
+        double midCurr = getRecent(objBB.getMiddle().getSma());
         double upPrev = getRecent(objBB.getUpper(), 2);
         double upCurr = getRecent(objBB.getUpper());
 
@@ -100,7 +103,7 @@ public class BBAR extends Strategy {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //adjust our hard stop price to protect our investment
-        if (agent.getReasonSell() != null)
+        if (closeCurr < midCurr || closeCurr < lowCurr)
             adjustHardStopPrice(agent, currentPrice);
 
         //display our data

@@ -23,18 +23,19 @@ public class MACS extends Strategy {
     private static final int PERIODS_MACS_FAST = 5;
     private static final int PERIODS_MACS_SLOW = 10;
     private static final int PERIODS_MACS_TREND = 20;
-
-    private final int fast, slow, trend;
+    private static final int PERIODS_CONFIRM = 3;
+    private final int fast, slow, trend, confirm;
 
     public MACS() {
-        this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND);
+        this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND, PERIODS_CONFIRM);
     }
 
-    public MACS(int fast, int slow, int trend) {
+    public MACS(int fast, int slow, int trend, int confirm) {
 
         this.fast = fast;
         this.slow = slow;
         this.trend = trend;
+        this.confirm = confirm;
 
         //create new list(s)
         this.emaFast = new ArrayList<>();
@@ -45,8 +46,15 @@ public class MACS extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        if (getRecent(emaFast) > getRecent(emaSlow) && getRecent(emaSlow) > getRecent(emaTrend))
-            agent.setBuy(true);
+        if (getRecent(emaFast) > getRecent(emaSlow) && getRecent(emaSlow) > getRecent(emaTrend)) {
+
+            //let's also confirm our values are all going in the correct direction
+            if (getRecent(emaSlow, 2) < getRecent(emaSlow) &&
+                getRecent(emaTrend, 2) < getRecent(emaTrend) &&
+                getRecent(emaFast, 2) < getRecent(emaFast)) {
+                    agent.setBuy(true);
+            }
+        }
 
         //display our data for what it is worth
         displayData(agent, agent.hasBuy());
@@ -55,8 +63,25 @@ public class MACS extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
+        //if our fast value is below the slow and trend let's sell
         if (getRecent(emaFast) < getRecent(emaSlow) && getRecent(emaFast) < getRecent(emaTrend))
             agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //we should sell if every value is trending down even if they haven't crossed
+        for (int count = 1; count <= PERIODS_CONFIRM; count++) {
+            //TODO UPDATE THIS
+        }
+
+
+        if (getRecent(emaSlow, 3) > getRecent(emaSlow, 2) && getRecent(emaSlow, 2) > getRecent(emaSlow) &&
+            getRecent(emaTrend, 3) > getRecent(emaTrend, 2) && getRecent(emaTrend, 2) > getRecent(emaTrend) &&
+            getRecent(emaFast, 3) > getRecent(emaFast, 2) && getRecent(emaFast, 2) > getRecent(emaFast)) {
+
+           agent.setReasonSell(ReasonSell.Reason_Strategy);
+
+            //adjust our hard stop price to protect our investment
+            adjustHardStopPrice(agent, currentPrice);
+        }
 
         //adjust our hard stop price to protect our investment
         if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) < getRecent(emaTrend))

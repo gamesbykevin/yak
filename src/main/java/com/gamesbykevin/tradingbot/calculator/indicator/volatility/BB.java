@@ -21,7 +21,10 @@ public class BB extends Indicator {
     private final float multiplier;
 
     //our lists
-    private List<Double> middle, upper, lower, width;
+    private List<Double> upper, lower, width;
+
+    //our middle values
+    private SMA middle;
 
     public static final float MULTIPLIER = 2.0f;
 
@@ -35,7 +38,7 @@ public class BB extends Indicator {
         this.multiplier = multiplier;
 
         //create our lists
-        this.middle = new ArrayList<>();
+        this.middle = new SMA(periods);
         this.upper = new ArrayList<>();
         this.lower = new ArrayList<>();
         this.width = new ArrayList<>();
@@ -49,7 +52,7 @@ public class BB extends Indicator {
         return this.upper;
     }
 
-    public List<Double> getMiddle() {
+    public SMA getMiddle() {
         return this.middle;
     }
 
@@ -66,7 +69,7 @@ public class BB extends Indicator {
 
         //display the information
         display(agent, "Upper:  ", getUpper(), write);
-        display(agent, "Middle: ", getMiddle(), write);
+        display(agent, "Middle: ", getMiddle().getSma(), write);
         display(agent, "Lower:  ", getLower(), write);
         display(agent, "Width:  ", getWidth(), write);
     }
@@ -75,18 +78,17 @@ public class BB extends Indicator {
     public void calculate(List<Period> history) {
 
         //clear our lists
-        getMiddle().clear();
         getUpper().clear();
         getLower().clear();
         getWidth().clear();
 
         //calculate our sma values
-        SMA.calculateSMA(history, getMiddle(), getPeriods(), Fields.Close);
+        getMiddle().calculate(history);
 
-        for (int index = 0; index < getMiddle().size(); index++) {
+        for (int index = 0; index < getMiddle().getSma().size(); index++) {
 
             //get the sma value
-            double sma = getMiddle().get(index);
+            double sma = getMiddle().getSma().get(index);
 
             //get the standard deviation
             double standardDeviation = getStandardDeviation(history, sma, index + getPeriods());

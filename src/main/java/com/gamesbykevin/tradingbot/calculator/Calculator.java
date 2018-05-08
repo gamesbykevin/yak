@@ -96,8 +96,8 @@ public class Calculator {
 
             switch (MY_TRADING_STRATEGIES[i]) {
 
-                case AO:
-                    strategy = new AO();
+                case AE:
+                    strategy = new AE();
                     break;
 
                 case BBAR:
@@ -124,14 +124,6 @@ public class Calculator {
                     strategy = new HASO();
                     break;
 
-                case LR:
-                    strategy = new LR();
-                    break;
-
-                case MACD:
-                    strategy = new MACD();
-                    break;
-
                 case MACS:
                     strategy = new MACS();
                     break;
@@ -142,6 +134,10 @@ public class Calculator {
 
                 case MES:
                     strategy = new MES();
+                    break;
+
+                case MSL:
+                    strategy = new MSL();
                     break;
 
                 case NR:
