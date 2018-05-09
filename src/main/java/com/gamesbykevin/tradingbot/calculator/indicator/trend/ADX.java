@@ -66,7 +66,7 @@ public class ADX extends Indicator {
         //display the recent values which we use as a signal
         display(agent, "+DI: ", getDmPlusIndicator(), write);
         display(agent, "-DI: ", getDmMinusIndicator(), write);
-        displayMessage(agent, "ADX: " + getRecent(getAdx()), write);
+        display(agent, "ADX: ", getAdx(), write);
     }
 
     @Override

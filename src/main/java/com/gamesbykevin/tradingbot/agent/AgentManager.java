@@ -47,9 +47,10 @@ public class AgentManager {
      */
     public enum TradingStrategy {
 
-        AE, BBAR, BBER, BBR, EMAR,
-        EMAS, HASO, MACS, MARS, MES,
-        MSL, NR, NVI, PVI, SOEMA
+        AR, BBAR, BBER, BBR, CA,
+        EMAR, EMAS, HASO, MACS, MARS,
+        MER, MES, MSL, NR, NVI,
+        PVI, SOEMA
     }
 
     public AgentManager(final Product product, final double funds) {

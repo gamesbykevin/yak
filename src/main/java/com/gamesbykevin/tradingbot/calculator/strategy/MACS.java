@@ -63,25 +63,38 @@ public class MACS extends Strategy {
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if our fast value is below the slow and trend let's sell
-        if (getRecent(emaFast) < getRecent(emaSlow) && getRecent(emaFast) < getRecent(emaTrend))
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        //did we confirm downtrend?
+        boolean downtrend = true;
 
         //we should sell if every value is trending down even if they haven't crossed
-        for (int count = 1; count <= PERIODS_CONFIRM; count++) {
-            //TODO UPDATE THIS
+        for (int count = 1; count <= confirm; count++) {
+
+            //if the previous ema period is less than the current we can't confirm downtrend
+            if (getRecent(emaSlow, count + 1) < getRecent(emaSlow, count)) {
+                downtrend = false;
+                break;
+            } else if (getRecent(emaTrend, count + 1) < getRecent(emaTrend, count)) {
+                downtrend = false;
+                break;
+            } else if (getRecent(emaFast, count + 1) < getRecent(emaFast, count)) {
+                downtrend = false;
+                break;
+            }
         }
 
+        //do we have a downtrend
+        if (downtrend) {
 
-        if (getRecent(emaSlow, 3) > getRecent(emaSlow, 2) && getRecent(emaSlow, 2) > getRecent(emaSlow) &&
-            getRecent(emaTrend, 3) > getRecent(emaTrend, 2) && getRecent(emaTrend, 2) > getRecent(emaTrend) &&
-            getRecent(emaFast, 3) > getRecent(emaFast, 2) && getRecent(emaFast, 2) > getRecent(emaFast)) {
-
-           agent.setReasonSell(ReasonSell.Reason_Strategy);
+            //we have a reason to sell
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
             //adjust our hard stop price to protect our investment
             adjustHardStopPrice(agent, currentPrice);
         }
+
+        //if our fast value is below the slow and trend let's sell
+        if (getRecent(emaFast) < getRecent(emaSlow) && getRecent(emaFast) < getRecent(emaTrend))
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //adjust our hard stop price to protect our investment
         if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) < getRecent(emaTrend))

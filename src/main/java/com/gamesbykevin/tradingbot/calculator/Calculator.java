@@ -96,8 +96,8 @@ public class Calculator {
 
             switch (MY_TRADING_STRATEGIES[i]) {
 
-                case AE:
-                    strategy = new AE();
+                case AR:
+                    strategy = new AR();
                     break;
 
                 case BBAR:
@@ -110,6 +110,10 @@ public class Calculator {
 
                 case BBR:
                     strategy = new BBR();
+                    break;
+
+                case CA:
+                    strategy = new CA();
                     break;
 
                 case EMAR:
@@ -130,6 +134,10 @@ public class Calculator {
 
                 case MARS:
                     strategy = new MARS();
+                    break;
+
+                case MER:
+                    strategy = new MER();
                     break;
 
                 case MES:
