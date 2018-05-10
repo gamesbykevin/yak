@@ -45,7 +45,7 @@ public class AR extends Strategy {
             agent.setBuy(true);
 
             //adjust our hard stop based on average true range
-            adjustHardStopPrice(agent, history.get(history.size() - 1).close - getRecent(objATR.getTrueRangeAverage()));
+            adjustHardStopPrice(agent, history.get(history.size() - 1).close - getRecent(objATR.getAverageTrueRange()));
         }
 
         //display our data

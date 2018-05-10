@@ -18,44 +18,44 @@ public final class SO extends Indicator {
     private List<Double> stochasticOscillator;
 
     //our market rate
-    private List<Double> marketRate;
+    private List<Double> marketRateBasic;
 
     //the sma of our market rate
-    private List<Double> marketRateSma;
+    private List<Double> marketRateFull;
 
     //list of configurable values
-    private static final int PERIODS_MARKET_RATE = 14;
-    private static final int PERIODS_MARKET_RATE_SMA = 3;
-    private static final int PERIODS_STOCHASTIC_SMA = 3;
+    private static final int PERIODS_MARKET_RATE_BASIC = 14;
+    private static final int PERIODS_MARKET_RATE_FULL = 3;
+    private static final int PERIODS_STOCHASTIC = 3;
 
-    private final int periodsMR, periodsMarketRateSMA, periodsStochasticSMA;
+    private final int periodsMarketRateBasic, periodsMarketRateFull, periodsStochastic;
 
     public SO() {
-        this(PERIODS_MARKET_RATE, PERIODS_MARKET_RATE_SMA, PERIODS_STOCHASTIC_SMA);
+        this(PERIODS_MARKET_RATE_BASIC, PERIODS_MARKET_RATE_FULL, PERIODS_STOCHASTIC);
     }
 
-    public SO(int periodsMR, int periodsMarketRateSMA, int periodsStochasticSMA) {
+    public SO(int periodsMarketRateBasic, int periodsMarketRateFull, int periodsStochastic) {
 
-        this.periodsMR = periodsMR;
-        this.periodsMarketRateSMA = periodsMarketRateSMA;
-        this.periodsStochasticSMA = periodsStochasticSMA;
+        this.periodsMarketRateBasic = periodsMarketRateBasic;
+        this.periodsMarketRateFull = periodsMarketRateFull;
+        this.periodsStochastic = periodsStochastic;
 
         //create new list(s)
         this.stochasticOscillator = new ArrayList<>();
-        this.marketRate = new ArrayList<>();
-        this.marketRateSma = new ArrayList<>();
+        this.marketRateBasic = new ArrayList<>();
+        this.marketRateFull = new ArrayList<>();
     }
 
-    public int getPeriodsStochasticSMA() {
-        return this.periodsStochasticSMA;
+    public int getPeriodsStochastic() {
+        return this.periodsStochastic;
     }
 
-    public int getPeriodsMarketRateSMA() {
-        return this.periodsMarketRateSMA;
+    public int getPeriodsMarketRateFull() {
+        return this.periodsMarketRateFull;
     }
 
-    public int getPeriodsMR() {
-        return this.periodsMR;
+    public int getPeriodsMarketRateBasic() {
+        return this.periodsMarketRateBasic;
     }
 
     /**
@@ -68,36 +68,36 @@ public final class SO extends Indicator {
     /**
      * Get the market rate %K (not smoothed with sma)
      */
-    public List<Double> getMarketRate() {
-        return this.marketRate;
+    public List<Double> getMarketRateBasic() {
+        return this.marketRateBasic;
     }
 
     /**
      * Get the specified period sma of the market rate %K
      */
-    public List<Double> getMarketRateSma() {
-        return this.marketRateSma;
+    public List<Double> getMarketRateFull() {
+        return this.marketRateFull;
     }
 
     @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Market Rate:     %K ", getMarketRate(), write);
-        display(agent, "Market Rate Sma: %K ", getMarketRateSma(), write);
-        display(agent, "Stochastic:      %D ", getStochasticOscillator(), write);
+        display(agent, "Market Rate Basic: %K ", getMarketRateBasic(), write);
+        display(agent, "Market Rate Full : %K ", getMarketRateFull(), write);
+        display(agent, "Stochastic:        %D ", getStochasticOscillator(), write);
     }
 
     @Override
     public void calculate(List<Period> history) {
 
         //clear our list(s)
-        getMarketRate().clear();
+        getMarketRateBasic().clear();
 
         for (int i = 0; i < history.size(); i++) {
 
             //we don't have enough data yet
-            if (i < getPeriodsMR())
+            if (i < getPeriodsMarketRateBasic())
                 continue;
 
             //what is the high and low for our period range
@@ -108,14 +108,14 @@ public final class SO extends Indicator {
             double marketValue = ((history.get(i).close - low) / (high - low)) * 100.0d;
 
             //add to our market rate list
-            getMarketRate().add(marketValue);
+            getMarketRateBasic().add(marketValue);
         }
 
         //now we use a sma to create our market rate values
-        calculateSMA(getMarketRate(), getMarketRateSma(), getPeriodsMarketRateSMA());
+        calculateSMA(getMarketRateBasic(), getMarketRateFull(), getPeriodsMarketRateFull());
 
         //now we use a sma of that to create our stochastic oscillator values
-        calculateSMA(getMarketRateSma(), getStochasticOscillator(), getPeriodsStochasticSMA());
+        calculateSMA(getMarketRateFull(), getStochasticOscillator(), getPeriodsStochastic());
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {
@@ -123,7 +123,7 @@ public final class SO extends Indicator {
         Period result = null;
 
         //check these periods for the high or low
-        for (int i = index - getPeriodsMR(); i < index; i++) {
+        for (int i = index - getPeriodsMarketRateBasic(); i < index; i++) {
 
             //check the current period
             Period current = history.get(i);

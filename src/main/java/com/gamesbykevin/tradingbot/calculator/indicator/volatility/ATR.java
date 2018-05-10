@@ -42,7 +42,7 @@ public class ATR extends Indicator {
         return this.trueRange;
     }
 
-    public List<Double> getTrueRangeAverage() {
+    public List<Double> getAverageTrueRange() {
         return this.trueRangeAverage;
     }
 
@@ -51,7 +51,7 @@ public class ATR extends Indicator {
 
         //display the information
         display(agent, "True Range     : ", getTrueRange(), write);
-        display(agent, "Avg True Range : ", getTrueRangeAverage(), write);
+        display(agent, "Avg True Range : ", getAverageTrueRange(), write);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ATR extends Indicator {
 
         //clear our list
         getTrueRange().clear();
-        getTrueRangeAverage().clear();
+        getAverageTrueRange().clear();
 
         for (int i = 0; i < history.size(); i++) {
 
@@ -98,19 +98,19 @@ public class ATR extends Indicator {
         double average = (sum / (float)getPeriods());
 
         //add the first value to our list
-        getTrueRangeAverage().add(average);
+        getAverageTrueRange().add(average);
 
         //start where we left off and calculate the rest
         for (int i = getPeriods(); i < getTrueRange().size(); i++) {
 
             //get the previous value
-            double previous = getRecent(getTrueRangeAverage());
+            double previous = getRecent(getAverageTrueRange());
 
             //calculate our new true average
             double current = ((previous * (getPeriods() - 1)) + getTrueRange().get(i)) / (float)getPeriods();
 
             //add to the list
-            getTrueRangeAverage().add(current);
+            getAverageTrueRange().add(current);
         }
     }
 }

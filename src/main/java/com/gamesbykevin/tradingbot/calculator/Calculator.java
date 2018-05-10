@@ -96,6 +96,10 @@ public class Calculator {
 
             switch (MY_TRADING_STRATEGIES[i]) {
 
+                case AE:
+                    strategy = new AE();
+                    break;
+
                 case AR:
                     strategy = new AR();
                     break;
@@ -124,6 +128,10 @@ public class Calculator {
                     strategy = new EMAS();
                     break;
 
+                case ERS:
+                    strategy = new ERS();
+                    break;
+
                 case HASO:
                     strategy = new HASO();
                     break;
@@ -148,10 +156,6 @@ public class Calculator {
                     strategy = new MSL();
                     break;
 
-                case NR:
-                    strategy = new NR();
-                    break;
-
                 case NVI:
                     strategy = new NVI();
                     break;
@@ -160,8 +164,16 @@ public class Calculator {
                     strategy = new PVI();
                     break;
 
+                case RCR:
+                    strategy = new RCR();
+                    break;
+
                 case SOEMA:
                     strategy = new SOEMA();
+                    break;
+
+                case SSR:
+                    strategy = new SSR();
                     break;
 
                 default:
