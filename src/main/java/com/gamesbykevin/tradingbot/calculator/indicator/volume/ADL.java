@@ -33,12 +33,12 @@ public class ADL extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear our list
-        getVolume().clear();
+        //where do we start?
+        int start = getVolume().isEmpty() ? 0 : history.size() - newPeriods;
 
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //calculate our money flow volume
             double volume = getMultiplier(history.get(i)) * history.get(i).volume;

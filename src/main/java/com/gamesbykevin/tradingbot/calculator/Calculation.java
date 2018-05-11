@@ -14,7 +14,7 @@ public abstract class Calculation {
      */
     private static final int RECENT_PERIODS = 10;
 
-    public abstract void calculate(List<Period> history);
+    public abstract void calculate(List<Period> history, int newPeriods);
 
     public abstract void displayData(Agent agent, boolean write);
 

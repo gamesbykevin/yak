@@ -100,10 +100,10 @@ public class CA extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //perform calculations
-        objADX.calculate(history);
-        objCCI.calculate(history);
+        objADX.calculate(history, newPeriods);
+        objCCI.calculate(history, newPeriods);
     }
 }

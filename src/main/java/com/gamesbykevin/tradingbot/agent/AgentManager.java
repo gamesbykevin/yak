@@ -77,7 +77,7 @@ public class AgentManager {
             History.load(getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory(), getProductId(), MY_PERIOD_DURATIONS[i], getWriter());
 
             //now that we have data do the initial calculations
-            getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate();
+            getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate(0);
         }
 
         //create our agents last

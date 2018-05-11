@@ -76,10 +76,10 @@ public class AR extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        objATR.calculate(history);
-        objRSI.calculate(history);
+        objATR.calculate(history, newPeriods);
+        objRSI.calculate(history, newPeriods);
     }
 }

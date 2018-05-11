@@ -100,11 +100,11 @@ public class BBER extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        this.emaObj.calculate(history);
-        this.bbObj.calculate(history);
-        this.rsiObj.calculate(history);
+        this.emaObj.calculate(history, newPeriods);
+        this.bbObj.calculate(history, newPeriods);
+        this.rsiObj.calculate(history, newPeriods);
     }
 }

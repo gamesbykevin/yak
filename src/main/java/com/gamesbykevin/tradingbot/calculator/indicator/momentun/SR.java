@@ -65,16 +65,16 @@ public class SR extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate
-        getObjRsi().calculate(history);
+        getObjRsi().calculate(history, newPeriods);
 
-        //clear our list
-        getStochRsi().clear();
+        //where do we start?
+        int start = getStochRsi().isEmpty() ? 0 : getObjRsi().getRsiVal().size() - newPeriods;
 
         //check every period
-        for (int i = 0; i < getObjRsi().getRsiVal().size(); i++) {
+        for (int i = start; i < getObjRsi().getRsiVal().size(); i++) {
 
             //skip until we have enough data
             if (i < getPeriods())

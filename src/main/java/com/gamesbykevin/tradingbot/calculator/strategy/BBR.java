@@ -118,10 +118,10 @@ public class BBR extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        this.objBB.calculate(history);
-        this.objRSI.calculate(history);
+        this.objBB.calculate(history, newPeriods);
+        this.objRSI.calculate(history, newPeriods);
     }
 }

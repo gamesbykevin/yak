@@ -90,11 +90,11 @@ public class RCR extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //perform calculations
-        objRSI.calculate(history);
-        objRC.calculate(history);
-        calculateSMA(objRC.getRenkoChart(), sma, periodsSMA);
+        objRSI.calculate(history, newPeriods);
+        objRC.calculate(history, newPeriods);
+        calculateSMA(objRC.getRenkoChart(), sma, newPeriods, periodsSMA);
     }
 }

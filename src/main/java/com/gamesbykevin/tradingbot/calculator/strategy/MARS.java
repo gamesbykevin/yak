@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 
 /**
  * Moving average ribbon strategy
@@ -133,11 +134,11 @@ public class MARS extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate the different ema values
         for (int i = 0; i < emas.size(); i++) {
-            EMA.calculateEMA(history, emas.get(i), PERIODS[i]);
+            calculateEMA(history, emas.get(i), newPeriods, PERIODS[i]);
         }
     }
 }

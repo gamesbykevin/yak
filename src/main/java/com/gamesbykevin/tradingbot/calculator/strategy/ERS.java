@@ -96,11 +96,11 @@ public class ERS extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //perform calculations
-        objSO.calculate(history);
-        objEMA.calculate(history);
-        objRSI.calculate(history);
+        objSO.calculate(history, newPeriods);
+        objEMA.calculate(history, newPeriods);
+        objRSI.calculate(history, newPeriods);
     }
 }

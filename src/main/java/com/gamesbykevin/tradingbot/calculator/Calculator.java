@@ -240,7 +240,7 @@ public class Calculator {
         return result;
     }
 
-    public synchronized void calculate() {
+    public synchronized void calculate(int newPeriods) {
 
         //recalculate all our strategies
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
@@ -249,7 +249,7 @@ public class Calculator {
             getStrategies().get(MY_TRADING_STRATEGIES[i]).setWait(false);
 
             //calculate based on the current strategy
-            getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(getHistory());
+            getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(getHistory(), newPeriods);
         }
     }
 

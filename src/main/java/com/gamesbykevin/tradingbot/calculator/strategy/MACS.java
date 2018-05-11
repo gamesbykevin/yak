@@ -9,6 +9,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 /**
@@ -46,12 +47,24 @@ public class MACS extends Strategy {
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        if (getRecent(emaFast) > getRecent(emaSlow) && getRecent(emaSlow) > getRecent(emaTrend)) {
+        //current values
+        double currEmaSlow = getRecent(emaSlow);
+        double currEmaFast = getRecent(emaFast);
+        double currEmaTrend = getRecent(emaTrend);
 
-            //let's also confirm our values are all going in the correct direction
-            if (getRecent(emaSlow, 2) < getRecent(emaSlow) &&
-                getRecent(emaTrend, 2) < getRecent(emaTrend) &&
-                getRecent(emaFast, 2) < getRecent(emaFast)) {
+        //previous values
+        double prevEmaSlow = getRecent(emaSlow, 2);
+        double prevEmaFast = getRecent(emaFast, 2);
+        double prevEmaTrend = getRecent(emaTrend, 2);
+
+        //make sure the fast just crossed above the slow
+        if (prevEmaFast < prevEmaSlow && currEmaFast > currEmaSlow) {
+
+            //we also want the slow to be above the trend
+            if (currEmaSlow > currEmaTrend) {
+
+                //last thing we check is that all ema values are going in the correct direction
+                if (prevEmaSlow < currEmaSlow && prevEmaFast  < currEmaFast && prevEmaTrend < currEmaTrend)
                     agent.setBuy(true);
             }
         }
@@ -114,11 +127,11 @@ public class MACS extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate the different ema values
-        EMA.calculateEMA(history, emaFast, fast);
-        EMA.calculateEMA(history, emaSlow, slow);
-        EMA.calculateEMA(history, emaTrend, trend);
+        calculateEMA(history, emaFast, newPeriods, fast);
+        calculateEMA(history, emaSlow, newPeriods, slow);
+        calculateEMA(history, emaTrend, newPeriods, trend);
     }
 }

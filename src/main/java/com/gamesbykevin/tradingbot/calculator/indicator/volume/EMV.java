@@ -57,12 +57,12 @@ public class EMV extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear our list
-        getEmv().clear();
+        //where do we start
+        int start = getEmv().isEmpty() ? 0 : history.size() - newPeriods;
 
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //we need to be able to look at the previous value
             if (i < 1)
@@ -86,6 +86,6 @@ public class EMV extends Indicator {
         }
 
         //now that we have our list of emv values, calculate sma
-        calculateSMA(getEmv(), getEmvSma(), periods);
+        calculateSMA(getEmv(), getEmvSma(), newPeriods, periods);
     }
 }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEmaList;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEma;
 
 /**
  * Positive volume index
@@ -79,16 +79,16 @@ public class PVI extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
-
-        //clear list
-        getPviCumulative().clear();
+    public void calculate(List<Period> history, int newPeriods) {
 
         //start at 1,000
         double pvi = 1000;
 
+        //where do we start?
+        int start = getPviCumulative().isEmpty() ? 0 : history.size() - newPeriods;
+
         //check all of our periods
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //we have to check the previous period
             if (i < 1)
@@ -114,6 +114,6 @@ public class PVI extends Strategy {
         }
 
         //now that we have our standard list, let's calculate ema
-        calculateEmaList(getPviEma(), getPviCumulative(), periodsEma);
+        calculateEma(getPviEma(), getPviCumulative(), newPeriods, periodsEma);
     }
 }

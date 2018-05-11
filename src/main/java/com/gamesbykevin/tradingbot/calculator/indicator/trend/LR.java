@@ -77,7 +77,7 @@ public class LR extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //the number of periods
         double n = getPeriods();

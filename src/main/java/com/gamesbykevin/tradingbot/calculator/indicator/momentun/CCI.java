@@ -3,10 +3,11 @@ package com.gamesbykevin.tradingbot.calculator.indicator.momentun;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Commodity Channel Index
@@ -94,15 +95,13 @@ public class CCI extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear our list
-        getCCI().clear();
-        getTypicalPrice().clear();
-        getTypicalPriceSma().clear();
+        //where do we start
+        int start = getTypicalPrice().isEmpty() ? 0 : history.size() - newPeriods;
 
         //check every period for our calculations
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);
@@ -115,10 +114,13 @@ public class CCI extends Indicator {
         }
 
         //calculate the simple moving average
-        SMA.calculateSMA(getTypicalPrice(), getTypicalPriceSma(), getPeriods());
+        calculateSMA(getTypicalPrice(), getTypicalPriceSma(), newPeriods, getPeriods());
+
+        //where do we start
+        start = getCCI().isEmpty() ? getTypicalPrice().size() - newPeriods : getPeriods();
 
         //calculate cci for every value in this list
-        for (int i = getPeriods(); i < getTypicalPrice().size(); i++) {
+        for (int i = start; i < getTypicalPrice().size(); i++) {
 
             //get the sma typical price
             double sma = getTypicalPriceSma().get(i - getPeriods());

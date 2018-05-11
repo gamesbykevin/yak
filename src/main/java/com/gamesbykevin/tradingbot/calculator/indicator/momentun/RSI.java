@@ -43,19 +43,13 @@ public class RSI extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //calculate rsi values
-        calculateRsi(history, getRsiVal(), periods);
-    }
+        //where do we start
+        int startIndex = (getRsiVal().isEmpty() ? 0 : history.size() - newPeriods);
 
-    public static void calculateRsi(List<Period> history, List<Double> populate, int periods) {
-
-        //clear our historical rsi list
-        populate.clear();
-
-        //calculate as many periods as we can
-        for (int i = 0; i < history.size(); i++) {
+        //calculate as many periods as we need
+        for (int i = startIndex; i < history.size(); i++) {
 
             //skip if we don't have enough data
             if (i <= periods)
@@ -69,7 +63,7 @@ public class RSI extends Indicator {
             final double tmpRsi = calculateRsi(history, start, end);
 
             //add the rsi value to our list
-            populate.add(tmpRsi);
+            getRsiVal().add(tmpRsi);
         }
     }
 
@@ -80,7 +74,7 @@ public class RSI extends Indicator {
      * @param endIndex Ending period
      * @return The rsi value
      */
-    private static final double calculateRsi(List<Period> history, int startIndex, int endIndex) {
+    private double calculateRsi(List<Period> history, int startIndex, int endIndex) {
 
         //track total gains and losses
         float gain = 0, loss = 0;
@@ -93,7 +87,7 @@ public class RSI extends Indicator {
         for (int i = startIndex; i < endIndex; i++) {
 
             //get the close prices to compare
-            double prev = history.get(i-1).close;
+            double prev = history.get(i - 1).close;
             double next = history.get(i).close;
 
             if (next > prev) {

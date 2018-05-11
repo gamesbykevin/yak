@@ -75,23 +75,25 @@ public class BB extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
-
-        //clear our lists
-        getUpper().clear();
-        getLower().clear();
-        getWidth().clear();
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate our sma values
-        getMiddle().calculate(history);
+        getMiddle().calculate(history, newPeriods);
 
-        for (int index = 0; index < getMiddle().getSma().size(); index++) {
+        //where do we start
+        int start = getWidth().isEmpty() ? 0 : getMiddle().getSma().size() - newPeriods;
+
+        for (int index = start; index < getMiddle().getSma().size(); index++) {
+
+            //do we have enough data to calculate
+            if (index < getPeriods())
+                continue;
 
             //get the sma value
             double sma = getMiddle().getSma().get(index);
 
             //get the standard deviation
-            double standardDeviation = getStandardDeviation(history, sma, index + getPeriods());
+            double standardDeviation = getStandardDeviation(history, sma, index);
 
             //calculate our upper value
             double upper = sma + (standardDeviation * multiplier);

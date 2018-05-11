@@ -97,10 +97,10 @@ public class AE extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //perform calculations
-        objADX.calculate(history);
-        objEMA.calculate(history);
+        objADX.calculate(history, newPeriods);
+        objEMA.calculate(history, newPeriods);
     }
 }

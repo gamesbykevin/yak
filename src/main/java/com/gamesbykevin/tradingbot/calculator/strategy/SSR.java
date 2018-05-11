@@ -94,11 +94,11 @@ public class SSR extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //perform calculations
-        objSO.calculate(history);
-        objSMA.calculate(history);
-        objRSI.calculate(history);
+        objSO.calculate(history, newPeriods);
+        objSMA.calculate(history, newPeriods);
+        objRSI.calculate(history, newPeriods);
     }
 }

@@ -55,18 +55,18 @@ public class SMA extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate the sma
-        calculateSMA(history, getSma(), getPeriods(), getField());
+        calculateSMA(history, getSma(), newPeriods, getPeriods(), getField());
     }
 
-    public static void calculateSMA(List<Double> data, List<Double> populate, int periods) {
+    public static void calculateSMA(List<Double> data, List<Double> populate, int newPeriods, int periods) {
 
-        //clear the list
-        populate.clear();
+        //where do we start
+        int start = (populate.isEmpty()) ? 0 : data.size() - newPeriods;
 
-        for (int i = 0; i <= data.size(); i++) {
+        for (int i = start; i <= data.size(); i++) {
 
             //skip if we don't have enough data
             if (i < periods)
@@ -84,13 +84,13 @@ public class SMA extends Indicator {
         }
     }
 
-    public static void calculateSMA(List<Period> history, List<Double> populate, int periods, Fields field) {
+    public static void calculateSMA(List<Period> history, List<Double> populate, int newPeriods, int periods, Fields field) {
 
-        //clear the list
-        populate.clear();
+        //where do we start
+        int start = populate.isEmpty() ? 0 : history.size() - newPeriods;
 
         //check all data when calculating
-        for (int i = 0; i <= history.size(); i++) {
+        for (int i = start; i <= history.size(); i++) {
 
             //skip until we have enough data to calculate
             if (i < periods)

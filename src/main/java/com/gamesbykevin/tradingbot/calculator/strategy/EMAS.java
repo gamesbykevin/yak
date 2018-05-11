@@ -49,13 +49,18 @@ public class EMAS extends Strategy {
         //recent closing $
         final double close = getRecent(history, Fields.Close);
 
-        //make sure we have an uptrend short value > long value
-        if (getRecent(emaObj.getEmaShort()) > getRecent(emaObj.getEmaLong())) {
+        //our previous values
+        double prevEmaShort = getRecent(emaObj.getEmaShort(), 2);
+        double prevEmaLong = getRecent(emaObj.getEmaLong(), 2);
 
-            //if the close $ is above the sma we have a buy signal
-            if (close > getRecent(smaObjShort.getSma()))
-                agent.setBuy(true);
-        }
+        //our current values
+        double currEmaShort = getRecent(emaObj.getEmaShort());
+        double currEmaLong = getRecent(emaObj.getEmaLong());
+        double currSmaShort = getRecent(smaObjShort.getSma());
+
+        //the short ema needs to cross above the long ema and the close needs to be above the sma
+        if (prevEmaShort < prevEmaLong && currEmaShort > currEmaLong && close > currSmaShort)
+            agent.setBuy(true);
 
         //display our data
         displayMessage(agent, "Close $" + close, agent.hasBuy());
@@ -68,14 +73,18 @@ public class EMAS extends Strategy {
         //recent closing $
         final double close = getRecent(history, Fields.Close);
 
+        //our current values
+        double currEmaShort = getRecent(emaObj.getEmaShort());
+        double currEmaLong = getRecent(emaObj.getEmaLong());
+        double currSmaShort = getRecent(smaObjShort.getSma());
+        double currSmaLong = getRecent(smaObjLong.getSma());
+
         //if the close $ is below the long sma we will sell
-        if (close < getRecent(smaObjLong.getSma()))
+        if (close < currSmaLong)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //adjust our hard stop price to protect our investment
-        if (close < getRecent(smaObjShort.getSma()))
-            adjustHardStopPrice(agent, currentPrice);
-        if (getRecent(emaObj.getEmaShort()) < getRecent(emaObj.getEmaLong()))
+        if (close < currSmaShort || currEmaShort < currEmaLong)
             adjustHardStopPrice(agent, currentPrice);
 
         //display our data
@@ -93,11 +102,11 @@ public class EMAS extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        emaObj.calculate(history);
-        smaObjShort.calculate(history);
-        smaObjLong.calculate(history);
+        emaObj.calculate(history, newPeriods);
+        smaObjShort.calculate(history, newPeriods);
+        smaObjLong.calculate(history, newPeriods);
     }
 }

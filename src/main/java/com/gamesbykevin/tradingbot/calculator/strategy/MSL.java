@@ -124,10 +124,10 @@ public class MSL extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate
-        getObjMacd().calculate(history);
+        getObjMacd().calculate(history, newPeriods);
         calculateSlope(history);
     }
 

@@ -27,7 +27,19 @@ public class ADX extends Indicator {
     public static final int PERIODS = 14;
     public static final double TREND = 20.0d;
 
+    //how many periods
     private final int periods;
+
+    //our lists for calculation
+    private List<Double> dmPlus;
+    private List<Double> dmMinus;
+    private List<Double> dmIndex;
+    private List<Double> trueRange;
+
+    //our temp lists
+    private List<Double> tmpDmPlus;
+    private List<Double> tmpDmMinus;
+    private List<Double> tmpTrueRange;
 
     public ADX() {
         this(PERIODS);
@@ -39,6 +51,13 @@ public class ADX extends Indicator {
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();
         this.dmMinusIndicator = new ArrayList<>();
+        this.dmPlus = new ArrayList<>();
+        this.dmMinus = new ArrayList<>();
+        this.trueRange = new ArrayList<>();
+        this.tmpDmPlus = new ArrayList<>();
+        this.tmpDmMinus = new ArrayList<>();
+        this.tmpTrueRange = new ArrayList<>();
+        this.dmIndex = new ArrayList<>();
 
         //save our settings
         this.periods = periods;
@@ -70,20 +89,13 @@ public class ADX extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear the list(s) before we calculate
-        getAdx().clear();
-        getDmPlusIndicator().clear();
-        getDmMinusIndicator().clear();
-
-        //our temp lists
-        List<Double> tmpDmPlus = new ArrayList<>();
-        List<Double> tmpDmMinus = new ArrayList<>();
-        List<Double> tmpTrueRange = new ArrayList<>();
+        //where do we start
+        int start = getAdx().isEmpty() ? 0 : history.size() - newPeriods;
 
         //calculate for the entire history that we have
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //we can't check the previous period here
             if (i <= 0)
@@ -140,16 +152,15 @@ public class ADX extends Indicator {
             }
         }
 
-        List<Double> dmPlus = new ArrayList<>();
-        List<Double> dmMinus = new ArrayList<>();
-        List<Double> trueRange = new ArrayList<>();
-
         //smooth the values
-        smooth(tmpDmMinus, dmMinus,     getPeriods());
-        smooth(tmpDmPlus, dmPlus,       getPeriods());
-        smooth(tmpTrueRange, trueRange, getPeriods());
+        smooth(tmpDmMinus,   dmMinus,   getPeriods(), newPeriods);
+        smooth(tmpDmPlus,    dmPlus,    getPeriods(), newPeriods);
+        smooth(tmpTrueRange, trueRange, getPeriods(), newPeriods);
 
-        for (int i = 0; i < dmPlus.size(); i++) {
+        //where do we start?
+        start = getAdx().isEmpty() ? 0 : dmPlus.size() - newPeriods;
+
+        for (int i = start; i < dmPlus.size(); i++) {
 
             //calculate the +- indicators
             double newPlus = (dmPlus.get(i) / trueRange.get(i)) * 100.0d;
@@ -160,28 +171,37 @@ public class ADX extends Indicator {
             getDmMinusIndicator().add(newMinus);
         }
 
-        //directional movement index
-        List<Double> dmIndex = new ArrayList<>();
+        //where do we start?
+        start = getAdx().isEmpty() ? 0 : dmPlus.size() - newPeriods;
 
         //calculate each dm index
-        for (int i = 0; i < dmPlus.size(); i++) {
+        for (int i = start; i < dmPlus.size(); i++) {
             double result1 = Math.abs(getDmPlusIndicator().get(i) - getDmMinusIndicator().get(i));
             double result2 = getDmPlusIndicator().get(i) + getDmMinusIndicator().get(i);
             dmIndex.add((result1 / result2) * 100.0d);
         }
 
-        double sum = 0;
+        //where do we start
+        start = getPeriods();
 
-        //get the average for the first value
-        for (int i = 0; i < getPeriods(); i++) {
-            sum += dmIndex.get(i);
+        //if the list is empty calculate our first value
+        if (getAdx().isEmpty()) {
+
+            double sum = 0;
+
+            //get the average for the first value
+            for (int i = 0; i < getPeriods(); i++) {
+                sum += dmIndex.get(i);
+            }
+
+            //our first value is the average
+            getAdx().add(sum / (double) getPeriods());
+        } else {
+            start = dmIndex.size() - newPeriods;
         }
 
-        //our first value is the average
-        getAdx().add(sum / (double)getPeriods());
-
         //calculate the remaining average directional index values
-        for (int i = getPeriods(); i < dmIndex.size(); i++) {
+        for (int i = start; i < dmIndex.size(); i++) {
 
             //get the most recent adx
             double previousAdx = getRecent(getAdx());
@@ -199,20 +219,33 @@ public class ADX extends Indicator {
      * @param tmp Our temp list of values
      * @param result Our final result of smoothed values
      */
-    private static final void smooth(List<Double> tmp, List<Double> result, int periods) {
+    private void smooth(List<Double> tmp, List<Double> result, int periods, int newPeriods) {
 
-        double sum = 0;
+        //where do we start?
+        int start = periods;
 
-        //add the sum of the first x periods to get the first value
-        for (int i = 0; i < periods; i++) {
-            sum += tmp.get(i);
+        //if the list is empty we need to get our first value
+        if (result.isEmpty()) {
+
+            double sum = 0;
+
+            //add the sum of the first x periods to get the first value
+            for (int i = 0; i < periods; i++) {
+                sum += tmp.get(i);
+            }
+
+            //add first result to our list as a sum
+            result.add(sum);
+
+        } else {
+
+            //adjust the start index
+            start = tmp.size() - newPeriods;
+
         }
 
-        //add first result to our list as a sum
-        result.add(sum);
-
         //now lets smooth the values for the remaining
-        for (int i = periods; i < tmp.size(); i++) {
+        for (int i = start; i < tmp.size(); i++) {
 
             //calculate our current
             double currentSum = 0;

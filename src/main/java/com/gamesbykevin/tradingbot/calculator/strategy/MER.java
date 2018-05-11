@@ -108,14 +108,14 @@ public class MER extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        EMA.calculateEMA(history, ema1, PERIODS_EMA_1);
-        EMA.calculateEMA(history, ema2, PERIODS_EMA_2);
-        EMA.calculateEMA(history, ema3, PERIODS_EMA_3);
-        EMA.calculateEMA(history, ema4, PERIODS_EMA_4);
-        EMA.calculateEMA(history, ema5, PERIODS_EMA_5);
-        objRSI.calculate(history);
+        EMA.calculateEMA(history, ema1, newPeriods, PERIODS_EMA_1);
+        EMA.calculateEMA(history, ema2, newPeriods, PERIODS_EMA_2);
+        EMA.calculateEMA(history, ema3, newPeriods, PERIODS_EMA_3);
+        EMA.calculateEMA(history, ema4, newPeriods, PERIODS_EMA_4);
+        EMA.calculateEMA(history, ema5, newPeriods, PERIODS_EMA_5);
+        objRSI.calculate(history, newPeriods);
     }
 }

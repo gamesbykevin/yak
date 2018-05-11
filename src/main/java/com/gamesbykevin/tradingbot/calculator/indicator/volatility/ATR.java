@@ -55,13 +55,12 @@ public class ATR extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear our list
-        getTrueRange().clear();
-        getAverageTrueRange().clear();
+        //where do we start?
+        int start = getAverageTrueRange().isEmpty() ? 0 : history.size() - newPeriods;
 
-        for (int i = 0; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //get the current and previous periods
             Period curr = history.get(i);

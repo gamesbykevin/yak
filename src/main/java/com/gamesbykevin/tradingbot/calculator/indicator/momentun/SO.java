@@ -89,12 +89,13 @@ public final class SO extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear our list(s)
-        getMarketRateBasic().clear();
+        //where do we start
+        int start = getMarketRateBasic().isEmpty() ? 0 : history.size() - newPeriods;
 
-        for (int i = 0; i < history.size(); i++) {
+        //calculate our data
+        for (int i = start; i < history.size(); i++) {
 
             //we don't have enough data yet
             if (i < getPeriodsMarketRateBasic())
@@ -112,10 +113,10 @@ public final class SO extends Indicator {
         }
 
         //now we use a sma to create our market rate values
-        calculateSMA(getMarketRateBasic(), getMarketRateFull(), getPeriodsMarketRateFull());
+        calculateSMA(getMarketRateBasic(), getMarketRateFull(), newPeriods, getPeriodsMarketRateFull());
 
         //now we use a sma of that to create our stochastic oscillator values
-        calculateSMA(getMarketRateFull(), getStochasticOscillator(), getPeriodsStochastic());
+        calculateSMA(getMarketRateFull(), getStochasticOscillator(), newPeriods, getPeriodsStochastic());
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {

@@ -83,10 +83,10 @@ public class EMAR extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate
-        rsiObj.calculate(history);
-        emaObj.calculate(history);
+        rsiObj.calculate(history, newPeriods);
+        emaObj.calculate(history, newPeriods);
     }
 }

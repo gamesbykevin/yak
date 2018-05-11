@@ -11,6 +11,8 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
+
 /**
  * MACD / EMA / SMA
  */
@@ -118,11 +120,11 @@ public class MES extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        getObjMacd().calculate(history);
-        smaShort.calculate(history);
-        EMA.calculateEMA(history, emaShort, periodsEmaShort);
+        getObjMacd().calculate(history, newPeriods);
+        smaShort.calculate(history, newPeriods);
+        calculateEMA(history, emaShort, newPeriods, periodsEmaShort);
     }
 }

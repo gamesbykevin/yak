@@ -34,13 +34,17 @@ public class OBV extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
-        //clear our historical list
-        getVolume().clear();
+        //where do we start?
+        int start = getVolume().isEmpty() ? 0 : history.size() - newPeriods;
 
         //calculate the obv for each period
-        for (int i = 1; i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
+
+            //we need to go back 1 period
+            if (i < 1)
+                continue;
 
             //get the latest volume value
             double volume = getVolume().isEmpty() ? history.get(i).volume : getRecent(getVolume());

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 
 /**
  * stochastic oscillator / ema
@@ -91,11 +92,11 @@ public class SOEMA extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate our value(s)
-        this.objSoSlow.calculate(history);
-        this.objSoFast.calculate(history);
-        EMA.calculateEMA(history, ema, periodsEMA);
+        this.objSoSlow.calculate(history, newPeriods);
+        this.objSoFast.calculate(history, newPeriods);
+        calculateEMA(history, ema, newPeriods, periodsEMA);
     }
 }

@@ -22,7 +22,7 @@ public class HA extends Indicator {
     /**
      * We only want to calculate the latest heiken ashi candles for accurate results
      */
-    private static final int PERIODS = 5;
+    private static final int PERIODS = 10;
 
     private final int periods;
 
@@ -64,7 +64,7 @@ public class HA extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //clear the list
         getHaPeriods().clear();

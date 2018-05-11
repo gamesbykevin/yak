@@ -92,10 +92,10 @@ public class HASO extends Strategy {
     }
 
     @Override
-    public void calculate(List<Period> history) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate
-        objHA.calculate(history);
-        objSO.calculate(history);
+        objHA.calculate(history, newPeriods);
+        objSO.calculate(history, newPeriods);
     }
 }

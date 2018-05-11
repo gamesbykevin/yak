@@ -47,18 +47,18 @@ public class RC extends Indicator {
     }
 
     @Override
-    public void calculate(List<Period> history) {
-
-        //clear the list
-        getRenkoChart().clear();
+    public void calculate(List<Period> history, int newPeriods) {
 
         //calculate average true range
-        objATR.calculate(history);
+        objATR.calculate(history, newPeriods);
 
         //find the offset
         int difference = (history.size() - objATR.getAverageTrueRange().size());
 
-        for (int i = difference; i < history.size(); i++) {
+        //where do we start?
+        int start = getRenkoChart().isEmpty() ? difference : history.size() - newPeriods;
+
+        for (int i = start; i < history.size(); i++) {
 
             //get the current average true range
             double atr = objATR.getAverageTrueRange().get(i - difference);
