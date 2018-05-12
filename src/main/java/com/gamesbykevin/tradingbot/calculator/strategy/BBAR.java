@@ -11,8 +11,8 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasTrendDownward;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasTrendUpward;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasTrendDownward;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasTrendUpward;
 
 /**
  * Bollinger Bands / Accumulation Distribution Line / Relative Strength Index
@@ -126,5 +126,12 @@ public class BBAR extends Strategy {
         this.objBB.calculate(history, newPeriods);
         this.objADL.calculate(history, newPeriods);
         this.objRSI.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        objBB.cleanup();
+        objADL.cleanup();
+        objRSI.cleanup();
     }
 }

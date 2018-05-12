@@ -88,4 +88,10 @@ public class EMV extends Indicator {
         //now that we have our list of emv values, calculate sma
         calculateSMA(getEmv(), getEmvSma(), newPeriods, periods);
     }
+
+    @Override
+    public void cleanup() {
+        cleanup(getEmv());
+        cleanup(getEmvSma());
+    }
 }

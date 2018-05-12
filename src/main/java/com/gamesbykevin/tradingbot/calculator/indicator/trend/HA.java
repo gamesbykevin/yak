@@ -150,4 +150,13 @@ public class HA extends Indicator {
     public boolean isBullish(Period period) {
         return (period.close > period.open);
     }
+
+    @Override
+    public void cleanup() {
+
+        //don't allow the size to grow too much
+        while (getHaPeriods().size() > PERIODS_RETAIN) {
+            getHaPeriods().remove(0);
+        }
+    }
 }

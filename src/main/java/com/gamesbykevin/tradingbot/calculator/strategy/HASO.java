@@ -98,4 +98,10 @@ public class HASO extends Strategy {
         objHA.calculate(history, newPeriods);
         objSO.calculate(history, newPeriods);
     }
+
+    @Override
+    public void cleanup() {
+        objHA.cleanup();
+        objSO.cleanup();
+    }
 }

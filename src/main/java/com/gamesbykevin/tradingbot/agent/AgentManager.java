@@ -15,6 +15,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateAgents;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateCalculators;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
@@ -49,8 +50,8 @@ public class AgentManager {
 
         AE, AR, BBAR, BBER, BBR,
         CA, EMAR, EMAS, ERS, HASO,
-        MACS, MARS, MER, MES, MSL,
-        NVI, PVI, RCR, SSR, SOEMA
+        MACS, MARS, MER, MES, NVI,
+        PVI, RCR, SSR, SOEMA
     }
 
     public AgentManager(final Product product, final double funds) {
@@ -76,8 +77,9 @@ public class AgentManager {
             //now we want to load any historical data that we may have
             History.load(getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory(), getProductId(), MY_PERIOD_DURATIONS[i], getWriter());
 
-            //now that we have data do the initial calculations
-            getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate(0);
+            //now that we have data do the initial calculations assuming we have enough data
+            if (getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory().size() >= HISTORICAL_PERIODS_MINIMUM)
+                getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate(0);
         }
 
         //create our agents last

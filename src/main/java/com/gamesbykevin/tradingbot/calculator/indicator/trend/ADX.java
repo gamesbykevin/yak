@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
@@ -264,5 +264,19 @@ public class ADX extends Indicator {
             //add the smoothed value to our list
             result.add(newValue);
         }
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(adx);
+        cleanup(dmPlusIndicator);
+        cleanup(dmMinusIndicator);
+        cleanup(dmPlus);
+        cleanup(dmMinus);
+        cleanup(dmIndex);
+        cleanup(trueRange);
+        cleanup(tmpDmPlus);
+        cleanup(tmpDmMinus);
+        cleanup(tmpTrueRange);
     }
 }

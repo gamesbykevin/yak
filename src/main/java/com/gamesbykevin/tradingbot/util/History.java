@@ -1,14 +1,13 @@
 package com.gamesbykevin.tradingbot.util;
 
-import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.io.*;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.addHistory;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.addHistory;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
 import static com.gamesbykevin.tradingbot.util.LogFile.getPrintWriter;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 

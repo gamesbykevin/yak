@@ -82,4 +82,10 @@ public class AR extends Strategy {
         objATR.calculate(history, newPeriods);
         objRSI.calculate(history, newPeriods);
     }
+
+    @Override
+    public void cleanup() {
+        objATR.cleanup();
+        objRSI.cleanup();
+    }
 }

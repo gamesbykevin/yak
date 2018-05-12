@@ -1,7 +1,8 @@
-package com.gamesbykevin.tradingbot.calculator.indicator;
+package com.gamesbykevin.tradingbot.calculator.indicator.other;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.ATR;
 
 import java.util.ArrayList;
@@ -67,10 +68,13 @@ public class RC extends Indicator {
             Period period = history.get(i);
 
             if (getRenkoChart().isEmpty()) {
+
+                //if the list is empty add our initial value
                 getRenkoChart().add(period.close > period.open ? period.close + atr : period.close - atr);
+
             } else {
 
-                //get the previous value
+                //get the previous renko value
                 double previous = getRenkoChart().get(getRenkoChart().size() - 1);
 
                 //adjust based on a bearish or bullish close
@@ -84,5 +88,11 @@ public class RC extends Indicator {
                 getRenkoChart().add(previous);
             }
         }
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getRenkoChart());
+        objATR.cleanup();
     }
 }

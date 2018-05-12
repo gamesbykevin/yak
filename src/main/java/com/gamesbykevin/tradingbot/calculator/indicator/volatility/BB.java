@@ -11,6 +11,9 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
+/**
+ * Bollinger Bands
+ */
 public class BB extends Indicator {
 
     //list of configurable values
@@ -80,19 +83,23 @@ public class BB extends Indicator {
         //calculate our sma values
         getMiddle().calculate(history, newPeriods);
 
-        //where do we start
-        int start = getWidth().isEmpty() ? 0 : getMiddle().getSma().size() - newPeriods;
+        //find the offset
+        int difference = (history.size() - getMiddle().getSma().size());
 
-        for (int index = start; index < getMiddle().getSma().size(); index++) {
+        //where do we start?
+        int start = getWidth().isEmpty() ? difference : history.size() - newPeriods;
 
-            //do we have enough data to calculate
+        //iterate through each middle value to identify the upper and lower bollinger bands
+        for (int index = start; index < history.size(); index++) {
+
+            //don't continue if we don't have enough data
             if (index < getPeriods())
                 continue;
 
             //get the sma value
-            double sma = getMiddle().getSma().get(index);
+            double sma = getMiddle().getSma().get(index - difference);
 
-            //get the standard deviation
+            //get the standard deviation and offset the index so we can pull from the history
             double standardDeviation = getStandardDeviation(history, sma, index);
 
             //calculate our upper value
@@ -127,5 +134,14 @@ public class BB extends Indicator {
 
         //return the square root of our average aka standard deviation
         return Math.sqrt(average);
+    }
+
+    @Override
+    public void cleanup() {
+
+        cleanup(getUpper());
+        cleanup(getLower());
+        cleanup(getWidth());
+        getMiddle().cleanup();
     }
 }

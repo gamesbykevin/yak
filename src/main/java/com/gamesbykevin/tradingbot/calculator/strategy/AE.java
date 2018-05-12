@@ -8,7 +8,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 
 /**
  * Average Directional Index / Exponential Moving Average
@@ -17,7 +17,7 @@ public class AE extends Strategy {
 
     //our indicator objects
     private ADX objADX;
-    private EMA objEMA;
+    private EMA objShortEMA, objLongEMA;
 
     //configurable values
     private static final int PERIODS_EMA_LONG = 10;
@@ -36,7 +36,8 @@ public class AE extends Strategy {
     public AE(int periodsEmaLong, int periodsEmaShort, int periodsAdx, int periodsAdxConfirm) {
         this.periodsAdxConfirm = periodsAdxConfirm;
         this.objADX = new ADX(periodsAdx);
-        this.objEMA = new EMA(periodsEmaLong, periodsEmaShort);
+        this.objShortEMA = new EMA(periodsEmaShort);
+        this.objLongEMA = new EMA(periodsEmaLong);
     }
 
     @Override
@@ -62,7 +63,7 @@ public class AE extends Strategy {
             if (confirm) {
 
                 //if the short crosses above the long let's buy and enter the trade
-                if (hasCrossover(true, objEMA.getEmaShort(), objEMA.getEmaLong()))
+                if (hasCrossover(true, objShortEMA.getEma(), objLongEMA.getEma()))
                     agent.setBuy(true);
             }
         }
@@ -75,7 +76,7 @@ public class AE extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the ema short crosses below the ema long, it is time to sell
-        if (getRecent(objEMA.getEmaShort()) < getRecent(objEMA.getEmaLong())) {
+        if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
             adjustHardStopPrice(agent, currentPrice);
         }
@@ -93,7 +94,8 @@ public class AE extends Strategy {
 
         //display info
         objADX.displayData(agent, write);
-        objEMA.displayData(agent, write);
+        objShortEMA.displayData(agent, write);
+        objLongEMA.displayData(agent, write);
     }
 
     @Override
@@ -101,6 +103,14 @@ public class AE extends Strategy {
 
         //perform calculations
         objADX.calculate(history, newPeriods);
-        objEMA.calculate(history, newPeriods);
+        objShortEMA.calculate(history, newPeriods);
+        objLongEMA.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        objADX.cleanup();
+        objShortEMA.cleanup();
+        objLongEMA.cleanup();
     }
 }

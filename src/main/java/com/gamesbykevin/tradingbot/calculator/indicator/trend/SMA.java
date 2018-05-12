@@ -8,6 +8,9 @@ import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Simple Moving Average
+ */
 public class SMA extends Indicator {
 
     //our list of sma values
@@ -157,5 +160,10 @@ public class SMA extends Indicator {
 
         //return the average of the sum
         return (sum / (double)periods);
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getSma());
     }
 }

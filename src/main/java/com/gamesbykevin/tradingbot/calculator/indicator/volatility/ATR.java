@@ -112,4 +112,10 @@ public class ATR extends Indicator {
             getAverageTrueRange().add(current);
         }
     }
+
+    @Override
+    public void cleanup() {
+        cleanup(getTrueRange());
+        cleanup(getAverageTrueRange());
+    }
 }

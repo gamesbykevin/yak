@@ -16,7 +16,8 @@ public class ERS extends Strategy {
 
     //our indicator objects
     private SO objSO;
-    private EMA objEMA;
+    private EMA objShortEMA;
+    private EMA objLongEMA;
     private RSI objRSI;
 
     //configurable values
@@ -34,7 +35,8 @@ public class ERS extends Strategy {
 
         //create our indicator objects
         this.objSO = new SO(PERIODS_SO_MARKET_RATE, PERIODS_SO_MARKET_RATE_SMA, PERIODS_SO_STOCHASTIC_SMA);
-        this.objEMA = new EMA(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
+        this.objShortEMA = new EMA(PERIODS_EMA_SHORT);
+        this.objLongEMA = new EMA(PERIODS_EMA_LONG);
         this.objRSI = new RSI(PERIODS_RSI);
     }
 
@@ -42,7 +44,7 @@ public class ERS extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //the short period has crossed the long period
-        if (getRecent(objEMA.getEmaShort()) > getRecent(objEMA.getEmaLong())) {
+        if (getRecent(objShortEMA.getEma()) > getRecent(objLongEMA.getEma())) {
 
             //rsi is above 50
             if (getRecent(objRSI.getRsiVal()) > RSI_LINE) {
@@ -72,7 +74,7 @@ public class ERS extends Strategy {
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if the fast went below the long
-        if (getRecent(objEMA.getEmaShort()) < getRecent(objEMA.getEmaLong())) {
+        if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
 
             //protect our investment
             adjustHardStopPrice(agent, currentPrice);
@@ -91,7 +93,8 @@ public class ERS extends Strategy {
 
         //display info
         objSO.displayData(agent, write);
-        objEMA.displayData(agent, write);
+        objShortEMA.displayData(agent, write);
+        objLongEMA.displayData(agent, write);
         objRSI.displayData(agent, write);
     }
 
@@ -100,7 +103,16 @@ public class ERS extends Strategy {
 
         //perform calculations
         objSO.calculate(history, newPeriods);
-        objEMA.calculate(history, newPeriods);
+        objShortEMA.calculate(history, newPeriods);
+        objLongEMA.calculate(history, newPeriods);
         objRSI.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        objSO.cleanup();
+        objShortEMA.cleanup();
+        objLongEMA.cleanup();
+        objRSI.cleanup();
     }
 }

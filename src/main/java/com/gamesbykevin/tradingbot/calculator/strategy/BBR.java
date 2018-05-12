@@ -124,4 +124,10 @@ public class BBR extends Strategy {
         this.objBB.calculate(history, newPeriods);
         this.objRSI.calculate(history, newPeriods);
     }
+
+    @Override
+    public void cleanup() {
+        objBB.cleanup();
+        objRSI.cleanup();
+    }
 }

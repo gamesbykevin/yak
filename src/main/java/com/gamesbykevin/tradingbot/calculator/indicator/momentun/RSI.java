@@ -9,6 +9,9 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
+/**
+ * Relative Strength Index
+ */
 public class RSI extends Indicator {
 
     //keep a historical list of the rsi so we can check for divergence
@@ -131,5 +134,10 @@ public class RSI extends Indicator {
 
         //return our rsi value
         return rsi;
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getRsiVal());
     }
 }

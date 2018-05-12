@@ -9,7 +9,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 
 /**
  * EMA / RSI
@@ -17,7 +17,7 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossov
 public class EMAR extends Strategy {
 
     //our ema object reference
-    private EMA emaObj;
+    private EMA emaShortObj, emaLongObj;
 
     //our rsi object reference
     private RSI rsiObj;
@@ -39,7 +39,8 @@ public class EMAR extends Strategy {
         this.rsiLine = rsiLine;
 
         //create our objects
-        this.emaObj = new EMA(emaLong, emaShort);
+        this.emaShortObj = new EMA(emaShort);
+        this.emaLongObj = new EMA(emaLong);
         this.rsiObj = new RSI(periodsRSI);
     }
 
@@ -47,7 +48,7 @@ public class EMAR extends Strategy {
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //if rsi is over the line and we have a bullish crossover
-        if (getRecent(rsiObj.getRsiVal()) > rsiLine && hasCrossover(true, emaObj.getEmaShort(), emaObj.getEmaLong()))
+        if (getRecent(rsiObj.getRsiVal()) > rsiLine && hasCrossover(true, emaShortObj.getEma(), emaLongObj.getEma()))
             agent.setBuy(true);
 
         //display our data
@@ -59,8 +60,8 @@ public class EMAR extends Strategy {
 
         //recent values
         double current = getRecent(rsiObj.getRsiVal());
-        double emaShort = getRecent(emaObj.getEmaShort());
-        double emaLong = getRecent(emaObj.getEmaLong());
+        double emaShort = getRecent(emaShortObj.getEma());
+        double emaLong = getRecent(emaLongObj.getEma());
 
         //if rsi is under the line and the fast line is below the slow long indicating a downward trend
         if (current < rsiLine && emaShort < emaLong)
@@ -79,7 +80,8 @@ public class EMAR extends Strategy {
 
         //display our information
         rsiObj.displayData(agent, write);
-        emaObj.displayData(agent, write);
+        emaShortObj.displayData(agent, write);
+        emaLongObj.displayData(agent, write);
     }
 
     @Override
@@ -87,6 +89,14 @@ public class EMAR extends Strategy {
 
         //calculate
         rsiObj.calculate(history, newPeriods);
-        emaObj.calculate(history, newPeriods);
+        emaShortObj.calculate(history, newPeriods);
+        emaLongObj.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        rsiObj.cleanup();
+        emaShortObj.cleanup();
+        emaLongObj.cleanup();
     }
 }

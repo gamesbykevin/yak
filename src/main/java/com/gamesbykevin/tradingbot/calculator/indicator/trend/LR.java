@@ -137,4 +137,9 @@ public class LR extends Indicator {
     private double calculateY(float x) {
         return (getSlope() * x) + getYintercept();
     }
+
+    @Override
+    public void cleanup() {
+        //no cleanup here
+    }
 }

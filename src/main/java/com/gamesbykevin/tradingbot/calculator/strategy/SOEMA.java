@@ -3,14 +3,13 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 
 /**
@@ -98,5 +97,12 @@ public class SOEMA extends Strategy {
         this.objSoSlow.calculate(history, newPeriods);
         this.objSoFast.calculate(history, newPeriods);
         calculateEMA(history, ema, newPeriods, periodsEMA);
+    }
+
+    @Override
+    public void cleanup() {
+        objSoSlow.cleanup();
+        objSoFast.cleanup();
+        cleanup(ema);
     }
 }

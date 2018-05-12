@@ -6,9 +6,11 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.Main.PRODUCTS;
+import static com.gamesbykevin.tradingbot.Main.getProducts;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_HISTORIC;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.updateHistory;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.updateHistory;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
@@ -16,11 +18,6 @@ import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
  * This class is responsible to track all the candles for all the products on GDAX
  */
 public class HistoryTracker implements Runnable {
-
-    /**
-     * List of products we are trading
-     */
-    public static final String[] PRODUCT_IDS = {"LTC-USD", "ETH-USD", "BTC-USD", "BCH-USD"};
 
     //list of trackers
     private List<Tracker> trackers;
@@ -56,13 +53,13 @@ public class HistoryTracker implements Runnable {
     public void run() {
 
         //loop through each product
-        for (String productId : PRODUCT_IDS) {
+        for (int index = 0; index < getProducts().size(); index++) {
 
             //loop through each duration
             for (Duration duration : Duration.values()) {
 
                 //add a tracker for every product/duration combination
-                getTrackers().add(new Tracker(productId, duration));
+                getTrackers().add(new Tracker(getProducts().get(index).getId(), duration));
             }
         }
 

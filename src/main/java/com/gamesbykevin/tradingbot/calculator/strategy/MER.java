@@ -118,4 +118,14 @@ public class MER extends Strategy {
         EMA.calculateEMA(history, ema5, newPeriods, PERIODS_EMA_5);
         objRSI.calculate(history, newPeriods);
     }
+
+    @Override
+    public void cleanup() {
+        objRSI.cleanup();
+        cleanup(ema1);
+        cleanup(ema2);
+        cleanup(ema3);
+        cleanup(ema4);
+        cleanup(ema5);
+    }
 }

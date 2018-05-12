@@ -25,7 +25,7 @@ public class MACD extends Indicator {
     private List<Double> histogram;
 
     //our ema object
-    private EMA objEMA;
+    private EMA objShortEMA, objLongEMA;
 
     //our list of variations
     private static final int PERIODS_MACD_SIGNAL = 9;
@@ -48,11 +48,16 @@ public class MACD extends Indicator {
         this.macdLine = new ArrayList<>();
         this.signalLine = new ArrayList<>();
         this.histogram = new ArrayList<>();
-        this.objEMA = new EMA(periodsEmaLong, periodsEmaShort);
+        this.objShortEMA = new EMA(periodsEmaShort);
+        this.objLongEMA = new EMA(periodsEmaLong);
     }
 
-    private EMA getObjEMA() {
-        return this.objEMA;
+    private EMA getObjShortEMA() {
+        return this.objShortEMA;
+    }
+
+    private EMA getObjLongEMA() {
+        return this.objLongEMA;
     }
 
     private int getPeriods() {
@@ -80,17 +85,19 @@ public class MACD extends Indicator {
         display(agent, "Histogram: ", getHistogram(), write);
 
         //display values
-        getObjEMA().displayData(agent, write);
+        getObjShortEMA().displayData(agent, write);
+        getObjLongEMA().displayData(agent, write);
     }
 
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
         //calculate our short and long ema values first
-        getObjEMA().calculate(history, newPeriods);
+        getObjShortEMA().calculate(history, newPeriods);
+        getObjLongEMA().calculate(history, newPeriods);
 
         //now we can calculate our macd line
-        calculateMacdLine(getObjEMA().getEmaShort(), getObjEMA().getEmaLong(), getMacdLine(), newPeriods);
+        calculateMacdLine(getObjShortEMA().getEma(), getObjLongEMA().getEma(), getMacdLine(), newPeriods);
 
         //then we can calculate our signal line
         calculateEma(getSignalLine(), getMacdLine(), newPeriods, getPeriods());
@@ -125,5 +132,14 @@ public class MACD extends Indicator {
         for (int i = start; i > 0; i--) {
             histogram.add(macdLine.get(macdLine.size() - i) - signalLine.get(signalLine.size() - i));
         }
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getMacdLine());
+        cleanup(getSignalLine());
+        cleanup(getHistogram());
+        getObjShortEMA().cleanup();
+        getObjLongEMA().cleanup();
     }
 }

@@ -7,11 +7,10 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
@@ -20,7 +19,7 @@ import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calcula
 public class EMAS extends Strategy {
 
     //our ema object reference
-    private EMA emaObj;
+    private EMA emaShortObj, emaLongObj;
 
     //our sma object reference(s)
     private SMA smaObjShort, smaObjLong;
@@ -38,7 +37,8 @@ public class EMAS extends Strategy {
     public EMAS(int emaLong, int emaShort, int smaLong, int smaShort) {
 
         //create new objects
-        this.emaObj = new EMA(emaLong, emaShort);
+        this.emaShortObj = new EMA(emaShort);
+        this.emaLongObj = new EMA(emaLong);
         this.smaObjShort = new SMA(smaShort);
         this.smaObjLong = new SMA(smaLong);
     }
@@ -50,12 +50,12 @@ public class EMAS extends Strategy {
         final double close = getRecent(history, Fields.Close);
 
         //our previous values
-        double prevEmaShort = getRecent(emaObj.getEmaShort(), 2);
-        double prevEmaLong = getRecent(emaObj.getEmaLong(), 2);
+        double prevEmaShort = getRecent(emaShortObj.getEma(), 2);
+        double prevEmaLong = getRecent(emaLongObj.getEma(), 2);
 
         //our current values
-        double currEmaShort = getRecent(emaObj.getEmaShort());
-        double currEmaLong = getRecent(emaObj.getEmaLong());
+        double currEmaShort = getRecent(emaShortObj.getEma());
+        double currEmaLong = getRecent(emaLongObj.getEma());
         double currSmaShort = getRecent(smaObjShort.getSma());
 
         //the short ema needs to cross above the long ema and the close needs to be above the sma
@@ -74,8 +74,8 @@ public class EMAS extends Strategy {
         final double close = getRecent(history, Fields.Close);
 
         //our current values
-        double currEmaShort = getRecent(emaObj.getEmaShort());
-        double currEmaLong = getRecent(emaObj.getEmaLong());
+        double currEmaShort = getRecent(emaShortObj.getEma());
+        double currEmaLong = getRecent(emaLongObj.getEma());
         double currSmaShort = getRecent(smaObjShort.getSma());
         double currSmaLong = getRecent(smaObjLong.getSma());
 
@@ -96,7 +96,8 @@ public class EMAS extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        emaObj.displayData(agent, write);
+        emaShortObj.displayData(agent, write);
+        emaLongObj.displayData(agent, write);
         smaObjShort.displayData(agent, write);
         smaObjLong.displayData(agent, write);
     }
@@ -105,8 +106,17 @@ public class EMAS extends Strategy {
     public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        emaObj.calculate(history, newPeriods);
+        emaShortObj.calculate(history, newPeriods);
+        emaLongObj.calculate(history, newPeriods);
         smaObjShort.calculate(history, newPeriods);
         smaObjLong.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        emaShortObj.cleanup();
+        emaLongObj.cleanup();
+        smaObjShort.cleanup();
+        smaObjLong.cleanup();
     }
 }

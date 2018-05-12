@@ -76,4 +76,9 @@ public class ADL extends Indicator {
         //return our result
         return (value1 - value2) / value3;
     }
+
+    @Override
+    public void cleanup() {
+        cleanup(getVolume());
+    }
 }

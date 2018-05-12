@@ -9,7 +9,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 
 /**
  * Stochastic Oscillator / Simple Moving Average / Relative Strength Index
@@ -100,5 +100,12 @@ public class SSR extends Strategy {
         objSO.calculate(history, newPeriods);
         objSMA.calculate(history, newPeriods);
         objRSI.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        objSO.cleanup();
+        objSMA.cleanup();
+        objRSI.cleanup();
     }
 }

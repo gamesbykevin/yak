@@ -2,13 +2,12 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 
 /**
@@ -139,6 +138,14 @@ public class MARS extends Strategy {
         //calculate the different ema values
         for (int i = 0; i < emas.size(); i++) {
             calculateEMA(history, emas.get(i), newPeriods, PERIODS[i]);
+        }
+    }
+
+    @Override
+    public void cleanup() {
+
+        for (int i = 0; i < emas.size(); i++) {
+            cleanup(emas.get(i));
         }
     }
 }

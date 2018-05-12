@@ -8,7 +8,7 @@ import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
@@ -16,58 +16,46 @@ import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calcula
  */
 public class EMA extends Indicator {
 
-    //list of ema values for our long period
-    private List<Double> emaLong;
-
-    //list of ema values for our short period
-    private List<Double> emaShort;
+    //list of ema values
+    private List<Double> emaList;
 
     //list of configurable values
-    public static final int PERIODS_EMA_LONG = 26;
-    public static final int PERIODS_EMA_SHORT = 12;
+    public static final int PERIODS = 12;
 
-    private final int periodsLong, periodsShort;
+    private final int periods;
 
     public EMA() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT);
+        this(PERIODS);
     }
 
-    public EMA(int periodsLong, int periodsShort) {
+    public EMA(int periods) {
 
         //call parent
         super();
 
         //create our lists
-        this.emaLong = new ArrayList<>();
-        this.emaShort = new ArrayList<>();
+        this.emaList = new ArrayList<>();
 
         //store our periods
-        this.periodsLong = periodsLong;
-        this.periodsShort = periodsShort;
+        this.periods = periods;
     }
 
-    public List<Double> getEmaShort() {
-        return this.emaShort;
-    }
-
-    public List<Double> getEmaLong() {
-        return this.emaLong;
+    public List<Double> getEma() {
+        return this.emaList;
     }
 
     @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA Short :", getEmaShort(), write);
-        display(agent, "EMA Long  :", getEmaLong(), write);
+        display(agent, "EMA (" + periods + ") :", getEma(), write);
     }
 
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
         //calculate ema for short and long periods
-        calculateEMA(history, getEmaShort(), newPeriods, periodsShort);
-        calculateEMA(history, getEmaLong(), newPeriods, periodsLong);
+        calculateEMA(history, getEma(), newPeriods, periods);
     }
 
     private static final double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
@@ -171,5 +159,10 @@ public class EMA extends Indicator {
             //add our new ema value to the list
             populate.add(newEma);
         }
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getEma());
     }
 }

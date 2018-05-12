@@ -72,4 +72,9 @@ public class OBV extends Indicator {
             getVolume().add(volume + change);
         }
     }
+
+    @Override
+    public void cleanup() {
+        cleanup(getVolume());
+    }
 }

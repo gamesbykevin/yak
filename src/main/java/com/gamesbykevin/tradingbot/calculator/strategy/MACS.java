@@ -2,13 +2,12 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -133,5 +132,12 @@ public class MACS extends Strategy {
         calculateEMA(history, emaFast, newPeriods, fast);
         calculateEMA(history, emaSlow, newPeriods, slow);
         calculateEMA(history, emaTrend, newPeriods, trend);
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(emaFast);
+        cleanup(emaSlow);
+        cleanup(emaTrend);
     }
 }

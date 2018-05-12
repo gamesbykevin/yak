@@ -127,4 +127,12 @@ public class MES extends Strategy {
         smaShort.calculate(history, newPeriods);
         calculateEMA(history, emaShort, newPeriods, periodsEmaShort);
     }
+
+    @Override
+    public void cleanup() {
+        getObjMacd().cleanup();
+        smaShort.cleanup();
+        cleanup(emaShort);
+    }
+
 }

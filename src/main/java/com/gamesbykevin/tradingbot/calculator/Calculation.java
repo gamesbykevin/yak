@@ -5,16 +5,31 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.getValue;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.getValue;
 
 public abstract class Calculation {
 
     /**
      * When displaying data how many periods do we print/write to the console/log
      */
-    private static final int RECENT_PERIODS = 10;
+    private static final int RECENT_PERIODS = 5;
+
+    /**
+     * After we perform all our calculations we don't need to retain all values
+     */
+    public static final int PERIODS_RETAIN = 500;
 
     public abstract void calculate(List<Period> history, int newPeriods);
+
+    public abstract void cleanup();
+
+    protected void cleanup(List<Double> list) {
+
+        //remove the first values until we are at the desired size
+        while (list.size() > PERIODS_RETAIN) {
+            list.remove(0);
+        }
+    }
 
     public abstract void displayData(Agent agent, boolean write);
 

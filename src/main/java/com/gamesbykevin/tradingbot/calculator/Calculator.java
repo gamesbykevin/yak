@@ -11,7 +11,8 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
 import static com.gamesbykevin.tradingbot.Main.PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
+import static com.gamesbykevin.tradingbot.calculator.Calculation.PERIODS_RETAIN;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 
 public class Calculator {
@@ -152,10 +153,6 @@ public class Calculator {
                     strategy = new MES();
                     break;
 
-                case MSL:
-                    strategy = new MSL();
-                    break;
-
                 case NVI:
                     strategy = new NVI();
                     break;
@@ -250,6 +247,14 @@ public class Calculator {
 
             //calculate based on the current strategy
             getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(getHistory(), newPeriods);
+
+            //cleanup data list(s) to keep it at a manageable size
+            getStrategies().get(MY_TRADING_STRATEGIES[i]).cleanup();
+        }
+
+        //let's keep a manageable history size
+        while (getHistory().size() > PERIODS_RETAIN) {
+            getHistory().remove(0);
         }
     }
 

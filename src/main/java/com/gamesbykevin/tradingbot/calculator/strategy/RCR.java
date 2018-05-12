@@ -2,7 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.indicator.RC;
+import com.gamesbykevin.tradingbot.calculator.indicator.other.RC;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
@@ -96,5 +96,12 @@ public class RCR extends Strategy {
         objRSI.calculate(history, newPeriods);
         objRC.calculate(history, newPeriods);
         calculateSMA(objRC.getRenkoChart(), sma, newPeriods, periodsSMA);
+    }
+
+    @Override
+    public void cleanup() {
+        objRC.cleanup();
+        objRSI.cleanup();
+        cleanup(sma);
     }
 }

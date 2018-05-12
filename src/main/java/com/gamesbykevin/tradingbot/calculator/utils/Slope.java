@@ -1,4 +1,4 @@
-package com.gamesbykevin.tradingbot.calculator;
+package com.gamesbykevin.tradingbot.calculator.utils;
 
 import com.gamesbykevin.tradingbot.calculator.Period;
 

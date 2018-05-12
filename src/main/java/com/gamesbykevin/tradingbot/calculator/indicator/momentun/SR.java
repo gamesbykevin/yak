@@ -107,4 +107,10 @@ public class SR extends Indicator {
             getStochRsi().add(stochRsi);
         }
     }
+
+    @Override
+    public void cleanup() {
+        cleanup(getStochRsi());
+        getObjRsi().cleanup();
+    }
 }

@@ -106,4 +106,10 @@ public class CA extends Strategy {
         objADX.calculate(history, newPeriods);
         objCCI.calculate(history, newPeriods);
     }
+
+    @Override
+    public void cleanup() {
+        objADX.cleanup();
+        objCCI.cleanup();
+    }
 }

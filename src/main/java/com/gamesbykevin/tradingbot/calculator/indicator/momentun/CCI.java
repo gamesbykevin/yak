@@ -117,7 +117,8 @@ public class CCI extends Indicator {
         calculateSMA(getTypicalPrice(), getTypicalPriceSma(), newPeriods, getPeriods());
 
         //where do we start
-        start = getCCI().isEmpty() ? getTypicalPrice().size() - newPeriods : getPeriods();
+        //start = getCCI().isEmpty() ? getTypicalPrice().size() - newPeriods : getPeriods();
+        start = getCCI().isEmpty() ? getPeriods() : getTypicalPrice().size() - newPeriods;
 
         //calculate cci for every value in this list
         for (int i = start; i < getTypicalPrice().size(); i++) {
@@ -142,5 +143,12 @@ public class CCI extends Indicator {
             //add the value to our list
             getCCI().add(cci);
         }
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getCCI());
+        cleanup(getTypicalPrice());
+        cleanup(getTypicalPriceSma());
     }
 }

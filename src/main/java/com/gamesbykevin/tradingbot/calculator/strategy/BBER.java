@@ -32,7 +32,7 @@ public class BBER extends Strategy {
     private RSI rsiObj;
 
     //our ema object
-    private EMA emaObj;
+    private EMA emaShortObj, emaLongObj;
 
     //our rsi line
     private final float rsiLine;
@@ -47,7 +47,8 @@ public class BBER extends Strategy {
 
         this.bbObj = new BB(periodsBB, multiplierBB);
         this.rsiObj = new RSI(periodsRSI);
-        this.emaObj = new EMA(periodsEmaLong, periodsEmaShort);
+        this.emaLongObj = new EMA(periodsEmaLong);
+        this.emaShortObj = new EMA(periodsEmaShort);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class BBER extends Strategy {
 
         //get the current values
         double close = getRecent(history, Period.Fields.Close);
-        double ema = getRecent(emaObj.getEmaLong());
+        double ema = getRecent(emaLongObj.getEma());
         double middle = getRecent(bbObj.getMiddle().getSma());
         double rsi = getRecent(rsiObj.getRsiVal());
 
@@ -73,7 +74,7 @@ public class BBER extends Strategy {
 
         //get the current values
         double close = getRecent(history, Period.Fields.Close);
-        double ema = getRecent(emaObj.getEmaLong());
+        double ema = getRecent(emaLongObj.getEma());
         double middle = getRecent(bbObj.getMiddle().getSma());
         double rsi = getRecent(rsiObj.getRsiVal());
 
@@ -94,7 +95,8 @@ public class BBER extends Strategy {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        this.emaObj.displayData(agent, write);
+        this.emaShortObj.displayData(agent, write);
+        this.emaLongObj.displayData(agent, write);
         this.bbObj.displayData(agent, write);
         this.rsiObj.displayData(agent, write);
     }
@@ -103,8 +105,17 @@ public class BBER extends Strategy {
     public void calculate(List<Period> history, int newPeriods) {
 
         //do our calculations
-        this.emaObj.calculate(history, newPeriods);
+        this.emaShortObj.calculate(history, newPeriods);
+        this.emaLongObj.calculate(history, newPeriods);
         this.bbObj.calculate(history, newPeriods);
         this.rsiObj.calculate(history, newPeriods);
+    }
+
+    @Override
+    public void cleanup() {
+        emaShortObj.cleanup();
+        emaLongObj.cleanup();
+        bbObj.cleanup();
+        rsiObj.cleanup();
     }
 }

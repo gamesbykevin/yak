@@ -155,4 +155,11 @@ public final class SO extends Indicator {
         //return our result
         return result;
     }
+
+    @Override
+    public void cleanup() {
+        cleanup(getMarketRateBasic());
+        cleanup(getMarketRateFull());
+        cleanup(getStochasticOscillator());
+    }
 }

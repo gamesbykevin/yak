@@ -88,7 +88,7 @@ public class Main implements Runnable {
     public static boolean WEBSOCKET_ENABLED = false;
 
     //our list of products
-    private List<Product> products;
+    private static List<Product> PRODUCTS;
 
     /**
      * Warn the user before we actually start (when using real money)
@@ -166,7 +166,7 @@ public class Main implements Runnable {
             List<Product> tmp = productService.getProducts();
 
             //create new list of products we want to trade
-            this.products = new ArrayList<>();
+            PRODUCTS = new ArrayList<>();
 
             //figure out which products we are trading
             for (int i = 0; i < tmp.size(); i++) {
@@ -358,8 +358,8 @@ public class Main implements Runnable {
         displayMessage("History tracker created", getWriter());
     }
 
-    public List<Product> getProducts() {
-        return this.products;
+    public static List<Product> getProducts() {
+        return PRODUCTS;
     }
 
     protected final PrintWriter getWriter() {

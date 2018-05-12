@@ -7,7 +7,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEma;
 
 /**
@@ -115,5 +115,11 @@ public class PVI extends Strategy {
 
         //now that we have our standard list, let's calculate ema
         calculateEma(getPviEma(), getPviCumulative(), newPeriods, periodsEma);
+    }
+
+    @Override
+    public void cleanup() {
+        cleanup(getPviEma());
+        cleanup(getPviCumulative());
     }
 }
