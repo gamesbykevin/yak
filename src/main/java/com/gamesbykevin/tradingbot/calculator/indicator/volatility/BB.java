@@ -2,14 +2,11 @@ package com.gamesbykevin.tradingbot.calculator.indicator.volatility;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Bollinger Bands

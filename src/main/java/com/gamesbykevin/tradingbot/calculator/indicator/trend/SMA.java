@@ -60,50 +60,44 @@ public class SMA extends Indicator {
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
-        //calculate the sma
-        calculateSMA(history, getSma(), newPeriods, getPeriods(), getField());
-    }
-
-    public static void calculateSMA(List<Double> data, List<Double> populate, int newPeriods, int periods) {
-
         //where do we start
-        int start = (populate.isEmpty()) ? 0 : data.size() - newPeriods;
-
-        for (int i = start; i <= data.size(); i++) {
-
-            //skip if we don't have enough data
-            if (i < periods)
-                continue;
-
-            double sum = 0;
-
-            //go back our desired number of periods
-            for (int x = i - periods; x < i; x++) {
-                sum += data.get(x);
-            }
-
-            //add the average to our list
-            populate.add(sum / (float)periods);
-        }
-    }
-
-    public static void calculateSMA(List<Period> history, List<Double> populate, int newPeriods, int periods, Fields field) {
-
-        //where do we start
-        int start = populate.isEmpty() ? 0 : history.size() - newPeriods;
+        int start = getSma().isEmpty() ? 0 : history.size() - newPeriods;
 
         //check all data when calculating
         for (int i = start; i <= history.size(); i++) {
 
             //skip until we have enough data to calculate
-            if (i < periods)
+            if (i < getPeriods())
                 continue;
 
             //calculate the sma value with the given values
-            double sma = calculateSMA(history, i, periods, field);
+            double sma = calculateSMA(history, i, periods, getField());
 
             //add the sma value to our list
-            populate.add(sma);
+            getSma().add(sma);
+        }
+    }
+
+    public void calculateSMA(List<Double> data, int newPeriods) {
+
+        //where do we start
+        int start = (getSma().isEmpty()) ? 0 : data.size() - newPeriods;
+
+        for (int i = start; i <= data.size(); i++) {
+
+            //skip if we don't have enough data
+            if (i < getPeriods())
+                continue;
+
+            double sum = 0;
+
+            //go back our desired number of periods
+            for (int x = i - getPeriods(); x < i; x++) {
+                sum += data.get(x);
+            }
+
+            //add the average to our list
+            getSma().add(sum / (float)periods);
         }
     }
 

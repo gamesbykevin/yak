@@ -50,8 +50,8 @@ public class AgentManager {
 
         AE, AR, BBAR, BBER, BBR,
         CA, EMAR, EMAS, ERS, HASO,
-        MACS, MARS, MER, MES, NVI,
-        PVI, RCR, SSR, SOEMA
+        MACS, MARS, MER, MES, RCR,
+        SSR, SOEMA
     }
 
     public AgentManager(final Product product, final double funds) {

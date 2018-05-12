@@ -16,10 +16,10 @@ import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasC
  */
 public class SSR extends Strategy {
 
-    //our indicator objects
-    private SO objSO;
-    private SMA objSMA;
-    private RSI objRSI;
+    //how to access our indicator objects
+    private static int INDEX_SO;
+    private static int INDEX_SMA;
+    private static int INDEX_RSI;
 
     //configurable values
     private static final int PERIODS_SMA = 150;
@@ -32,10 +32,10 @@ public class SSR extends Strategy {
 
     public SSR() {
 
-        //create our indicators
-        this.objSO = new SO(PERIODS_SO_MARKET_RATE, PERIODS_SO_MARKET_RATE_SMA, PERIODS_SO_STOCHASTIC_SMA);
-        this.objRSI = new RSI(PERIODS_RSI);
-        this.objSMA = new SMA(PERIODS_SMA);
+        //add our indicators
+        INDEX_SO = addIndicator(new SO(PERIODS_SO_MARKET_RATE, PERIODS_SO_MARKET_RATE_SMA, PERIODS_SO_STOCHASTIC_SMA));
+        INDEX_RSI = addIndicator(new RSI(PERIODS_RSI));
+        INDEX_SMA = addIndicator(new SMA(PERIODS_SMA));
     }
 
     @Override
@@ -44,8 +44,13 @@ public class SSR extends Strategy {
         //get the recent period
         Period period = history.get(history.size() - 1);
 
+        //get our indicator objects
+        SMA objSMA = (SMA)getIndicator(INDEX_SMA);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
+        SO objSO = (SO)getIndicator(INDEX_SO);
+
         //if the close is above the sma we have a bullish trend
-        if (period.close > getRecent(objSMA.getSma())) {
+        if (period.close > getRecent(objSMA)) {
 
             //we also want the rsi and the stochastic oscillator to be over sold
             if (getRecent(objRSI.getRsiVal()) < OVERSOLD && getRecent(objSO.getStochasticOscillator()) < OVERSOLD) {
@@ -55,9 +60,6 @@ public class SSR extends Strategy {
                     agent.setBuy(true);
             }
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -66,8 +68,13 @@ public class SSR extends Strategy {
         //get the recent period
         Period period = history.get(history.size() - 1);
 
+        //get our indicator objects
+        SMA objSMA = (SMA)getIndicator(INDEX_SMA);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
+        SO objSO = (SO)getIndicator(INDEX_SO);
+
         //if the close is below the sma we have a bearish trend
-        if (period.close < getRecent(objSMA.getSma()))
+        if (period.close < getRecent(objSMA))
             adjustHardStopPrice(agent, currentPrice);
 
         //if the stock is overbought, adjust our hard stop price and sell
@@ -79,33 +86,5 @@ public class SSR extends Strategy {
         //if bearish crossover we go short
         if (hasCrossover(false, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display info
-        objSO.displayData(agent, write);
-        objSMA.displayData(agent, write);
-        objRSI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //perform calculations
-        objSO.calculate(history, newPeriods);
-        objSMA.calculate(history, newPeriods);
-        objRSI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objSO.cleanup();
-        objSMA.cleanup();
-        objRSI.cleanup();
     }
 }

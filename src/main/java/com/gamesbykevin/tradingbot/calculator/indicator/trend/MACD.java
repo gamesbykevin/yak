@@ -8,8 +8,6 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEma;
-
 /**
  * Moving Average Crossover Divergence
  */
@@ -18,14 +16,11 @@ public class MACD extends Indicator {
     //macdLine values
     private List<Double> macdLine;
 
-    //list of ema values from the macd line
-    private List<Double> signalLine;
-
     //our histogram (macdLine - signalLine)
     private List<Double> histogram;
 
-    //our ema object
-    private EMA objShortEMA, objLongEMA;
+    //our ema objects
+    private EMA objShortEMA, objLongEMA, objSignalLine;
 
     //our list of variations
     private static final int PERIODS_MACD_SIGNAL = 9;
@@ -36,20 +31,14 @@ public class MACD extends Indicator {
         this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_MACD_SIGNAL);
     }
 
-    //how many periods to calculate our signal line
-    private final int periods;
-
-    public MACD(int periodsEmaLong, int periodsEmaShort, int periods) {
-
-        //store our settings
-        this.periods = periods;
+    public MACD(int periodsEmaLong, int periodsEmaShort, int periodsSignalLine) {
 
         //create lists and objects
         this.macdLine = new ArrayList<>();
-        this.signalLine = new ArrayList<>();
         this.histogram = new ArrayList<>();
         this.objShortEMA = new EMA(periodsEmaShort);
         this.objLongEMA = new EMA(periodsEmaLong);
+        this.objSignalLine = new EMA(periodsSignalLine);
     }
 
     private EMA getObjShortEMA() {
@@ -60,16 +49,12 @@ public class MACD extends Indicator {
         return this.objLongEMA;
     }
 
-    private int getPeriods() {
-        return this.periods;
-    }
-
     public List<Double> getMacdLine() {
         return this.macdLine;
     }
 
     public List<Double> getSignalLine() {
-        return this.signalLine;
+        return this.objSignalLine.getEma();
     }
 
     public List<Double> getHistogram() {
@@ -100,7 +85,7 @@ public class MACD extends Indicator {
         calculateMacdLine(getObjShortEMA().getEma(), getObjLongEMA().getEma(), getMacdLine(), newPeriods);
 
         //then we can calculate our signal line
-        calculateEma(getSignalLine(), getMacdLine(), newPeriods, getPeriods());
+        objSignalLine.calculateEma(getMacdLine(), newPeriods);
 
         //last we can calculate the histogram
         calculateHistogram(getMacdLine(), getSignalLine(), getHistogram(), newPeriods);
@@ -137,9 +122,9 @@ public class MACD extends Indicator {
     @Override
     public void cleanup() {
         cleanup(getMacdLine());
-        cleanup(getSignalLine());
         cleanup(getHistogram());
         getObjShortEMA().cleanup();
         getObjLongEMA().cleanup();
+        objSignalLine.cleanup();
     }
 }

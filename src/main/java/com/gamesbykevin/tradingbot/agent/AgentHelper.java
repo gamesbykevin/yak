@@ -113,6 +113,9 @@ public class AgentHelper {
         //check for a sell signal
         strategy.checkSellSignal(agent, history, currentPrice);
 
+        //display our data
+        strategy.displayData(agent, agent.getReasonSell() != null);
+
         //get the latest closing price
         final double closePrice = history.get(history.size() - 1).close;
 
@@ -171,12 +174,15 @@ public class AgentHelper {
         //reset our hard stop until we actually buy
         agent.setHardStopPrice(0);
 
-        //get the latest closing price
-        final double closePrice = history.get(history.size() - 1).close;
+        //if the strategy does not need to wait for new candle data
+        if (!strategy.hasWait()) {
 
-        //if the strategy does not need to wait for new candle data, check for a buy signal
-        if (!strategy.hasWait())
+            //check for a buy signal
             strategy.checkBuySignal(agent, history, currentPrice);
+
+            //display our data
+            strategy.displayData(agent, agent.hasBuy());
+        }
 
         //we will buy if there is a reason
         if (agent.hasBuy()) {

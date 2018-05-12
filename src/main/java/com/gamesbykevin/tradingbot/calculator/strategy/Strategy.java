@@ -3,7 +3,9 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Calculation;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
@@ -16,8 +18,59 @@ public abstract class Strategy extends Calculation {
     //adjust our price increase by half
     private static final float ADJUST_HARD_STOP_RATIO = .5f;
 
+    //list of indicators we are using
+    private List<Indicator> indicators;
+
     protected Strategy() {
         //default constructor
+    }
+
+    protected int addIndicator(Indicator indicator) {
+
+        //add at the end of the list
+        getIndicators().add(indicator);
+
+        return getIndicators().size() - 1;
+    }
+
+    protected Indicator getIndicator(int index) {
+        return getIndicators().get(index);
+    }
+
+    /**
+     * Get the list of indicators for this strategy
+     * @return List of existing indicators
+     */
+    private List<Indicator> getIndicators() {
+
+        if (this.indicators == null)
+            this.indicators = new ArrayList<>();
+
+        return this.indicators;
+    }
+
+    @Override
+    public final void displayData(Agent agent, boolean write) {
+
+        for (int index = 0; index < getIndicators().size(); index++) {
+            getIndicator(index).displayData(agent, write);
+        }
+    }
+
+    @Override
+    public final void calculate(List<Period> history, int newPeriods) {
+
+        for (int index = 0; index < getIndicators().size(); index++) {
+            getIndicator(index).calculate(history, newPeriods);
+        }
+    }
+
+    @Override
+    public final void cleanup() {
+
+        for (int index = 0; index < getIndicators().size(); index++) {
+            getIndicator(index).cleanup();
+        }
     }
 
     public void adjustHardStopPrice(Agent agent, double currentPrice) {

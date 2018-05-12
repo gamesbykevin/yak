@@ -17,6 +17,12 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
  */
 public class BBER extends Strategy {
 
+    //how to access our indicator objects
+    private static int INDEX_EMA_SHORT;
+    private static int INDEX_EMA_LONG;
+    private static int INDEX_RSI;
+    private static int INDEX_BB;
+
     //our list of variations
     private static final float RSI_LINE = 50.0f;
     private static final int PERIODS_EMA_LONG = 75;
@@ -24,15 +30,6 @@ public class BBER extends Strategy {
     private static final int PERIODS_RSI = 14;
     private static final int PERIODS_BB = 20;
     private static final float MULTIPLIER_BB = 2.0f;
-
-    //bollinger bands object
-    private BB bbObj;
-
-    //our rsi object
-    private RSI rsiObj;
-
-    //our ema object
-    private EMA emaShortObj, emaLongObj;
 
     //our rsi line
     private final float rsiLine;
@@ -43,16 +40,22 @@ public class BBER extends Strategy {
 
     public BBER(int periodsEmaLong, int periodsEmaShort, int periodsBB, float multiplierBB, int periodsRSI, float rsiLine) {
 
+        //save our value
         this.rsiLine = rsiLine;
 
-        this.bbObj = new BB(periodsBB, multiplierBB);
-        this.rsiObj = new RSI(periodsRSI);
-        this.emaLongObj = new EMA(periodsEmaLong);
-        this.emaShortObj = new EMA(periodsEmaShort);
+        //add our indicators
+        INDEX_EMA_SHORT = addIndicator(new EMA(periodsEmaShort));
+        INDEX_EMA_LONG = addIndicator(new EMA(periodsEmaLong));
+        INDEX_RSI = addIndicator(new RSI(periodsRSI));
+        INDEX_BB = addIndicator(new BB(periodsBB, multiplierBB));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
+        BB bbObj = (BB)getIndicator(INDEX_BB);
+        RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
 
         //get the current values
         double close = getRecent(history, Period.Fields.Close);
@@ -63,14 +66,14 @@ public class BBER extends Strategy {
         //if the candle closed above our long ema and above the bollinger bands middle line, and our rsi is above the line
         if (close > ema && close > middle && rsi >= RSI_LINE)
                 agent.setBuy(true);
-
-        //display our data
-        displayMessage(agent, "Close $" + close, agent.hasBuy());
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
+        BB bbObj = (BB)getIndicator(INDEX_BB);
+        RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
 
         //get the current values
         double close = getRecent(history, Period.Fields.Close);
@@ -85,37 +88,5 @@ public class BBER extends Strategy {
         //if the close is below the ema long and bb middle and rsi is heading towards oversold
         if (close < ema && close < middle && rsi <= RSI_LINE)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        //display our data
-        displayMessage(agent, "Close $" + close, agent.hasBuy());
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display the information
-        this.emaShortObj.displayData(agent, write);
-        this.emaLongObj.displayData(agent, write);
-        this.bbObj.displayData(agent, write);
-        this.rsiObj.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        this.emaShortObj.calculate(history, newPeriods);
-        this.emaLongObj.calculate(history, newPeriods);
-        this.bbObj.calculate(history, newPeriods);
-        this.rsiObj.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        emaShortObj.cleanup();
-        emaLongObj.cleanup();
-        bbObj.cleanup();
-        rsiObj.cleanup();
     }
 }

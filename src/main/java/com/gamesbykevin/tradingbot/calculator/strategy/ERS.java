@@ -14,11 +14,11 @@ import java.util.List;
  */
 public class ERS extends Strategy {
 
-    //our indicator objects
-    private SO objSO;
-    private EMA objShortEMA;
-    private EMA objLongEMA;
-    private RSI objRSI;
+    //how to access our indicator objects
+    private static int INDEX_EMA_SHORT;
+    private static int INDEX_EMA_LONG;
+    private static int INDEX_SO;
+    private static int INDEX_RSI;
 
     //configurable values
     private static final int PERIODS_EMA_SHORT = 5;
@@ -33,15 +33,20 @@ public class ERS extends Strategy {
 
     public ERS() {
 
-        //create our indicator objects
-        this.objSO = new SO(PERIODS_SO_MARKET_RATE, PERIODS_SO_MARKET_RATE_SMA, PERIODS_SO_STOCHASTIC_SMA);
-        this.objShortEMA = new EMA(PERIODS_EMA_SHORT);
-        this.objLongEMA = new EMA(PERIODS_EMA_LONG);
-        this.objRSI = new RSI(PERIODS_RSI);
+        //add our indicator objects
+        INDEX_EMA_SHORT = addIndicator(new EMA(PERIODS_EMA_SHORT));
+        INDEX_EMA_LONG = addIndicator(new EMA(PERIODS_EMA_LONG));
+        INDEX_SO = addIndicator(new SO(PERIODS_SO_MARKET_RATE, PERIODS_SO_MARKET_RATE_SMA, PERIODS_SO_STOCHASTIC_SMA));
+        INDEX_RSI = addIndicator(new RSI(PERIODS_RSI));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
+        SO objSO = (SO)getIndicator(INDEX_SO);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //the short period has crossed the long period
         if (getRecent(objShortEMA.getEma()) > getRecent(objLongEMA.getEma())) {
@@ -65,13 +70,14 @@ public class ERS extends Strategy {
                 }
             }
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //if the fast went below the long
         if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
@@ -83,36 +89,5 @@ public class ERS extends Strategy {
             if (getRecent(objRSI.getRsiVal()) < RSI_LINE)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display info
-        objSO.displayData(agent, write);
-        objShortEMA.displayData(agent, write);
-        objLongEMA.displayData(agent, write);
-        objRSI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //perform calculations
-        objSO.calculate(history, newPeriods);
-        objShortEMA.calculate(history, newPeriods);
-        objLongEMA.calculate(history, newPeriods);
-        objRSI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objSO.cleanup();
-        objShortEMA.cleanup();
-        objLongEMA.cleanup();
-        objRSI.cleanup();
     }
 }

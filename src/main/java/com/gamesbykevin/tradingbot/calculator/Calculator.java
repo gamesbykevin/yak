@@ -153,14 +153,6 @@ public class Calculator {
                     strategy = new MES();
                     break;
 
-                case NVI:
-                    strategy = new NVI();
-                    break;
-
-                case PVI:
-                    strategy = new PVI();
-                    break;
-
                 case RCR:
                     strategy = new RCR();
                     break;

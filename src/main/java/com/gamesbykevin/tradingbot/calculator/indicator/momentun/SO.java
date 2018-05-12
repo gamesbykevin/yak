@@ -3,32 +3,28 @@ package com.gamesbykevin.tradingbot.calculator.indicator.momentun;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Stochastic Oscillator
  */
 public final class SO extends Indicator {
 
-    //indicator list
-    private List<Double> stochasticOscillator;
-
     //our market rate
     private List<Double> marketRateBasic;
 
-    //the sma of our market rate
-    private List<Double> marketRateFull;
+    //our sma objects
+    private SMA objMarketFullSMA, objStochasticOscillator;
 
     //list of configurable values
     private static final int PERIODS_MARKET_RATE_BASIC = 14;
     private static final int PERIODS_MARKET_RATE_FULL = 3;
     private static final int PERIODS_STOCHASTIC = 3;
 
-    private final int periodsMarketRateBasic, periodsMarketRateFull, periodsStochastic;
+    private final int periodsMarketRateBasic;
 
     public SO() {
         this(PERIODS_MARKET_RATE_BASIC, PERIODS_MARKET_RATE_FULL, PERIODS_STOCHASTIC);
@@ -37,21 +33,11 @@ public final class SO extends Indicator {
     public SO(int periodsMarketRateBasic, int periodsMarketRateFull, int periodsStochastic) {
 
         this.periodsMarketRateBasic = periodsMarketRateBasic;
-        this.periodsMarketRateFull = periodsMarketRateFull;
-        this.periodsStochastic = periodsStochastic;
 
         //create new list(s)
-        this.stochasticOscillator = new ArrayList<>();
         this.marketRateBasic = new ArrayList<>();
-        this.marketRateFull = new ArrayList<>();
-    }
-
-    public int getPeriodsStochastic() {
-        return this.periodsStochastic;
-    }
-
-    public int getPeriodsMarketRateFull() {
-        return this.periodsMarketRateFull;
+        this.objMarketFullSMA = new SMA(periodsMarketRateFull);
+        this.objStochasticOscillator = new SMA(periodsStochastic);
     }
 
     public int getPeriodsMarketRateBasic() {
@@ -62,7 +48,7 @@ public final class SO extends Indicator {
      * Get the stochastic oscillator %D
      */
     public List<Double> getStochasticOscillator() {
-        return this.stochasticOscillator;
+        return this.objStochasticOscillator.getSma();
     }
 
     /**
@@ -76,7 +62,7 @@ public final class SO extends Indicator {
      * Get the specified period sma of the market rate %K
      */
     public List<Double> getMarketRateFull() {
-        return this.marketRateFull;
+        return this.objMarketFullSMA.getSma();
     }
 
     @Override
@@ -113,10 +99,10 @@ public final class SO extends Indicator {
         }
 
         //now we use a sma to create our market rate values
-        calculateSMA(getMarketRateBasic(), getMarketRateFull(), newPeriods, getPeriodsMarketRateFull());
+        objMarketFullSMA.calculateSMA(getMarketRateBasic(), newPeriods);
 
         //now we use a sma of that to create our stochastic oscillator values
-        calculateSMA(getMarketRateFull(), getStochasticOscillator(), newPeriods, getPeriodsStochastic());
+        objStochasticOscillator.calculateSMA(getMarketRateFull(), newPeriods);
     }
 
     private Period getMaxPeriod(List<Period> history, int index, boolean high) {
@@ -159,7 +145,7 @@ public final class SO extends Indicator {
     @Override
     public void cleanup() {
         cleanup(getMarketRateBasic());
-        cleanup(getMarketRateFull());
-        cleanup(getStochasticOscillator());
+        objMarketFullSMA.cleanup();
+        objStochasticOscillator.cleanup();
     }
 }

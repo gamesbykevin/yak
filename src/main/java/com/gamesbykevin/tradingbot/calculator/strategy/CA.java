@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class CA extends Strategy {
 
-    //our indicator objects
-    private CCI objCCI;
-    private ADX objADX;
+    //how to access our indicator objects
+    private static int INDEX_CCI;
+    private static int INDEX_ADX;
 
     //configurable values
     private static final int PERIODS_CCI = 4;
@@ -30,13 +30,16 @@ public class CA extends Strategy {
 
     public CA(int periodsCCI, int periodsADX) {
 
-        //create new indicator objects
-        this.objADX = new ADX(periodsADX);
-        this.objCCI = new CCI(periodsCCI);
+        //add our indicators
+        INDEX_CCI = addIndicator(new CCI(periodsCCI));
+        INDEX_ADX = addIndicator(new ADX(periodsADX));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        ADX objADX = (ADX)getIndicator(INDEX_ADX);
+        CCI objCCI = (CCI)getIndicator(INDEX_CCI);
 
         //if adx is below the trend and cci is below -100
         if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW) {
@@ -48,13 +51,13 @@ public class CA extends Strategy {
             if (period.open < period.close)
                 agent.setBuy(true);
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        ADX objADX = (ADX)getIndicator(INDEX_ADX);
+        CCI objCCI = (CCI)getIndicator(INDEX_CCI);
 
         //get the current candle
         Period period = history.get(history.size() - 1);
@@ -84,32 +87,5 @@ public class CA extends Strategy {
                     adjustHardStopPrice(agent, currentPrice);
             }
         }
-
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display info
-        objADX.displayData(agent, write);
-        objCCI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //perform calculations
-        objADX.calculate(history, newPeriods);
-        objCCI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objADX.cleanup();
-        objCCI.cleanup();
     }
 }

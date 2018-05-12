@@ -18,6 +18,11 @@ import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calcula
  */
 public class MES extends Strategy {
 
+    //how to access our indicator objects
+    private static int INDEX_SMA;
+    private static int INDEX_EMA;
+    private static int INDEX_MACD;
+
     //configurable values
     private static final int PERIODS_SMA_SHORT = 15;
     private static final int PERIODS_EMA_SHORT = 5;
@@ -28,42 +33,32 @@ public class MES extends Strategy {
     //check recent periods to confirm recent crossover
     private static final int PERIOD_DISTANCE_REFERENCE = 3;
 
-    private final int periodsEmaShort;
-
-    //objects with indicator values
-    private MACD objMACD;
-    private List<Double> emaShort;
-    private SMA smaShort;
-
     public MES() {
         this(PERIODS_SMA_SHORT, PERIODS_EMA_SHORT, PERIODS_MACD_SHORT, PERIODS_MACD_LONG, PERIODS_MACD_SIGNAL);
     }
 
     public MES(int periodsSmaShort, int periodsEmaShort, int periodsMacdShort, int periodsMacdLong, int periodsMacdSignal) {
 
-        //store our config settings
-        this.periodsEmaShort = periodsEmaShort;
-
-        //create our indicator objects
-        this.objMACD = new MACD(periodsMacdLong, periodsMacdShort, periodsMacdSignal);
-        this.emaShort = new ArrayList<>();
-        this.smaShort = new SMA(periodsSmaShort);
-    }
-
-    private MACD getObjMacd() {
-        return this.objMACD;
+        //add our indicator objects
+        INDEX_MACD = addIndicator(new MACD(periodsMacdLong, periodsMacdShort, periodsMacdSignal));
+        INDEX_SMA = addIndicator(new SMA(periodsSmaShort));
+        INDEX_EMA = addIndicator(new EMA(periodsEmaShort));
     }
 
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         boolean confirmA = false, confirmB = false;
 
+        EMA objEMA = (EMA)getIndicator(INDEX_EMA);
+        MACD objMACD = (MACD)getIndicator(INDEX_MACD);
+        SMA objSMA = (SMA)getIndicator(INDEX_SMA);
+
         //make sure we recently crossed
         for (int index = 0; index < PERIOD_DISTANCE_REFERENCE; index++) {
 
-            if (!confirmA && getRecent(getObjMacd().getMacdLine(), index + 2) < getRecent(getObjMacd().getSignalLine(), index + 2))
+            if (!confirmA && getRecent(objMACD.getMacdLine(), index + 2) < getRecent(objMACD.getSignalLine(), index + 2))
                 confirmA = true;
-            if (!confirmB && getRecent(emaShort, index + 2) < getRecent(smaShort.getSma(), index + 2))
+            if (!confirmB && getRecent(objEMA, index + 2) < getRecent(objSMA, index + 2))
                 confirmB = true;
         }
 
@@ -71,26 +66,27 @@ public class MES extends Strategy {
         if (confirmA && confirmB) {
 
             //first we make sure the macd line crossed above the signal line
-            if (getRecent(getObjMacd().getMacdLine()) > getRecent(getObjMacd().getSignalLine())) {
+            if (getRecent(objMACD.getMacdLine()) > getRecent(objMACD.getSignalLine())) {
 
                 //make sure the fast ema crosses above the sma short, let's buy
-                if (getRecent(emaShort) > getRecent(smaShort.getSma()))
+                if (getRecent(objEMA) > getRecent(objSMA))
                     agent.setBuy(true);
             }
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
+        EMA objEMA = (EMA)getIndicator(INDEX_EMA);
+        MACD objMACD = (MACD)getIndicator(INDEX_MACD);
+        SMA objSMA = (SMA)getIndicator(INDEX_SMA);
+
         //first we make sure the macd line crossed below the signal line
-        if (getRecent(getObjMacd().getMacdLine()) < getRecent(getObjMacd().getSignalLine())) {
+        if (getRecent(objMACD.getMacdLine()) < getRecent(objMACD.getSignalLine())) {
 
             //next make sure the fast ema crosses below the sma short
-            if (getRecent(emaShort) < getRecent(smaShort.getSma()))
+            if (getRecent(objEMA) < getRecent(objSMA))
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         } else {
@@ -98,41 +94,12 @@ public class MES extends Strategy {
             double close = getRecent(history, Fields.Close);
 
             //if the close is less than the emas and the macd line is negative
-            if (close < getRecent(emaShort) && close < getRecent(smaShort.getSma()) && getRecent(getObjMacd().getMacdLine()) < 0)
+            if (close < getRecent(objEMA) && close < getRecent(objSMA) && getRecent(objMACD.getMacdLine()) < 0)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
 
         //adjust our hard stop price to protect our investment
-        if (periodsEmaShort < smaShort.getPeriods() && getRecent(emaShort) < getRecent(smaShort.getSma()))
+        if (objEMA.getPeriods() < objSMA.getPeriods() && getRecent(objEMA) < getRecent(objSMA))
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
     }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display our data
-        getObjMacd().displayData(agent, write);
-        display(agent, "SMA Short :", smaShort.getSma(), write);
-        display(agent, "EMA Short :", emaShort, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        getObjMacd().calculate(history, newPeriods);
-        smaShort.calculate(history, newPeriods);
-        calculateEMA(history, emaShort, newPeriods, periodsEmaShort);
-    }
-
-    @Override
-    public void cleanup() {
-        getObjMacd().cleanup();
-        smaShort.cleanup();
-        cleanup(emaShort);
-    }
-
 }

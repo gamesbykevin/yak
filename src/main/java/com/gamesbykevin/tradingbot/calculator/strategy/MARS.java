@@ -2,7 +2,9 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import org.omg.CORBA.PRIVATE_MEMBER;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,23 +17,20 @@ import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calcula
  */
 public class MARS extends Strategy {
 
-    //our list of ema values
-    private List<List<Double>> emas;
-
     //our multiple periods in ascending order
     private static final int[] PERIODS = {10, 20, 30, 40, 50, 60, 70, 80};
 
+    //how we will access our objects
+    private int[] INDEXES = {1, 2, 3, 4, 5, 6, 7, 8};
+
     public MARS() {
 
-        //create new list(s)
-        this.emas = new ArrayList<>();
-
-        //sort the periods
+        //first we sort the periods in ascending order
         sortPeriods();
 
-        //add a new array list for each period
+        //then we add our indicators
         for (int i = 0; i < PERIODS.length; i++) {
-            this.emas.add(new ArrayList<>());
+            INDEXES[i] = addIndicator(new EMA(PERIODS[i]));
         }
     }
 
@@ -73,8 +72,8 @@ public class MARS extends Strategy {
         for (int i = 0; i < PERIODS.length - 1; i++) {
 
             //get the short and fast ema
-            double fast = getRecent(emas.get(i));
-            double slow = getRecent(emas.get(i + 1));
+            double fast = getRecent((EMA)getIndicator(INDEXES[i]));
+            double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
             //if the fast is less this isn't an upward trend
             if (fast < slow) {
@@ -84,11 +83,8 @@ public class MARS extends Strategy {
         }
 
         //if there is a trend, check when the longest emas cross over since that would happen last
-        if (trend && hasCrossover(true, emas.get(PERIODS.length - 2), emas.get(PERIODS.length - 1)))
+        if (trend && hasCrossover(true, ((EMA)getIndicator(INDEXES[INDEXES.length - 2])).getEma(), ((EMA)getIndicator(INDEXES[INDEXES.length - 1])).getEma()))
             agent.setBuy(true);
-
-        //display our data for what it is worth
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -101,8 +97,8 @@ public class MARS extends Strategy {
         for (int i = 0; i < (PERIODS.length / 2); i++) {
 
             //get the short and fast ema
-            double fast = getRecent(emas.get(i));
-            double slow = getRecent(emas.get(i + 1));
+            double fast = getRecent((EMA)getIndicator(INDEXES[i]));
+            double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
             //if the fast is more, the trend hasn't gone downward (yet)
             if (fast > slow) {
@@ -116,36 +112,7 @@ public class MARS extends Strategy {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //adjust our hard stop price to protect our investment checking the first 2 lists
-        if (emas.size() >= 2 && getRecent(emas.get(0)) < getRecent(emas.get(1)))
+        if (INDEXES.length >= 2 && getRecent((EMA)getIndicator(INDEXES[0])) < getRecent((EMA)getIndicator(INDEXES[1])))
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data for what it is worth
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display values
-        for (int i = 0; i < emas.size(); i++) {
-            display(agent, "EMA (" + PERIODS[i] + ") : ", emas.get(i), write);
-        }
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //calculate the different ema values
-        for (int i = 0; i < emas.size(); i++) {
-            calculateEMA(history, emas.get(i), newPeriods, PERIODS[i]);
-        }
-    }
-
-    @Override
-    public void cleanup() {
-
-        for (int i = 0; i < emas.size(); i++) {
-            cleanup(emas.get(i));
-        }
     }
 }

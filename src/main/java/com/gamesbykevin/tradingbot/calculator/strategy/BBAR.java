@@ -19,6 +19,11 @@ import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasT
  */
 public class BBAR extends Strategy {
 
+    //how to access our indicator objects
+    private static int INDEX_BB;
+    private static int INDEX_RSI;
+    private static int INDEX_ADL;
+
     //list of configurable values
     protected static int PERIODS_BB = 10;
     protected static int PERIODS_RSI = 14;
@@ -32,38 +37,33 @@ public class BBAR extends Strategy {
     //what is the bollinger band squeeze ratio
     private static final float SQUEEZE_RATIO = .040f;
 
-    //our bollinger bands object
-    private BB objBB;
-
-    //our relative strength index
-    private RSI objRSI;
-
-    //our accumulation distribution line
-    private ADL objADL;
-
     public BBAR() {
         this(PERIODS_BB, MULTIPLIER, PERIODS_RSI);
     }
 
     public BBAR(int periodsBB, float multiplier, int periodsRSI) {
 
-        //create our indicator objects
-        this.objBB = new BB(periodsBB, multiplier);
-        this.objRSI = new RSI(periodsRSI);
-        this.objADL = new ADL();
+        //add our indicator objects
+        INDEX_ADL = addIndicator(new ADL());
+        INDEX_RSI = addIndicator(new RSI(periodsRSI));
+        INDEX_BB = addIndicator(new BB(periodsBB, multiplier));
     }
 
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        BB objBB = (BB)getIndicator(INDEX_BB);
+        ADL objADL = (ADL)getIndicator(INDEX_ADL);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
+
         //what is the price percentage
-        float percentage = (float)(getRecent(this.objBB.getWidth()) / getRecent(history, Fields.Close));
+        float percentage = (float)(getRecent(objBB.getWidth()) / getRecent(history, Fields.Close));
 
         //if the squeeze is on, then let's try to figure out bullish divergence
         if (percentage <= SQUEEZE_RATIO) {
 
             //make sure both indicators are going up
-            if (hasTrendUpward(this.objADL.getVolume(), PERIOD_TREND) &&
-                    hasTrendUpward(this.objRSI.getRsiVal(), PERIOD_TREND)) {
+            if (hasTrendUpward(objADL.getVolume(), PERIOD_TREND) &&
+                    hasTrendUpward(objRSI.getRsiVal(), PERIOD_TREND)) {
 
                 //check that the price is heading down, then we have a bullish divergence
                 if (hasTrendDownward(history, Fields.Close, PERIOD_TREND))
@@ -74,11 +74,12 @@ public class BBAR extends Strategy {
         //display our data
         displayMessage(agent, "Ratio %" + SQUEEZE_RATIO, agent.hasBuy());
         displayMessage(agent, "Price %" + percentage, agent.hasBuy());
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        BB objBB = (BB)getIndicator(INDEX_BB);
 
         //get the current and previous values
         double closeCurr = getRecent(history, Fields.Close);
@@ -105,33 +106,5 @@ public class BBAR extends Strategy {
         //adjust our hard stop price to protect our investment
         if (closeCurr < midCurr || closeCurr < lowCurr)
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display our data
-        this.objBB.displayData(agent, write);
-        this.objADL.displayData(agent, write);
-        this.objRSI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        this.objBB.calculate(history, newPeriods);
-        this.objADL.calculate(history, newPeriods);
-        this.objRSI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objBB.cleanup();
-        objADL.cleanup();
-        objRSI.cleanup();
     }
 }

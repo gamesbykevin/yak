@@ -6,16 +6,17 @@ import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MER extends Strategy {
 
-    //list of ema values
-    private List<Double> ema1, ema2, ema3, ema4, ema5;
-
-    //our rsi object
-    private RSI objRSI;
+    //how to access our indicator objects
+    private static int INDEX_EMA_1;
+    private static int INDEX_EMA_2;
+    private static int INDEX_EMA_3;
+    private static int INDEX_EMA_4;
+    private static int INDEX_EMA_5;
+    private static int INDEX_RSI;
 
     //configurable values
     private static final int PERIODS_EMA_1 = 3;
@@ -28,15 +29,13 @@ public class MER extends Strategy {
 
     public MER() {
 
-        //create new lists
-        this.ema1 = new ArrayList<>();
-        this.ema2 = new ArrayList<>();
-        this.ema3 = new ArrayList<>();
-        this.ema4 = new ArrayList<>();
-        this.ema5 = new ArrayList<>();
-
-        //create our new rsi object
-        this.objRSI = new RSI(PERIODS_RSI);
+        //add our indicators
+        INDEX_EMA_1 = addIndicator(new EMA(PERIODS_EMA_1));
+        INDEX_EMA_2 = addIndicator(new EMA(PERIODS_EMA_2));
+        INDEX_EMA_3 = addIndicator(new EMA(PERIODS_EMA_3));
+        INDEX_EMA_4 = addIndicator(new EMA(PERIODS_EMA_4));
+        INDEX_EMA_5 = addIndicator(new EMA(PERIODS_EMA_5));
+        INDEX_RSI = addIndicator(new RSI(PERIODS_RSI));
     }
 
     @Override
@@ -44,6 +43,13 @@ public class MER extends Strategy {
 
         //get the recent period
         Period period = history.get(history.size() - 1);
+
+        EMA ema1 = (EMA)getIndicator(INDEX_EMA_1);
+        EMA ema2 = (EMA)getIndicator(INDEX_EMA_2);
+        EMA ema3 = (EMA)getIndicator(INDEX_EMA_3);
+        EMA ema4 = (EMA)getIndicator(INDEX_EMA_4);
+        EMA ema5 = (EMA)getIndicator(INDEX_EMA_5);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //is the close > our 80 period ema then there is bullish trend
         if (period.close > getRecent(ema5)) {
@@ -60,9 +66,6 @@ public class MER extends Strategy {
                 }
             }
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -70,6 +73,13 @@ public class MER extends Strategy {
 
         //get the recent period
         Period period = history.get(history.size() - 1);
+
+        EMA ema1 = (EMA)getIndicator(INDEX_EMA_1);
+        EMA ema2 = (EMA)getIndicator(INDEX_EMA_2);
+        EMA ema3 = (EMA)getIndicator(INDEX_EMA_3);
+        EMA ema4 = (EMA)getIndicator(INDEX_EMA_4);
+        EMA ema5 = (EMA)getIndicator(INDEX_EMA_5);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //if below trend sell immediately
         if (period.close < getRecent(ema5)) {
@@ -90,42 +100,5 @@ public class MER extends Strategy {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
             adjustHardStopPrice(agent, currentPrice);
         }
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display the information
-        display(agent, "EMA (" + PERIODS_EMA_1 + ") ", ema1, write);
-        display(agent, "EMA (" + PERIODS_EMA_2 + ") ", ema2, write);
-        display(agent, "EMA (" + PERIODS_EMA_3 + ") ", ema3, write);
-        display(agent, "EMA (" + PERIODS_EMA_4 + ") ", ema4, write);
-        display(agent, "EMA (" + PERIODS_EMA_5 + ") ", ema5, write);
-        objRSI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        EMA.calculateEMA(history, ema1, newPeriods, PERIODS_EMA_1);
-        EMA.calculateEMA(history, ema2, newPeriods, PERIODS_EMA_2);
-        EMA.calculateEMA(history, ema3, newPeriods, PERIODS_EMA_3);
-        EMA.calculateEMA(history, ema4, newPeriods, PERIODS_EMA_4);
-        EMA.calculateEMA(history, ema5, newPeriods, PERIODS_EMA_5);
-        objRSI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objRSI.cleanup();
-        cleanup(ema1);
-        cleanup(ema2);
-        cleanup(ema3);
-        cleanup(ema4);
-        cleanup(ema5);
     }
 }

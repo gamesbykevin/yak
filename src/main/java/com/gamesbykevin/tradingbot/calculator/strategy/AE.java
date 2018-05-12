@@ -15,9 +15,10 @@ import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasC
  */
 public class AE extends Strategy {
 
-    //our indicator objects
-    private ADX objADX;
-    private EMA objShortEMA, objLongEMA;
+    //how to access our indicator objects
+    private static int INDEX_EMA_SHORT;
+    private static int INDEX_EMA_LONG;
+    private static int INDEX_ADX;
 
     //configurable values
     private static final int PERIODS_EMA_LONG = 10;
@@ -34,14 +35,22 @@ public class AE extends Strategy {
     }
 
     public AE(int periodsEmaLong, int periodsEmaShort, int periodsAdx, int periodsAdxConfirm) {
+
+        //save the periods to confirm
         this.periodsAdxConfirm = periodsAdxConfirm;
-        this.objADX = new ADX(periodsAdx);
-        this.objShortEMA = new EMA(periodsEmaShort);
-        this.objLongEMA = new EMA(periodsEmaLong);
+
+        //add our indicators
+        INDEX_EMA_SHORT = addIndicator(new EMA(periodsEmaShort));
+        INDEX_EMA_LONG = addIndicator(new EMA(periodsEmaLong));
+        INDEX_ADX = addIndicator(new ADX(periodsAdx));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        ADX objADX = (ADX)getIndicator(INDEX_ADX);
+        EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
 
         //make sure adx is trending
         if (getRecent(objADX.getAdx()) > ADX_TREND) {
@@ -67,13 +76,14 @@ public class AE extends Strategy {
                     agent.setBuy(true);
             }
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        ADX objADX = (ADX)getIndicator(INDEX_ADX);
+        EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
 
         //if the ema short crosses below the ema long, it is time to sell
         if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
@@ -84,33 +94,5 @@ public class AE extends Strategy {
         //if the adx value goes below the trend, let's update our hard stop $
         if (getRecent(objADX.getAdx()) < ADX_TREND)
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display info
-        objADX.displayData(agent, write);
-        objShortEMA.displayData(agent, write);
-        objLongEMA.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //perform calculations
-        objADX.calculate(history, newPeriods);
-        objShortEMA.calculate(history, newPeriods);
-        objLongEMA.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objADX.cleanup();
-        objShortEMA.cleanup();
-        objLongEMA.cleanup();
     }
 }

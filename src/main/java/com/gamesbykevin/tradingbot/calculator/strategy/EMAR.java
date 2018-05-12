@@ -16,11 +16,10 @@ import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasC
  */
 public class EMAR extends Strategy {
 
-    //our ema object reference
-    private EMA emaShortObj, emaLongObj;
-
-    //our rsi object reference
-    private RSI rsiObj;
+    //how to access our indicator objects
+    private static int INDEX_EMA_LONG;
+    private static int INDEX_EMA_SHORT;
+    private static int INDEX_RSI;
 
     //list of configurable values
     private static final int PERIODS_EMA_LONG = 12;
@@ -28,6 +27,7 @@ public class EMAR extends Strategy {
     private static final int PERIODS_RSI = 21;
     private static final float RSI_LINE = 50.0f;
 
+    //our rsi trend line
     private final float rsiLine;
 
     public EMAR() {
@@ -36,27 +36,33 @@ public class EMAR extends Strategy {
 
     public EMAR(int emaLong, int emaShort, int periodsRSI, float rsiLine) {
 
+        //save our rsi line
         this.rsiLine = rsiLine;
 
-        //create our objects
-        this.emaShortObj = new EMA(emaShort);
-        this.emaLongObj = new EMA(emaLong);
-        this.rsiObj = new RSI(periodsRSI);
+        //add our indicators
+        INDEX_EMA_SHORT = addIndicator(new EMA(emaShort));
+        INDEX_EMA_LONG = addIndicator(new EMA(emaLong));
+        INDEX_RSI = addIndicator(new RSI(periodsRSI));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
+        EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
+
         //if rsi is over the line and we have a bullish crossover
         if (getRecent(rsiObj.getRsiVal()) > rsiLine && hasCrossover(true, emaShortObj.getEma(), emaLongObj.getEma()))
             agent.setBuy(true);
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
+        EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
 
         //recent values
         double current = getRecent(rsiObj.getRsiVal());
@@ -70,33 +76,5 @@ public class EMAR extends Strategy {
         //adjust our hard stop price to protect our investment
         if (emaShort < emaLong || current < rsiLine)
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display our information
-        rsiObj.displayData(agent, write);
-        emaShortObj.displayData(agent, write);
-        emaLongObj.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //calculate
-        rsiObj.calculate(history, newPeriods);
-        emaShortObj.calculate(history, newPeriods);
-        emaLongObj.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        rsiObj.cleanup();
-        emaShortObj.cleanup();
-        emaLongObj.cleanup();
     }
 }

@@ -7,8 +7,6 @@ import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
-
 /**
  * Relative Strength Index
  */

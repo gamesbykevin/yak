@@ -2,13 +2,10 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.HA;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,9 +13,9 @@ import java.util.List;
  */
 public class HASO extends Strategy {
 
-    //our indicators
-    private HA objHA;
-    private SO objSO;
+    //how to access our indicator objects
+    private static int INDEX_HA;
+    private static int INDEX_SO;
 
     //configurable values
     private static final int PERIODS_MARKET_RATE = 14;
@@ -34,13 +31,16 @@ public class HASO extends Strategy {
 
     public HASO(int periodsMarketRate, int periodsMarketRateSma, int periodsStochasticSma, int periodsHa) {
 
-        //create our indicators
-        this.objHA = new HA(periodsHa);
-        this.objSO = new SO(periodsMarketRate, periodsMarketRateSma, periodsStochasticSma);
+        //add our indicators
+        INDEX_HA = addIndicator(new HA(periodsHa));
+        INDEX_SO = addIndicator(new SO(periodsMarketRate, periodsMarketRateSma, periodsStochasticSma));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        HA objHA = (HA)getIndicator(INDEX_HA);
+        SO objSO = (SO)getIndicator(INDEX_SO);
 
         //get the most recent ha candles
         Period curr = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 1);
@@ -54,13 +54,13 @@ public class HASO extends Strategy {
             if (getRecent(objSO.getStochasticOscillator()) <= STOCHASTIC_MIN)
                 agent.setBuy(true);
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        HA objHA = (HA)getIndicator(INDEX_HA);
+        SO objSO = (SO)getIndicator(INDEX_SO);
 
         //get the most recent ha candles
         Period curr = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 1);
@@ -78,30 +78,5 @@ public class HASO extends Strategy {
         //adjust our hard stop price to protect our investment
         if (objHA.isBearish(prev1) || objHA.isBearish(curr))
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display our information
-        objHA.displayData(agent, write);
-        objSO.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //calculate
-        objHA.calculate(history, newPeriods);
-        objSO.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objHA.cleanup();
-        objSO.cleanup();
     }
 }

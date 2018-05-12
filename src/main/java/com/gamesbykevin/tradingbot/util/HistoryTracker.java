@@ -6,7 +6,6 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.PRODUCTS;
 import static com.gamesbykevin.tradingbot.Main.getProducts;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_HISTORIC;
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;

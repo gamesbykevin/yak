@@ -3,11 +3,10 @@ package com.gamesbykevin.tradingbot.calculator.indicator.volume;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Ease of Movement
@@ -23,9 +22,10 @@ public class EMV extends Indicator {
     protected static double VOLUME_DEFAULT = 100000000d;
 
     //list of emv values
-    private List<Double> smaEmv, valEmv;
+    private List<Double> emvVal;
 
-    private final int periods;
+    //our simple moving average
+    private SMA objSMA;
 
     public EMV() {
         this(PERIODS_EMV);
@@ -33,19 +33,19 @@ public class EMV extends Indicator {
 
     public EMV(int periods) {
 
-        this.periods = periods;
+        //create our objects
+        this.objSMA = new SMA(periods);
 
         //create new lists
-        this.smaEmv = new ArrayList<>();
-        this.valEmv = new ArrayList<>();
+        this.emvVal = new ArrayList<>();
     }
 
     public List<Double> getEmvSma() {
-        return this.smaEmv;
+        return this.objSMA.getSma();
     }
 
     public List<Double> getEmv() {
-        return this.valEmv;
+        return this.emvVal;
     }
 
     @Override
@@ -86,12 +86,12 @@ public class EMV extends Indicator {
         }
 
         //now that we have our list of emv values, calculate sma
-        calculateSMA(getEmv(), getEmvSma(), newPeriods, periods);
+        objSMA.calculateSMA(getEmv(), newPeriods);
     }
 
     @Override
     public void cleanup() {
         cleanup(getEmv());
-        cleanup(getEmvSma());
+        objSMA.cleanup();
     }
 }

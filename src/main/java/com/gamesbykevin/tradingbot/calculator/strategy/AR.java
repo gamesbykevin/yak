@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class AR extends Strategy {
 
-    //our indicator objects
-    private ATR objATR;
-    private RSI objRSI;
+    //how to access our indicator objects
+    private static int INDEX_ATR;
+    private static int INDEX_RSI;
 
     //configurable values
     private static final int PERIODS_ATR = 10;
@@ -30,13 +30,16 @@ public class AR extends Strategy {
 
     public AR(int periodsATR, int periodsRSI) {
 
-        //create our new indicator objects
-        this.objATR = new ATR(periodsATR);
-        this.objRSI = new RSI(periodsRSI);
+        //add our indicator objects
+        INDEX_ATR = addIndicator(new ATR(periodsATR));
+        INDEX_RSI = addIndicator(new RSI(periodsRSI));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        ATR objATR = (ATR)getIndicator(INDEX_ATR);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //make sure we just came out of oversold territory
         if (getRecent(objRSI.getRsiVal(), 2) < OVERSOLD && getRecent(objRSI.getRsiVal()) > OVERSOLD) {
@@ -47,13 +50,12 @@ public class AR extends Strategy {
             //adjust our hard stop based on average true range
             adjustHardStopPrice(agent, history.get(history.size() - 1).close - getRecent(objATR.getAverageTrueRange()));
         }
-
-        //display our data
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //make sure we just came out of over bought territory before selling
         if (getRecent(objRSI.getRsiVal(), 2) > OVERBOUGHT && getRecent(objRSI.getRsiVal()) < OVERBOUGHT)
@@ -62,30 +64,5 @@ public class AR extends Strategy {
         //if over bought adjust our hard stop price
         if (getRecent(objRSI.getRsiVal()) > OVERBOUGHT)
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display the information
-        objATR.displayData(agent, write);
-        objRSI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        objATR.calculate(history, newPeriods);
-        objRSI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objATR.cleanup();
-        objRSI.cleanup();
     }
 }

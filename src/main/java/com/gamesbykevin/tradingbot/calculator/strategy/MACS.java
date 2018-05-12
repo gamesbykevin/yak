@@ -2,13 +2,10 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
 import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 /**
@@ -16,15 +13,18 @@ import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSe
  */
 public class MACS extends Strategy {
 
-    //our list of fast, slow, trending values
-    private List<Double> emaFast, emaSlow, emaTrend;
+    //how to access our indicator objects
+    private static int INDEX_EMA_FAST;
+    private static int INDEX_EMA_SLOW;
+    private static int INDEX_EMA_TREND;
 
     //list of configurable values
     private static final int PERIODS_MACS_FAST = 5;
     private static final int PERIODS_MACS_SLOW = 10;
     private static final int PERIODS_MACS_TREND = 20;
     private static final int PERIODS_CONFIRM = 3;
-    private final int fast, slow, trend, confirm;
+
+    private final int confirm;
 
     public MACS() {
         this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND, PERIODS_CONFIRM);
@@ -32,19 +32,21 @@ public class MACS extends Strategy {
 
     public MACS(int fast, int slow, int trend, int confirm) {
 
-        this.fast = fast;
-        this.slow = slow;
-        this.trend = trend;
-        this.confirm = confirm;
+        //add our indicators
+        INDEX_EMA_TREND = addIndicator(new EMA(trend));
+        INDEX_EMA_SLOW = addIndicator(new EMA(slow));
+        INDEX_EMA_FAST = addIndicator(new EMA(fast));
 
-        //create new list(s)
-        this.emaFast = new ArrayList<>();
-        this.emaSlow = new ArrayList<>();
-        this.emaTrend = new ArrayList<>();
+        //store our value
+        this.confirm = confirm;
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
+        EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
+        EMA emaTrend = (EMA)getIndicator(INDEX_EMA_TREND);
 
         //current values
         double currEmaSlow = getRecent(emaSlow);
@@ -67,9 +69,6 @@ public class MACS extends Strategy {
                     agent.setBuy(true);
             }
         }
-
-        //display our data for what it is worth
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
@@ -77,6 +76,10 @@ public class MACS extends Strategy {
 
         //did we confirm downtrend?
         boolean downtrend = true;
+
+        EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
+        EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
+        EMA emaTrend = (EMA)getIndicator(INDEX_EMA_TREND);
 
         //we should sell if every value is trending down even if they haven't crossed
         for (int count = 1; count <= confirm; count++) {
@@ -111,33 +114,5 @@ public class MACS extends Strategy {
         //adjust our hard stop price to protect our investment
         if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) < getRecent(emaTrend))
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data for what it is worth
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display values
-        display(agent, "EMA Fast :", emaFast, write);
-        display(agent, "EMA Slow :", emaSlow, write);
-        display(agent, "EMA Trend:", emaTrend, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //calculate the different ema values
-        calculateEMA(history, emaFast, newPeriods, fast);
-        calculateEMA(history, emaSlow, newPeriods, slow);
-        calculateEMA(history, emaTrend, newPeriods, trend);
-    }
-
-    @Override
-    public void cleanup() {
-        cleanup(emaFast);
-        cleanup(emaSlow);
-        cleanup(emaTrend);
     }
 }

@@ -13,6 +13,10 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 
 public class BBR extends Strategy {
 
+    //how to access our indicator objects
+    private static int INDEX_BB;
+    private static int INDEX_RSI;
+
     //list of configurable values
     protected static int PERIODS_BB = 10;
     protected static int PERIODS_RSI = 21;
@@ -27,24 +31,21 @@ public class BBR extends Strategy {
     private static final float RSI_TREND = 50.0f;
     private static final float RSI_OVERBOUGHT = 70.0f;
 
-    //our bollinger bands object
-    private BB objBB;
-
-    //our rsi
-    private RSI objRSI;
-
     public BBR() {
         this(PERIODS_BB, MULTIPLIER, PERIODS_RSI);
     }
 
     public BBR(int periodsBB, float multiplier, int periodsRSI) {
 
-        //create our indicator objects
-        this.objBB = new BB(periodsBB, multiplier);
-        this.objRSI = new RSI(periodsRSI);
+        //add our indicator objects
+        INDEX_BB = addIndicator(new BB(periodsBB, multiplier));
+        INDEX_RSI = addIndicator(new RSI(periodsRSI));
     }
 
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        BB objBB = (BB)getIndicator(INDEX_BB);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //what is the price percentage
         float percentage = (float)(getRecent(objBB.getWidth()) / getRecent(history, Fields.Close));
@@ -65,17 +66,13 @@ public class BBR extends Strategy {
             if (percentage <= SQUEEZE_RATIO && close > upper)
                 agent.setBuy(true);
         }
-
-        //display our data
-        displayMessage(agent, "RSI   :" + rsi, agent.hasBuy());
-        displayMessage(agent, "Close $" + close, agent.hasBuy());
-        displayMessage(agent, "Upper :" + upper, agent.hasBuy());
-        displayMessage(agent, "Price %" + percentage, agent.hasBuy());
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        BB objBB = (BB)getIndicator(INDEX_BB);
+        RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //indicator values
         double rsi = getRecent(objRSI.getRsiVal());
@@ -100,34 +97,5 @@ public class BBR extends Strategy {
         //adjust our hard stop price to protect our investment
         if (close < middleCurr)
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayMessage(agent, "Close    $" + close, agent.getReasonSell() != null);
-        displayMessage(agent, "Curr Mid :" + middleCurr, agent.getReasonSell() != null);
-        displayMessage(agent, "Prev Mid :" + middlePrev, agent.getReasonSell() != null);
-        displayMessage(agent, "RSI Val  :" + rsi, agent.getReasonSell() != null);
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display our data
-        this.objBB.displayData(agent, write);
-        this.objRSI.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        this.objBB.calculate(history, newPeriods);
-        this.objRSI.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        objBB.cleanup();
-        objRSI.cleanup();
     }
 }

@@ -10,19 +10,17 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * EMA / SMA
  */
 public class EMAS extends Strategy {
 
-    //our ema object reference
-    private EMA emaShortObj, emaLongObj;
-
-    //our sma object reference(s)
-    private SMA smaObjShort, smaObjLong;
+    //how to access our indicator objects
+    private static int INDEX_EMA_SHORT;
+    private static int INDEX_EMA_LONG;
+    private static int INDEX_SMA_SHORT;
+    private static int INDEX_SMA_LONG;
 
     //our list of variations
     private static final int PERIODS_EMA_LONG = 169;
@@ -36,15 +34,19 @@ public class EMAS extends Strategy {
 
     public EMAS(int emaLong, int emaShort, int smaLong, int smaShort) {
 
-        //create new objects
-        this.emaShortObj = new EMA(emaShort);
-        this.emaLongObj = new EMA(emaLong);
-        this.smaObjShort = new SMA(smaShort);
-        this.smaObjLong = new SMA(smaLong);
+        //add our indicators
+        INDEX_EMA_SHORT = addIndicator(new EMA(emaShort));
+        INDEX_EMA_LONG = addIndicator(new EMA(emaLong));
+        INDEX_SMA_SHORT = addIndicator(new SMA(smaShort));
+        INDEX_SMA_LONG = addIndicator(new SMA(smaLong));
     }
 
     @Override
     public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
+        SMA smaObjShort = (SMA)getIndicator(INDEX_SMA_SHORT);
 
         //recent closing $
         final double close = getRecent(history, Fields.Close);
@@ -61,14 +63,15 @@ public class EMAS extends Strategy {
         //the short ema needs to cross above the long ema and the close needs to be above the sma
         if (prevEmaShort < prevEmaLong && currEmaShort > currEmaLong && close > currSmaShort)
             agent.setBuy(true);
-
-        //display our data
-        displayMessage(agent, "Close $" + close, agent.hasBuy());
-        displayData(agent, agent.hasBuy());
     }
 
     @Override
     public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
+        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
+        SMA smaObjShort = (SMA)getIndicator(INDEX_SMA_SHORT);
+        SMA smaObjLong = (SMA)getIndicator(INDEX_SMA_LONG);
 
         //recent closing $
         final double close = getRecent(history, Fields.Close);
@@ -86,37 +89,5 @@ public class EMAS extends Strategy {
         //adjust our hard stop price to protect our investment
         if (close < currSmaShort || currEmaShort < currEmaLong)
             adjustHardStopPrice(agent, currentPrice);
-
-        //display our data
-        displayMessage(agent, "Close $" + close, agent.hasBuy());
-        displayData(agent, agent.getReasonSell() != null);
-    }
-
-    @Override
-    public void displayData(Agent agent, boolean write) {
-
-        //display the information
-        emaShortObj.displayData(agent, write);
-        emaLongObj.displayData(agent, write);
-        smaObjShort.displayData(agent, write);
-        smaObjLong.displayData(agent, write);
-    }
-
-    @Override
-    public void calculate(List<Period> history, int newPeriods) {
-
-        //do our calculations
-        emaShortObj.calculate(history, newPeriods);
-        emaLongObj.calculate(history, newPeriods);
-        smaObjShort.calculate(history, newPeriods);
-        smaObjLong.calculate(history, newPeriods);
-    }
-
-    @Override
-    public void cleanup() {
-        emaShortObj.cleanup();
-        emaLongObj.cleanup();
-        smaObjShort.cleanup();
-        smaObjLong.cleanup();
     }
 }
