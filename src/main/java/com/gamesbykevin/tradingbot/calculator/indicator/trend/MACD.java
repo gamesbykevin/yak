@@ -65,8 +65,8 @@ public class MACD extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the recent MSL values which we use as a signal
-        display(agent, "MSL Line: ",   getMacdLine(),   write);
-        display(agent, "Signal Line: ", getSignalLine(), write);
+        display(agent, "MACD Line (" + objShortEMA.getPeriods() + ", " + objLongEMA.getPeriods() + "): ", getMacdLine(), write);
+        display(agent, "Signal Line (" + objSignalLine.getPeriods() + "): ", getSignalLine(), write);
         display(agent, "Histogram: ", getHistogram(), write);
 
         //display values

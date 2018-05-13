@@ -79,8 +79,9 @@ public class CCI extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Typical  $", getTypicalPrice(), write);
-        display(agent, "CC Index :", getCCI(), write);
+        display(agent, "Typical $", getTypicalPrice(), write);
+        display(agent, "Typical SMA (" + objSMA.getPeriods() + ") $", getTypicalPrice(), write);
+        display(agent, "CC Index: ", getCCI(), write);
     }
 
     @Override

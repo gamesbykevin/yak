@@ -43,7 +43,7 @@ public class PVI extends Indicator {
 
         //display the information
         display(agent, "PVI Cum: ", getCumulative(), write);
-        display(agent, "PVI Ema: ", objEMA.getEma(), write);
+        display(agent, "PVI Ema (" + objEMA.getPeriods() + "): ", objEMA.getEma(), write);
     }
 
     @Override

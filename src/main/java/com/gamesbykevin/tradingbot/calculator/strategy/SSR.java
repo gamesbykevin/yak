@@ -53,7 +53,7 @@ public class SSR extends Strategy {
         if (period.close > getRecent(objSMA)) {
 
             //we also want the rsi and the stochastic oscillator to be over sold
-            if (getRecent(objRSI.getRsiVal()) < OVERSOLD && getRecent(objSO.getStochasticOscillator()) < OVERSOLD) {
+            if (getRecent(objRSI.getValueRSI()) < OVERSOLD && getRecent(objSO.getStochasticOscillator()) < OVERSOLD) {
 
                 //last thing we check is for the stochastic bullish crossover before we buy
                 if (hasCrossover(true, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
@@ -78,7 +78,7 @@ public class SSR extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
 
         //if the stock is overbought, adjust our hard stop price and sell
-        if (getRecent(objRSI.getRsiVal()) > OVERBOUGHT && getRecent(objSO.getStochasticOscillator()) > OVERBOUGHT) {
+        if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT && getRecent(objSO.getStochasticOscillator()) > OVERBOUGHT) {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
             adjustHardStopPrice(agent, currentPrice);
         }

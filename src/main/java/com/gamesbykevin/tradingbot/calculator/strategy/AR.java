@@ -42,7 +42,7 @@ public class AR extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //make sure we just came out of oversold territory
-        if (getRecent(objRSI.getRsiVal(), 2) < OVERSOLD && getRecent(objRSI.getRsiVal()) > OVERSOLD) {
+        if (getRecent(objRSI.getValueRSI(), 2) < OVERSOLD && getRecent(objRSI.getValueRSI()) > OVERSOLD) {
 
             //let's buy
             agent.setBuy(true);
@@ -58,11 +58,11 @@ public class AR extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //make sure we just came out of over bought territory before selling
-        if (getRecent(objRSI.getRsiVal(), 2) > OVERBOUGHT && getRecent(objRSI.getRsiVal()) < OVERBOUGHT)
+        if (getRecent(objRSI.getValueRSI(), 2) > OVERBOUGHT && getRecent(objRSI.getValueRSI()) < OVERBOUGHT)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
 
         //if over bought adjust our hard stop price
-        if (getRecent(objRSI.getRsiVal()) > OVERBOUGHT)
+        if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT)
             adjustHardStopPrice(agent, currentPrice);
     }
 }

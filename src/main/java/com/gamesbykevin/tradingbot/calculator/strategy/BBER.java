@@ -61,7 +61,7 @@ public class BBER extends Strategy {
         double close = getRecent(history, Period.Fields.Close);
         double ema = getRecent(emaLongObj.getEma());
         double middle = getRecent(bbObj.getMiddle().getSma());
-        double rsi = getRecent(rsiObj.getRsiVal());
+        double rsi = getRecent(rsiObj.getValueRSI());
 
         //if the candle closed above our long ema and above the bollinger bands middle line, and our rsi is above the line
         if (close > ema && close > middle && rsi >= RSI_LINE)
@@ -79,7 +79,7 @@ public class BBER extends Strategy {
         double close = getRecent(history, Period.Fields.Close);
         double ema = getRecent(emaLongObj.getEma());
         double middle = getRecent(bbObj.getMiddle().getSma());
-        double rsi = getRecent(rsiObj.getRsiVal());
+        double rsi = getRecent(rsiObj.getValueRSI());
 
         //if at least one of our values are below trending set the hard stop $
         if (close < ema || close < middle || rsi <= RSI_LINE)

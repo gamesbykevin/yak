@@ -70,7 +70,7 @@ public class RC extends Indicator {
         int difference = (history.size() - objATR.getAverageTrueRange().size());
 
         //where do we start?
-        int start = getRenkoChart().isEmpty() ? difference : history.size() - newPeriods;
+        int start = getRenkoChart().isEmpty() ? 0 : history.size() - newPeriods;
 
         for (int i = start; i < history.size(); i++) {
 

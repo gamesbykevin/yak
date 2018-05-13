@@ -14,7 +14,7 @@ public abstract class Calculation {
     /**
      * When displaying data how many periods do we print/write to the console/log
      */
-    private static final int RECENT_PERIODS = 5;
+    public static final int RECENT_PERIODS = 5;
 
     /**
      * After we perform all our calculations we don't need to retain all values

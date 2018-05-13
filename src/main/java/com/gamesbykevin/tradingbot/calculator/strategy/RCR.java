@@ -46,7 +46,7 @@ public class RCR extends Strategy {
                 getRecent(objRC.getRenkoChart()) > getRecent(objRC.getRenkoChartSMA())) {
 
             //check if oversold before we buy
-            if (getRecent(objRSI.getRsiVal()) < OVERSOLD)
+            if (getRecent(objRSI.getValueRSI()) < OVERSOLD)
                 agent.setBuy(true);
         }
     }
@@ -62,11 +62,11 @@ public class RCR extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
 
         //if we reached overbought, protect investment
-        if (getRecent(objRSI.getRsiVal()) >= OVERBOUGHT)
+        if (getRecent(objRSI.getValueRSI()) >= OVERBOUGHT)
             adjustHardStopPrice(agent, currentPrice);
 
         //if we were overbought and are now below overbought, it is time to sell
-        if (getRecent(objRSI.getRsiVal(), 2) >= OVERBOUGHT && getRecent(objRSI.getRsiVal()) < OVERBOUGHT)
+        if (getRecent(objRSI.getValueRSI(), 2) >= OVERBOUGHT && getRecent(objRSI.getValueRSI()) < OVERBOUGHT)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
     }
 }

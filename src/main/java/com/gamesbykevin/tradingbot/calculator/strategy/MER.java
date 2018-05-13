@@ -61,7 +61,7 @@ public class MER extends Strategy {
                 if (getRecent(ema1) > getRecent(ema2)) {
 
                     //if the rsi line is above trend, we will buy
-                    if (getRecent(objRSI.getRsiVal()) >= RSI_LINE)
+                    if (getRecent(objRSI.getValueRSI()) >= RSI_LINE)
                         agent.setBuy(true);
                 }
             }
@@ -96,7 +96,7 @@ public class MER extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
 
         //if rsi drops below the line we will sell
-        if (getRecent(objRSI.getRsiVal()) < RSI_LINE) {
+        if (getRecent(objRSI.getValueRSI()) < RSI_LINE) {
             agent.setReasonSell(ReasonSell.Reason_Strategy);
             adjustHardStopPrice(agent, currentPrice);
         }

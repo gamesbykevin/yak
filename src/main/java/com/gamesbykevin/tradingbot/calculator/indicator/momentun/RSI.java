@@ -12,8 +12,11 @@ import java.util.List;
  */
 public class RSI extends Indicator {
 
-    //keep a historical list of the rsi so we can check for divergence
-    private List<Double> rsiVal;
+    //keep a list of the rsi values
+    private List<Double> valueRSI;
+
+    //our average gain and loss
+    private List<Double> avgGain, avgLoss;
 
     //list of configurable values
     private static final int PERIODS = 14;
@@ -28,114 +31,132 @@ public class RSI extends Indicator {
     public RSI(int periods) {
 
         //create new list(s)
-        this.rsiVal = new ArrayList<>();
+        this.valueRSI = new ArrayList<>();
+        this.avgGain = new ArrayList<>();
+        this.avgLoss = new ArrayList<>();
+
+        //store our periods
         this.periods = periods;
     }
 
-    public List<Double> getRsiVal() {
-        return this.rsiVal;
+    public int getPeriods() {
+        return this.periods;
+    }
+
+    public List<Double> getValueRSI() {
+        return this.valueRSI;
+    }
+
+    private List<Double> getAvgGain() {
+        return this.avgGain;
+    }
+
+    private List<Double> getAvgLoss() {
+        return this.avgLoss;
     }
 
     @Override
     public void displayData(Agent agent, boolean write) {
 
         //display the volume
-        display(agent, "RSI: ", getRsiVal(), write);
+        display(agent, "RSI (" + getPeriods() + "): ", getValueRSI(), write);
     }
 
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
         //where do we start
-        int startIndex = (getRsiVal().isEmpty() ? 0 : history.size() - newPeriods);
+        int start = (getValueRSI().isEmpty() ? 0 : history.size() - newPeriods);
 
         //calculate as many periods as we need
-        for (int i = startIndex; i < history.size(); i++) {
+        for (int index = start; index < history.size(); index++) {
 
             //skip if we don't have enough data
-            if (i <= periods)
+            if (index < getPeriods())
                 continue;
 
-            //find the start and end periods
-            final int start = i - periods;
-            final int end = i;
+            //we need to find out the average gain / loss
+            double avgGain, avgLoss;
 
-            //calculate the rsi for the given periods
-            final double tmpRsi = calculateRsi(history, start, end);
+            //add up our gain and losses
+            double sumGain = 0, sumLoss = 0;
 
-            //add the rsi value to our list
-            getRsiVal().add(tmpRsi);
-        }
-    }
+            //first value is calculated differently
+            if (getValueRSI().isEmpty()) {
 
-    /**
-     * Calcuate the rsi value for the specified range
-     * @param history Our historical data
-     * @param startIndex Beginning period
-     * @param endIndex Ending period
-     * @return The rsi value
-     */
-    private double calculateRsi(List<Period> history, int startIndex, int endIndex) {
+                //check our recent periods
+                for (int i = (index + 1) - getPeriods(); i <= index; i++) {
 
-        //track total gains and losses
-        float gain = 0, loss = 0;
-        float gainCurrent = 0, lossCurrent = 0;
+                    //get the current and previous periods
+                    Period curr = history.get(i);
+                    Period prev = history.get(i - 1);
 
-        //count the periods
-        final int size = (endIndex - startIndex) - 1;
+                    //what is the difference between periods?
+                    double diff = Math.abs(curr.close - prev.close);
 
-        //go through the periods to calculate rsi
-        for (int i = startIndex; i < endIndex; i++) {
+                    //determine if this was a gain or loss
+                    if (curr.close > prev.close) {
+                        sumGain += diff;
+                    } else {
+                        sumLoss += diff;
+                    }
+                }
 
-            //get the close prices to compare
-            double prev = history.get(i - 1).close;
-            double next = history.get(i).close;
-
-            if (next > prev) {
-
-                //here we have a gain
-                gain += (next - prev);
+                //figure out our averages
+                avgGain = sumGain / (float)getPeriods();
+                avgLoss = sumLoss / (float)getPeriods();
 
             } else {
 
-                //here we have a loss
-                loss += (prev - next);
+                //get the current and previous periods
+                Period curr = history.get(index);
+                Period prev = history.get(index - 1);
+
+                //what is the difference between periods?
+                double diff = Math.abs(curr.close - prev.close);
+
+                //determine if this was a gain or loss
+                if (curr.close > prev.close) {
+                    sumGain += diff;
+                } else {
+                    sumLoss += diff;
+                }
+
+                //figure out our averages, this calculation will smooth out the value
+                avgGain = ((getRecent(getAvgGain()) * (float)(getPeriods() - 1) + sumGain) / (float)getPeriods());
+                avgLoss = ((getRecent(getAvgLoss()) * (float)(getPeriods() - 1) + sumLoss) / (float)getPeriods());
+            }
+
+            //add our average gain / loss to the list
+            getAvgGain().add(avgGain);
+            getAvgLoss().add(avgLoss);
+
+            //calculate the relative strength
+            double relativeStrength = (avgGain / avgLoss);
+
+            //finally add our relative strength index
+            if (avgGain <= 0) {
+
+                //if the gain is 0 our rsi will be 0
+                getValueRSI().add(0.0d);
+
+            } else if (avgLoss <= 0) {
+
+                //if the loss is 0 our rsi will be 100
+                getValueRSI().add(100.0d);
+
+            } else {
+
+                //else calculate the relative strength index
+                getValueRSI().add(100.0f - (100.0f / (1.0f + relativeStrength)));
             }
         }
-
-        //calculate the average gain and loss
-        float avgGain = (gain / (float)size);
-        float avgLoss = (loss / (float)size);
-
-        //get the previous price in our list so we can compare to the current price
-        final double recentPrice = history.get(endIndex - 1).close;
-
-        //the recent period will be the current price
-        final double currentPrice = history.get(endIndex).close;
-
-        //check if the current price is a gain or loss
-        if (currentPrice > recentPrice) {
-            gainCurrent = (float)(currentPrice - recentPrice);
-        } else {
-            lossCurrent = (float)(recentPrice - currentPrice);
-        }
-
-        //smothered rsi including current gain loss
-        float smotheredRS = (
-            ((avgGain * size) + gainCurrent) / (float)(size + 1)
-        ) / (
-            ((avgLoss * size) + lossCurrent) / (float)(size + 1)
-        );
-
-        //calculate our rsi value
-        final float rsi = 100f - (100f / (1f + smotheredRS));
-
-        //return our rsi value
-        return rsi;
     }
 
     @Override
     public void cleanup() {
-        cleanup(getRsiVal());
+        cleanup(getValueRSI());
+        cleanup(getAvgGain());
+        cleanup(getAvgLoss());
     }
 }

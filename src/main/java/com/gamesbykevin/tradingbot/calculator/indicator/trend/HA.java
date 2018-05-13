@@ -39,6 +39,10 @@ public class HA extends Indicator {
         this.haPeriods = new ArrayList<>();
     }
 
+    public int getPeriods() {
+        return this.periods;
+    }
+
     public List<Period> getHaPeriods() {
         return this.haPeriods;
     }
@@ -48,7 +52,7 @@ public class HA extends Indicator {
 
         String desc = "";
 
-        for (int i = getHaPeriods().size() - periods; i < getHaPeriods().size(); i++) {
+        for (int i = getHaPeriods().size() - getPeriods(); i < getHaPeriods().size(); i++) {
 
             if (desc.length() > 0)
                 desc = desc + ", ";
@@ -60,7 +64,7 @@ public class HA extends Indicator {
             }
         }
 
-        displayMessage(agent, "HA: " + desc, write);
+        displayMessage(agent, "HA (" + getPeriods() + "): " + desc, write);
     }
 
     @Override
@@ -70,7 +74,7 @@ public class HA extends Indicator {
         getHaPeriods().clear();
 
         //check the latest periods only for accurate results
-        for (int i = history.size() - periods; i < history.size(); i++) {
+        for (int i = history.size() - getPeriods(); i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);

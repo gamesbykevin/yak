@@ -63,7 +63,7 @@ public class BBAR extends Strategy {
 
             //make sure both indicators are going up
             if (hasTrendUpward(objADL.getVolume(), PERIOD_TREND) &&
-                    hasTrendUpward(objRSI.getRsiVal(), PERIOD_TREND)) {
+                    hasTrendUpward(objRSI.getValueRSI(), PERIOD_TREND)) {
 
                 //check that the price is heading down, then we have a bullish divergence
                 if (hasTrendDownward(history, Fields.Close, PERIOD_TREND))

@@ -54,7 +54,7 @@ public class SMA extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display our data
-        display(agent, "SMA (" + getPeriods() + ") :", getSma(), write);
+        display(agent, "SMA (" + getPeriods() + "): ", getSma(), write);
     }
 
     @Override

@@ -52,8 +52,8 @@ public class EMV extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "    EMV: ", getEmv(), write);
-        display(agent, "SMA EMV: ", getEmvSma(), write);
+        display(agent, "EMV: ", getEmv(), write);
+        display(agent, "SMA EMV (" + objSMA.getPeriods() + "): ", getEmvSma(), write);
     }
 
     @Override

@@ -13,7 +13,7 @@ public class NVI extends Indicator {
     //our cumulative and ema lists
     private List<Double> cumulative;
 
-    //our ema
+    //our ema object
     private EMA objEMA;
 
     //list of configurable values
@@ -43,7 +43,7 @@ public class NVI extends Indicator {
 
         //display the information
         display(agent, "NVI Cum: ", getCumulative(), write);
-        display(agent, "NVI Ema: ", getEma(), write);
+        display(agent, "NVI Ema (" + objEMA.getPeriods() + "): ", getEma(), write);
     }
 
     @Override

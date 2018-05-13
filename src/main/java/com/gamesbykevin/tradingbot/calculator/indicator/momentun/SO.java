@@ -69,9 +69,9 @@ public final class SO extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Market Rate Basic: %K ", getMarketRateBasic(), write);
-        display(agent, "Market Rate Full : %K ", getMarketRateFull(), write);
-        display(agent, "Stochastic:        %D ", getStochasticOscillator(), write);
+        display(agent, "Market Rate Basic (" + getPeriodsMarketRateBasic() + ") %K: ", getMarketRateBasic(), write);
+        display(agent, "Market Rate Full (" + objMarketFullSMA.getPeriods() + ") %K: ", getMarketRateFull(), write);
+        display(agent, "Stochastic (" + objStochasticOscillator.getPeriods() + ") %D: ", getStochasticOscillator(), write);
     }
 
     @Override

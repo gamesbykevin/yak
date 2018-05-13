@@ -68,10 +68,10 @@ public class BB extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "Upper:  ", getUpper(), write);
-        display(agent, "Middle: ", getMiddle().getSma(), write);
-        display(agent, "Lower:  ", getLower(), write);
-        display(agent, "Width:  ", getWidth(), write);
+        display(agent, "Middle (" + getMiddle().getPeriods() + "): ", getMiddle().getSma(), write);
+        display(agent, "Upper: ", getUpper(), write);
+        display(agent, "Lower: ", getLower(), write);
+        display(agent, "Width: ", getWidth(), write);
     }
 
     @Override

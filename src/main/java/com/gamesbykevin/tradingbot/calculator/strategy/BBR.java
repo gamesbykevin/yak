@@ -54,7 +54,7 @@ public class BBR extends Strategy {
         final double close = getRecent(history, Fields.Close);
 
         //current rsi value
-        final double rsi = getRecent(objRSI.getRsiVal());
+        final double rsi = getRecent(objRSI.getValueRSI());
 
         //current upper band
         final double upper = getRecent(objBB.getUpper());
@@ -75,7 +75,7 @@ public class BBR extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //indicator values
-        double rsi = getRecent(objRSI.getRsiVal());
+        double rsi = getRecent(objRSI.getValueRSI());
         double middleCurr = getRecent(objBB.getMiddle().getSma());
         double middlePrev = getRecent(objBB.getMiddle().getSma(), 2);
         double close = getRecent(history, Fields.Close);

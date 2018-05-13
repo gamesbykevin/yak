@@ -52,7 +52,7 @@ public class ERS extends Strategy {
         if (getRecent(objShortEMA.getEma()) > getRecent(objLongEMA.getEma())) {
 
             //rsi is above 50
-            if (getRecent(objRSI.getRsiVal()) > RSI_LINE) {
+            if (getRecent(objRSI.getValueRSI()) > RSI_LINE) {
 
                 //get the current market rate and stochastic values
                 double marketRate = getRecent(objSO.getMarketRateFull());
@@ -86,7 +86,7 @@ public class ERS extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
 
             //if rsi is lower then we have confirmation to sell
-            if (getRecent(objRSI.getRsiVal()) < RSI_LINE)
+            if (getRecent(objRSI.getValueRSI()) < RSI_LINE)
                 agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
     }

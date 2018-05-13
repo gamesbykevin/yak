@@ -18,6 +18,7 @@ public class ATR extends Indicator {
     //list(s) of true range values
     private List<Double> trueRange, trueRangeAverage;
 
+    //save our periods
     private final int periods;
 
     public ATR() {
@@ -50,8 +51,8 @@ public class ATR extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the information
-        display(agent, "True Range     : ", getTrueRange(), write);
-        display(agent, "Avg True Range : ", getAverageTrueRange(), write);
+        display(agent, "True Range: ", getTrueRange(), write);
+        display(agent, "Avg True Range (" + getPeriods() + "): ", getAverageTrueRange(), write);
     }
 
     @Override
@@ -64,7 +65,7 @@ public class ATR extends Indicator {
 
             //get the current and previous periods
             Period curr = history.get(i);
-            Period prev = (i - 1 >= 0) ? history.get(i - 1) : null;
+            Period prev = (i > 0) ? history.get(i - 1) : null;
 
             //start with a value
             double value = curr.high - curr.low;
@@ -83,24 +84,31 @@ public class ATR extends Indicator {
             getTrueRange().add(value);
         }
 
-        //what is our sum?
-        double sum = 0;
+        //if the list is empty we need to calculate our first value
+        if (getAverageTrueRange().isEmpty()) {
 
-        //now we calculate our average
-        for (int i = 0; i < getPeriods(); i++) {
+            //what is our sum?
+            double sum = 0;
 
-            //add our total sum
-            sum += getTrueRange().get(i);
+            //now we calculate our average
+            for (int i = 0; i < getPeriods(); i++) {
+
+                //add our total sum
+                sum += getTrueRange().get(i);
+            }
+
+            //calculate our first value
+            double average = (sum / (float) getPeriods());
+
+            //add the first value to our list
+            getAverageTrueRange().add(average);
         }
 
-        //calculate our first value
-        double average = (sum / (float)getPeriods());
-
-        //add the first value to our list
-        getAverageTrueRange().add(average);
+        //where do we start when calculating the average true range?
+        start = getAverageTrueRange().size() <= 1 ? 0 : getTrueRange().size() - newPeriods;
 
         //start where we left off and calculate the rest
-        for (int i = getPeriods(); i < getTrueRange().size(); i++) {
+        for (int i = start; i < getTrueRange().size(); i++) {
 
             //get the previous value
             double previous = getRecent(getAverageTrueRange());

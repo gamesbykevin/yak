@@ -68,10 +68,10 @@ public class SR extends Indicator {
         getObjRsi().calculate(history, newPeriods);
 
         //where do we start?
-        int start = getStochRsi().isEmpty() ? 0 : getObjRsi().getRsiVal().size() - newPeriods;
+        int start = getStochRsi().isEmpty() ? 0 : getObjRsi().getValueRSI().size() - newPeriods;
 
         //check every period
-        for (int i = start; i < getObjRsi().getRsiVal().size(); i++) {
+        for (int i = start; i < getObjRsi().getValueRSI().size(); i++) {
 
             //skip until we have enough data
             if (i < getPeriods())
@@ -83,7 +83,7 @@ public class SR extends Indicator {
             for (int x = i - getPeriods(); x < i; x++) {
 
                 //get the current rsi value
-                double rsi = getObjRsi().getRsiVal().get(x);
+                double rsi = getObjRsi().getValueRSI().get(x);
 
                 //locate our high and low
                 if (rsi < rsiLow)
@@ -93,7 +93,7 @@ public class SR extends Indicator {
             }
 
             //calculate the numerator and the denominator
-            double numerator = getObjRsi().getRsiVal().get(i) - rsiLow;
+            double numerator = getObjRsi().getValueRSI().get(i) - rsiLow;
             double denominator = rsiHigh - rsiLow;
             double stochRsi = 0;
 
