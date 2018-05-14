@@ -5,10 +5,9 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA.calculateSMA;
 
 /**
  * Smoothed Moving Average
@@ -22,19 +21,31 @@ public class SMMA extends Indicator {
     private final int periods;
 
     //the field we want to calculate
-    private final Fields field;
+    private final List<Fields> fields;
 
     public SMMA(int periods) {
-        this(periods, Fields.Close);
+
+        //assume the close $ by default
+        this(periods, new AbstractList<Fields>() {
+            @Override
+            public Fields get(int index) {
+                return Fields.Close;
+            }
+
+            @Override
+            public int size() {
+                return 1;
+            }
+        });
     }
 
-    public SMMA(int periods, Fields field) {
+    public SMMA(int periods, List<Fields> fields) {
 
         //store our periods
         this.periods = periods;
 
-        //save the field
-        this.field = field;
+        //what fields are we checking?
+        this.fields = fields;
 
         //create new list
         this.smma = new ArrayList<>();
@@ -48,8 +59,8 @@ public class SMMA extends Indicator {
         return this.periods;
     }
 
-    public Fields getField() {
-        return this.field;
+    public List<Fields> getFields() {
+        return this.fields;
     }
 
     @Override
@@ -69,49 +80,15 @@ public class SMMA extends Indicator {
             if (getSmma().isEmpty()) {
 
                 //calculate our simple moving average
-                final double sma = calculateSMA(history, index, getPeriods(), getField());
+                final double sma = getSma(history, index + 1, getPeriods());
 
                 //add the simple moving average to our list
                 getSmma().add(sma);
 
             } else {
 
-                //get the current period
-                Period period = history.get(index);
-
-                //value we want to calculate
-                double value;
-
-                //figure out which field we need
-                switch (getField()) {
-
-                    case Close:
-                        value = period.close;
-                        break;
-
-                    case High:
-                        value = period.high;
-                        break;
-
-                    case Low:
-                        value = period.low;
-                        break;
-
-                    case Open:
-                        value = period.open;
-                        break;
-
-                    case Time:
-                        value = period.time;
-                        break;
-
-                    case Volume:
-                        value = period.volume;
-                        break;
-
-                    default:
-                        throw new RuntimeException("Field not handled: " + getField());
-                }
+                //get the value of our desired fields
+                double value = getSma(history, index + 1, 1);
 
                 //our smoothed moving average value
                 double smma;
@@ -123,7 +100,7 @@ public class SMMA extends Indicator {
                 if (getSmma().size() == 1) {
 
                     //calculate our smoothed moving average value accordingly
-                    smma = (((previous * (float) (getPeriods() - 1)) + value) / (float) getPeriods());
+                    smma = (((previous * (float)(getPeriods() - 1)) + value) / (float) getPeriods());
 
                 } else {
 
@@ -136,6 +113,61 @@ public class SMMA extends Indicator {
                 getSmma().add(smma);
             }
         }
+    }
+
+    private double getSma(List<Period> history, int index, int periods) {
+
+        //value we want to calculate
+        double value = 0;
+
+        for (int i = index - periods; i < index; i++) {
+
+            //get the current period
+            Period period = history.get(i);
+
+            //calculate the current value
+            double tmp = 0;
+
+            for (int j = 0; j < getFields().size(); j++) {
+
+                //figure out which field we need
+                switch (getFields().get(j)) {
+
+                    case Close:
+                        tmp += period.close;
+                        break;
+
+                    case High:
+                        tmp += period.high;
+                        break;
+
+                    case Low:
+                        tmp += period.low;
+                        break;
+
+                    case Open:
+                        tmp += period.open;
+                        break;
+
+                    case Time:
+                        tmp += period.time;
+                        break;
+
+                    case Volume:
+                        tmp += period.volume;
+                        break;
+
+                    default:
+                        throw new RuntimeException("Field not handled: " + getFields().get(j));
+                }
+            }
+
+            //divide by the number of fields to get the average and add to our total value
+            value += (tmp / (float)getFields().size());
+        }
+
+        //return the average
+        return (value / (float)periods);
     }
 
     @Override

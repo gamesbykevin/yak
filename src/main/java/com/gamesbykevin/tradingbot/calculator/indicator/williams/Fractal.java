@@ -23,17 +23,31 @@ public class Fractal extends Indicator {
      * Different types of fractals we can have
      */
     public enum Status {
-        Upper, Lower, None
+        Buy, Sell, Both, None
     }
 
+    //how many periods do we confirm
+    private final int periods;
+
     public Fractal() {
+        this(PERIODS_CONFIRM);
+    }
+
+    public Fractal(int periods) {
+
+        //store our periods
+        this.periods = periods;
 
         //make sure the confirm periods is an odd number
-        if (PERIODS_CONFIRM % 2 == 0)
+        if (getPeriods() % 2 == 0)
             throw new RuntimeException("The periods to confirm should be an odd number");
 
         //create our list
         this.statusList = new ArrayList<>();
+    }
+
+    public int getPeriods() {
+        return this.periods;
     }
 
     public List<Status> getStatusList() {
@@ -49,13 +63,13 @@ public class Fractal extends Indicator {
         //check all periods to identify our fractals
         for (int index = start; index < history.size(); index++) {
 
-            if (index < (PERIODS_CONFIRM / 2)) {
+            if (index < (getPeriods() / 2)) {
 
                 //if we don't have enough periods to make a decision, mark as None
                 getStatusList().add(Status.None);
                 continue;
 
-            } else if (index >= history.size() - (PERIODS_CONFIRM / 2)) {
+            } else if (index >= history.size() - (getPeriods() / 2)) {
 
                 //if we don't have enough periods to make a decision, mark as None
                 getStatusList().add(Status.None);
@@ -73,7 +87,7 @@ public class Fractal extends Indicator {
             throw new RuntimeException("The status list does not match the history size " + history.size() + ", " + getStatusList().size());
 
         //look at the recent values just in case the status changed
-        for (int index = history.size() - PERIODS_CONFIRM; index < history.size() - (PERIODS_CONFIRM / 2); index++) {
+        for (int index = history.size() - getPeriods(); index < history.size() - (getPeriods() / 2); index++) {
 
             //update the list with the current status
             getStatusList().set(index, getStatus(history, index));
@@ -91,26 +105,42 @@ public class Fractal extends Indicator {
         Period current = history.get(index);
 
         //check our neighboring periods
-        for (int i = 1; i <= (PERIODS_CONFIRM / 2); i++) {
+        for (int i = 1; i <= (getPeriods() / 2); i++) {
+
+            Period  compare1 = null, compare2 = null;
 
             //get our neighbors
-            Period compare1 = history.get(index + i);
-            Period compare2 = history.get(index - i);
+            if (index + i < history.size())
+                compare1 = history.get(index + i);
 
-            //if either is above our current, we don't have an up fractal
-            if (compare1.high > current.high || compare2.high > current.high)
+            if (index - i >= 0)
+                compare2 = history.get(index - i);
+
+            //compare only if the objects are not null
+            if (compare1 != null && compare2 != null) {
+
+                //if either is above our current, we don't have an up fractal
+                if (compare1.high > current.high || compare2.high > current.high)
+                    confirmUp = false;
+
+                //if either is below our current, we don't have a down fractal
+                if (compare1.low < current.low || compare2.low < current.low)
+                    confirmDown = false;
+            } else {
+
+                //if either object is null we can't confirm either
                 confirmUp = false;
-
-            //if either is below our current, we don't have a down fractal
-            if (compare1.low < current.low || compare2.low < current.low)
                 confirmDown = false;
+            }
         }
 
         //now let's add our status to the list
-        if (confirmUp) {
-            return Status.Upper;
+        if (confirmUp && confirmDown) {
+            return Status.Both;
+        } else if (confirmUp) {
+            return Status.Buy;
         } else if (confirmDown) {
-            return Status.Lower;
+            return Status.Sell;
         } else {
             return Status.None;
         }
@@ -123,13 +153,13 @@ public class Fractal extends Indicator {
         String statusDesc = "";
 
         //construct our message
-        for (int i = 0; i < RECENT_PERIODS; i++) {
+        for (int i = getPeriods(); i > 0; i--) {
 
             //add to our status
             statusDesc += getStatusList().get(getStatusList().size() - i);
 
             //separate each value with a ,
-            if (i < RECENT_PERIODS - 1)
+            if (i > 1)
                 statusDesc += ", ";
         }
 

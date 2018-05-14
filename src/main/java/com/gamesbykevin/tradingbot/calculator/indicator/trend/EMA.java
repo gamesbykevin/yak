@@ -21,7 +21,11 @@ public class EMA extends Indicator {
     //list of configurable values
     public static final int PERIODS = 12;
 
+    //number of periods to calculate this ema
     private final int periods;
+
+    //what is the default fields we will use to calculate
+    private static final List<Fields> DEFAULT_FIELDS = new ArrayList<>();
 
     public EMA() {
         this(PERIODS);
@@ -47,6 +51,15 @@ public class EMA extends Indicator {
         return this.periods;
     }
 
+    private static List<Fields> getDefaultFields() {
+
+        //we only need 1 element if the list is empty
+        if (DEFAULT_FIELDS.isEmpty())
+            DEFAULT_FIELDS.add(Fields.Close);
+
+        return DEFAULT_FIELDS;
+    }
+
     @Override
     public void displayData(Agent agent, boolean write) {
 
@@ -58,10 +71,10 @@ public class EMA extends Indicator {
     public void calculate(List<Period> history, int newPeriods) {
 
         //calculate ema for short and long periods
-        calculateEMA(history, getEma(), newPeriods, periods);
+        calculateEMA(history, getEma(), newPeriods, getPeriods());
     }
 
-    private static final double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
+    private static double calculateEMA(List<Period> history, int current, int periods, double emaPrevious) {
 
         //what is our multiplier
         final float multiplier = ((float)2 / ((float)periods + 1.0f));
@@ -79,7 +92,7 @@ public class EMA extends Indicator {
         } else {
 
             //calculate simple moving average since there is no previous ema
-            final double sma = calculateSMA(history, current + 1, periods, Fields.Close);
+            final double sma = calculateSMA(history, current + 1, periods, getDefaultFields());
 
             //use sma to help calculate the first ema value
             ema = ((currentPrice - sma) * multiplier) + sma;

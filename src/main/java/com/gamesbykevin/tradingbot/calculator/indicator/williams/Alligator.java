@@ -2,9 +2,11 @@ package com.gamesbykevin.tradingbot.calculator.indicator.williams;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMMA;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Alligator extends Indicator {
@@ -22,11 +24,20 @@ public class Alligator extends Indicator {
     private SMMA jaw, teeth, lips;
 
     public Alligator() {
+        this(PERIODS_JAW, PERIODS_TEETH, PERIODS_LIPS);
+    }
+
+    public Alligator(int periodsJaw, int periodsTeeth, int periodsLips) {
+
+        //add the fields we want to use for the smma
+        List<Period.Fields> fields = new ArrayList<>();
+        fields.add(Fields.High);
+        fields.add(Fields.Low);
 
         //create our smoothed moving average objects
-        this.jaw = new SMMA(PERIODS_JAW);
-        this.teeth = new SMMA(PERIODS_TEETH);
-        this.lips = new SMMA(PERIODS_LIPS);
+        this.jaw = new SMMA(periodsJaw, fields);
+        this.teeth = new SMMA(periodsTeeth, fields);
+        this.lips = new SMMA(periodsLips, fields);
     }
 
     public SMMA getJaw() {

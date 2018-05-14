@@ -20,6 +20,11 @@ public class History {
 
     private static String FILENAME = "candles.txt";
 
+    /**
+     * Display updates when loading files
+     */
+    private static final int NOTIFY_LIMIT = 1500;
+
     public static synchronized void load(List<Period> history, String productId, Duration duration, PrintWriter writer) {
 
         //get the directory where our history is stored
@@ -43,8 +48,13 @@ public class History {
                 //start reading the file
                 BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
 
+                int count =  0;
+
                 //check every line of the text file
                 while(true) {
+
+                    if (count % NOTIFY_LIMIT == 0)
+                        displayMessage("Count: " + count);
 
                     //read the line in the text file
                     final String line = bufferedReader.readLine();
@@ -58,6 +68,9 @@ public class History {
 
                     //add period to our history
                     addHistory(history, data);
+
+                    //add to our count
+                    count++;
                 }
 
             } catch (Exception e) {
@@ -65,8 +78,14 @@ public class History {
             }
         }
 
+        //notify user
+        displayMessage("Sorting records...");
+
         //now let's make sure everything is sorted in order
         sortHistory(history);
+
+        //notify user
+        displayMessage("Sorting done");
 
         //any records loaded
         final int change = history.size() - size;

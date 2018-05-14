@@ -49,9 +49,9 @@ public class AgentManager {
     public enum TradingStrategy {
 
         AE, AR, BBAR, BBER, BBR,
-        CA, EMAR, EMAS, ERS, HASO,
-        MACS, MARS, MER, MES, RCR,
-        SSR, SOEMA
+        CA, EMAR, EMAS, ERS, FA,
+        FADOA, FAO, HASO, MACS, MARS,
+        MER, MES, RCR, SSR, SOEMA
     }
 
     public AgentManager(final Product product, final double funds) {
@@ -79,7 +79,7 @@ public class AgentManager {
 
             //now that we have data do the initial calculations assuming we have enough data
             if (getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory().size() >= HISTORICAL_PERIODS_MINIMUM)
-                getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate(0);
+                getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate(this, 0);
         }
 
         //create our agents last

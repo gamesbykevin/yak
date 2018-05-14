@@ -74,7 +74,7 @@ public class AgentManagerHelper {
 
                 //if a new candle has been added recalculate our strategies
                 if (size != change)
-                    calculator.calculate(size > change ? size - change : change - size);
+                    calculator.calculate(manager, size > change ? size - change : change - size);
 
                 if (success) {
 

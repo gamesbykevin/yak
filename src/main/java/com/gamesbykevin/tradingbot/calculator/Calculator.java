@@ -1,5 +1,6 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
@@ -14,6 +15,7 @@ import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculation.PERIODS_RETAIN;
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class Calculator {
 
@@ -133,6 +135,18 @@ public class Calculator {
                     strategy = new ERS();
                     break;
 
+                case FA:
+                    strategy = new FA();
+                    break;
+
+                case FADOA:
+                    strategy = new FADOA();
+                    break;
+
+                case FAO:
+                    strategy = new FAO();
+                    break;
+
                 case HASO:
                     strategy = new HASO();
                     break;
@@ -229,10 +243,13 @@ public class Calculator {
         return result;
     }
 
-    public synchronized void calculate(int newPeriods) {
+    public synchronized void calculate(AgentManager manager, int newPeriods) {
 
         //recalculate all our strategies
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+
+            //display info
+            displayMessage("Calculating " + MY_TRADING_STRATEGIES[i] + "...", manager.getWriter());
 
             //flag the strategy as no longer waiting for new candle data
             getStrategies().get(MY_TRADING_STRATEGIES[i]).setWait(false);
@@ -242,6 +259,9 @@ public class Calculator {
 
             //cleanup data list(s) to keep it at a manageable size
             getStrategies().get(MY_TRADING_STRATEGIES[i]).cleanup();
+
+            //display info
+            displayMessage("Calculating " + MY_TRADING_STRATEGIES[i] + " Done", manager.getWriter());
         }
 
         //let's keep a manageable history size
