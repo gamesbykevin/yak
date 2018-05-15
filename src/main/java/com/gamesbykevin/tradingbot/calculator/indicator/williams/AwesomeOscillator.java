@@ -106,6 +106,7 @@ public class AwesomeOscillator extends Indicator {
         //display our data
         getSmaShort().displayData(agent, write);
         getSmaLong().displayData(agent, write);
+        display(agent, "Histogram: ", getHistogram(), write);
     }
 
     @Override

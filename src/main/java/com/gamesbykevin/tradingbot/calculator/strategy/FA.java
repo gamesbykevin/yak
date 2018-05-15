@@ -40,24 +40,79 @@ public class FA extends Strategy {
         Alligator gator = (Alligator)getIndicator(INDEX_ALLIGATOR);
         Fractal fractal = (Fractal)getIndicator(INDEX_FRACTAL);
 
-        //which fractal should we check
-        int indexOffset = (PERIODS_FRACTAL / 2) + 1;
+        //check our recent periods
+        for (int index = 0; index < PERIODS_FRACTAL * 2; index++) {
 
-        //get the status of our fractal
-        Status status = fractal.getStatusList().get(fractal.getStatusList().size() - indexOffset);
+            //which fractal should we check
+            int indexOffset = (PERIODS_FRACTAL / 2) + 1 + index;
 
-        //make sure we have a buy fractal first
-        if (status == Status.Both || status == Status.Buy) {
+            //where is our fractal at?
+            int fractalIndex = fractal.getStatusList().size() - indexOffset;
 
-            //get the alligator teeth value offsetting the index
-            double value = gator.getTeeth().getSmma().get(gator.getTeeth().getSmma().size() - PERIODS_TEETH_OFFSET);
+            //get the status of our fractal
+            Status status = fractal.getStatusList().get(fractalIndex);
 
-            //get the recent period
-            Period period = history.get(history.size() - 1);
+            //make sure we have a buy fractal first
+            if (status != Status.Both && status != Status.Buy)
+                continue;
 
-            //if the $ is above the gator's teeth
-            if (period.high > value)
-                agent.setBuy(true);
+            //our indexes
+            final int alligatorIndex = gator.getTeeth().getSmma().size() - PERIODS_TEETH_OFFSET - indexOffset;
+            final int historyIndex = history.size() - indexOffset;
+
+            //get the alligator teeth value at the same periods as the fractal
+            double teeth = gator.getTeeth().getSmma().get(alligatorIndex);
+
+            //look at the same period as the fractal
+            Period period = history.get(historyIndex);
+
+            //if the $ is below the gator's teeth we don't have a buy opportunity
+            if (period.close < teeth)
+                continue;
+
+            //we need a candle to break above this high $
+            double highLine = period.high;
+
+            //confirm periods after are above the alligators teeth
+            boolean confirm = true;
+
+            //check the next few periods to confirm we are above the alligators teeth
+            for (int i = 1; i <= PERIODS_FRACTAL; i++) {
+
+                //if our index is out of bounds we don't have enough information to confirm
+                if (alligatorIndex + i >= gator.getTeeth().getSmma().size() || historyIndex + i >= history.size()) {
+                    confirm = false;
+                    break;
+                }
+
+                //make sure the close $ stays above the teeth
+                double tmpTeeth = gator.getTeeth().getSmma().get(alligatorIndex + i);
+                double tmpClose = history.get(historyIndex + i).close;
+
+                //if the close $ goes below the teeth we need to exit our buy trade
+                if (tmpTeeth >= tmpClose) {
+                    confirm = false;
+                    break;
+                }
+            }
+
+            //if we are unable to confirm skip to the next period
+            if (!confirm)
+                continue;
+
+            //check the periods afterwards for a price breakout
+            for (int i = historyIndex + PERIODS_FRACTAL; i < history.size(); i++) {
+
+                //if the high exceeds our previous high line it is time to buy
+                if (history.get(i).high > highLine) {
+
+                    //flag that we want to buy
+                    agent.setBuy(true);
+
+                    //exit the loop if we have a buy
+                    break;
+                }
+            }
         }
     }
 
@@ -66,28 +121,38 @@ public class FA extends Strategy {
 
         //get our indicators
         Alligator gator = (Alligator)getIndicator(INDEX_ALLIGATOR);
-        Fractal fractal = (Fractal)getIndicator(INDEX_FRACTAL);
 
-        //which fractal should we check
-        int indexOffset = (PERIODS_FRACTAL / 2) + 1;
+        //get our teeth values
+        double prevTeeth = gator.getTeeth().getSmma().get(gator.getTeeth().getSmma().size() - 2);;
+        double currTeeth = gator.getTeeth().getSmma().get(gator.getTeeth().getSmma().size() - 1);
 
-        //get the status of our fractal
-        Status status = fractal.getStatusList().get(fractal.getStatusList().size() - indexOffset);
+        //get our jaw values
+        double prevJaw = gator.getJaw().getSmma().get(gator.getJaw().getSmma().size() - 2);
+        double currJaw = gator.getJaw().getSmma().get(gator.getJaw().getSmma().size() - 1);
 
-        //make sure we have a sell fractal first
-        if (status == Status.Both || status == Status.Sell) {
+        //get our lip values
+        double prevLips = gator.getLips().getSmma().get(gator.getLips().getSmma().size() - 2);
+        double currLips = gator.getLips().getSmma().get(gator.getLips().getSmma().size() - 1);
 
-            //get the alligator teeth value offsetting the index
-            double value = gator.getTeeth().getSmma().get(gator.getTeeth().getSmma().size() - PERIODS_TEETH_OFFSET - indexOffset);
-
-            //get the recent period
-            Period period = history.get(history.size() - indexOffset);
-
-            //if the $ is below the gator's teeth
-            if (period.low < value) {
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
-                adjustHardStopPrice(agent, currentPrice);
-            }
+        //if any cross happens let's sell
+        if (prevTeeth < prevJaw && currTeeth > currJaw) {
+            adjustHardStopPrice(agent, currentPrice);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        } else if (prevJaw < prevTeeth && currJaw > currTeeth) {
+            adjustHardStopPrice(agent, currentPrice);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        } else if (prevTeeth < prevLips && currTeeth > currLips) {
+            adjustHardStopPrice(agent, currentPrice);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        } else if (prevLips < prevTeeth && currLips > currTeeth) {
+            adjustHardStopPrice(agent, currentPrice);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        } else if (prevJaw < prevLips && currJaw > currLips) {
+            adjustHardStopPrice(agent, currentPrice);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        } else if (prevLips < prevJaw && currLips > currJaw) {
+            adjustHardStopPrice(agent, currentPrice);
+            agent.setReasonSell(ReasonSell.Reason_Strategy);
         }
     }
 }

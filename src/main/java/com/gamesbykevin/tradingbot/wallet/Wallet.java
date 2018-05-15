@@ -2,6 +2,11 @@ package com.gamesbykevin.tradingbot.wallet;
 
 public class Wallet {
 
+    /**
+     * If we lose an overall % of our funds let's stop the bleeding
+     */
+    public static float STOP_TRADING_RATIO;
+
     //money we have to invest
     private double funds = 0;
 
@@ -11,25 +16,27 @@ public class Wallet {
     //the price we bought the stock
     private double purchasePrice = 0;
 
-    /**
-     * If we lose an overall % of our funds let's stop the bleeding
-     */
-    public static float STOP_TRADING_RATIO;
+    //how many funds did we start with before our next trade
+    private double fundsBeforeTrade;
 
-    //how many funds did we start with?
-    private double startingFunds;
+    private final double initialFunds;
 
     public Wallet(double funds) {
         setFunds(funds);
-        setStartingFunds(funds);
+        setFundsBeforeTrade(funds);
+        this.initialFunds = funds;
     }
 
-    public void setStartingFunds(final double startingFunds) {
-        this.startingFunds = startingFunds;
+    public double getInitialFunds() {
+        return this.initialFunds;
     }
 
-    public double getStartingFunds() {
-        return this.startingFunds;
+    public double getFundsBeforeTrade() {
+        return this.fundsBeforeTrade;
+    }
+
+    public void setFundsBeforeTrade(double fundsBeforeTrade) {
+        this.fundsBeforeTrade = fundsBeforeTrade;
     }
 
     public void setFunds(double funds) {

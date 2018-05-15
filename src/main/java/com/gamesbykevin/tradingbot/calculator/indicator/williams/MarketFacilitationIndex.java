@@ -10,12 +10,11 @@ import java.util.List;
 /**
  *Market Facilitation Index
  *
- Volume	Index 	Terms
-    +     + 	Green
-    -     - 	Fade
-    -     + 	Fake
-    +     - 	Squat
- *
+ * Volume	Index 	Terms
+ *    +     + 	    Green
+ *    -     - 	    Fade
+ *    -     + 	    Fake
+ *    +     - 	    Squat
  *
  */
 public class MarketFacilitationIndex extends Indicator {

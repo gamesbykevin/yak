@@ -77,6 +77,9 @@ public class Agent implements IAgent {
     //how many times have we checked to see if our sell order is filled
     private int attempts = 0;
 
+    //track the price history of the current period
+    private double[] priceHistory;
+
     protected Agent(double funds, String productId, TradingStrategy tradingStrategy, Duration duration) {
 
         //assign our duration
@@ -90,6 +93,9 @@ public class Agent implements IAgent {
 
         //set order null
         this.order = null;
+
+        //create new array to track recent periods
+        this.priceHistory = new double[CURRENT_PRICE_HISTORY];
 
         //set our initial trading strategy
         setTradingStrategy(tradingStrategy);
@@ -272,6 +278,9 @@ public class Agent implements IAgent {
 
                     //now that the order has been filled, remove it
                     setOrder(null);
+
+                    //reset the price history for our next trade
+                    resetPriceHistory();
                     break;
 
                 case Rejected:
@@ -352,7 +361,7 @@ public class Agent implements IAgent {
             displayMessage(this, TransactionHelper.getDescLost(this), true);
 
             //display the total fees paid
-            displayMessage(this, TransactionHelper.getTotalFees(this), true);
+            displayMessage(this, "Fees $" + TransactionHelper.getTotalFees(this), true);
 
             //display average transaction time
             displayMessage(this, TransactionHelper.getAverageDurationDesc(this), true);
@@ -550,5 +559,32 @@ public class Agent implements IAgent {
 
     public TradingStrategy getTradingStrategy() {
         return this.tradingStrategy;
+    }
+
+    public double[] getPriceHistory() {
+        return this.priceHistory;
+    }
+
+    public void resetPriceHistory() {
+        for (int i = 0; i < getPriceHistory().length; i++) {
+            getPriceHistory()[i] = 0;
+        }
+    }
+
+    public void addPriceHistory(double price) {
+
+        //we don't need to add if it matches the latest price
+        if (price == getPriceHistory()[getPriceHistory().length - 1])
+            return;
+
+        //update every period in our array
+        for (int i = 0; i < getPriceHistory().length - 1; i++) {
+
+            //move the value back
+            getPriceHistory()[i] = getPriceHistory()[i + 1];
+        }
+
+        //add the new price to the end
+        getPriceHistory()[getPriceHistory().length - 1] = price;
     }
 }

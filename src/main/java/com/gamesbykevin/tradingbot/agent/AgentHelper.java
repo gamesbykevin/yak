@@ -63,6 +63,11 @@ public class AgentHelper {
      */
     public static int SELL_ATTEMPT_LIMIT = 10;
 
+    /**
+     * How many current prices do we track looking for a decline when selling?
+     */
+    public static int CURRENT_PRICE_HISTORY;
+
     public enum Action {
 
         Buy("buy"),
@@ -113,11 +118,33 @@ public class AgentHelper {
         //check for a sell signal
         strategy.checkSellSignal(agent, history, currentPrice);
 
-        //display our data
-        strategy.displayData(agent, agent.getReasonSell() != null);
-
         //get the latest closing price
         final double closePrice = history.get(history.size() - 1).close;
+
+        //if current price has declined x number of times, we will sell
+        if (hasDecline(agent.getPriceHistory())) {
+
+            String message = "Price Decline: ";
+
+            //construct our message
+            for (int i = 0; i < agent.getPriceHistory().length; i++) {
+                message += "$" + agent.getPriceHistory()[i];
+
+                if (i < agent.getPriceHistory().length - 1)
+                    message += ", ";
+            }
+
+            //display the recent prices so we can see the decline
+            displayMessage(agent, message, true);
+
+            //assign our reason for the sell
+            agent.setReasonSell(ReasonSell.Reason_PriceDecline);
+
+        } else {
+
+            //add the current price history to the list
+            agent.addPriceHistory(currentPrice);
+        }
 
         //if the price dropped below our hard stop, we must sell to cut our losses
         if (closePrice <= agent.getHardStopPrice()) {
@@ -125,14 +152,14 @@ public class AgentHelper {
             //reason for selling is that we hit our hard stop
             agent.setReasonSell(ReasonSell.Reason_HardStop);
 
-            //display our data for reference
-            strategy.displayData(agent, true);
-
         } else {
 
             //since the close price is above the hard stop price, let's see if we can adjust
             agent.adjustHardStopPrice(closePrice);
         }
+
+        //display our data
+        strategy.displayData(agent, agent.getReasonSell() != null);
 
         //if there is a reason to sell then we will sell
         if (agent.getReasonSell() != null) {
@@ -452,15 +479,15 @@ public class AgentHelper {
     protected static void checkStanding(Agent agent) {
 
         //if we lost too much money and have no quantity pending, we will stop trading
-        if (agent.getWallet().getFunds() < (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds()) && agent.getWallet().getQuantity() <= 0)
+        if (agent.getWallet().getFunds() < (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade()) && agent.getWallet().getQuantity() <= 0)
             agent.setStopTrading(true);
 
         //if our money has gone up, increase the stop trading limit
-        if (agent.getWallet().getFunds() > agent.getWallet().getStartingFunds()) {
+        if (agent.getWallet().getFunds() > agent.getWallet().getFundsBeforeTrade()) {
 
-            final double oldRatio = (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
-            agent.getWallet().setStartingFunds(agent.getWallet().getFunds());
-            final double newRatio = (STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
+            final double oldRatio = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
+            agent.getWallet().setFundsBeforeTrade(agent.getWallet().getFunds());
+            final double newRatio = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
             displayMessage(agent, "Good news, stop trading limit has increased", true);
             displayMessage(agent, "    Funds $" + AgentHelper.round(agent.getWallet().getFunds()), true);
             displayMessage(agent, "Old limit $" + AgentHelper.round(oldRatio), true);
@@ -472,18 +499,22 @@ public class AgentHelper {
         if (agent.hasStopTrading()) {
 
             String subject = "We stopped trading";
-            String text1 = "Funds $" + AgentHelper.round(agent.getWallet().getFunds());
-            String text2 = "Limit $" + AgentHelper.round(STOP_TRADING_RATIO * agent.getWallet().getStartingFunds());
-            String text3 = "Min $" + AgentHelper.round(agent.getFundsMin());
-            String text4 = "Max $" + AgentHelper.round(agent.getFundsMax());
+            String text6 = "Started $" + AgentHelper.round(agent.getWallet().getInitialFunds());
+            String text1 = "Funds   $" + AgentHelper.round(agent.getWallet().getFunds());
+            String text2 = "Limit   $" + AgentHelper.round(STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
+            String text3 = "Min     $" + AgentHelper.round(agent.getFundsMin());
+            String text4 = "Max     $" + AgentHelper.round(agent.getFundsMax());
+            String text5 = "Fees    $" + AgentHelper.round(TransactionHelper.getTotalFees(agent));
             displayMessage(agent, subject, true);
+            displayMessage(agent, text6, true);
             displayMessage(agent, text1, true);
             displayMessage(agent, text2, true);
             displayMessage(agent, text3, true);
             displayMessage(agent, text4, true);
+            displayMessage(agent, text5, true);
 
             //include the funds in our message
-            String message = text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n";
+            String message = text6 + "\n" + text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n" + text5 + "\n";
 
             //also include the summary of wins/losses
             message += TransactionHelper.getDescWins(agent) + "\n";
@@ -519,5 +550,18 @@ public class AgentHelper {
 
     public static String getStockInvestmentDesc(Agent agent) {
         return "Owned Stock: " + round(agent.getWallet().getQuantity());
+    }
+
+    private static boolean hasDecline(double[] price) {
+
+        for (int i = 0; i < price.length - 1; i++) {
+
+            //if the next price is more than the current or 0, we can't confirm decline yet
+            if (price[i] < price[i + 1] || price[i] <= 0 || price[i + 1] <= 0)
+                return false;
+        }
+
+        //every value continued to go down, so we have a decline
+        return true;
     }
 }

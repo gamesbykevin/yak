@@ -86,5 +86,6 @@ public class AccelerationDecelerationOscillator extends Indicator {
     public void cleanup() {
         objAwesomeOscillator.cleanup();
         objSimpleMovingAverage.cleanup();
+        cleanup(getOscillator());
     }
 }

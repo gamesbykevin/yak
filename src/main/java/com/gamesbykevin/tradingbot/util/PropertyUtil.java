@@ -135,6 +135,9 @@ public class PropertyUtil {
         //how many attempts do we sell before we cancel
         AgentHelper.SELL_ATTEMPT_LIMIT = Integer.parseInt(getProperties().getProperty("sellAttemptLimit"));
 
+        //how many consecutive prices do we check for a decline
+        AgentHelper.CURRENT_PRICE_HISTORY = Integer.parseInt(getProperties().getProperty("currentPriceHistory"));
+
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 

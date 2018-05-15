@@ -120,11 +120,11 @@ public class Fractal extends Indicator {
             if (compare1 != null && compare2 != null) {
 
                 //if either is above our current, we don't have an up fractal
-                if (compare1.high > current.high || compare2.high > current.high)
+                if (compare1.high >= current.high || compare2.high >= current.high)
                     confirmUp = false;
 
                 //if either is below our current, we don't have a down fractal
-                if (compare1.low < current.low || compare2.low < current.low)
+                if (compare1.low <= current.low || compare2.low <= current.low)
                     confirmDown = false;
             } else {
 
@@ -137,9 +137,9 @@ public class Fractal extends Indicator {
         //now let's add our status to the list
         if (confirmUp && confirmDown) {
             return Status.Both;
-        } else if (confirmUp) {
+        } else if (confirmUp && !confirmDown) {
             return Status.Buy;
-        } else if (confirmDown) {
+        } else if (confirmDown && !confirmUp) {
             return Status.Sell;
         } else {
             return Status.None;

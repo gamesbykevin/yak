@@ -113,13 +113,17 @@ public class FADOA extends Strategy {
                 double val4 = oscillator.getOscillator().get(oscillator.getOscillator().size() - 4);
 
                 if (val1 < val2 && val2 < val3 && val1 < 0) {
+
                     //if latest 2 are decreasing and the latest is below 0
                     agent.setReasonSell(ReasonSell.Reason_Strategy);
                     adjustHardStopPrice(agent, currentPrice);
+
                 } else if (val1 < val2 && val2 < val3 && val3 < val4 && val1 > 0) {
+
                     //if all are decreasing and the latest is above 0
                     agent.setReasonSell(ReasonSell.Reason_Strategy);
                     adjustHardStopPrice(agent, currentPrice);
+
                 }
             }
         }

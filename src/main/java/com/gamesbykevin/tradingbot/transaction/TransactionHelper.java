@@ -16,6 +16,7 @@ public class TransactionHelper {
 
         Reason_Strategy("Sold based on strategy logic"),
         Reason_HardStop("We have hit our hard stop"),
+        Reason_PriceDecline("Current $ has declined"),
         ;
 
         private final String description;
@@ -156,7 +157,7 @@ public class TransactionHelper {
         return "Wins :" + getCount(agent, Result.Win) + ", $" + round(getAmount(agent, Result.Win));
     }
 
-    public static String getTotalFees(Agent agent) {
+    public static double getTotalFees(Agent agent) {
 
         //how many fees have we paid?
         double fees = 0;
@@ -166,6 +167,6 @@ public class TransactionHelper {
             fees += (agent.getTransactions().get(i).getFeeBuy() + agent.getTransactions().get(i).getFeeSell());
         }
 
-        return "Fees $" + fees;
+        return fees;
     }
 }

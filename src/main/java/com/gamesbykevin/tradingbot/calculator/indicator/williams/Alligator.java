@@ -65,9 +65,9 @@ public class Alligator extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display our info
-        getJaw().displayData(agent, write);
-        getLips().displayData(agent, write);
-        getTeeth().displayData(agent, write);
+        display(agent, "Jaw (" + getJaw().getPeriods() + "): ", getJaw().getSmma(), write);
+        display(agent, "Lips (" + getLips().getPeriods() + "): ", getLips().getSmma(), write);
+        display(agent, "Teeth (" + getTeeth().getPeriods() + "): ", getTeeth().getSmma(), write);
     }
 
     @Override

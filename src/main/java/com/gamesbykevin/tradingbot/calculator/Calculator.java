@@ -135,6 +135,10 @@ public class Calculator {
                     strategy = new ERS();
                     break;
 
+                case F:
+                    strategy = new F();
+                    break;
+
                 case FA:
                     strategy = new FA();
                     break;
@@ -145,6 +149,10 @@ public class Calculator {
 
                 case FAO:
                     strategy = new FAO();
+                    break;
+
+                case FMFI:
+                    strategy = new FMFI();
                     break;
 
                 case HASO:
