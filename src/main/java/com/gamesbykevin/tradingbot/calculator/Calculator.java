@@ -135,10 +135,6 @@ public class Calculator {
                     strategy = new ERS();
                     break;
 
-                case F:
-                    strategy = new F();
-                    break;
-
                 case FA:
                     strategy = new FA();
                     break;
@@ -177,6 +173,10 @@ public class Calculator {
 
                 case RCR:
                     strategy = new RCR();
+                    break;
+
+                case SOADX:
+                    strategy = new SOADX();
                     break;
 
                 case SOEMA:

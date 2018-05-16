@@ -37,6 +37,21 @@ public class SMA extends Indicator {
         });
     }
 
+    public SMA(int periods, final Fields field) {
+        this(periods, new AbstractList<Fields>() {
+            @Override
+            public Fields get(int index) {
+                return field;
+            }
+
+            @Override
+            public int size() {
+                return 1;
+            }
+        });
+    }
+
+
     public SMA(int periods, List<Fields> fields) {
 
         //save the periods

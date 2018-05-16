@@ -205,25 +205,25 @@ public class Transaction {
             //did we win or lose?
             if (bought > sold - totalFees) {
 
-                //track our amount
-                setAmount((bought - sold) + totalFees);
+                //track our amount lost not including fees
+                setAmount(bought - sold);
 
                 //assign the result
                 setResult(Result.Lose);
 
-                //setup our subject
-                subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, getAmount());
+                //we lost
+                subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, (bought - sold) + totalFees);
 
             } else {
 
-                //track our amount
-                setAmount((sold - bought) - totalFees);
+                //track our amount won not including fees
+                setAmount(sold - bought);
 
                 //assign the result
                 setResult(Result.Win);
 
                 //we win
-                subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, getAmount());
+                subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, (sold - bought) - totalFees);
             }
 
             //start off with the product to start the transaction description
@@ -237,6 +237,9 @@ public class Transaction {
 
             //how much did we pay initially
             text += ", purchase $" + agent.getWallet().getPurchasePrice();
+
+            //display our fee
+            text += ", buy fee $" + getFeeBuy();
 
             //display our fee
             text += ", sell fee $" + getFeeSell();
