@@ -95,7 +95,7 @@ public class Agent implements IAgent {
         this.order = null;
 
         //create new array to track recent periods
-        this.priceHistory = new double[CURRENT_PRICE_HISTORY];
+        this.priceHistory = new double[CURRENT_PRICE_HISTORY + 1];
 
         //set our initial trading strategy
         setTradingStrategy(tradingStrategy);
