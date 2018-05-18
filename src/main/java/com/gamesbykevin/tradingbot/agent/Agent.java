@@ -68,8 +68,8 @@ public class Agent implements IAgent {
     //what is the  lowest price and highest price
     private double priceLow = 0, priceHigh = 0;
 
-    //what duration are we trading on?
-    private final Duration duration;
+    //what duration is this agent trading against?
+    private Duration duration;
 
     //keep track so we know when the history has changed
     private int historySize = 0;
@@ -83,7 +83,7 @@ public class Agent implements IAgent {
     protected Agent(double funds, String productId, TradingStrategy tradingStrategy, Duration duration) {
 
         //assign our duration
-        this.duration = duration;
+        setDuration(duration);
 
         //create new list of transactions
         this.transactions = new ArrayList<>();
@@ -475,6 +475,10 @@ public class Agent implements IAgent {
 
     public void setPriceHigh(double priceHigh) {
         this.priceHigh = priceHigh;
+    }
+
+    public void setDuration(final Duration duration) {
+        this.duration = duration;
     }
 
     public Duration getDuration() {

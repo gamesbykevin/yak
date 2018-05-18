@@ -12,7 +12,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
 
 /**
- * EMA / RSI
+ * Exponential Moving Average / Relative Strength Index
  */
 public class EMAR extends Strategy {
 

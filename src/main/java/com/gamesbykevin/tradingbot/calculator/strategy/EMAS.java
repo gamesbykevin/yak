@@ -12,7 +12,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 /**
- * EMA / SMA
+ * Exponential Moving Average / Simple Moving Average
  */
 public class EMAS extends Strategy {
 

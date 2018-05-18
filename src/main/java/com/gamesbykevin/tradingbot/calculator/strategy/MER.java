@@ -8,6 +8,9 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
+/**
+ * Multiple EMA / Relative Strength Index
+ */
 public class MER extends Strategy {
 
     //how to access our indicator objects

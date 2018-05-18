@@ -171,6 +171,10 @@ public class Calculator {
                     strategy = new MES();
                     break;
 
+                case RA:
+                    strategy = new RA();
+                    break;
+
                 case RCR:
                     strategy = new RCR();
                     break;

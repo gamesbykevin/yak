@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.calculator;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMMA;
 
 import java.util.List;
 
@@ -95,5 +96,13 @@ public abstract class Calculation {
 
     protected double getRecent(SMA objSMA) {
         return getRecent(objSMA.getSma(), 1);
+    }
+
+    protected double getRecent(SMMA objSMMA) {
+        return getRecent(objSMMA.getSmma(), 1);
+    }
+
+    protected double getRecent(SMMA objSMMA, int index) {
+        return getRecent(objSMMA.getSmma(), index);
     }
 }
