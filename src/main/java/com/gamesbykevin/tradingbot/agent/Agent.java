@@ -71,8 +71,8 @@ public class Agent implements IAgent {
     //what duration is this agent trading against?
     private Duration duration;
 
-    //keep track so we know when the history has changed
-    private int historySize = 0;
+    //the candle time of the order
+    private long orderTime;
 
     //how many times have we checked to see if our sell order is filled
     private int attempts = 0;
@@ -149,16 +149,9 @@ public class Agent implements IAgent {
         //do we cancel the order
         boolean cancel = false;
 
-        //if the history changed a new period has passed
-        if (history.size() > historySize) {
-
-            //update the new size
-            historySize = history.size();
-
-            //flag cancel true if an order exists
-            if (getOrder() != null)
-                cancel = true;
-        }
+        //if a new period occurs and we have an order, we will cancel
+        if (history.get(history.size() - 1).time != getOrderTime() && getOrder() != null)
+            cancel = true;
 
         //if we don't have an active order look at the market data
         if (getOrder() == null) {
@@ -175,6 +168,10 @@ public class Agent implements IAgent {
                 checkBuy(this, strategy, history, product, currentPrice);
 
             }
+
+            //if an order was created track the create time
+            if (getOrder() != null)
+                setOrderTime(history.get(history.size() - 1).time);
 
         } else {
 
@@ -555,6 +552,14 @@ public class Agent implements IAgent {
 
     public boolean hasBuy() {
         return this.buy;
+    }
+
+    public long getOrderTime() {
+        return this.orderTime;
+    }
+
+    public void setOrderTime(long orderTime) {
+        this.orderTime = orderTime;
     }
 
     public void setTradingStrategy(TradingStrategy tradingStrategy) {
