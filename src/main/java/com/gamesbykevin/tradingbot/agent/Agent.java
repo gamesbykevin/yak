@@ -160,12 +160,12 @@ public class Agent implements IAgent {
             if (getWallet().getQuantity() > 0 && getWallet().getQuantity() >= product.getBase_min_size()) {
 
                 //check if we in position to sell our stock
-                checkSell(this, strategy, history, product, currentPrice);
+                checkSell(strategy, history, product, currentPrice);
 
             } else {
 
                 //we don't have any quantity so let's see if we can buy
-                checkBuy(this, strategy, history, product, currentPrice);
+                checkBuy(strategy, history, product, currentPrice);
 
             }
 
@@ -595,5 +595,133 @@ public class Agent implements IAgent {
 
         //add the new price to the end
         getPriceHistory()[getPriceHistory().length - 1] = price;
+    }
+
+    private void checkSell(Strategy strategy, List<Period> history, Product product, double currentPrice) {
+
+        //keep track of the lowest / highest price during a single trade
+        checkPriceRange(currentPrice);
+
+        //start without a reason to sell
+        setReasonSell(null);
+
+        //check for a sell signal
+        strategy.checkSellSignal(this, history, currentPrice);
+
+        //get the latest closing price
+        final double closePrice = history.get(history.size() - 1).close;
+
+        //if current price has declined x number of times, we will sell
+        if (hasDecline(getPriceHistory())) {
+
+            String message = "Price Decline: ";
+
+            //construct our message
+            for (int i = 0; i < getPriceHistory().length; i++) {
+                message += "$" + getPriceHistory()[i];
+
+                if (i < getPriceHistory().length - 1)
+                    message += ", ";
+            }
+
+            //display the recent prices so we can see the decline
+            displayMessage(this, message, true);
+
+            //assign our reason for the sell
+            setReasonSell(ReasonSell.Reason_PriceDecline);
+
+        } else {
+
+            //add the current price history to the list
+            addPriceHistory(currentPrice);
+        }
+
+        //if the price dropped below our hard stop, we must sell to cut our losses
+        if (closePrice <= getHardStopPrice()) {
+
+            //reason for selling is that we hit our hard stop
+            setReasonSell(ReasonSell.Reason_HardStop);
+
+        } else {
+
+            //since the close price is above the hard stop price, let's see if we can adjust
+            adjustHardStopPrice(closePrice);
+        }
+
+        //display our data
+        strategy.displayData(this, getReasonSell() != null);
+
+        //if there is a reason to sell then we will sell
+        if (getReasonSell() != null) {
+
+            //if there is a reason, display message
+            displayMessage(this, getReasonSell().getDescription(), true);
+
+            //reset our attempt counter for our sell order
+            setAttempts(0);
+
+            //create and assign our limit order at the last period closing price
+            setOrder(createLimitOrder(this, Action.Sell, product, currentPrice));
+
+            //we want to wait until the next candle period before we check to buy stock again after this sells
+            strategy.setWait(true);
+
+        } else {
+
+            //construct message
+            String message = "Waiting. Product " + product.getId();
+            message += " Current $" + currentPrice;
+            message += ", Purchase $" + getWallet().getPurchasePrice();
+            message += ", Hard Stop $" + round(getHardStopPrice());
+            message += ", Quantity: " + getWallet().getQuantity();
+
+            //we are waiting
+            displayMessage(this, message, true);
+        }
+    }
+
+    private void checkBuy(Strategy strategy, List<Period> history, Product product, double currentPrice) {
+
+        //flag buy false before we check
+        setBuy(false);
+
+        //we don't have a reason to sell just yet
+        setReasonSell(null);
+
+        //reset our hard stop until we actually buy
+        setHardStopPrice(0);
+
+        //if the strategy does not need to wait for new candle data
+        if (!strategy.hasWait()) {
+
+            //check for a buy signal
+            strategy.checkBuySignal(this, history, currentPrice);
+
+            //display our data
+            strategy.displayData(this, hasBuy());
+        }
+
+        //we will buy if there is a reason
+        if (hasBuy()) {
+
+            //what is the lowest and highest price during this trade?
+            setPriceLow(currentPrice);
+            setPriceHigh(currentPrice);
+
+            //let's set our hard stop if it hasn't been set already
+            if (getHardStopPrice() == 0)
+                setHardStopPrice(currentPrice - (currentPrice * getHardStopRatio()));
+
+            //write hard stop amount to our log file
+            displayMessage(this, "Current Price $" + currentPrice + ", Hard stop $" + getHardStopPrice(), true);
+
+            //create and assign our limit order
+            setOrder(createLimitOrder(this, Action.Buy, product, currentPrice));
+
+        } else {
+
+            //we are still waiting
+            displayMessage(this, "Waiting. Available funds $" + getWallet().getFunds(), false);
+        }
     }
 }

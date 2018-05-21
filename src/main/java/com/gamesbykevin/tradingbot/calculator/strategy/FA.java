@@ -113,6 +113,10 @@ public class FA extends Strategy {
                     break;
                 }
             }
+
+            //if we have a buy signal, exit the loop
+            if (agent.hasBuy())
+                break;
         }
     }
 

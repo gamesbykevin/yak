@@ -41,8 +41,15 @@ public class CA extends Strategy {
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
 
-        //if adx is below the trend and cci is below -100
-        if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW) {
+        double adxCurr = getRecent(objADX.getAdx(), 1);
+        double adxPrev = getRecent(objADX.getAdx(), 2);
+
+        double cciCurr = getRecent(objCCI.getCCI(), 1);
+        double cciPrev = getRecent(objCCI.getCCI(), 2);
+
+        //are things trending with momentum? we want to catch it when the switch just happens
+        if ((adxCurr < TREND && cciPrev > CCI_LOW && cciCurr < CCI_LOW) ||
+            (adxPrev > TREND && adxCurr < TREND && cciCurr < CCI_LOW)) {
 
             //get the current candle
             Period period = history.get(history.size() - 1);
@@ -71,7 +78,7 @@ public class CA extends Strategy {
         }
 
         //if adx is trending
-        if (getRecent(objADX.getAdx()) >= TREND) {
+        if (getRecent(objADX.getAdx()) > TREND) {
 
             //if dm+ is below dm-
             if (getRecent(objADX.getDmPlusIndicator()) < getRecent(objADX.getDmMinusIndicator())) {

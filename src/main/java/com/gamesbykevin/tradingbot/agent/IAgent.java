@@ -1,7 +1,6 @@
 package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.Product;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 

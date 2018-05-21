@@ -58,14 +58,23 @@ public class BBER extends Strategy {
         RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
 
         //get the current values
-        double close = getRecent(history, Period.Fields.Close);
-        double ema = getRecent(emaLongObj.getEma());
-        double middle = getRecent(bbObj.getMiddle().getSma());
-        double rsi = getRecent(rsiObj.getValueRSI());
+        double currClose = getRecent(history, Period.Fields.Close);
+        double currEma = getRecent(emaLongObj.getEma());
+        double currMiddle = getRecent(bbObj.getMiddle().getSma());
+        double currRsi = getRecent(rsiObj.getValueRSI());
 
-        //if the candle closed above our long ema and above the bollinger bands middle line, and our rsi is above the line
-        if (close > ema && close > middle && rsi >= RSI_LINE)
-                agent.setBuy(true);
+        //get the previous values
+        double prevClose = getRecent(history, Period.Fields.Close, 2);
+        double prevEma = getRecent(emaLongObj.getEma(), 2);
+        double prevMiddle = getRecent(bbObj.getMiddle().getSma(), 2);
+        double prevRsi = getRecent(rsiObj.getValueRSI(), 2);
+
+        //we want to buy right when the close crosses the ema or close crosses the middle while the rsi is trending
+        if (prevClose < prevEma && currClose > currEma && currClose > currMiddle && currRsi >= RSI_LINE) {
+            agent.setBuy(true);
+        } else if (currClose > currEma && prevClose < prevMiddle && currClose > currMiddle && currRsi >= RSI_LINE) {
+            agent.setBuy(true);
+        }
     }
 
     @Override
@@ -82,11 +91,11 @@ public class BBER extends Strategy {
         double rsi = getRecent(rsiObj.getValueRSI());
 
         //if at least one of our values are below trending set the hard stop $
-        if (close < ema || close < middle || rsi <= RSI_LINE)
+        if (close < ema || close < middle || rsi < RSI_LINE)
             adjustHardStopPrice(agent, currentPrice);
 
         //if the close is below the ema long and bb middle and rsi is heading towards oversold
-        if (close < ema && close < middle && rsi <= RSI_LINE)
+        if (close < ema && close < middle && rsi < RSI_LINE)
             agent.setReasonSell(ReasonSell.Reason_Strategy);
     }
 }

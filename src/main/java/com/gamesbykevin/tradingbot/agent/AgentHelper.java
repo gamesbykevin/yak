@@ -107,134 +107,6 @@ public class AgentHelper {
         }
     }
 
-    protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double currentPrice) {
-
-        //keep track of the lowest / highest price during a single trade
-        agent.checkPriceRange(currentPrice);
-
-        //start without a reason to sell
-        agent.setReasonSell(null);
-
-        //check for a sell signal
-        strategy.checkSellSignal(agent, history, currentPrice);
-
-        //get the latest closing price
-        final double closePrice = history.get(history.size() - 1).close;
-
-        //if current price has declined x number of times, we will sell
-        if (hasDecline(agent.getPriceHistory())) {
-
-            String message = "Price Decline: ";
-
-            //construct our message
-            for (int i = 0; i < agent.getPriceHistory().length; i++) {
-                message += "$" + agent.getPriceHistory()[i];
-
-                if (i < agent.getPriceHistory().length - 1)
-                    message += ", ";
-            }
-
-            //display the recent prices so we can see the decline
-            displayMessage(agent, message, true);
-
-            //assign our reason for the sell
-            agent.setReasonSell(ReasonSell.Reason_PriceDecline);
-
-        } else {
-
-            //add the current price history to the list
-            agent.addPriceHistory(currentPrice);
-        }
-
-        //if the price dropped below our hard stop, we must sell to cut our losses
-        if (closePrice <= agent.getHardStopPrice()) {
-
-            //reason for selling is that we hit our hard stop
-            agent.setReasonSell(ReasonSell.Reason_HardStop);
-
-        } else {
-
-            //since the close price is above the hard stop price, let's see if we can adjust
-            agent.adjustHardStopPrice(closePrice);
-        }
-
-        //display our data
-        strategy.displayData(agent, agent.getReasonSell() != null);
-
-        //if there is a reason to sell then we will sell
-        if (agent.getReasonSell() != null) {
-
-            //if there is a reason, display message
-            displayMessage(agent, agent.getReasonSell().getDescription(), true);
-
-            //reset our attempt counter for our sell order
-            agent.setAttempts(0);
-
-            //create and assign our limit order at the last period closing price
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
-
-            //we want to wait until the next candle period before we check to buy stock again after this sells
-            strategy.setWait(true);
-
-        } else {
-
-            //construct message
-            String message = "Waiting. Product " + product.getId();
-            message += " Current $" + currentPrice;
-            message += ", Purchase $" + agent.getWallet().getPurchasePrice();
-            message += ", Hard Stop $" + round(agent.getHardStopPrice());
-            message += ", Quantity: " + agent.getWallet().getQuantity();
-
-            //we are waiting
-            displayMessage(agent, message, true);
-        }
-    }
-
-    protected static void checkBuy(Agent agent, Strategy strategy, List<Period> history, Product product, double currentPrice) {
-
-        //flag buy false before we check
-        agent.setBuy(false);
-
-        //we don't have a reason to sell just yet
-        agent.setReasonSell(null);
-
-        //reset our hard stop until we actually buy
-        agent.setHardStopPrice(0);
-
-        //if the strategy does not need to wait for new candle data
-        if (!strategy.hasWait()) {
-
-            //check for a buy signal
-            strategy.checkBuySignal(agent, history, currentPrice);
-
-            //display our data
-            strategy.displayData(agent, agent.hasBuy());
-        }
-
-        //we will buy if there is a reason
-        if (agent.hasBuy()) {
-
-            //what is the lowest and highest price during this trade?
-            agent.setPriceLow(currentPrice);
-            agent.setPriceHigh(currentPrice);
-
-            //let's set our hard stop if it hasn't been set already
-            if (agent.getHardStopPrice() == 0)
-                agent.setHardStopPrice(currentPrice - (currentPrice * agent.getHardStopRatio()));
-
-            //write hard stop amount to our log file
-            displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + agent.getHardStopPrice(), true);
-
-            //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
-
-        } else {
-
-            //we are still waiting
-            displayMessage(agent, "Waiting. Available funds $" + agent.getWallet().getFunds(), false);
-        }
-    }
-
     protected static synchronized Status updateLimitOrder(final Agent agent, final String orderId) {
 
         //check the current order and let's see if we can tell when it is done
@@ -552,7 +424,7 @@ public class AgentHelper {
         return "Owned Stock: " + round(agent.getWallet().getQuantity());
     }
 
-    private static boolean hasDecline(double[] price) {
+    protected static boolean hasDecline(double[] price) {
 
         for (int i = 0; i < price.length - 1; i++) {
 
