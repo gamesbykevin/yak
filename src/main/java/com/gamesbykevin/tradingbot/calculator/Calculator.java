@@ -103,10 +103,6 @@ public class Calculator {
                     strategy = new AE();
                     break;
 
-                case AR:
-                    strategy = new AR();
-                    break;
-
                 case BBAR:
                     strategy = new BBAR();
                     break;

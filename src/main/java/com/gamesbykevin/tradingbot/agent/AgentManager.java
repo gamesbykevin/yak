@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.util.History;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
@@ -47,12 +48,11 @@ public class AgentManager {
      * Different trading strategies we can use
      */
     public enum TradingStrategy {
-
-        AE, AR, BBAR, BBER, BBR,
-        CA, EMAR, EMAS, ERS, FA,
-        FADOA, FAO, FMFI, HASO, MACS,
-        MARS, MER, MES, RA, RCR,
-        SOADX, SOEMA, SSR
+        AE,     BBAR,   BBER,   BBR,    CA,
+        EMAR,   EMAS,   ERS,    FA,     FADOA,
+        FAO,    FMFI,   HASO,   MACS,   MARS,
+        MER,    MES,    RA,     RCR,    SOADX,
+        SOEMA,  SSR
     }
 
     public AgentManager(final Product product, final double funds) {

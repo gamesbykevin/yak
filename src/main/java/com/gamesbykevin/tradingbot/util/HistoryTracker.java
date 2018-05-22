@@ -6,7 +6,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.getProducts;
+import static com.gamesbykevin.tradingbot.Main.getProductsAllUsd;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_HISTORIC;
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.updateHistory;
@@ -52,13 +52,13 @@ public class HistoryTracker implements Runnable {
     public void run() {
 
         //loop through each product
-        for (int index = 0; index < getProducts().size(); index++) {
+        for (int index = 0; index < getProductsAllUsd().size(); index++) {
 
             //loop through each duration
             for (Duration duration : Duration.values()) {
 
                 //add a tracker for every product/duration combination
-                getTrackers().add(new Tracker(getProducts().get(index).getId(), duration));
+                getTrackers().add(new Tracker(getProductsAllUsd().get(index).getId(), duration));
             }
         }
 

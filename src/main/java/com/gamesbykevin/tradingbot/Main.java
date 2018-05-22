@@ -90,6 +90,9 @@ public class Main implements Runnable {
     //our list of products
     private static List<Product> PRODUCTS;
 
+    //our list of all US products
+    private static List<Product> PRODUCTS_ALL_USD;
+
     /**
      * Warn the user before we actually start (when using real money)
      */
@@ -168,6 +171,9 @@ public class Main implements Runnable {
             //create new list of products we want to trade
             PRODUCTS = new ArrayList<>();
 
+            //create new list of all us products
+            PRODUCTS_ALL_USD = new ArrayList<>();
+
             //figure out which products we are trading
             for (int i = 0; i < tmp.size(); i++) {
 
@@ -184,6 +190,10 @@ public class Main implements Runnable {
                         break;
                     }
                 }
+
+                //add all us products to this list
+                if (tmp.get(i).getId().trim().contains("-USD"))
+                    PRODUCTS_ALL_USD.add(tmp.get(i));
             }
 
         } catch (Exception e) {
@@ -358,8 +368,12 @@ public class Main implements Runnable {
         displayMessage("History tracker created", getWriter());
     }
 
-    public static List<Product> getProducts() {
+    protected static List<Product> getProducts() {
         return PRODUCTS;
+    }
+
+    public static List<Product> getProductsAllUsd() {
+        return PRODUCTS_ALL_USD;
     }
 
     protected final PrintWriter getWriter() {
