@@ -8,6 +8,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.addHistory;
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getPrintWriter;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
@@ -120,6 +121,6 @@ public class History {
     }
 
     private static String getDirectory(String productId, Duration duration) {
-        return (DIRECTORY + "\\" + productId + "\\" + duration.description);
+        return (DIRECTORY + FILE_SEPARATOR + productId + FILE_SEPARATOR + duration.description);
     }
 }

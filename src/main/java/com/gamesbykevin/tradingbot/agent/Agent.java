@@ -22,6 +22,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
+import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 
 public class Agent implements IAgent {
 
@@ -455,7 +456,7 @@ public class Agent implements IAgent {
     }
 
     public String getDirectory() {
-        return LogFile.getLogDirectory() + "\\" + getProductId() + "\\" + "trades" + "\\";
+        return LogFile.getLogDirectory() + FILE_SEPARATOR + getProductId() + FILE_SEPARATOR + "trades" + FILE_SEPARATOR;
     }
 
     public double getPriceLow() {

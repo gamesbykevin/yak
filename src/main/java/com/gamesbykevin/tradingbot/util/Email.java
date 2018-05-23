@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
+import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class Email implements Runnable {
@@ -94,6 +95,6 @@ public class Email implements Runnable {
     }
 
     public static String getFileDateDesc() {
-        return new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date());
+        return new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date()).replaceAll(" ", FILE_SEPARATOR);
     }
 }

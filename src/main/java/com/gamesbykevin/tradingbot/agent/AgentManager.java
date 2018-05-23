@@ -3,7 +3,6 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
-import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.util.History;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
@@ -19,6 +18,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateCalcula
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
 
 public class AgentManager {
@@ -64,7 +64,7 @@ public class AgentManager {
         this.funds = funds;
 
         //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter(getFilenameManager(), LogFile.getLogDirectory() + "\\" + getProductId());
+        this.writer = LogFile.getPrintWriter(getFilenameManager(), LogFile.getLogDirectory() + FILE_SEPARATOR + getProductId());
 
         //create new list
         this.calculators = new HashMap<>();

@@ -24,6 +24,8 @@ public class LogFile {
         return "gdax_json.log";
     }
 
+    public static final String FILE_SEPARATOR = System.getProperty("file.separator");
+
     public static String getLogDirectory() {
 
         if (LOG_DIRECTORY == null)
@@ -53,7 +55,7 @@ public class LogFile {
                 file.mkdirs();
 
             //create new print writer
-            return new PrintWriter(directories + "\\" + filename, "UTF-8");
+            return new PrintWriter(directories + FILE_SEPARATOR + filename, "UTF-8");
 
         } catch (Exception e) {
             e.printStackTrace();
