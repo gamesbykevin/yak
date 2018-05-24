@@ -131,9 +131,6 @@ public class Main implements Runnable {
         ORDER_SERVICE = factory.getBean(OrderService.class);
         this.productService = factory.getBean(ProductService.class);
 
-        //create the main log file and place in our root logs directory
-        this.writer = LogFile.getPrintWriter(getFilenameMain(), LogFile.getLogDirectory());
-
         //display message of bot starting
         if (PAPER_TRADING) {
 
@@ -377,6 +374,11 @@ public class Main implements Runnable {
     }
 
     protected final PrintWriter getWriter() {
+
+        //create the main log file and place in our root logs directory
+        if (this.writer == null)
+            this.writer = LogFile.getPrintWriter(getFilenameMain(), LogFile.getLogDirectory());
+
         return this.writer;
     }
 

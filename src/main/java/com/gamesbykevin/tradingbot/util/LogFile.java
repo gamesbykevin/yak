@@ -16,6 +16,10 @@ public class LogFile {
         return "main.log";
     }
 
+    public static String getFilenameEmail() {
+        return "email.log";
+    }
+
     public static String getFilenameManager() {
         return "manager.log";
     }
