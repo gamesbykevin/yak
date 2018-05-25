@@ -80,6 +80,9 @@ public abstract class Strategy extends Calculation {
 
         //adjust our hard stop price around the current price to protect our investment
         agent.adjustHardStopPrice(currentPrice + increase);
+
+        //if there is no reason to sell, let's write our data to the log file
+        displayData(agent, agent.getReasonSell() == null);
     }
 
     public abstract void checkBuySignal(Agent agent, List<Period> history, double currentPrice);

@@ -361,7 +361,7 @@ public class Main implements Runnable {
 
         //create a new history tracker
         displayMessage("Creating history tracker", getWriter());
-        new HistoryTracker();
+        HistoryTracker historyTracker = new HistoryTracker();
         displayMessage("History tracker created", getWriter());
     }
 

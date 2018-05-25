@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.util;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_HISTORI
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
 import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.updateHistory;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
+import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameHistoryTracker;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 /**
@@ -28,6 +30,12 @@ public class HistoryTracker implements Runnable {
      * How long do we wait between our json calls
      */
     private static final long DELAY = (120L * 1000L);
+
+    //this script will check in the candle history to github
+    private static final String SHELL_SCRIPT_FILE = "./auto_check.sh";
+
+    //where we write our log file(s)
+    private static PrintWriter WRITER;
 
     /**
      * Default constructor
@@ -71,6 +79,9 @@ public class HistoryTracker implements Runnable {
 
             try {
 
+                //were any files changed?
+                boolean changed = false;
+
                 //check every tracker
                 for (int i = 0; i < getTrackers().size(); i++) {
 
@@ -105,13 +116,18 @@ public class HistoryTracker implements Runnable {
 
                         //if the history changed, write it to local storage
                         if (tracker.history.size() != size) {
-                            displayMessage("Writing history: " + tracker.productId + ", " + tracker.duration.description + ", Size: " + tracker.history.size());
-                            History.write(tracker.history, tracker.productId, tracker.duration);
+                            displayMessage("Writing history: " + tracker.productId + ", " + tracker.duration.description + ", Size: " + tracker.history.size(), getWriter());
+                            boolean result = History.write(tracker.history, tracker.productId, tracker.duration);
+
+                            //if writing the file was successful flag it was changed
+                            if (result)
+                                changed = true;
                         }
 
                     } catch (Exception ex) {
 
-                        ex.printStackTrace();
+                        //display message and write to log
+                        displayMessage(ex, getWriter());
 
                     } finally {
 
@@ -120,11 +136,35 @@ public class HistoryTracker implements Runnable {
                     }
                 }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+                if (changed) {
+
+                    //display that we are calling the bash script
+                    displayMessage("Calling .sh Bash script...", getWriter());
+
+                    //run shell script to commit file changes into github
+                    Runtime.getRuntime().exec(SHELL_SCRIPT_FILE);
+
+                    //display that we called the bash script
+                    displayMessage(".sh Bash script called", getWriter());
+                }
+
+            } catch (Exception ex1) {
+
+                //display error message and write to log
+                displayMessage(ex1, getWriter());
             }
         }
     }
+
+    protected static final PrintWriter getWriter() {
+
+        //create the main log file and place in our root logs directory
+        if (WRITER == null)
+            WRITER = LogFile.getPrintWriter(getFilenameHistoryTracker(), LogFile.getLogDirectory());
+
+        return WRITER;
+    }
+
 
     /**
      * This class will track the candle history for a particular product and particular duration

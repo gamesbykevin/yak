@@ -20,6 +20,10 @@ public class LogFile {
         return "email.log";
     }
 
+    public static String getFilenameHistoryTracker() {
+        return "history_tracker.log";
+    }
+
     public static String getFilenameManager() {
         return "manager.log";
     }

@@ -98,7 +98,7 @@ public class History {
         displayMessage("Done loading history: " + getDirectory(productId, duration), writer);
     }
 
-    public static synchronized void write(List<Period> history, String productId, Duration duration) {
+    protected static synchronized boolean write(List<Period> history, String productId, Duration duration) {
 
         try {
 
@@ -115,8 +115,16 @@ public class History {
             //close the file
             pw.close();
 
+            //we have success
+            return true;
+
         } catch (Exception e) {
+
+            //print error message
             e.printStackTrace();
+
+            //we weren't successful
+            return false;
         }
     }
 

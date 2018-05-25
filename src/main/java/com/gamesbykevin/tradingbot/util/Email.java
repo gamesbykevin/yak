@@ -122,4 +122,5 @@ public class Email implements Runnable {
             WRITER = LogFile.getPrintWriter(getFilenameEmail(), LogFile.getLogDirectory());
 
         return WRITER;
-    }}
+    }
+}
