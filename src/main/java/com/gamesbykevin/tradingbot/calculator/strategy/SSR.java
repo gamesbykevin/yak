@@ -9,7 +9,7 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
 
 /**
  * Stochastic Oscillator / Simple Moving Average / Relative Strength Index

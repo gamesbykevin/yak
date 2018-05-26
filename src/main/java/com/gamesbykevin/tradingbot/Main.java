@@ -69,9 +69,6 @@ public class Main implements Runnable {
     //which strategies do we want to trade with (separated by comma)
     public static String[] TRADING_STRATEGIES;
 
-    //list of desired durations to trade
-    public static long[] PERIOD_DURATIONS;
-
     /**
      * Are we paper trading? default true
      */
@@ -139,9 +136,9 @@ public class Main implements Runnable {
 
         } else {
 
-            //if we are using real money, let's only focus on 1 trading strategy and 1 ratio and 1 candle
-            if (TRADING_STRATEGIES.length != 1 || HARD_STOP_RATIO.length != 1 || PERIOD_DURATIONS.length != 1)
-                throw new RuntimeException("When using real money you can only have 1 strategy, 1 hard stop ratio, and 1 candle");
+            //if we are using real money, let's only focus on 1 trading strategy and 1 ratio
+            if (TRADING_STRATEGIES.length != 1 || HARD_STOP_RATIO.length != 1)
+                throw new RuntimeException("When using real money you can only have 1 strategy, 1 hard stop ratio");
 
             //display message and pause if using real money
             displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", getWriter());

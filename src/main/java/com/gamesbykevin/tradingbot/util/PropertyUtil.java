@@ -108,16 +108,8 @@ public class PropertyUtil {
             }
         }
 
-        //what different hard stop ratios do we use to test our simulations
-        String[] values = getProperties().getProperty("hardStopRatio").split(DELIMITER);
-
-        //create our array of values
-        AgentHelper.HARD_STOP_RATIO = new float[values.length];
-
-        //populate our array
-        for (int i = 0; i < values.length; i++) {
-            AgentHelper.HARD_STOP_RATIO[i] = Float.parseFloat(values[i]);
-        }
+        //what hard stop ratio do we use to test our simulations?
+        AgentHelper.HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
 
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
@@ -140,21 +132,6 @@ public class PropertyUtil {
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
-
-        //how long is each candle?
-        String[] durations = getProperties().getProperty("periodDuration").split(DELIMITER);
-
-        //make sure we have at least 1
-        if (durations.length < 1)
-            throw new RuntimeException("You don't have any durations specified");
-
-        //create our list of durations
-        Main.PERIOD_DURATIONS = new long[durations.length];
-
-        //populate our array
-        for (int i = 0; i < durations.length; i++) {
-            Main.PERIOD_DURATIONS[i] = Long.parseLong(durations[i]);
-        }
 
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));

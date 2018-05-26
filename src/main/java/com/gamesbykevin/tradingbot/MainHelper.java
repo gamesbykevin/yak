@@ -3,7 +3,6 @@ package com.gamesbykevin.tradingbot;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.transaction.Transaction;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;

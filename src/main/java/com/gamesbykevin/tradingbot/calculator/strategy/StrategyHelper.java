@@ -1,73 +1,11 @@
-package com.gamesbykevin.tradingbot.calculator.utils;
+package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 
 import java.util.List;
 
-public class CalculatorHelper {
-
-    public static void updateHistory(List<Period> history, double[][] data) {
-
-        //parse each period from the data
-        for (int row = data.length - 1; row >= 0; row--) {
-            updateHistory(history, data[row]);
-        }
-    }
-
-    public static void updateHistory(List<Period> history, double[] data) {
-
-        //create and populate our period
-        Period period = new Period();
-        period.time = (long) data[0];
-        period.low = data[1];
-        period.high = data[2];
-        period.open = data[3];
-        period.close = data[4];
-        period.volume = data[5];
-
-        //check this period against our history and add if missing
-        addHistory(history, period);
-    }
-
-    public static void addHistory(List<Period> history, Period period) {
-
-        //check every period
-        for (int i = 0; i < history.size(); i++) {
-
-            //if the time matches it already exists and no need to continue
-            if (history.get(i).time == period.time)
-                return;
-        }
-
-        //since it wasn't found, add it to the list
-        history.add(period);
-    }
-
-    /**
-     * Sort the list so the most recent period is at the end of the array list
-     * @param history Our current list of history periods
-     */
-    public static void sortHistory(List<Period> history) {
-
-        //sort so the periods are in order from oldest to newest
-        for (int x = 0; x < history.size(); x++) {
-            for (int y = x; y < history.size() - 1; y++) {
-
-                //get the current and next period
-                Period tmp1 = history.get(x);
-                Period tmp2 = history.get(y + 1);
-
-                //if the next object does not have a greater time, we need to swap
-                if (tmp1.time > tmp2.time) {
-
-                    //swap the values
-                    history.set(x,     tmp2);
-                    history.set(y + 1, tmp1);
-                }
-            }
-        }
-    }
+public class StrategyHelper {
 
     public static synchronized double getValue(List<Period> data, Fields field, int index) {
 

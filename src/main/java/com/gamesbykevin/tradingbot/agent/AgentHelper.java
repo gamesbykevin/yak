@@ -4,15 +4,11 @@ import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.util.Email;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
@@ -38,7 +34,7 @@ public class AgentHelper {
     /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
      */
-    public static float[] HARD_STOP_RATIO;
+    public static float HARD_STOP_RATIO;
 
     /**
      * Do we want to send a notification for every transaction?

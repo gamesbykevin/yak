@@ -49,47 +49,6 @@ public class AgentManagerHelper {
         }
     }
 
-    protected static void updateCalculators(AgentManager manager) {
-
-        //check all our desired durations
-        for (int i = 0; i < MY_PERIOD_DURATIONS.length; i++) {
-
-            //get the current calculator
-            Calculator calculator = manager.getCalculators().get(MY_PERIOD_DURATIONS[i]);
-
-            //can we make a service call to update our calculator
-            if (calculator.canExecute()) {
-
-                //how many periods do we have?
-                final int size = calculator.getHistory().size();
-
-                //display message as sometimes the call is not successful
-                displayMessage("Making rest call to retrieve history " + manager.getProductId() + " (" + MY_PERIOD_DURATIONS[i].description + ")", null);
-
-                //update our historical data and update the last update
-                boolean success = calculator.update(manager.getProductId());
-
-                //get the size again so we can compare and see if it has changed
-                final int change = calculator.getHistory().size();
-
-                //if a new candle has been added recalculate our strategies
-                if (size != change)
-                    calculator.calculate(manager, size > change ? size - change : change - size);
-
-                if (success) {
-
-                    //rest call is successful
-                    displayMessage("Rest call successful. History size: " + change, (change != size) ? manager.getWriter() : null);
-
-                } else {
-
-                    //rest call isn't successful
-                    displayMessage("Rest call is NOT successful.", manager.getWriter());
-                }
-            }
-        }
-    }
-
     protected static void displayMessage(String message, PrintWriter writer) {
         PropertyUtil.displayMessage(message, writer);
     }

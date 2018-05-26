@@ -11,8 +11,8 @@ import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasTrendDownward;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasTrendUpward;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
 
 /**
  * Bollinger Bands / Accumulation Distribution Line / Relative Strength Index

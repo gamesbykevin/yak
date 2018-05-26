@@ -2,10 +2,12 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Calculation;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
@@ -58,7 +60,7 @@ public abstract class Strategy extends Calculation {
     }
 
     @Override
-    public final void calculate(List<Period> history, int newPeriods) {
+    public final void calculate(HashMap<Candle, List<Period>> history, int newPeriods) {
 
         for (int index = 0; index < getIndicators().size(); index++) {
             getIndicator(index).calculate(history, newPeriods);
@@ -85,9 +87,9 @@ public abstract class Strategy extends Calculation {
         displayData(agent, agent.getReasonSell() == null);
     }
 
-    public abstract void checkBuySignal(Agent agent, List<Period> history, double currentPrice);
+    public abstract void checkBuySignal(Agent agent, HashMap<Candle, List<Period>> history, double currentPrice);
 
-    public abstract void checkSellSignal(Agent agent, List<Period> history, double currentPrice);
+    public abstract void checkSellSignal(Agent agent, HashMap<Candle, List<Period>> history, double currentPrice);
 
     /**
      * Does the strategy need to wait?

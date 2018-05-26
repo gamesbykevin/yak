@@ -2,21 +2,16 @@ package com.gamesbykevin.tradingbot.agent;
 
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
-import com.gamesbykevin.tradingbot.util.History;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateAgents;
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateCalculators;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
@@ -26,8 +21,8 @@ public class AgentManager {
     //our agent list
     private List<Agent> agents;
 
-    //our reference to calculate calculator
-    private HashMap<Duration, Calculator> calculators;
+    //our reference to the calculator
+    private Calculator calculator;
 
     //are we updating the agent?
     private boolean working = false;
@@ -39,7 +34,7 @@ public class AgentManager {
     private double currentPrice = 0;
 
     //object used to write to a text file
-    private final PrintWriter writer;
+    private PrintWriter writer;
 
     //how many funds did we start with
     private final double funds;
@@ -47,7 +42,7 @@ public class AgentManager {
     /**
      * Different trading strategies we can use
      */
-    public enum TradingStrategy {
+    public enum StrategyKey {
         AE,     BBAR,   BBER,   BBR,    CA,
         EMAR,   EMAS,   ERS,    FA,     FADOA,
         FAO,    FMFI,   HASO,   MACS,   MARS,
@@ -63,25 +58,9 @@ public class AgentManager {
         //how many funds do we start with?
         this.funds = funds;
 
-        //create our object to write to a text file
-        this.writer = LogFile.getPrintWriter(getFilenameManager(), LogFile.getLogDirectory() + FILE_SEPARATOR + getProductId());
-
-        //create new list
-        this.calculators = new HashMap<>();
-
-        //create our calculator(s) for each duration
-        for (int i = 0; i < MY_PERIOD_DURATIONS.length; i++) {
-
-            //create our the calculator for the specified duration
-            getCalculators().put(MY_PERIOD_DURATIONS[i], new Calculator(MY_PERIOD_DURATIONS[i]));
-
-            //now we want to load any historical data that we may have
-            History.load(getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory(), getProductId(), MY_PERIOD_DURATIONS[i], getWriter());
-
-            //now that we have data do the initial calculations assuming we have enough data
-            if (getCalculators().get(MY_PERIOD_DURATIONS[i]).getHistory().size() >= HISTORICAL_PERIODS_MINIMUM)
-                getCalculators().get(MY_PERIOD_DURATIONS[i]).calculate(this, 0);
-        }
+        //create new calculator and perform our initial calculations
+        this.calculator = new Calculator(getProductId(), getWriter());
+        this.calculator.calculate(this, 0);
 
         //create our agents last
         createAgents();
@@ -98,18 +77,14 @@ public class AgentManager {
             //create an agent for each hard stop ratio
             for (int j = 0; j < HARD_STOP_RATIO.length; j++) {
 
-                //create an agent for each candle duration
-                for (int k = 0; k < MY_PERIOD_DURATIONS.length; k++) {
+                //create our agent
+                Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], MY_PERIOD_DURATIONS[k]);
 
-                    //create our agent
-                    Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], MY_PERIOD_DURATIONS[k]);
+                //assign the hard stop ratio
+                agent.setHardStopRatio(HARD_STOP_RATIO[j]);
 
-                    //assign the hard stop ratio
-                    agent.setHardStopRatio(HARD_STOP_RATIO[j]);
-
-                    //add agent to the list
-                    getAgents().add(agent);
-                }
+                //add agent to the list
+                getAgents().add(agent);
             }
         }
     }
@@ -132,8 +107,8 @@ public class AgentManager {
 
         try {
 
-            //update our calculator data and calculate, etc...
-            updateCalculators(this);
+            //update our calculator, etc...
+            calculator.update(this);
 
             //update our agents
             updateAgents(this);
@@ -229,7 +204,7 @@ public class AgentManager {
         return getAssets(agent);
     }
 
-    public double getTotalAssets(TradingStrategy strategy, Duration duration, float ratio) {
+    public double getTotalAssets(StrategyKey strategyKey, Candle duration, float ratio) {
 
         for (int i = 0; i < getAgents().size(); i++) {
 
@@ -237,7 +212,7 @@ public class AgentManager {
 
             if (agent.getDuration() == duration &&
                 agent.getHardStopRatio() == ratio &&
-                agent.getTradingStrategy() == strategy)
+                agent.getTradingStrategy() == strategyKey)
                 return getAssets(agent);
         }
 
@@ -250,6 +225,12 @@ public class AgentManager {
     }
 
     public PrintWriter getWriter() {
+
+        //create our object to write to a text file
+        if (this.writer == null)
+            this.writer = LogFile.getPrintWriter(getFilenameManager(), LogFile.getLogDirectory() + FILE_SEPARATOR + getProductId());
+
+        //return our print writer
         return this.writer;
     }
 
@@ -293,9 +274,5 @@ public class AgentManager {
 
         //all agents are done return true
         return true;
-    }
-
-    protected HashMap<Duration, Calculator> getCalculators() {
-        return this.calculators;
     }
 }

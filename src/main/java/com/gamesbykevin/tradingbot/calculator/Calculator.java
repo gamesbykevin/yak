@@ -4,23 +4,25 @@ import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
+import com.gamesbykevin.tradingbot.util.History;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.Main.PERIOD_DURATIONS;
-import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculation.PERIODS_RETAIN;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.*;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.createStrategy;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.updateHistory;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class Calculator {
 
-    //keep a list of our periods
-    private List<Period> history;
+    //track our historical data for every candle duration
+    private HashMap<Candle, List<Period>> history;
 
     //how long do we pause after our service call, this is to help prevent 429 errors (rate limit exceeded)
     private static final long DELAY = 500L;
@@ -36,29 +38,18 @@ public class Calculator {
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
 
-    //create an indicator class for each trading strategy
-    private HashMap<TradingStrategy, Strategy> strategies;
+    //we will have the same strategy for each candle
+    private List<Strategy> strategies;
+
+    //the product id
+    private final String productId;
 
     /**
      * Our list of chosen trading strategies
      */
     public static TradingStrategy[] MY_TRADING_STRATEGIES;
 
-    /**
-     * How long is each period we want to trade?
-     */
-    public static Duration[] MY_PERIOD_DURATIONS;
-
-    //our json response string
-    private String json;
-
-    //last time calculator was updated
-    private long previous;
-
-    //the chosen duration
-    private final Duration duration;
-
-    public enum Duration {
+    public enum Candle {
 
         OneMinute(60, "one_minute", 6),             //check every 10 seconds
         FiveMinutes(300, "five_minutes", 10),       //check every 30 seconds
@@ -73,178 +64,126 @@ public class Calculator {
         //how often we check
         public final int frequency;
 
+        //text description of this candle
         public final String description;
 
-        Duration(long duration, String description, int frequency) {
+        //when is the last time this candle has been updated
+        public long timestamp = 0;
+
+        Candle(long duration, String description, int frequency) {
             this.duration = duration;
             this.description = description;
             this.frequency = frequency;
         }
     }
 
-    public Calculator(Duration duration) {
+    public Calculator(String productId, PrintWriter writer) {
 
-        //store the selected duration
-        this.duration = duration;
+        //the product this calculator is for
+        this.productId = productId;
 
-        //create new list(s)
-        this.history = new ArrayList<>();
-        this.strategies = new HashMap<>();
+        //we want to track all durations
+        for (int j = 0; j < Candle.values().length; j++) {
 
-        //create an object for each strategy that we have specified
-        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+            //what is the current candle
+            Candle duration = Candle.values()[j];
 
-            //what is our strategy?
-            Strategy strategy;
+            //we need to add an empty list for the candle duration before we populate it
+            getHistory().put(duration, new ArrayList<>());
 
-            switch (MY_TRADING_STRATEGIES[i]) {
+            //populate the list based on existing file data
+            History.load(getHistory().get(duration), productId, duration, writer);
 
-                case AE:
-                    strategy = new AE();
-                    break;
-
-                case BBAR:
-                    strategy = new BBAR();
-                    break;
-
-                case BBER:
-                    strategy = new BBER();
-                    break;
-
-                case BBR:
-                    strategy = new BBR();
-                    break;
-
-                case CA:
-                    strategy = new CA();
-                    break;
-
-                case EMAR:
-                    strategy = new EMAR();
-                    break;
-
-                case EMAS:
-                    strategy = new EMAS();
-                    break;
-
-                case ERS:
-                    strategy = new ERS();
-                    break;
-
-                case FA:
-                    strategy = new FA();
-                    break;
-
-                case FADOA:
-                    strategy = new FADOA();
-                    break;
-
-                case FAO:
-                    strategy = new FAO();
-                    break;
-
-                case FMFI:
-                    strategy = new FMFI();
-                    break;
-
-                case HASO:
-                    strategy = new HASO();
-                    break;
-
-                case MACS:
-                    strategy = new MACS();
-                    break;
-
-                case MARS:
-                    strategy = new MARS();
-                    break;
-
-                case MER:
-                    strategy = new MER();
-                    break;
-
-                case MES:
-                    strategy = new MES();
-                    break;
-
-                case RA:
-                    strategy = new RA();
-                    break;
-
-                case RCR:
-                    strategy = new RCR();
-                    break;
-
-                case SOADX:
-                    strategy = new SOADX();
-                    break;
-
-                case SOEMA:
-                    strategy = new SOEMA();
-                    break;
-
-                case SSR:
-                    strategy = new SSR();
-                    break;
-
-                default:
-                    throw new RuntimeException("Strategy not found: " + MY_TRADING_STRATEGIES[i]);
-            }
-
-            //add to hash map
-            getStrategies().put(MY_TRADING_STRATEGIES[i], strategy);
+            //update the previous run time, so it runs immediately since we don't have data yet
+            duration.timestamp = System.currentTimeMillis() - (duration.duration * 1000);
         }
 
-        //update the previous run time, so it runs immediately since we don't have data yet
-        this.previous = System.currentTimeMillis() - (getDuration().duration * 1000);
+        //create all strategies and add to our list
+        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+            getStrategies().add(createStrategy(MY_TRADING_STRATEGIES[i]));
+        }
     }
 
-    public Duration getDuration() {
-        return this.duration;
-    }
-
-    public boolean canExecute() {
-        return System.currentTimeMillis() - previous >= (getDuration().duration / getDuration().frequency) * 1000;
-    }
-
-    public synchronized boolean update(String productId) {
+    public synchronized boolean update(AgentManager manager) {
 
         //were we successful
         boolean result = false;
 
-        try {
+        //we want to track all durations
+        for (int j = 0; j < Candle.values().length; j++) {
 
-            //make our rest call and get the json response
-            setJson(getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getDuration().duration)));
+            //the current candle duration
+            Candle duration = Candle.values()[j];
 
-            //convert json text to multi array
-            double[][] data = GSon.getGson().fromJson(getJson(), double[][].class);
+            try {
 
-            //make sure we have data before we update
-            if (data != null && data.length > 0) {
+                //how much time has passed
+                long lapsed = System.currentTimeMillis() - duration.timestamp;
 
-                //update our history list
-                updateHistory(getHistory(), data);
+                //time required to pass
+                long minimum = (duration.duration / duration.frequency) * 1000L;
 
-                //sort the history
-                sortHistory(getHistory());
+                //has enough time passed to retrieve more candle data
+                if (lapsed >= minimum) {
 
-                //we are successful
-                result = true;
+                    //display message as sometimes the call is not successful
+                    displayMessage("Making rest call to retrieve history " + productId + " (" + duration.description + ")", null);
 
-                //update the last successful run
-                this.previous = System.currentTimeMillis();
+                    //make our rest call and get the json response
+                    String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, duration.duration));
 
-            } else {
+                    //convert json text to multi array
+                    double[][] data = GSon.getGson().fromJson(json, double[][].class);
 
-                result = false;
+                    //make sure we have data before we update
+                    if (data != null && data.length > 0) {
+
+                        //get data for the current candle
+                        List<Period> tmpHistory = getHistory().get(duration);
+
+                        //store the size
+                        final int size = tmpHistory.size();
+
+                        //update our history list with potential new data
+                        updateHistory(tmpHistory, data);
+
+                        //sort the history
+                        sortHistory(tmpHistory);
+
+                        //let's see if the size changed
+                        final int change = tmpHistory.size();
+
+                        //if a new candle has been added re-calculate our strategies
+                        if (size != change)
+                            calculate(manager, size > change ? size - change : change - size);
+
+                        //rest call is successful
+                        displayMessage("Rest call successful. History size: " + change, (change != size) ? manager.getWriter() : null);
+
+                        //we are successful
+                        result = true;
+
+                        //update the last successful run
+                        duration.timestamp = System.currentTimeMillis();
+
+                    } else {
+
+                        //flag our result false
+                        result = false;
+
+                        //rest call isn't successful
+                        displayMessage("Rest call is NOT successful.", manager.getWriter());
+                    }
+
+                    //we want to limit the time between each service call to prevent too many request errors
+                    Thread.sleep(DELAY);
+                }
+
+            } catch (Exception e) {
+
+                //display our message and write to the log file
+                displayMessage(e, manager.getWriter());
             }
-
-            //we want to limit the time between each service call to prevent too many request errors
-            Thread.sleep(DELAY);
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         //return our result
@@ -253,145 +192,55 @@ public class Calculator {
 
     public synchronized void calculate(AgentManager manager, int newPeriods) {
 
-        //recalculate all our strategies
-        for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+        //calculate all strategies
+        for (int i = 0; i < getStrategies().size(); i++) {
+
+            //get the current strategy
+            Strategy strategy = getStrategies().get(i);
 
             //display info
-            displayMessage("Calculating " + MY_TRADING_STRATEGIES[i] + "...", manager.getWriter());
+            displayMessage("Calculating " + getStrategies().get(i).getClass() + "...", manager.getWriter());
 
             //flag the strategy as no longer waiting for new candle data
-            getStrategies().get(MY_TRADING_STRATEGIES[i]).setWait(false);
+            strategy.setWait(false);
 
-            //calculate based on the current strategy
-            getStrategies().get(MY_TRADING_STRATEGIES[i]).calculate(getHistory(), newPeriods);
+            //calculate indicator values based on the current strategy
+            strategy.calculate(getHistory(), newPeriods);
 
             //cleanup data list(s) to keep it at a manageable size
-            getStrategies().get(MY_TRADING_STRATEGIES[i]).cleanup();
+            strategy.cleanup();
 
             //display info
-            displayMessage("Calculating " + MY_TRADING_STRATEGIES[i] + " Done", manager.getWriter());
+            displayMessage("Calculating " + getStrategies().get(i).getClass() + " Done", manager.getWriter());
         }
 
-        //let's keep a manageable history size
-        while (getHistory().size() > PERIODS_RETAIN) {
-            getHistory().remove(0);
+        //let's keep our list at a manageable size
+        for (int i = 0; i < Candle.values().length; i++) {
+
+            //get the current history list
+            List<Period> tmpHistory = getHistory().get(Candle.values()[i]);
+
+            while (tmpHistory.size() > PERIODS_RETAIN) {
+                tmpHistory.remove(0);
+            }
         }
     }
 
-    public List<Period> getHistory() {
+    private HashMap<Candle, List<Period>> getHistory() {
+
+        //instantiate if null
+        if (this.history == null)
+            this.history = new HashMap<>();
+
         return this.history;
     }
 
-    public Strategy getStrategy(TradingStrategy tradingStrategy) {
-        return getStrategies().get(tradingStrategy);
-    }
+    private List<Strategy> getStrategies() {
 
-    private HashMap<TradingStrategy, Strategy> getStrategies() {
+        //instantiate if null
+        if (this.strategies == null)
+            this.strategies = new ArrayList<>();
+
         return this.strategies;
-    }
-
-    public static void populateDurations() {
-
-        //create a new array which will contain our candle durations
-        if (MY_PERIOD_DURATIONS == null) {
-
-            //make sure we aren't using duplicate durations
-            for (int i = 0; i < PERIOD_DURATIONS.length; i++) {
-                for (int j = 0; j < PERIOD_DURATIONS.length; j++) {
-
-                    //don't check the same element
-                    if (i == j)
-                        continue;
-
-                    //if the value already exists we have duplicate strategies
-                    if (PERIOD_DURATIONS[i] == PERIOD_DURATIONS[j])
-                        throw new RuntimeException("Duplicate period durations in your property file \"" + PERIOD_DURATIONS[i] + "\"");
-                }
-            }
-
-            //create new list
-            MY_PERIOD_DURATIONS = new Duration[PERIOD_DURATIONS.length];
-
-            //populate the array list
-            for (int i = 0; i < PERIOD_DURATIONS.length; i++) {
-
-                //we must have a match
-                boolean match = false;
-
-                for (Duration duration : Duration.values()) {
-
-                    //check if we have a match
-                    if (duration.duration == PERIOD_DURATIONS[i]) {
-                        MY_PERIOD_DURATIONS[i] = duration;
-                        match = true;
-                        break;
-                    }
-                }
-
-                //throw exception if no match
-                if (!match)
-                    throw new RuntimeException("Duration not valid: " + PERIOD_DURATIONS[i]);
-            }
-        }
-    }
-
-    /**
-     * Create our array containing our trading strategies
-     */
-    public static void populateStrategies() {
-
-        //create a new array which will contain our trading strategies
-        if (MY_TRADING_STRATEGIES == null) {
-
-            //make sure we aren't using duplicate strategies
-            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
-                for (int j = 0; j < TRADING_STRATEGIES.length; j++) {
-
-                    //don't check the same element
-                    if (i == j)
-                        continue;
-
-                    //if the value already exists we have duplicate strategies
-                    if (TRADING_STRATEGIES[i].trim().equalsIgnoreCase(TRADING_STRATEGIES[j].trim()))
-                        throw new RuntimeException("Duplicate trading strategy in your property file \"" + TRADING_STRATEGIES[i] + "\"");
-                }
-            }
-
-            //create our trading array
-            MY_TRADING_STRATEGIES = new TradingStrategy[TRADING_STRATEGIES.length];
-
-            //temp list of all values so we can check for a match
-            TradingStrategy[] tmp = TradingStrategy.values();
-
-            //make sure the specified strategies exist
-            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
-
-                //check each strategy for a match
-                for (int j = 0; j < tmp.length; j++) {
-
-                    //if the spelling matches we have found our strategy
-                    if (tmp[j].toString().trim().equalsIgnoreCase(TRADING_STRATEGIES[i].trim())) {
-
-                        //assign our strategy
-                        MY_TRADING_STRATEGIES[i] = tmp[j];
-
-                        //exit the loop
-                        break;
-                    }
-                }
-
-                //no matching strategy was found throw exception
-                if (MY_TRADING_STRATEGIES[i] == null)
-                    throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
-            }
-        }
-    }
-
-    private String getJson() {
-        return this.json;
-    }
-
-    private void setJson(String json) {
-        this.json = json;
     }
 }

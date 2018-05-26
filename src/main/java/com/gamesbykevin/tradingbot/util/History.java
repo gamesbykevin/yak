@@ -1,13 +1,13 @@
 package com.gamesbykevin.tradingbot.util;
 
-import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.io.*;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.addHistory;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.addHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
 import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getPrintWriter;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -26,7 +26,7 @@ public class History {
      */
     private static final int NOTIFY_LIMIT = 1500;
 
-    public static synchronized void load(List<Period> history, String productId, Duration duration, PrintWriter writer) {
+    public static synchronized void load(List<Period> history, String productId, Candle duration, PrintWriter writer) {
 
         //get the directory where our history is stored
         File directory = new File(getDirectory(productId, duration));
@@ -98,7 +98,7 @@ public class History {
         displayMessage("Done loading history: " + getDirectory(productId, duration), writer);
     }
 
-    protected static synchronized boolean write(List<Period> history, String productId, Duration duration) {
+    protected static synchronized boolean write(List<Period> history, String productId, Candle duration) {
 
         try {
 
@@ -128,7 +128,7 @@ public class History {
         }
     }
 
-    private static String getDirectory(String productId, Duration duration) {
+    private static String getDirectory(String productId, Candle duration) {
         return (DIRECTORY + FILE_SEPARATOR + productId + FILE_SEPARATOR + duration.description);
     }
 }

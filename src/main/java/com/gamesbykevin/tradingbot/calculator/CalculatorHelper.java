@@ -1,0 +1,230 @@
+package com.gamesbykevin.tradingbot.calculator;
+
+import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
+import com.gamesbykevin.tradingbot.calculator.strategy.*;
+
+import java.util.List;
+
+import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+
+public class CalculatorHelper {
+
+    protected static Strategy createStrategy(TradingStrategy tradingStrategy) {
+
+        //what is our strategy?
+        Strategy strategy;
+
+        //create the correct strategy
+        switch (tradingStrategy) {
+
+            case AE:
+                strategy = new AE();
+                break;
+
+            case BBAR:
+                strategy = new BBAR();
+                break;
+
+            case BBER:
+                strategy = new BBER();
+                break;
+
+            case BBR:
+                strategy = new BBR();
+                break;
+
+            case CA:
+                strategy = new CA();
+                break;
+
+            case EMAR:
+                strategy = new EMAR();
+                break;
+
+            case EMAS:
+                strategy = new EMAS();
+                break;
+
+            case ERS:
+                strategy = new ERS();
+                break;
+
+            case FA:
+                strategy = new FA();
+                break;
+
+            case FADOA:
+                strategy = new FADOA();
+                break;
+
+            case FAO:
+                strategy = new FAO();
+                break;
+
+            case FMFI:
+                strategy = new FMFI();
+                break;
+
+            case HASO:
+                strategy = new HASO();
+                break;
+
+            case MACS:
+                strategy = new MACS();
+                break;
+
+            case MARS:
+                strategy = new MARS();
+                break;
+
+            case MER:
+                strategy = new MER();
+                break;
+
+            case MES:
+                strategy = new MES();
+                break;
+
+            case RA:
+                strategy = new RA();
+                break;
+
+            case RCR:
+                strategy = new RCR();
+                break;
+
+            case SOADX:
+                strategy = new SOADX();
+                break;
+
+            case SOEMA:
+                strategy = new SOEMA();
+                break;
+
+            case SSR:
+                strategy = new SSR();
+                break;
+
+            default:
+                throw new RuntimeException("Strategy not found: " + tradingStrategy);
+        }
+
+        //return our object
+        return strategy;
+    }
+
+    /**
+     * Create our array containing our trading strategies
+     */
+    public static void populateStrategies() {
+
+        //create a new array which will contain our trading strategies
+        if (MY_TRADING_STRATEGIES == null) {
+
+            //make sure we aren't using duplicate strategies
+            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+                for (int j = 0; j < TRADING_STRATEGIES.length; j++) {
+
+                    //don't check the same element
+                    if (i == j)
+                        continue;
+
+                    //if the value already exists we have duplicate strategies
+                    if (TRADING_STRATEGIES[i].trim().equalsIgnoreCase(TRADING_STRATEGIES[j].trim()))
+                        throw new RuntimeException("Duplicate trading strategy in your property file \"" + TRADING_STRATEGIES[i] + "\"");
+                }
+            }
+
+            //create our trading array
+            MY_TRADING_STRATEGIES = new TradingStrategy[TRADING_STRATEGIES.length];
+
+            //temp list of all values so we can check for a match
+            TradingStrategy[] tmp = TradingStrategy.values();
+
+            //make sure the specified strategies exist
+            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+
+                //check each strategy for a match
+                for (int j = 0; j < tmp.length; j++) {
+
+                    //if the spelling matches we have found our strategy
+                    if (tmp[j].toString().trim().equalsIgnoreCase(TRADING_STRATEGIES[i].trim())) {
+
+                        //assign our strategy
+                        MY_TRADING_STRATEGIES[i] = tmp[j];
+
+                        //exit the loop
+                        break;
+                    }
+                }
+
+                //no matching strategy was found throw exception
+                if (MY_TRADING_STRATEGIES[i] == null)
+                    throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
+            }
+        }
+    }
+
+    public static void updateHistory(List<Period> history, double[][] data) {
+
+        //parse each period from the data
+        for (int row = data.length - 1; row >= 0; row--) {
+            updateHistory(history, data[row]);
+        }
+    }
+
+    public static void updateHistory(List<Period> history, double[] data) {
+
+        //create and populate our period
+        Period period = new Period();
+        period.time = (long) data[0];
+        period.low = data[1];
+        period.high = data[2];
+        period.open = data[3];
+        period.close = data[4];
+        period.volume = data[5];
+
+        //check this period against our history and add if missing
+        addHistory(history, period);
+    }
+
+    public static void addHistory(List<Period> history, Period period) {
+
+        //check every period
+        for (int i = 0; i < history.size(); i++) {
+
+            //if the time matches it already exists and no need to continue
+            if (history.get(i).time == period.time)
+                return;
+        }
+
+        //since it wasn't found, add it to the list
+        history.add(period);
+    }
+
+    /**
+     * Sort the list so the most recent period is at the end of the array list
+     * @param history Our current list of history periods
+     */
+    public static void sortHistory(List<Period> history) {
+
+        //sort so the periods are in order from oldest to newest
+        for (int x = 0; x < history.size(); x++) {
+            for (int y = x; y < history.size() - 1; y++) {
+
+                //get the current and next period
+                Period tmp1 = history.get(x);
+                Period tmp2 = history.get(y + 1);
+
+                //if the next object does not have a greater time, we need to swap
+                if (tmp1.time > tmp2.time) {
+
+                    //swap the values
+                    history.set(x,     tmp2);
+                    history.set(y + 1, tmp1);
+                }
+            }
+        }
+    }
+}

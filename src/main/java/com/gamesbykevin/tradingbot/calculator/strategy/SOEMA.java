@@ -7,11 +7,9 @@ import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
 
 /**
  * stochastic oscillator / ema

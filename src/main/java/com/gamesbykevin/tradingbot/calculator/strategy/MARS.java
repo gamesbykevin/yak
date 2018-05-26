@@ -4,13 +4,10 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
-import org.omg.CORBA.PRIVATE_MEMBER;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.hasCrossover;
-import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
 
 /**
  * Moving average ribbon strategy

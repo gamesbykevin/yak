@@ -1,14 +1,17 @@
 package com.gamesbykevin.tradingbot.calculator;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMMA;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.getValue;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.getValue;
 
 public abstract class Calculation {
 
@@ -22,7 +25,7 @@ public abstract class Calculation {
      */
     public static final int PERIODS_RETAIN = 500;
 
-    public abstract void calculate(List<Period> history, int newPeriods);
+    public abstract void calculate(HashMap<Candle, List<Period>> history, int newPeriods);
 
     public abstract void cleanup();
 
@@ -59,7 +62,7 @@ public abstract class Calculation {
         displayMessage(agent, desc + info, write);
     }
 
-    protected double getRecent(List<Period> periods, Period.Fields field) {
+    protected double getRecent(List<Period> periods, Fields field) {
         return getRecent(periods, field, 1);
     }
 

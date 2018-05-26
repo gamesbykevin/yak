@@ -1,6 +1,6 @@
 package com.gamesbykevin.tradingbot.util;
 
-import com.gamesbykevin.tradingbot.calculator.Calculator.Duration;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.io.PrintWriter;
@@ -9,8 +9,8 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.getProductsAllUsd;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_HISTORIC;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.sortHistory;
-import static com.gamesbykevin.tradingbot.calculator.utils.CalculatorHelper.updateHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.updateHistory;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameHistoryTracker;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -63,7 +63,7 @@ public class HistoryTracker implements Runnable {
         for (int index = 0; index < getProductsAllUsd().size(); index++) {
 
             //loop through each duration
-            for (Duration duration : Duration.values()) {
+            for (Candle duration : Candle.values()) {
 
                 //add a tracker for every product/duration combination
                 getTrackers().add(new Tracker(getProductsAllUsd().get(index).getId(), duration));
@@ -165,17 +165,16 @@ public class HistoryTracker implements Runnable {
         return WRITER;
     }
 
-
     /**
      * This class will track the candle history for a particular product and particular duration
      */
     private class Tracker {
 
         private final String productId;
-        private final Duration duration;
+        private final Candle duration;
         private final List<Period> history;
 
-        private Tracker(String productId, Duration duration) {
+        private Tracker(String productId, Candle duration) {
             this.productId = productId;
             this.duration = duration;
             this.history = new ArrayList<>();

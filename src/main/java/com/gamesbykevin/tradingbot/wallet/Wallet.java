@@ -39,7 +39,15 @@ public class Wallet {
         this.fundsBeforeTrade = fundsBeforeTrade;
     }
 
-    public void setFunds(double funds) {
+    public void addFunds(double funds) {
+        setFunds(getFunds() + funds);
+    }
+
+    public void subtractFunds(double funds) {
+        setFunds(getFunds() - funds);
+    }
+
+    private void setFunds(double funds) {
         this.funds = funds;
     }
 
@@ -47,7 +55,15 @@ public class Wallet {
         return this.funds;
     }
 
-    public void setQuantity(float quantity) {
+    public void addQuantity(float quantity) {
+        setQuantity(getQuantity() + quantity);
+    }
+
+    public void subtractQuantity(float quantity) {
+        setQuantity(getQuantity() - quantity);
+    }
+
+    private void setQuantity(float quantity) {
         this.quantity = quantity;
     }
 
