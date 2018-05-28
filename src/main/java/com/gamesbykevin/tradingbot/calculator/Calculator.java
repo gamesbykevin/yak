@@ -196,13 +196,19 @@ public class Calculator {
             strategy.cleanup();
 
             //display info
-            displayMessage("Calculating " + getCandle().description + " " + getStrategies().get(i).getKey() + " Done", manager.getWriter());
+            displayMessage("Calculating " + getCandle().description + " " + getStrategies().get(i).getKey() + " done", manager.getWriter());
         }
+
+        //size before cleanup
+        displayMessage("Cleaning up history: " + getHistory().size(), manager.getWriter());
 
         //let's keep our historical list at a manageable size
         while (getHistory().size() > PERIODS_RETAIN) {
             getHistory().remove(0);
         }
+
+        //size after cleanup
+        displayMessage("Cleaned: " + getHistory().size(), manager.getWriter());
     }
 
     public List<Period> getHistory() {

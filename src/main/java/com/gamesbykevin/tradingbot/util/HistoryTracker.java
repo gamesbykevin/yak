@@ -39,6 +39,9 @@ public class HistoryTracker implements Runnable {
      */
     public HistoryTracker() {
 
+        if (getProductsAllUsd() == null || getProductsAllUsd().isEmpty())
+            throw new RuntimeException("There are no usd products to track...");
+
         //create new thread and start it
         this.thread = new Thread(this);
         this.thread.start();
@@ -57,9 +60,6 @@ public class HistoryTracker implements Runnable {
 
             try {
 
-                //were any files changed?
-                boolean changed = false;
-
                 //check every candle
                 for (int i = 0; i < candles.length; i++) {
 
@@ -72,6 +72,9 @@ public class HistoryTracker implements Runnable {
 
                             //get the product id
                             String productId = getProductsAllUsd().get(j).getId();
+
+                            //display the message
+                            displayMessage("Resuming " + productId + " " + candle.description, getWriter());
 
                             //clear our history list before we load
                             history.clear();
@@ -108,9 +111,9 @@ public class HistoryTracker implements Runnable {
                                 displayMessage("Writing history: " + productId + ", " + candle.description + ", Size: " + history.size(), getWriter());
                                 boolean result = History.write(history, productId, candle);
 
-                                //if writing the file was successful flag it was changed
+                                //if writing the file was successful commit the change
                                 if (result)
-                                    changed = true;
+                                    commitChanges();
                             }
 
                         } catch (Exception e) {
@@ -120,22 +123,13 @@ public class HistoryTracker implements Runnable {
 
                         } finally {
 
+                            //we need to wait for a short while
+                            displayMessage("Sleeping for " + (DELAY/1000L) + " seconds", getWriter());
+
                             //sleep the thread for a short time
                             Thread.sleep(DELAY);
                         }
                     }
-                }
-
-                if (changed) {
-
-                    //display that we are calling the bash script
-                    displayMessage("Running bash script: " + SHELL_SCRIPT_FILE, getWriter());
-
-                    //run shell script to commit file changes into github
-                    Runtime.getRuntime().exec(SHELL_SCRIPT_FILE);
-
-                    //display that we called the bash script
-                    displayMessage("Bash script called", getWriter());
                 }
 
             } catch (Exception ex) {
@@ -144,6 +138,18 @@ public class HistoryTracker implements Runnable {
                 displayMessage(ex, getWriter());
             }
         }
+    }
+
+    protected static final void commitChanges() throws Exception {
+
+        //display that we are calling the bash script
+        displayMessage("Running bash script: " + SHELL_SCRIPT_FILE, getWriter());
+
+        //run shell script to commit file changes into github
+        Runtime.getRuntime().exec(SHELL_SCRIPT_FILE);
+
+        //display that we called the bash script
+        displayMessage("Bash script called", getWriter());
     }
 
     protected static final PrintWriter getWriter() {

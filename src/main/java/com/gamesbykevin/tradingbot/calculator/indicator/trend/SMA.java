@@ -15,9 +15,6 @@ public class SMA extends Indicator {
     //our list of sma values
     private final List<Double> sma;
 
-    //how many periods so we cover
-    private final int periods;
-
     //the fields we want to calculate
     private final List<Fields> fields;
 
@@ -54,20 +51,13 @@ public class SMA extends Indicator {
     public SMA(int periods, List<Fields> fields) {
 
         //call parent
-        super(Indicator.Key.SMA);
-
-        //save the periods
-        this.periods = periods;
+        super(Indicator.Key.SMA, periods);
 
         //which fields are we calculating
         this.fields = fields;
 
         //create new list
         this.sma = new ArrayList<>();
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Fields> getFields() {
@@ -125,7 +115,7 @@ public class SMA extends Indicator {
             }
 
             //add the average to our list
-            getSma().add(sum / (float)periods);
+            getSma().add(sum / (float)getPeriods());
         }
     }
 

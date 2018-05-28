@@ -23,7 +23,7 @@ public abstract class Calculation {
     /**
      * After we perform all our calculations we don't need to retain all values
      */
-    public static final int PERIODS_RETAIN = 500;
+    public static final int PERIODS_RETAIN = 300;
 
     public abstract void cleanup();
 

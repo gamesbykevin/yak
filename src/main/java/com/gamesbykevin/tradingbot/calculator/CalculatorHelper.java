@@ -6,6 +6,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.calculator.Period.*;
 import static com.gamesbykevin.tradingbot.util.History.NOTIFY_LIMIT;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
@@ -159,37 +160,51 @@ public class CalculatorHelper {
 
         //parse each period from the data
         for (int row = data.length - 1; row >= 0; row--) {
-            updateHistory(history, data[row]);
+            addHistory(history, data[row]);
         }
     }
 
-    public static void updateHistory(List<Period> history, double[] data) {
+    private static boolean hasHistory(List<Period> history, long time) {
 
-        //create and populate our period
-        Period period = new Period();
-        period.time = (long) data[0];
-        period.low = data[1];
-        period.high = data[2];
-        period.open = data[3];
-        period.close = data[4];
-        period.volume = data[5];
-
-        //check this period against our history and add if missing
-        addHistory(history, period);
-    }
-
-    public static void addHistory(List<Period> history, Period period) {
-
-        //check every period
+        //check every period for a match
         for (int i = 0; i < history.size(); i++) {
 
-            //if the time matches it already exists and no need to continue
-            if (history.get(i).time == period.time)
-                return;
+            //if the time matches we have the history
+            if (history.get(i).time == time)
+                return true;
         }
 
-        //since it wasn't found, add it to the list
-        history.add(period);
+        //we did not find the history
+        return false;
+    }
+
+    public static void addHistory(List<Period> history, double[] data) {
+        addHistory(history,
+            (long)data[PERIOD_INDEX_TIME],
+            data[PERIOD_INDEX_LOW],
+            data[PERIOD_INDEX_HIGH],
+            data[PERIOD_INDEX_OPEN],
+            data[PERIOD_INDEX_CLOSE],
+            data[PERIOD_INDEX_VOLUME]
+        );
+    }
+
+    public static void addHistory(List<Period> history,
+           long time, double low, double high, double open, double close, double volume) {
+
+        //if we don't have it we can add it
+        if (!hasHistory(history, time)) {
+            Period period = new Period();
+            period.time = time;
+            period.open = open;
+            period.close = close;
+            period.high = high;
+            period.low = low;
+            period.volume = volume;
+
+            //add to our list
+            history.add(period);
+        }
     }
 
     /**

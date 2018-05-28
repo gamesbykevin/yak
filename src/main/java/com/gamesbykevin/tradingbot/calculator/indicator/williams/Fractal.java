@@ -26,9 +26,6 @@ public class Fractal extends Indicator {
         Buy, Sell, Both, None
     }
 
-    //how many periods do we confirm
-    private final int periods;
-
     public Fractal() {
         this(PERIODS_CONFIRM);
     }
@@ -36,10 +33,7 @@ public class Fractal extends Indicator {
     public Fractal(int periods) {
 
         //call parent
-        super(Indicator.Key.F);
-
-        //store our periods
-        this.periods = periods;
+        super(Indicator.Key.F, periods);
 
         //make sure the confirm periods is an odd number
         if (getPeriods() % 2 == 0)
@@ -47,10 +41,6 @@ public class Fractal extends Indicator {
 
         //create our list
         this.statusList = new ArrayList<>();
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Status> getStatusList() {

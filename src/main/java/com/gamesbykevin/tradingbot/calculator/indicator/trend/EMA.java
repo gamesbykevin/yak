@@ -21,9 +21,6 @@ public class EMA extends Indicator {
     //list of configurable values
     public static final int PERIODS = 12;
 
-    //number of periods to calculate this ema
-    private final int periods;
-
     //what is the default fields we will use to calculate
     private static final List<Fields> DEFAULT_FIELDS = new ArrayList<>();
 
@@ -34,21 +31,14 @@ public class EMA extends Indicator {
     public EMA(int periods) {
 
         //call parent
-        super(Indicator.Key.EMA);
+        super(Indicator.Key.EMA, periods);
 
         //create our lists
         this.emaList = new ArrayList<>();
-
-        //store our periods
-        this.periods = periods;
     }
 
     public List<Double> getEma() {
         return this.emaList;
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     private static List<Fields> getDefaultFields() {
@@ -64,7 +54,7 @@ public class EMA extends Indicator {
     public void displayData(Agent agent, boolean write) {
 
         //display the recent ema values which we use as a signal
-        display(agent, "EMA (" + periods + ") :", getEma(), write);
+        display(agent, "EMA (" + getPeriods() + ") :", getEma(), write);
     }
 
     @Override

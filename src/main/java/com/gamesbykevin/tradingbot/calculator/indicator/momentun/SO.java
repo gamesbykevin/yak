@@ -24,8 +24,6 @@ public final class SO extends Indicator {
     private static final int PERIODS_MARKET_RATE_FULL = 3;
     private static final int PERIODS_STOCHASTIC = 3;
 
-    private final int periodsMarketRateBasic;
-
     public SO() {
         this(PERIODS_MARKET_RATE_BASIC, PERIODS_MARKET_RATE_FULL, PERIODS_STOCHASTIC);
     }
@@ -33,9 +31,7 @@ public final class SO extends Indicator {
     public SO(int periodsMarketRateBasic, int periodsMarketRateFull, int periodsStochastic) {
 
         //call parent
-        super(Indicator.Key.SO);
-
-        this.periodsMarketRateBasic = periodsMarketRateBasic;
+        super(Indicator.Key.SO, periodsMarketRateBasic);
 
         //create new list(s)
         this.marketRateBasic = new ArrayList<>();
@@ -44,7 +40,7 @@ public final class SO extends Indicator {
     }
 
     public int getPeriodsMarketRateBasic() {
-        return this.periodsMarketRateBasic;
+        return this.getPeriods();
     }
 
     /**

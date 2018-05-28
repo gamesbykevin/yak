@@ -26,7 +26,7 @@ public class NVI extends Indicator {
     public NVI(int periods) {
 
         //call parent
-        super(Indicator.Key.NVI);
+        super(Indicator.Key.NVI, 0);
 
         //create new lists
         this.cumulative = new ArrayList<>();

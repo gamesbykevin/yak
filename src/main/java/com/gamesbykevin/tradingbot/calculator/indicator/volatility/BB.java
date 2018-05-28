@@ -16,8 +16,7 @@ public class BB extends Indicator {
     //list of configurable values
     public static int PERIODS = 10;
 
-    private final int periods;
-
+    //multiplier could change if desired
     private final float multiplier;
 
     //our lists
@@ -32,12 +31,15 @@ public class BB extends Indicator {
         this(PERIODS, MULTIPLIER);
     }
 
+    public BB(int periods) {
+        this(periods, MULTIPLIER);
+    }
+
     public BB(int periods, float multiplier) {
 
         //call parent
-        super(Indicator.Key.BB);
+        super(Indicator.Key.BB, periods);
 
-        this.periods = periods;
         this.multiplier = multiplier;
 
         //create our lists
@@ -45,10 +47,6 @@ public class BB extends Indicator {
         this.upper = new ArrayList<>();
         this.lower = new ArrayList<>();
         this.width = new ArrayList<>();
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Double> getUpper() {

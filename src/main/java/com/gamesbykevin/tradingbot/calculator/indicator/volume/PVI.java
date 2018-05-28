@@ -26,7 +26,7 @@ public class PVI extends Indicator {
     public PVI(int periods) {
 
         //call parent
-        super(Indicator.Key.PVI);
+        super(Indicator.Key.PVI,0);
 
         //create new objects
         this.cumulative = new ArrayList<>();

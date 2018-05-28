@@ -18,9 +18,6 @@ public class LR extends Indicator {
      */
     private static final int PERIODS = 10;
 
-    //how many periods do we calculate slope
-    private final int periods;
-
     //the slope of our regression line
     private float slope;
 
@@ -37,13 +34,7 @@ public class LR extends Indicator {
     public LR(int periods) {
 
         //call parent
-        super(Indicator.Key.LR);
-
-        this.periods = periods;
-    }
-
-    public int getPeriods() {
-        return this.periods;
+        super(Indicator.Key.LR, periods);
     }
 
     public float getSlope() {

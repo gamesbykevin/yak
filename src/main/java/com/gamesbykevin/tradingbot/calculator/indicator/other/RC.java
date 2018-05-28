@@ -36,7 +36,7 @@ public class RC extends Indicator {
     public RC(int periodsATR, int periodsSMA) {
 
         //call parent
-        super(Indicator.Key.RC);
+        super(Indicator.Key.RC, 0);
 
         //create our object(s)
         this.objATR = new ATR(periodsATR);

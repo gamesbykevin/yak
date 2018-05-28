@@ -28,7 +28,7 @@ public class MarketFacilitationIndex extends Indicator {
     public MarketFacilitationIndex() {
 
         //call parent
-        super(Indicator.Key.MFI);
+        super(Indicator.Key.MFI,0);
 
         //create a new list
         this.marketFacilitationIndex = new ArrayList<>();

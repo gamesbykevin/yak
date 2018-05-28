@@ -23,9 +23,6 @@ public class ADX extends Indicator {
     public static final int PERIODS = 14;
     public static final double TREND = 20.0d;
 
-    //how many periods
-    private final int periods;
-
     //our lists for calculation
     private List<Double> dmPlus;
     private List<Double> dmMinus;
@@ -44,7 +41,7 @@ public class ADX extends Indicator {
     public ADX(int periods) {
 
         //call parent
-        super(Indicator.Key.ADX);
+        super(Indicator.Key.ADX, periods);
 
         //create our lists
         this.adx = new ArrayList<>();
@@ -57,13 +54,6 @@ public class ADX extends Indicator {
         this.tmpDmMinus = new ArrayList<>();
         this.tmpTrueRange = new ArrayList<>();
         this.dmIndex = new ArrayList<>();
-
-        //save our settings
-        this.periods = periods;
-    }
-
-    private int getPeriods() {
-        return this.periods;
     }
 
     public List<Double> getAdx() {

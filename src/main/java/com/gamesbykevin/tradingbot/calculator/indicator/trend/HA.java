@@ -22,8 +22,6 @@ public class HA extends Indicator {
      */
     private static final int PERIODS = 10;
 
-    private final int periods;
-
     public HA() {
         this(PERIODS);
     }
@@ -31,17 +29,10 @@ public class HA extends Indicator {
     public HA(int periods) {
 
         //call parent
-        super(Indicator.Key.HA);
-
-        //save the periods
-        this.periods = periods;
+        super(Indicator.Key.HA, periods);
 
         //create new list
         this.haPeriods = new ArrayList<>();
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Period> getHaPeriods() {

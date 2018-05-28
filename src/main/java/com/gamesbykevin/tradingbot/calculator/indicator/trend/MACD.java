@@ -34,7 +34,7 @@ public class MACD extends Indicator {
     public MACD(int periodsEmaLong, int periodsEmaShort, int periodsSignalLine) {
 
         //call parent
-        super(Indicator.Key.MACD);
+        super(Indicator.Key.MACD, 0);
 
         //create lists and objects
         this.macdLine = new ArrayList<>();

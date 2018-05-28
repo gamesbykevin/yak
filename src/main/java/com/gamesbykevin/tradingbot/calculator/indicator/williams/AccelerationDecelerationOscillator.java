@@ -31,7 +31,7 @@ public class AccelerationDecelerationOscillator extends Indicator {
     public AccelerationDecelerationOscillator(int periods) {
 
         //call parent
-        super(Indicator.Key.ADO);
+        super(Indicator.Key.ADO,0);
 
         //create new indicators
         this.objAwesomeOscillator = new AwesomeOscillator();

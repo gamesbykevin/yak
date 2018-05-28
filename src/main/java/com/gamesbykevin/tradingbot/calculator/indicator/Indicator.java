@@ -7,6 +7,7 @@ import java.util.List;
 
 public abstract class Indicator extends Calculation {
 
+    //we need a way to identify this indicator
     private final Key key;
 
     public enum Key {
@@ -30,8 +31,20 @@ public abstract class Indicator extends Calculation {
         ADO, A, AO, F, MFI
     }
 
-    protected Indicator(Key key) {
+    //each indicator is checking a number of periods
+    private final int periods;
+
+    protected Indicator(Key key, int periods) {
         this.key = key;
+        this.periods = periods;
+
+        //make sure we are retaining enough data
+        if (getPeriods() > PERIODS_RETAIN)
+            throw new RuntimeException("Indicator (" + getKey() + ") is calculating more than (" + PERIODS_RETAIN + ") periods: " + getPeriods());
+    }
+
+    public int getPeriods() {
+        return this.periods;
     }
 
     public Key getKey() {

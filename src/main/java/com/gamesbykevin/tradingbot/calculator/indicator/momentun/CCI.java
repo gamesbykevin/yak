@@ -49,7 +49,7 @@ public class CCI extends Indicator {
     public CCI(int periods, float constantValue) {
 
         //call parent
-        super(Indicator.Key.CCI);
+        super(Indicator.Key.CCI, periods);
 
         //store our constant value
         this.constantValue = constantValue;

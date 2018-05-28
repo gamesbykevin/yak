@@ -7,7 +7,6 @@ import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.HistoryTracker;
@@ -113,6 +112,9 @@ public class Main implements Runnable {
             Thread thread = new Thread(app);
             thread.start();
 
+            //create our history tracker
+            createHistoryTracker(app);
+
         } catch (Exception e) {
             displayMessage("Trading bot not started...");
             e.printStackTrace();
@@ -155,6 +157,14 @@ public class Main implements Runnable {
 
         //load our products we will be trading
         loadProducts();
+    }
+
+    private static void createHistoryTracker(Main main) {
+
+        //create a new history tracker
+        displayMessage("Creating history tracker", main.getWriter());
+        HistoryTracker historyTracker = new HistoryTracker();
+        displayMessage("History tracker created", main.getWriter());
     }
 
     private void loadProducts() {
@@ -216,7 +226,6 @@ public class Main implements Runnable {
         Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
 
         try {
-
 
             //send notification our bot is starting
             sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On (fake money)" : "Off, You are using real funds!!!!!"));
@@ -351,11 +360,6 @@ public class Main implements Runnable {
 
             displayMessage("Websocket is not enabled...", getWriter());
         }
-
-        //create a new history tracker
-        displayMessage("Creating history tracker", getWriter());
-        HistoryTracker historyTracker = new HistoryTracker();
-        displayMessage("History tracker created", getWriter());
     }
 
     protected static List<Product> getProducts() {

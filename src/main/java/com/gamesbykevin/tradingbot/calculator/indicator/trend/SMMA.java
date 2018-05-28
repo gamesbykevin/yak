@@ -17,9 +17,6 @@ public class SMMA extends Indicator {
     //list of our values
     private List<Double> smma;
 
-    //how many periods do we calculate
-    private final int periods;
-
     //the field we want to calculate
     private final List<Fields> fields;
 
@@ -42,10 +39,7 @@ public class SMMA extends Indicator {
     public SMMA(int periods, List<Fields> fields) {
 
         //call parent
-        super(Indicator.Key.SMMA);
-
-        //store our periods
-        this.periods = periods;
+        super(Indicator.Key.SMMA, periods);
 
         //what fields are we checking?
         this.fields = fields;
@@ -56,10 +50,6 @@ public class SMMA extends Indicator {
 
     public List<Double> getSmma() {
         return this.smma;
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Fields> getFields() {

@@ -19,7 +19,7 @@ public class OBV extends Indicator {
     public OBV() {
 
         //call parent
-        super(Indicator.Key.OBV);
+        super(Indicator.Key.OBV,0);
 
         //create list
         this.volume = new ArrayList<>();

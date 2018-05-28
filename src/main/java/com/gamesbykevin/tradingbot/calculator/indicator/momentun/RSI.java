@@ -21,9 +21,6 @@ public class RSI extends Indicator {
     //list of configurable values
     private static final int PERIODS = 14;
 
-    //the number of periods when calculating rsi
-    private final int periods;
-
     public RSI() {
         this(PERIODS);
     }
@@ -31,19 +28,12 @@ public class RSI extends Indicator {
     public RSI(int periods) {
 
         //call parent
-        super(Indicator.Key.RSI);
+        super(Indicator.Key.RSI, periods);
 
         //create new list(s)
         this.valueRSI = new ArrayList<>();
         this.avgGain = new ArrayList<>();
         this.avgLoss = new ArrayList<>();
-
-        //store our periods
-        this.periods = periods;
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Double> getValueRSI() {

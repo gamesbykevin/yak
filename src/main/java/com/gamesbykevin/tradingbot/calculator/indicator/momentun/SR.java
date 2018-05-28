@@ -23,8 +23,6 @@ public class SR extends Indicator {
     public static final double OVER_BOUGHT = .80d;
     public static final double OVER_SOLD = .20d;
 
-    private final int periods;
-
     public SR() {
         this(PERIODS);
     }
@@ -32,10 +30,7 @@ public class SR extends Indicator {
     public SR(int periods) {
 
         //call parent
-        super(Indicator.Key.SR);
-
-        //store the number of periods
-        this.periods = periods;
+        super(Indicator.Key.SR, periods);
 
         //create our rsi object
         this.objRsi = new RSI(periods);
@@ -46,10 +41,6 @@ public class SR extends Indicator {
 
     private RSI getObjRsi() {
         return this.objRsi;
-    }
-
-    private int getPeriods() {
-        return this.periods;
     }
 
     public List<Double> getStochRsi() {

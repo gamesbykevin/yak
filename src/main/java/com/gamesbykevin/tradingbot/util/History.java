@@ -8,6 +8,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.addHistory;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
+import static com.gamesbykevin.tradingbot.calculator.Period.*;
 import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getPrintWriter;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -20,6 +21,11 @@ public class History {
     private static String DIRECTORY = "history";
 
     private static String FILENAME = "candles.txt";
+
+    /**
+     * Character separating each piece of data in the history
+     */
+    private static final String DELIMITER = ",";
 
     /**
      * Display updates when loading files
@@ -65,19 +71,37 @@ public class History {
                         break;
 
                     //the line is a json string we can convert to array
-                    Period data = GSon.getGson().fromJson(line, Period.class);
+                    String[] tmpData = line.split(DELIMITER);
 
                     //add period to our history
-                    addHistory(history, data);
+                    addHistory(history,
+                        Long.parseLong(tmpData[PERIOD_INDEX_TIME]),
+                        Double.parseDouble(tmpData[PERIOD_INDEX_LOW]),
+                        Double.parseDouble(tmpData[PERIOD_INDEX_HIGH]),
+                        Double.parseDouble(tmpData[PERIOD_INDEX_OPEN]),
+                        Double.parseDouble(tmpData[PERIOD_INDEX_CLOSE]),
+                        Double.parseDouble(tmpData[PERIOD_INDEX_VOLUME])
+                    );
+
+                    //Period data = GSon.getGson().fromJson(line, Period.class);
+                    tmpData = null;
+
 
                     //add to our count
                     count++;
                 }
 
+                //recycle
+                bufferedReader.close();
+                bufferedReader = null;
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
+        //mark null
+        directory = null;
 
         //notify user
         displayMessage("Sorting records...");
@@ -106,7 +130,21 @@ public class History {
             PrintWriter pw = getPrintWriter(FILENAME, getDirectory(productId, duration));
 
             for (int i = 0; i < history.size(); i++) {
-                pw.println(GSon.getGson().toJson(history.get(i)));
+
+                //get the current period
+                Period period = history.get(i);
+
+                //write data to file
+                pw.println(
+                    period.time + DELIMITER +
+                    period.low + DELIMITER +
+                    period.high + DELIMITER +
+                    period.open + DELIMITER +
+                    period.close + DELIMITER +
+                    period.volume
+                );
+
+                //pw.println(GSon.getGson().toJson(history.get(i)));
             }
 
             //write all remaining bytes
@@ -114,6 +152,9 @@ public class History {
 
             //close the file
             pw.close();
+
+            //flag null for garbage collection
+            pw = null;
 
             //we have success
             return true;

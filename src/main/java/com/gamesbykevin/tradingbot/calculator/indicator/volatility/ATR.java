@@ -18,9 +18,6 @@ public class ATR extends Indicator {
     //list(s) of true range values
     private List<Double> trueRange, trueRangeAverage;
 
-    //save our periods
-    private final int periods;
-
     public ATR() {
         this(PERIODS);
     }
@@ -28,18 +25,11 @@ public class ATR extends Indicator {
     public ATR(int periods) {
 
         //call parent
-        super(Indicator.Key.ATR);
-
-        //store our setting
-        this.periods = periods;
+        super(Indicator.Key.ATR, periods);
 
         //create our list(s)
         this.trueRange = new ArrayList<>();
         this.trueRangeAverage = new ArrayList<>();
-    }
-
-    public int getPeriods() {
-        return this.periods;
     }
 
     public List<Double> getTrueRange() {
