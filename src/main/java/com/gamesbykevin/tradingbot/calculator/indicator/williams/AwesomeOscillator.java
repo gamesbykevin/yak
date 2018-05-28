@@ -50,6 +50,9 @@ public class AwesomeOscillator extends Indicator {
 
     public AwesomeOscillator(int periodsSmaShort, int periodsSmaLong, List<Fields> fields) {
 
+        //call parent
+        super(Indicator.Key.AO);
+
         //create our indicators
         this.smaShort = new SMA(periodsSmaShort, fields);
         this.smaLong = new SMA(periodsSmaLong, fields);

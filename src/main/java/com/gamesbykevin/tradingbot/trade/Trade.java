@@ -4,6 +4,7 @@ import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentHelper.Action;
+import com.gamesbykevin.tradingbot.agent.AgentHelper.Status;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
@@ -21,6 +22,18 @@ public class Trade {
     private double priceMin;
     private double priceMax;
 
+    //the $ we bought / sold
+    private Double priceBuy;
+    private Double priceSell;
+
+    //the $ fees
+    private Double feeBuy;
+    private Double feeSell;
+
+    //the quantity bought / sold
+    private Float quantityBuy;
+    private Float quantitySell;
+
     //which product is this trade for
     private final String productId;
 
@@ -31,7 +44,7 @@ public class Trade {
     private final long start;
 
     //when did this trade finish?
-    private long finish;
+    private long finish = 0;
 
     //keep track of how many times our trades were not successful
     private int countRejectedBuy = 0;
@@ -74,18 +87,29 @@ public class Trade {
         this.productId = productId;
         this.candle = candle;
 
-        //set default values
-        setPriceMin(0);
-        setPriceMax(0);
-
         //track when this trade first started
         this.start = System.currentTimeMillis();
 
         //create new array to track recent periods
         this.priceHistory = new double[CURRENT_PRICE_HISTORY + 1];
+
+        //reset our values
+        restart();
     }
 
+    /**
+     * Update the trade only if a buy or sell order was filled
+     * @param agent Our agent making the trade
+     */
     public void update(final Agent agent) {
+
+        //we can't continue if we don't have an order
+        if (agent.getOrder() == null)
+            return;
+
+        //we can't continue if the order wasn't filled
+        if (!agent.getOrder().getStatus().equalsIgnoreCase(Status.Filled.getDescription()))
+            return;
 
         //is this transaction a buy or sell?
         boolean buying  = agent.getOrder().getSide().equalsIgnoreCase(Action.Buy.getDescription());
@@ -160,7 +184,6 @@ public class Trade {
                 setResult(Result.Win);
             }
 
-
         }
     }
 
@@ -226,11 +249,19 @@ public class Trade {
     }
 
     public double getFeeBuy() {
-        return getFee(orderBuy);
+
+        if (feeBuy == null)
+            feeBuy = new Double(getFee(getOrderBuy()));
+
+        return feeBuy;
     }
 
     public double getFeeSell() {
-        return getFee(orderSell);
+
+        if (feeSell == null)
+            feeSell = new Double(getFee(getOrderSell()));
+
+        return feeSell;
     }
 
     private double getFee(Order order) {
@@ -253,14 +284,25 @@ public class Trade {
     }
 
     public double getPriceBuy() {
-        return getPrice(getOrderBuy());
+
+        if (priceBuy == null)
+            priceBuy = new Double(getPrice(getOrderBuy()));
+
+        return priceBuy;
     }
 
     public double getPriceSell() {
-        return getPrice(getOrderSell());
+
+        if (priceSell == null)
+            priceSell = new Double(getPrice(getOrderSell()));
+
+        return priceSell;
     }
 
     private double getPrice(Order order) {
+
+        if (order == null)
+            return 0;
 
         //get the purchase price from the order and parse
         BigDecimal price = BigDecimal.valueOf(Double.parseDouble(order.getPrice()));
@@ -273,11 +315,19 @@ public class Trade {
     }
 
     public float getQuantityBuy() {
-        return getQuantity(getOrderBuy());
+
+        if (quantityBuy == null)
+            quantityBuy = new Float(getQuantity(getOrderBuy()));
+
+        return quantityBuy;
     }
 
     public float getQuantitySell() {
-        return getQuantity(getOrderSell());
+
+        if (quantitySell == null)
+            quantitySell = new Float(getQuantity(getOrderSell()));
+
+        return quantitySell;
     }
 
     private float getQuantity(Order order) {
@@ -380,7 +430,13 @@ public class Trade {
         return this.priceHistory;
     }
 
-    public void addPriceHistory(double price) {
+    private void resetPriceHistory() {
+        for (int i = 0; i < getPriceHistory().length; i++) {
+            getPriceHistory()[i] = 0;
+        }
+    }
+
+    public void updatePriceHistory(double price) {
 
         //we don't need to add if it matches the latest price
         if (price == getPriceHistory()[getPriceHistory().length - 1])
@@ -408,10 +464,10 @@ public class Trade {
     public void adjustHardStopPrice(Agent agent, double newPrice) {
 
         //what is the increase we check to see if we set a new hard stop amount
-        double increase = (agent.getWallet().getPurchasePrice() * HARD_STOP_RATIO);
+        double increase = (getPriceBuy() * HARD_STOP_RATIO);
 
         //if the price has increased some more, let's set a new hard stop
-        if (newPrice > getHardStopPrice() + increase && newPrice > agent.getWallet().getPurchasePrice() + increase) {
+        if (newPrice > getHardStopPrice() + increase && newPrice > getPriceBuy() + increase) {
 
             //set our new hard stop limit slightly below the current stock price
             setHardStopPrice(newPrice - increase);
@@ -419,5 +475,37 @@ public class Trade {
             //write hard stop amount to our log file
             displayMessage(agent, "New hard stop $" + getHardStopPrice(), true);
         }
+    }
+
+    public void restart() {
+
+        //remove our orders
+        orderBuy = null;
+        orderSell = null;
+
+        //the $ we bought / sold
+        priceBuy = null;
+        priceSell = null;
+
+        //the quantity bought / sold
+        quantityBuy = null;
+        quantitySell = null;
+
+        //the $ fees
+        feeBuy = null;
+        feeSell = null;
+
+        //set default values
+        setPriceMin(0);
+        setPriceMax(0);
+
+        //reset $
+        setHardStopPrice(0);
+
+        //reset our $ history
+        resetPriceHistory();
+
+        //reset attempts
+        setAttempts(0);
     }
 }

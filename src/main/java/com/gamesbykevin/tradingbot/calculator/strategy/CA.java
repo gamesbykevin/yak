@@ -4,7 +4,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.CCI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
 
@@ -29,6 +29,9 @@ public class CA extends Strategy {
     }
 
     public CA(int periodsCCI, int periodsADX) {
+
+        //call parent
+        super(Key.CA);
 
         //add our indicators
         INDEX_CCI = addIndicator(new CCI(periodsCCI));

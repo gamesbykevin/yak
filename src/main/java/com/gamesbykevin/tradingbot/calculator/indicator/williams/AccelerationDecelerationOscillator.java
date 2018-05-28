@@ -30,6 +30,9 @@ public class AccelerationDecelerationOscillator extends Indicator {
 
     public AccelerationDecelerationOscillator(int periods) {
 
+        //call parent
+        super(Indicator.Key.ADO);
+
         //create new indicators
         this.objAwesomeOscillator = new AwesomeOscillator();
         this.objSimpleMovingAverage = new SMA(periods);

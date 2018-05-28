@@ -1,10 +1,12 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
@@ -21,6 +23,9 @@ public class MARS extends Strategy {
     private int[] INDEXES = {1, 2, 3, 4, 5, 6, 7, 8};
 
     public MARS() {
+
+        //call parent
+        super(Key.MARS);
 
         //first we sort the periods in ascending order
         sortPeriods();

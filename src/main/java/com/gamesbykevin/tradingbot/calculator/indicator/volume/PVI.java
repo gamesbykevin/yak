@@ -25,6 +25,9 @@ public class PVI extends Indicator {
 
     public PVI(int periods) {
 
+        //call parent
+        super(Indicator.Key.PVI);
+
         //create new objects
         this.cumulative = new ArrayList<>();
         this.objEMA = new EMA(periods);

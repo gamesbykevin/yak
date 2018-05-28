@@ -5,9 +5,11 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Exponential Moving Average / Relative Strength Index / Stochastic Oscillator
@@ -32,6 +34,9 @@ public class ERS extends Strategy {
     private static final int PERIODS_SO_STOCHASTIC_SMA = 3;
 
     public ERS() {
+
+        //call parent
+        super(Key.ERS);
 
         //add our indicator objects
         INDEX_EMA_SHORT = addIndicator(new EMA(PERIODS_EMA_SHORT));

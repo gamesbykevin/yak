@@ -1,14 +1,13 @@
 package com.gamesbykevin.tradingbot;
 
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.agent.AgentManager;
-import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
+import com.gamesbykevin.tradingbot.trade.TradeHelper;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
 import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_PERIOD_DURATIONS;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -38,7 +37,7 @@ public class MainHelper {
         text = text + "Started with $" + FUNDS + "\n";
 
         //how long has the bot been running
-        text = text + "Bot Running: " + Transaction.getDurationDesc(System.currentTimeMillis() - START) + "\n\n";
+        text = text + "Bot Running: " + TradeHelper.getDurationDesc(System.currentTimeMillis() - START) + "\n\n";
 
         double total = 0;
 
@@ -55,7 +54,7 @@ public class MainHelper {
             text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.round(assets) + "\n";
 
             //display each agent's funds as well
-            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getAgentDetails();
+            text = text + AgentManagerHelper.getAgentDetails(main.getAgentManagers().get(TRADING_CURRENCIES[i]));
 
             //add line break in the end
             text = text + "\n";
@@ -101,13 +100,13 @@ public class MainHelper {
 
         String result = "";
 
-        if (MY_TRADING_STRATEGIES == null || MY_PERIOD_DURATIONS == null || HARD_STOP_RATIO == null)
+        if (MY_TRADING_STRATEGIES == null)
             return result;
 
         if (DESC == null || TOTALS == null) {
 
-            DESC = new String[MY_TRADING_STRATEGIES.length * MY_PERIOD_DURATIONS.length * HARD_STOP_RATIO.length];
-            TOTALS = new double[MY_TRADING_STRATEGIES.length * MY_PERIOD_DURATIONS.length * HARD_STOP_RATIO.length];
+            DESC = new String[MY_TRADING_STRATEGIES.length];
+            TOTALS = new double[MY_TRADING_STRATEGIES.length];
 
         } else {
 
@@ -122,32 +121,20 @@ public class MainHelper {
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
             //get the current strategy
-            final AgentManager.TradingStrategy strategy = MY_TRADING_STRATEGIES[i];
+            final Strategy.Key key = MY_TRADING_STRATEGIES[i];
 
-            for (int j = 0; j < MY_PERIOD_DURATIONS.length; j++) {
+            double total = 0;
 
-                //get the current duration
-                final Calculator.Duration duration = MY_PERIOD_DURATIONS[j];
-
-                for (int k = 0; k < HARD_STOP_RATIO.length; k++) {
-
-                    //get the current ratio
-                    final float ratio = HARD_STOP_RATIO[k];
-
-                    double total = 0;
-
-                    for (int m = 0; m < main.getProducts().size(); m++) {
-                        total += main.getAgentManagers().get(main.getProducts().get(m).getId()).getTotalAssets(strategy, duration, ratio);
-                    }
-
-                    //assign our data
-                    DESC[index] = strategy.toString() + " - " + duration.description + " - " + ratio + " $" + AgentHelper.round(total) + "\n";
-                    TOTALS[index] = total;
-
-                    //increase index
-                    index++;
-                }
+            for (int m = 0; m < main.getProducts().size(); m++) {
+                total += main.getAgentManagers().get(main.getProducts().get(m).getId()).getTotalAssets(key);
             }
+
+            //assign our data
+            DESC[index] = key.toString() + " $" + AgentHelper.round(total) + "\n";
+            TOTALS[index] = total;
+
+            //increase index
+            index++;
         }
 
         //sort by most $ first
@@ -191,6 +178,6 @@ public class MainHelper {
             return;
 
         //show when the next notification message will be sent
-        displayMessage("Next notification message in " + Transaction.getDurationDesc(NOTIFICATION_DELAY - (System.currentTimeMillis() - PREVIOUS_TIME)));
+        displayMessage("Next notification message in " + TradeHelper.getDurationDesc(NOTIFICATION_DELAY - (System.currentTimeMillis() - PREVIOUS_TIME)));
     }
 }

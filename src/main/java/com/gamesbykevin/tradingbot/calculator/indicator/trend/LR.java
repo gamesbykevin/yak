@@ -3,8 +3,6 @@ package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
-import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
 
 import java.util.List;
 
@@ -37,6 +35,10 @@ public class LR extends Indicator {
     }
 
     public LR(int periods) {
+
+        //call parent
+        super(Indicator.Key.LR);
+
         this.periods = periods;
     }
 

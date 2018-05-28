@@ -6,12 +6,14 @@ import com.gamesbykevin.tradingbot.calculator.indicator.williams.AccelerationDec
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Alligator;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal.Status;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.indicator.williams.Alligator.PERIODS_JAW_OFFSET;
 import static com.gamesbykevin.tradingbot.calculator.indicator.williams.Alligator.PERIODS_LIPS_OFFSET;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Fractals / Acceleration Deceleration Oscillator / Alligator
@@ -30,8 +32,10 @@ public class FADOA extends Strategy {
     private static int INDEX_ALLIGATOR;
     private static int INDEX_OSCILLATOR;
 
-
     public FADOA() {
+
+        //call parent
+        super(Key.FADOA);
 
         //add our indicators
         INDEX_FRACTAL = addIndicator(new Fractal(PERIODS_FRACTAL));

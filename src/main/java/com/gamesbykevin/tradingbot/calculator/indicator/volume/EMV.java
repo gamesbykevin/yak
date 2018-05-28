@@ -33,6 +33,9 @@ public class EMV extends Indicator {
 
     public EMV(int periods) {
 
+        //call parent
+        super(Indicator.Key.EMV);
+
         //create our objects
         this.objSMA = new SMA(periods);
 

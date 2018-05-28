@@ -5,7 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +39,9 @@ public class BBER extends Strategy {
     }
 
     public BBER(int periodsEmaLong, int periodsEmaShort, int periodsBB, float multiplierBB, int periodsRSI, float rsiLine) {
+
+        //call parent
+        super(Key.BBER);
 
         //save our value
         this.rsiLine = rsiLine;

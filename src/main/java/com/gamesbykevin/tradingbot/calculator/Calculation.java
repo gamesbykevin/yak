@@ -25,8 +25,6 @@ public abstract class Calculation {
      */
     public static final int PERIODS_RETAIN = 500;
 
-    public abstract void calculate(HashMap<Candle, List<Period>> history, int newPeriods);
-
     public abstract void cleanup();
 
     protected void cleanup(List<Double> list) {

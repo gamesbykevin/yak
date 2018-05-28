@@ -1,11 +1,13 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -31,6 +33,9 @@ public class MER extends Strategy {
     private static final float RSI_LINE = 50.0f;
 
     public MER() {
+
+        //call parent
+        super(Key.MER);
 
         //add our indicators
         INDEX_EMA_1 = addIndicator(new EMA(PERIODS_EMA_1));

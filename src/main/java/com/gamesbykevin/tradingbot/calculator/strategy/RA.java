@@ -4,9 +4,11 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Relative Strength Index / Average Directional Index
@@ -25,6 +27,9 @@ public class RA extends Strategy {
     public static final float RSI_LOW = 30.0f;
 
     public RA() {
+
+        //call parent
+        super(Key.RA);
 
         //add our indicator objects
         INDEX_RSI = addIndicator(new RSI(PERIODS_RSI));

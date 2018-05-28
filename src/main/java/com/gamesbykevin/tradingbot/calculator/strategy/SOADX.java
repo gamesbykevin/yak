@@ -6,9 +6,11 @@ import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Stochastic Oscillator / Average Directional Index
@@ -38,6 +40,9 @@ public class SOADX extends Strategy {
 
 
     public SOADX() {
+
+        //call parent
+        super(Key.SOADX);
 
         //add our indicators
         INDEX_SO_FULL = addIndicator(new SO(PERIODS_SO_FULL_MARKET, PERIODS_SO_FULL_MARKET_SMA, PERIODS_SO_FULL_OSCILLATOR));

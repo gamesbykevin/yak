@@ -35,6 +35,9 @@ public class Fractal extends Indicator {
 
     public Fractal(int periods) {
 
+        //call parent
+        super(Indicator.Key.F);
+
         //store our periods
         this.periods = periods;
 

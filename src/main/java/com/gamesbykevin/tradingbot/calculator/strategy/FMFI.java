@@ -5,9 +5,11 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal.Status;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.MarketFacilitationIndex;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Fractal / Market Facilitation Index
@@ -22,6 +24,9 @@ public class FMFI extends Strategy {
     private static int INDEX_MARKET;
 
     public FMFI() {
+
+        //call parent
+        super(Key.FMFI);
 
         //add indicators
         INDEX_FRACTAL = addIndicator(new Fractal(PERIODS_FRACTAL));

@@ -5,11 +5,13 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Exponential Moving Average / Simple Moving Average
@@ -33,6 +35,9 @@ public class EMAS extends Strategy {
     }
 
     public EMAS(int emaLong, int emaShort, int smaLong, int smaShort) {
+
+        //call parent
+        super(Key.EMAS);
 
         //add our indicators
         INDEX_EMA_SHORT = addIndicator(new EMA(emaShort));

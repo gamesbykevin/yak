@@ -4,7 +4,7 @@ import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper;
 import com.gamesbykevin.tradingbot.util.Email;
 
 import java.math.BigDecimal;
@@ -12,6 +12,8 @@ import java.math.RoundingMode;
 
 import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.displayMessageLimitIncrease;
+import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.displayMessageStopTrading;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class AgentHelper {
@@ -98,7 +100,7 @@ public class AgentHelper {
             this.description = description;
         }
 
-        private String getDescription() {
+        public String getDescription() {
             return this.description;
         }
     }
@@ -231,7 +233,7 @@ public class AgentHelper {
             displayMessage(agent, message, true);
 
             //stop trading
-            agent.setStopTrading(true);
+            agent.setStop(true);
 
             //send notification message
             Email.sendEmail("We stopped trading because we are unable to " + action.getDescription() + " " + product.getId(), message);
@@ -347,50 +349,24 @@ public class AgentHelper {
     protected static void checkStanding(Agent agent) {
 
         //if we lost too much money and have no quantity pending, we will stop trading
-        if (agent.getWallet().getFunds() < (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade()) && agent.getWallet().getQuantity() <= 0)
-            agent.setStopTrading(true);
+        if (agent.getWallet().getFunds() < (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade()) && agent.getWallet().getQuantity() <= 0) {
+
+            //flag the agent to stop
+            agent.setStop(true);
+
+            //send notify message
+            displayMessageStopTrading(agent);
+        }
 
         //if our money has gone up, increase the stop trading limit
         if (agent.getWallet().getFunds() > agent.getWallet().getFundsBeforeTrade()) {
 
-            final double oldRatio = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
+            final double oldLimit = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
             agent.getWallet().setFundsBeforeTrade(agent.getWallet().getFunds());
-            final double newRatio = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
-            displayMessage(agent, "Good news, stop trading limit has increased", true);
-            displayMessage(agent, "    Funds $" + AgentHelper.round(agent.getWallet().getFunds()), true);
-            displayMessage(agent, "Old limit $" + AgentHelper.round(oldRatio), true);
-            displayMessage(agent, "New limit $" + AgentHelper.round(newRatio), true);
-            displayMessage(agent, "If your funds fall below the new limit we will stop trading", true);
+            final double newLimit = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
+            displayMessageLimitIncrease(agent, oldLimit, newLimit);
         }
 
-        //notify if this agent has stopped trading
-        if (agent.hasStopTrading()) {
-
-            String subject = "We stopped trading";
-            String text6 = "Started $" + AgentHelper.round(agent.getWallet().getInitialFunds());
-            String text1 = "Funds   $" + AgentHelper.round(agent.getWallet().getFunds());
-            String text2 = "Limit   $" + AgentHelper.round(STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
-            String text3 = "Min     $" + AgentHelper.round(agent.getFundsMin());
-            String text4 = "Max     $" + AgentHelper.round(agent.getFundsMax());
-            String text5 = "Fees    $" + AgentHelper.round(TransactionHelper.getTotalFees(agent));
-            displayMessage(agent, subject, true);
-            displayMessage(agent, text6, true);
-            displayMessage(agent, text1, true);
-            displayMessage(agent, text2, true);
-            displayMessage(agent, text3, true);
-            displayMessage(agent, text4, true);
-            displayMessage(agent, text5, true);
-
-            //include the funds in our message
-            String message = text6 + "\n" + text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n" + text5 + "\n";
-
-            //also include the summary of wins/losses
-            message += TransactionHelper.getDescWins(agent) + "\n";
-            message += TransactionHelper.getDescLost(agent) + "\n";
-
-            //send email notification
-            Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getTradingStrategy() + "-" + agent.getDuration().description + "-" + agent.getHardStopRatio() + ")", message);
-        }
     }
 
     public static BigDecimal round(double number) {

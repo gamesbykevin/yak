@@ -1,28 +1,27 @@
 package com.gamesbykevin.tradingbot.calculator;
 
 import com.gamesbykevin.tradingbot.agent.AgentManager;
-import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.History;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
 import static com.gamesbykevin.tradingbot.calculator.Calculation.PERIODS_RETAIN;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.createStrategy;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistory;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.updateHistory;
+import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class Calculator {
 
     //track our historical data for every candle duration
-    private HashMap<Candle, List<Period>> history;
+    private List<Period> history;
+
+    //all of the strategies we are trading
+    private List<Strategy> strategies;
 
     //how long do we pause after our service call, this is to help prevent 429 errors (rate limit exceeded)
     private static final long DELAY = 500L;
@@ -38,16 +37,13 @@ public class Calculator {
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
 
-    //we will have the same strategy for each candle
-    private List<Strategy> strategies;
-
     //the product id
     private final String productId;
 
     /**
      * Our list of chosen trading strategies
      */
-    public static TradingStrategy[] MY_TRADING_STRATEGIES;
+    public static Strategy.Key[] MY_TRADING_STRATEGIES;
 
     public enum Candle {
 
@@ -67,9 +63,6 @@ public class Calculator {
         //text description of this candle
         public final String description;
 
-        //when is the last time this candle has been updated
-        public long timestamp = 0;
-
         Candle(long duration, String description, int frequency) {
             this.duration = duration;
             this.description = description;
@@ -77,26 +70,28 @@ public class Calculator {
         }
     }
 
-    public Calculator(String productId, PrintWriter writer) {
+    //which candle duration is this calculator for?
+    private final Candle candle;
+
+    //when was the last time we updated our data
+    private long timestamp = 0;
+
+    public Calculator(Candle candle, String productId, PrintWriter writer) {
+
+        //save the candle for this calculator
+        this.candle = candle;
+
+        //make sure we have the correct strategies
+        populateStrategies();
 
         //the product this calculator is for
         this.productId = productId;
 
-        //we want to track all durations
-        for (int j = 0; j < Candle.values().length; j++) {
+        //populate the list based on existing file data
+        History.load(getHistory(), productId, candle, writer);
 
-            //what is the current candle
-            Candle duration = Candle.values()[j];
-
-            //we need to add an empty list for the candle duration before we populate it
-            getHistory().put(duration, new ArrayList<>());
-
-            //populate the list based on existing file data
-            History.load(getHistory().get(duration), productId, duration, writer);
-
-            //update the previous run time, so it runs immediately since we don't have data yet
-            duration.timestamp = System.currentTimeMillis() - (duration.duration * 1000);
-        }
+        //update the previous run time, so it runs immediately since we don't have data yet
+        timestamp = System.currentTimeMillis() - (candle.duration * 1000);
 
         //create all strategies and add to our list
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
@@ -109,81 +104,71 @@ public class Calculator {
         //were we successful
         boolean result = false;
 
-        //we want to track all durations
-        for (int j = 0; j < Candle.values().length; j++) {
+        try {
 
-            //the current candle duration
-            Candle duration = Candle.values()[j];
+            //how much time has passed
+            long lapsed = System.currentTimeMillis() - this.timestamp;
 
-            try {
+            //time required to pass
+            long minimum = (getCandle().duration / getCandle().frequency) * 1000L;
 
-                //how much time has passed
-                long lapsed = System.currentTimeMillis() - duration.timestamp;
+            //has enough time passed to retrieve more candle data
+            if (lapsed >= minimum) {
 
-                //time required to pass
-                long minimum = (duration.duration / duration.frequency) * 1000L;
+                //display message as sometimes the call is not successful
+                displayMessage("Making rest call to retrieve history " + productId + " (" + candle.description + ")", null);
 
-                //has enough time passed to retrieve more candle data
-                if (lapsed >= minimum) {
+                //make our rest call and get the json response
+                String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, candle.duration));
 
-                    //display message as sometimes the call is not successful
-                    displayMessage("Making rest call to retrieve history " + productId + " (" + duration.description + ")", null);
+                //convert json text to multi array
+                double[][] data = GSon.getGson().fromJson(json, double[][].class);
 
-                    //make our rest call and get the json response
-                    String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, duration.duration));
+                //make sure we have data before we update
+                if (data != null && data.length > 0) {
 
-                    //convert json text to multi array
-                    double[][] data = GSon.getGson().fromJson(json, double[][].class);
+                    //store the size
+                    final int size = getHistory().size();
 
-                    //make sure we have data before we update
-                    if (data != null && data.length > 0) {
+                    //update our history list with potential new data
+                    updateHistory(getHistory(), data);
 
-                        //get data for the current candle
-                        List<Period> tmpHistory = getHistory().get(duration);
+                    //sort the history
+                    sortHistory(getHistory());
 
-                        //store the size
-                        final int size = tmpHistory.size();
+                    //let's see if the size changed
+                    final int change = getHistory().size();
 
-                        //update our history list with potential new data
-                        updateHistory(tmpHistory, data);
+                    //if a new candle has been added re-calculate our strategies
+                    if (size != change)
+                        calculate(manager, size > change ? size - change : change - size);
 
-                        //sort the history
-                        sortHistory(tmpHistory);
+                    //rest call is successful
+                    displayMessage("Rest call successful. History size: " + change, (change != size) ? manager.getWriter() : null);
 
-                        //let's see if the size changed
-                        final int change = tmpHistory.size();
+                    //we are successful
+                    result = true;
 
-                        //if a new candle has been added re-calculate our strategies
-                        if (size != change)
-                            calculate(manager, size > change ? size - change : change - size);
+                    //update the last successful run
+                    this.timestamp = System.currentTimeMillis();
 
-                        //rest call is successful
-                        displayMessage("Rest call successful. History size: " + change, (change != size) ? manager.getWriter() : null);
+                } else {
 
-                        //we are successful
-                        result = true;
+                    //flag our result false
+                    result = false;
 
-                        //update the last successful run
-                        duration.timestamp = System.currentTimeMillis();
-
-                    } else {
-
-                        //flag our result false
-                        result = false;
-
-                        //rest call isn't successful
-                        displayMessage("Rest call is NOT successful.", manager.getWriter());
-                    }
-
-                    //we want to limit the time between each service call to prevent too many request errors
-                    Thread.sleep(DELAY);
+                    //rest call isn't successful
+                    displayMessage("Rest call is NOT successful.", manager.getWriter());
                 }
 
-            } catch (Exception e) {
-
-                //display our message and write to the log file
-                displayMessage(e, manager.getWriter());
+                //we want to prevent too many request errors
+                Thread.sleep(DELAY);
             }
+
+        } catch (Exception e) {
+
+            //display our message and write to the log file
+            displayMessage(e, manager.getWriter());
         }
 
         //return our result
@@ -199,7 +184,7 @@ public class Calculator {
             Strategy strategy = getStrategies().get(i);
 
             //display info
-            displayMessage("Calculating " + getStrategies().get(i).getClass() + "...", manager.getWriter());
+            displayMessage("Calculating " + getCandle().description + " " + getStrategies().get(i).getKey() + "...", manager.getWriter());
 
             //flag the strategy as no longer waiting for new candle data
             strategy.setWait(false);
@@ -211,26 +196,20 @@ public class Calculator {
             strategy.cleanup();
 
             //display info
-            displayMessage("Calculating " + getStrategies().get(i).getClass() + " Done", manager.getWriter());
+            displayMessage("Calculating " + getCandle().description + " " + getStrategies().get(i).getKey() + " Done", manager.getWriter());
         }
 
-        //let's keep our list at a manageable size
-        for (int i = 0; i < Candle.values().length; i++) {
-
-            //get the current history list
-            List<Period> tmpHistory = getHistory().get(Candle.values()[i]);
-
-            while (tmpHistory.size() > PERIODS_RETAIN) {
-                tmpHistory.remove(0);
-            }
+        //let's keep our historical list at a manageable size
+        while (getHistory().size() > PERIODS_RETAIN) {
+            getHistory().remove(0);
         }
     }
 
-    private HashMap<Candle, List<Period>> getHistory() {
+    public List<Period> getHistory() {
 
         //instantiate if null
         if (this.history == null)
-            this.history = new HashMap<>();
+            this.history = new ArrayList<>();
 
         return this.history;
     }
@@ -242,5 +221,22 @@ public class Calculator {
             this.strategies = new ArrayList<>();
 
         return this.strategies;
+    }
+
+    public Strategy getStrategy(Strategy.Key key) {
+
+        for (int i = 0; i < getStrategies().size(); i++) {
+
+            //return if the key matches
+            if (getStrategies().get(i).getKey() == key)
+                return getStrategies().get(i);
+        }
+
+        //return null if nothing matched (this shouldn't happen)
+        return null;
+    }
+
+    public Candle getCandle() {
+        return this.candle;
     }
 }

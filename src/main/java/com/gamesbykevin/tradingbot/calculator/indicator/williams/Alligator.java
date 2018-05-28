@@ -29,6 +29,9 @@ public class Alligator extends Indicator {
 
     public Alligator(int periodsJaw, int periodsTeeth, int periodsLips) {
 
+        //call parent
+        super(Indicator.Key.A);
+
         //add the fields we want to use for the smma
         List<Period.Fields> fields = new ArrayList<>();
         fields.add(Fields.High);

@@ -13,12 +13,10 @@ public class Wallet {
     //quantity of stock we bought
     private float quantity = 0;
 
-    //the price we bought the stock
-    private double purchasePrice = 0;
-
     //how many funds did we start with before our next trade
     private double fundsBeforeTrade;
 
+    //how many funds did we start with overall
     private final double initialFunds;
 
     public Wallet(double funds) {
@@ -69,13 +67,5 @@ public class Wallet {
 
     public float getQuantity() {
         return this.quantity;
-    }
-
-    public void setPurchasePrice(final double purchasePrice) {
-        this.purchasePrice = purchasePrice;
-    }
-
-    public double getPurchasePrice() {
-        return this.purchasePrice;
     }
 }

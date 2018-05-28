@@ -43,6 +43,9 @@ public class ADX extends Indicator {
 
     public ADX(int periods) {
 
+        //call parent
+        super(Indicator.Key.ADX);
+
         //create our lists
         this.adx = new ArrayList<>();
         this.dmPlusIndicator = new ArrayList<>();

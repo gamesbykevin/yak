@@ -1,13 +1,15 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.volume.ADL;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
@@ -42,6 +44,9 @@ public class BBAR extends Strategy {
     }
 
     public BBAR(int periodsBB, float multiplier, int periodsRSI) {
+
+        //call parent
+        super(Key.BBAR);
 
         //add our indicator objects
         INDEX_ADL = addIndicator(new ADL());

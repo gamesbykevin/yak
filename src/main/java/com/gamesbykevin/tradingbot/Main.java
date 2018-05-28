@@ -136,9 +136,9 @@ public class Main implements Runnable {
 
         } else {
 
-            //if we are using real money, let's only focus on 1 trading strategy and 1 ratio
-            if (TRADING_STRATEGIES.length != 1 || HARD_STOP_RATIO.length != 1)
-                throw new RuntimeException("When using real money you can only have 1 strategy, 1 hard stop ratio");
+            //if we are using real money, let's only focus on 1 trading strategy
+            if (TRADING_STRATEGIES.length != 1)
+                throw new RuntimeException("When using real money you can only have 1 strategy");
 
             //display message and pause if using real money
             displayMessage("WARNING: We are trading with real money!!!!!!!!!!!", getWriter());
@@ -160,6 +160,8 @@ public class Main implements Runnable {
     private void loadProducts() {
 
         try {
+
+            //make the service call to gdax to get all coins
             List<Product> tmp = productService.getProducts();
 
             //create new list of products we want to trade
@@ -185,7 +187,7 @@ public class Main implements Runnable {
                     }
                 }
 
-                //add all us products to this list
+                //add all US $ products to this list
                 if (tmp.get(i).getId().trim().contains("-USD"))
                     PRODUCTS_ALL_USD.add(tmp.get(i));
             }
@@ -200,7 +202,7 @@ public class Main implements Runnable {
         }
 
         //make sure we are trading at least 1 product
-        if (getProducts().isEmpty())
+        if (getProducts().isEmpty() || PRODUCTS_ALL_USD.isEmpty())
             throw new RuntimeException("No products were found");
     }
 
@@ -309,12 +311,6 @@ public class Main implements Runnable {
 
         //create new hash map of agents
         this.agentManagers = new HashMap<>();
-
-        //populate our specified strategies
-        Calculator.populateStrategies();
-
-        //populate our desired candle durations
-        Calculator.populateDurations();
 
         //add an agent for each product we are trading
         for (int i = 0; i < getProducts().size(); i++) {

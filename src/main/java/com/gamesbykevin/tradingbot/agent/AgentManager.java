@@ -3,15 +3,16 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.updateAgents;
+import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.*;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
@@ -22,7 +23,7 @@ public class AgentManager {
     private List<Agent> agents;
 
     //our reference to the calculator
-    private Calculator calculator;
+    private List<Calculator> calculators;
 
     //are we updating the agent?
     private boolean working = false;
@@ -39,17 +40,6 @@ public class AgentManager {
     //how many funds did we start with
     private final double funds;
 
-    /**
-     * Different trading strategies we can use
-     */
-    public enum StrategyKey {
-        AE,     BBAR,   BBER,   BBR,    CA,
-        EMAR,   EMAS,   ERS,    FA,     FADOA,
-        FAO,    FMFI,   HASO,   MACS,   MARS,
-        MER,    MES,    RA,     RCR,    SOADX,
-        SOEMA,  SSR
-    }
-
     public AgentManager(final Product product, final double funds) {
 
         //store the product this agent is trading
@@ -58,15 +48,11 @@ public class AgentManager {
         //how many funds do we start with?
         this.funds = funds;
 
-        //create new calculator and perform our initial calculations
-        this.calculator = new Calculator(getProductId(), getWriter());
-        this.calculator.calculate(this, 0);
-
-        //create our agents last
-        createAgents();
-    }
-
-    private void createAgents() {
+        //create new calculator for each candle duration and perform our initial calculations
+        for (Candle candle : Candle.values()) {
+            getCalculators().add(new Calculator(candle, getProductId(), getWriter()));
+            getCalculators().get(getCalculators().size() - 1).calculate(this, 0);
+        }
 
         //create our list of agents
         this.agents = new ArrayList<>();
@@ -74,18 +60,11 @@ public class AgentManager {
         //create an agent for each strategy
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
-            //create an agent for each hard stop ratio
-            for (int j = 0; j < HARD_STOP_RATIO.length; j++) {
+            //create our agent
+            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], Candle.OneMinute);
 
-                //create our agent
-                Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], MY_PERIOD_DURATIONS[k]);
-
-                //assign the hard stop ratio
-                agent.setHardStopRatio(HARD_STOP_RATIO[j]);
-
-                //add agent to the list
-                getAgents().add(agent);
-            }
+            //add agent to the list
+            getAgents().add(agent);
         }
     }
 
@@ -108,7 +87,7 @@ public class AgentManager {
         try {
 
             //update our calculator, etc...
-            calculator.update(this);
+            updateCalculators(this);
 
             //update our agents
             updateAgents(this);
@@ -124,60 +103,6 @@ public class AgentManager {
             //last step is to make that we are done working
             working = false;
         }
-    }
-
-    public String getAgentDetails() {
-
-        String result = "\n";
-
-        //sort the agents to show which are most profitable
-        for (int i = 0; i < getAgents().size(); i++) {
-            for (int j = i; j <  getAgents().size(); j++) {
-
-                //don't check the same agent
-                if (i == j)
-                    continue;
-
-                Agent agent1 = getAgents().get(i);
-                Agent agent2 = getAgents().get(j);
-
-                //if the next agent has more funds, switch
-                if (getAssets(agent2) > getAssets(agent1)) {
-
-                    //switch positions of our agents
-                    getAgents().set(i, agent2);
-                    getAgents().set(j, agent1);
-                }
-            }
-        }
-
-        //message with all agent totals
-        for (int i = 0; i < getAgents().size(); i++) {
-
-            Agent agent = getAgents().get(i);
-
-            //start with product, strategy, hard stop ratio, and candle duration
-            result += getProductId() + " : " + agent.getTradingStrategy() + ", " + agent.getDuration().description + ", " + agent.getHardStopRatio();
-
-            //how much $ does the agent currently have
-            result += " - $" + AgentHelper.round(getAssets(agent));
-
-            //add our min value
-            result += ",  Min $" + AgentHelper.round(agent.getFundsMin());
-
-            //add our max value
-            result += ",  Max $" + AgentHelper.round(agent.getFundsMax());
-
-            //if this agent has stopped trading, include it in the message
-            if (agent.hasStopTrading())
-                result += ", (Stopped)";
-
-            //make new line
-            result += "\n";
-        }
-
-        //return our result
-        return result;
     }
 
     public double getTotalAssets() {
@@ -204,21 +129,18 @@ public class AgentManager {
         return getAssets(agent);
     }
 
-    public double getTotalAssets(StrategyKey strategyKey, Candle duration, float ratio) {
+    public double getTotalAssets(Strategy.Key key) {
 
         for (int i = 0; i < getAgents().size(); i++) {
 
             Agent agent = getAgents().get(i);
 
-            if (agent.getDuration() == duration &&
-                agent.getHardStopRatio() == ratio &&
-                agent.getTradingStrategy() == strategyKey)
+            if (agent.getStrategyKey() == key)
                 return getAssets(agent);
         }
 
         return 0;
     }
-
 
     private double getAssets(Agent agent) {
         return agent.getAssets(getCurrentPrice());
@@ -268,11 +190,31 @@ public class AgentManager {
         for (int i = 0; i < getAgents().size(); i++) {
 
             //if one agent is still trading, return false
-            if (!getAgents().get(i).hasStopTrading())
+            if (!getAgents().get(i).hasStop())
                 return false;
         }
 
         //all agents are done return true
         return true;
+    }
+
+    public List<Calculator> getCalculators() {
+
+        if (this.calculators == null)
+            this.calculators = new ArrayList<>();
+
+        return this.calculators;
+    }
+
+    public Calculator getCalculator(Candle candle) {
+
+        for (int i = 0; i < getCalculators().size(); i++) {
+
+            if (getCalculators().get(i).getCandle() == candle)
+                return getCalculators().get(i);
+        }
+
+        //if nothing was found return null (shouldn't happen)
+        return null;
     }
 }

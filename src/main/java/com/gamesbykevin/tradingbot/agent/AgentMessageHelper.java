@@ -2,29 +2,44 @@ package com.gamesbykevin.tradingbot.agent;
 
 import com.gamesbykevin.tradingbot.trade.Trade.Result;
 import com.gamesbykevin.tradingbot.trade.TradeHelper;
+import com.gamesbykevin.tradingbot.util.Email;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class AgentMessageHelper {
 
-    protected static void displayMessageOrderPending(Agent agent, double currentPrice) {
+    protected static void displayMessageLimitIncrease(Agent agent, double oldLimit, double newLimit) {
+        displayMessage(agent, "Good news, stop trading limit has increased", true);
+        displayMessage(agent, "    Funds $" + AgentHelper.round(agent.getWallet().getFunds()), true);
+        displayMessage(agent, "Old limit $" + AgentHelper.round(oldLimit), true);
+        displayMessage(agent, "New limit $" + AgentHelper.round(newLimit), true);
+        displayMessage(agent, "If your funds fall below the new limit we will stop trading", true);
+    }
 
-        //construct message
-        String message = "Waiting. Product " + agent.getProductId();
-        message += " Current $" + currentPrice;
+    protected static void displayMessageStopTrading(Agent agent) {
 
-        if (agent.getTrade().getOrderBuy() != null) {
-            message += ", Purchase $" + round(agent.getWallet().getPurchasePrice());
-        } else {
-            message += ", Purchase $" + round(agent.getTrade().getPriceBuy());
-        }
+        String subject = "We stopped trading";
+        String text1 = "Started $" + AgentHelper.round(agent.getWallet().getInitialFunds());
+        String text2 = "Funds   $" + AgentHelper.round(agent.getWallet().getFunds());
+        String text3 = "Limit   $" + AgentHelper.round(STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
+        String text4 = "Fees    $" + AgentHelper.round(TradeHelper.getTotalFees(agent));
+        displayMessage(agent, subject, true);
+        displayMessage(agent, text1, true);
+        displayMessage(agent, text2, true);
+        displayMessage(agent, text3, true);
+        displayMessage(agent, text4, true);
 
-        message += ", Hard Stop $" + round(agent.getTrade().getHardStopPrice());
-        message += ", Quantity: " + agent.getWallet().getQuantity();
+        //include the funds in our message
+        String message = text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n";
 
-        //we are waiting
-        displayMessage(agent, message, true);
+        //also include the summary of wins/losses
+        message += TradeHelper.getDescWins(agent) + "\n";
+        message += TradeHelper.getDescLost(agent) + "\n";
+
+        //send email notification
+        Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getStrategyKey() + ")", message);
     }
 
     protected static void displayMessageAllTradesSummary(Agent agent) {
@@ -48,18 +63,17 @@ public class AgentMessageHelper {
 
     }
 
-    protected static void displayMessageCheckSellWaiting(Agent agent, double currentPrice) {
+    protected static void displayMessageOrderPending(Agent agent, double currentPrice) {
 
         //construct message
         String message = "Waiting. Product " + agent.getProductId();
-        message += " Current $" + currentPrice;
-        message += ", Purchase $" + agent.getWallet().getPurchasePrice();
+        message += ", Current $" + currentPrice;
+        message += ", Purchase $" + round(agent.getTrade().getPriceBuy());
         message += ", Hard Stop $" + round(agent.getTrade().getHardStopPrice());
         message += ", Quantity: " + agent.getWallet().getQuantity();
 
         //we are waiting
         displayMessage(agent, message, true);
-
     }
 
     protected static void displayMessagePriceDecline(Agent agent) {

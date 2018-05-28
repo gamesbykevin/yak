@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 
 public abstract class Strategy extends Calculation {
 
@@ -23,16 +23,33 @@ public abstract class Strategy extends Calculation {
     //list of indicators we are using
     private List<Indicator> indicators;
 
-    protected Strategy() {
-        //default constructor
+    /**
+     * Different trading strategies we can use
+     */
+    public enum Key {
+        AE,     BBAR,   BBER,   BBR,    CA,
+        EMAR,   EMAS,   ERS,    FA,     FADOA,
+        FAO,    FMFI,   MACS,   MARS,   MER,
+        MES,    RA,     SOADX,  SSR
+    }
+
+    private final Key key;
+
+    protected Strategy(Key key) {
+        this.key = key;
+    }
+
+    public Key getKey() {
+        return this.key;
     }
 
     protected int addIndicator(Indicator indicator) {
 
-        //add at the end of the list
+        //add the indicator to the list
         getIndicators().add(indicator);
 
-        return getIndicators().size() - 1;
+        //return the index of the indicator
+        return (getIndicators().size() - 1);
     }
 
     protected Indicator getIndicator(int index) {
@@ -43,8 +60,8 @@ public abstract class Strategy extends Calculation {
      * Get the list of indicators for this strategy
      * @return List of existing indicators
      */
-    private List<Indicator> getIndicators() {
-
+    private List<Indicator> getIndicators()
+    {
         if (this.indicators == null)
             this.indicators = new ArrayList<>();
 
@@ -54,15 +71,14 @@ public abstract class Strategy extends Calculation {
     @Override
     public final void displayData(Agent agent, boolean write) {
 
-        for (int index = 0; index < getIndicators().size(); index++) {
+        for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).displayData(agent, write);
         }
     }
 
-    @Override
-    public final void calculate(HashMap<Candle, List<Period>> history, int newPeriods) {
+    public final void calculate(List<Period> history, int newPeriods) {
 
-        for (int index = 0; index < getIndicators().size(); index++) {
+        for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).calculate(history, newPeriods);
         }
     }
@@ -70,7 +86,7 @@ public abstract class Strategy extends Calculation {
     @Override
     public final void cleanup() {
 
-        for (int index = 0; index < getIndicators().size(); index++) {
+        for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).cleanup();
         }
     }
@@ -78,18 +94,15 @@ public abstract class Strategy extends Calculation {
     public void adjustHardStopPrice(Agent agent, double currentPrice) {
 
         //figure out our increase and get half of that
-        double increase = ((agent.getWallet().getPurchasePrice() * agent.getHardStopRatio()) * ADJUST_HARD_STOP_RATIO);
+        double increase = ((agent.getTrade().getPriceBuy() * HARD_STOP_RATIO) * ADJUST_HARD_STOP_RATIO);
 
         //adjust our hard stop price around the current price to protect our investment
-        agent.adjustHardStopPrice(currentPrice + increase);
-
-        //if there is no reason to sell, let's write our data to the log file
-        displayData(agent, agent.getReasonSell() == null);
+        agent.getTrade().adjustHardStopPrice(agent, currentPrice + increase);
     }
 
-    public abstract void checkBuySignal(Agent agent, HashMap<Candle, List<Period>> history, double currentPrice);
+    public abstract void checkBuySignal(Agent agent, List<Period> history, double currentPrice);
 
-    public abstract void checkSellSignal(Agent agent, HashMap<Candle, List<Period>> history, double currentPrice);
+    public abstract void checkSellSignal(Agent agent, List<Period> history, double currentPrice);
 
     /**
      * Does the strategy need to wait?

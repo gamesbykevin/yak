@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
 
 public class PropertyUtil {
@@ -109,7 +110,10 @@ public class PropertyUtil {
         }
 
         //what hard stop ratio do we use to test our simulations?
-        AgentHelper.HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
+        HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
+
+        if (HARD_STOP_RATIO <= 0)
+            throw new RuntimeException("Hard stop ratio has to be greater than 0");
 
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));

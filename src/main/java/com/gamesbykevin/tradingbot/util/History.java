@@ -24,19 +24,19 @@ public class History {
     /**
      * Display updates when loading files
      */
-    private static final int NOTIFY_LIMIT = 1500;
+    public static final int NOTIFY_LIMIT = 2500;
 
-    public static synchronized void load(List<Period> history, String productId, Candle duration, PrintWriter writer) {
+    public static synchronized void load(List<Period> history, String productId, Candle candle, PrintWriter writer) {
 
         //get the directory where our history is stored
-        File directory = new File(getDirectory(productId, duration));
+        File directory = new File(getDirectory(productId, candle));
 
         //if the directory does not exist, there is nothing to load
         if (!directory.exists())
             return;
 
         //start loading history
-        displayMessage("Loading history: " + getDirectory(productId, duration), writer);
+        displayMessage("Loading history: " + getDirectory(productId, candle), writer);
 
         //how big is our history
         final int size = history.size();
@@ -55,7 +55,7 @@ public class History {
                 while(true) {
 
                     if (count % NOTIFY_LIMIT == 0)
-                        displayMessage("Count: " + count);
+                        displayMessage(productId + " " + candle.description + " count: " + count);
 
                     //read the line in the text file
                     final String line = bufferedReader.readLine();
@@ -95,7 +95,7 @@ public class History {
         displayMessage(change + " records added", writer);
 
         //we are done loading history
-        displayMessage("Done loading history: " + getDirectory(productId, duration), writer);
+        displayMessage("Done loading history: " + getDirectory(productId, candle), writer);
     }
 
     protected static synchronized boolean write(List<Period> history, String productId, Candle duration) {

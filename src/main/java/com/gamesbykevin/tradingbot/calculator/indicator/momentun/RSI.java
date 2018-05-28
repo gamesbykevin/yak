@@ -30,6 +30,9 @@ public class RSI extends Indicator {
 
     public RSI(int periods) {
 
+        //call parent
+        super(Indicator.Key.RSI);
+
         //create new list(s)
         this.valueRSI = new ArrayList<>();
         this.avgGain = new ArrayList<>();

@@ -33,6 +33,9 @@ public class MACD extends Indicator {
 
     public MACD(int periodsEmaLong, int periodsEmaShort, int periodsSignalLine) {
 
+        //call parent
+        super(Indicator.Key.MACD);
+
         //create lists and objects
         this.macdLine = new ArrayList<>();
         this.histogram = new ArrayList<>();

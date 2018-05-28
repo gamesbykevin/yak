@@ -34,7 +34,7 @@ public class EMA extends Indicator {
     public EMA(int periods) {
 
         //call parent
-        super();
+        super(Indicator.Key.EMA);
 
         //create our lists
         this.emaList = new ArrayList<>();

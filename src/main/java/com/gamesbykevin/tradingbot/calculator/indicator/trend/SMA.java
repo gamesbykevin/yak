@@ -51,8 +51,10 @@ public class SMA extends Indicator {
         });
     }
 
-
     public SMA(int periods, List<Fields> fields) {
+
+        //call parent
+        super(Indicator.Key.SMA);
 
         //save the periods
         this.periods = periods;

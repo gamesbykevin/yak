@@ -1,11 +1,13 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
@@ -35,6 +37,9 @@ public class AE extends Strategy {
     }
 
     public AE(int periodsEmaLong, int periodsEmaShort, int periodsAdx, int periodsAdxConfirm) {
+
+        //call parent
+        super(Key.AE);
 
         //save the periods to confirm
         this.periodsAdxConfirm = periodsAdxConfirm;

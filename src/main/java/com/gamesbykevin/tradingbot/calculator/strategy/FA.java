@@ -5,7 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Alligator;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal.Status;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
 
@@ -27,6 +27,9 @@ public class FA extends Strategy {
     private static int INDEX_ALLIGATOR;
 
     public FA() {
+
+        //call parent
+        super(Key.FA);
 
         //add our indicators
         INDEX_FRACTAL = addIndicator(new Fractal(PERIODS_FRACTAL));

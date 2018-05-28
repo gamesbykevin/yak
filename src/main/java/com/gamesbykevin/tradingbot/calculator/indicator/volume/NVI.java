@@ -25,6 +25,9 @@ public class NVI extends Indicator {
 
     public NVI(int periods) {
 
+        //call parent
+        super(Indicator.Key.NVI);
+
         //create new lists
         this.cumulative = new ArrayList<>();
         this.objEMA = new EMA(periods);

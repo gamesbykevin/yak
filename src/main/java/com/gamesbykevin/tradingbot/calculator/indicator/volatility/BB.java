@@ -34,6 +34,9 @@ public class BB extends Indicator {
 
     public BB(int periods, float multiplier) {
 
+        //call parent
+        super(Indicator.Key.BB);
+
         this.periods = periods;
         this.multiplier = multiplier;
 

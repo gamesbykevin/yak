@@ -41,6 +41,9 @@ public class SMMA extends Indicator {
 
     public SMMA(int periods, List<Fields> fields) {
 
+        //call parent
+        super(Indicator.Key.SMMA);
+
         //store our periods
         this.periods = periods;
 

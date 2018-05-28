@@ -14,14 +14,13 @@ import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
-import static com.gamesbykevin.tradingbot.agent.AgentManager.StrategyKey;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.*;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.createTrade;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.displayTradeSummary;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
@@ -40,13 +39,13 @@ public class Agent {
     private List<Trade> trades;
 
     //do we stop trading
-    private boolean stopTrading = false;
+    private boolean stop = false;
 
     //the reason why we are selling
     private ReasonSell reason;
 
     //what is our assigned trading strategy
-    private StrategyKey strategyKey = null;
+    private Strategy.Key strategyKey = null;
 
     //the product we are trading
     private final String productId;
@@ -57,7 +56,10 @@ public class Agent {
     //the candle time of the order
     private long orderTime;
 
-    protected Agent(double funds, String productId, StrategyKey strategyKey) {
+    //the candle duration we are trading
+    private Candle candle;
+
+    protected Agent(double funds, String productId, Strategy.Key strategyKey, Candle candle) {
 
         //create new list of transactions
         this.trades = new ArrayList<>();
@@ -77,17 +79,20 @@ public class Agent {
         //we don't want to sell either
         setReasonSell(null);
 
-        //we don't want to stop trading
-        setStopTrading(false);
+        //we don't want to stop trading just yet
+        setStop(false);
 
         //create a wallet so we can track our investments
         this.wallet = new Wallet(funds);
+
+        //the current candle we are trading on
+        setCandle(candle);
     }
 
-    public synchronized void update(Strategy strategy, HashMap<Candle, List<Period>> history, Product product, double currentPrice) {
+    public synchronized void update(Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
         //skip if we lost too much $
-        if (hasStopTrading())
+        if (hasStop())
             return;
 
         //do we cancel the order
@@ -129,13 +134,13 @@ public class Agent {
             Status status;
 
             //what is the price of the order
-            final double orderPrice = Double.parseDouble(order.getPrice());
+            final double orderPrice = Double.parseDouble(getOrder().getPrice());
 
             //display our pending order
             displayMessageOrderPending(this, currentPrice);
 
             //if we are selling and the sell price is less than the purchase price we will chase the sell
-            if (selling && orderPrice < getWallet().getPurchasePrice()) {
+            if (selling && orderPrice < getTrade().getPriceBuy()) {
 
                 //if we exceeded our attempts we will cancel the limit order
                 if (getTrade().getAttempts() >= SELL_ATTEMPT_LIMIT)
@@ -182,7 +187,6 @@ public class Agent {
                         displayMessage(this, "Cancelling order", true);
 
                     }
-
                 }
 
             } else {
@@ -201,6 +205,9 @@ public class Agent {
 
                 case Filled:
 
+                    //order has been filled
+                    displayMessage(this, "Order filled, current $" + currentPrice, true);
+
                     //get the recent trade
                     Trade trade = getTrades().get(getTrades().size() - 1);
 
@@ -208,7 +215,7 @@ public class Agent {
                     trade.update(this);
 
                     //if we sold, display trade and totals
-                    if (order.getSide().equalsIgnoreCase(AgentHelper.Action.Sell.getDescription())) {
+                    if (selling) {
                         displayTradeSummary(this, trade);
                         displayMessageAllTradesSummary(this);
                     }
@@ -263,6 +270,14 @@ public class Agent {
         }
     }
 
+    public Candle getCandle() {
+        return this.candle;
+    }
+
+    public void setCandle(Candle candle) {
+        this.candle = candle;
+    }
+
     protected double getAssets(double currentPrice) {
         return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
     }
@@ -291,12 +306,12 @@ public class Agent {
         return this.wallet;
     }
 
-    public void setStopTrading(boolean stopTrading) {
-        this.stopTrading = stopTrading;
+    public void setStop(boolean stop) {
+        this.stop = stop;
     }
 
-    public boolean hasStopTrading() {
-        return this.stopTrading;
+    public boolean hasStop() {
+        return this.stop;
     }
 
     public void setReasonSell(final ReasonSell reason) {
@@ -331,15 +346,15 @@ public class Agent {
         this.orderTime = orderTime;
     }
 
-    public void setStrategyKey(StrategyKey strategyKey) {
+    public void setStrategyKey(Strategy.Key strategyKey) {
         this.strategyKey = strategyKey;
     }
 
-    public StrategyKey getStrategyKey() {
+    public Strategy.Key getStrategyKey() {
         return this.strategyKey;
     }
 
-    private void checkSell(Strategy strategy, HashMap<Candle, List<Period>> history, Product product, double currentPrice) {
+    private void checkSell(Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
         //keep track of the lowest / highest price during a single trade
         getTrade().checkPriceMinMax(currentPrice);
@@ -351,7 +366,7 @@ public class Agent {
         strategy.checkSellSignal(this, history, currentPrice);
 
         //get the latest closing price
-        final double closePrice = history.get(history.size() - 1).close;
+        final double close = history.get(history.size() - 1).close;
 
         //if current price has declined x number of times, we will sell
         if (hasDecline(getTrade().getPriceHistory())) {
@@ -365,11 +380,12 @@ public class Agent {
         } else {
 
             //add the current price history to the list
-            getTrade().addPriceHistory(currentPrice);
+            getTrade().updatePriceHistory(currentPrice);
+
         }
 
         //if the price dropped below our hard stop, we must sell to cut our losses
-        if (closePrice <= getTrade().getHardStopPrice()) {
+        if (close <= getTrade().getHardStopPrice()) {
 
             //reason for selling is that we hit our hard stop
             setReasonSell(ReasonSell.Reason_HardStop);
@@ -377,7 +393,8 @@ public class Agent {
         } else {
 
             //since the close price is above the hard stop price, let's see if we can adjust
-            getTrade().adjustHardStopPrice(this, closePrice);
+            getTrade().adjustHardStopPrice(this, close);
+
         }
 
         //display our data
@@ -401,20 +418,17 @@ public class Agent {
         } else {
 
             //display our waiting message
-            displayMessageCheckSellWaiting(this, currentPrice);
+            displayMessageOrderPending(this, currentPrice);
         }
     }
 
-    private void checkBuy(Strategy strategy, HashMap<Candle, List<Period>> history, Product product, double currentPrice) {
+    private void checkBuy(Strategy strategy, List<Period> history, Product product, double currentPrice) {
 
         //flag buy false before we check
         setBuy(false);
 
         //we don't have a reason to sell just yet
         setReasonSell(null);
-
-        //reset our hard stop until we actually buy
-        getTrade().setHardStopPrice(0);
 
         //if the strategy does not need to wait for new candle data
         if (!strategy.hasWait()) {
@@ -429,13 +443,15 @@ public class Agent {
         //we will buy if there is a reason
         if (hasBuy()) {
 
+            //create our trade object
+            createTrade(this);
+
             //what is the lowest and highest price during this trade?
             getTrade().setPriceMin(currentPrice);
             getTrade().setPriceMax(currentPrice);
 
-            //let's set our hard stop if it hasn't been set already
-            if (getTrade().getHardStopPrice() == 0)
-                getTrade().setHardStopPrice(currentPrice - (currentPrice * HARD_STOP_RATIO));
+            //let's set our hard stop $
+            getTrade().setHardStopPrice(currentPrice - (currentPrice * HARD_STOP_RATIO));
 
             //write hard stop amount to our log file
             displayMessage(this, "Current Price $" + currentPrice + ", Hard stop $" + getTrade().getHardStopPrice(), true);

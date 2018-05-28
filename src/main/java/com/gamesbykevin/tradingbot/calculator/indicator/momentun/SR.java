@@ -31,6 +31,9 @@ public class SR extends Indicator {
 
     public SR(int periods) {
 
+        //call parent
+        super(Indicator.Key.SR);
+
         //store the number of periods
         this.periods = periods;
 

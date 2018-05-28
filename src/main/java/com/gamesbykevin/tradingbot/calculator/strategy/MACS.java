@@ -5,8 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 /**
  * Moving average crossover strategy
@@ -31,6 +30,9 @@ public class MACS extends Strategy {
     }
 
     public MACS(int fast, int slow, int trend, int confirm) {
+
+        //call parent
+        super(Key.MACS);
 
         //add our indicators
         INDEX_EMA_TREND = addIndicator(new EMA(trend));

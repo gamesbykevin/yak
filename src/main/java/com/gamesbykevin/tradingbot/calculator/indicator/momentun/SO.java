@@ -32,6 +32,9 @@ public final class SO extends Indicator {
 
     public SO(int periodsMarketRateBasic, int periodsMarketRateFull, int periodsStochastic) {
 
+        //call parent
+        super(Indicator.Key.SO);
+
         this.periodsMarketRateBasic = periodsMarketRateBasic;
 
         //create new list(s)

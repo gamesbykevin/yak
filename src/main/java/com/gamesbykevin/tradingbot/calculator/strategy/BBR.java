@@ -5,7 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
 
@@ -36,6 +36,9 @@ public class BBR extends Strategy {
     }
 
     public BBR(int periodsBB, float multiplier, int periodsRSI) {
+
+        //call parent
+        super(Key.BBR);
 
         //add our indicator objects
         INDEX_BB = addIndicator(new BB(periodsBB, multiplier));

@@ -17,6 +17,9 @@ public class ADL extends Indicator {
 
     public ADL() {
 
+        //call parent
+        super(Indicator.Key.ADL);
+
         //create a new list
         this.accumulationDistributionLine = new ArrayList<>();
     }

@@ -20,9 +20,6 @@ import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
  */
 public class HistoryTracker implements Runnable {
 
-    //list of trackers
-    private List<Tracker> trackers;
-
     //individual thread to track the history
     private Thread thread;
 
@@ -47,33 +44,14 @@ public class HistoryTracker implements Runnable {
         this.thread.start();
     }
 
-    private List<Tracker> getTrackers() {
-
-        //create new list of trackers
-        if (this.trackers == null)
-            this.trackers = new ArrayList<>();
-
-        return this.trackers;
-    }
-
     @Override
     public void run() {
 
-        //loop through each product
-        for (int index = 0; index < getProductsAllUsd().size(); index++) {
+        //get our list of candles
+        Candle[] candles = Candle.values();
 
-            //loop through each duration
-            for (Candle duration : Candle.values()) {
-
-                //add a tracker for every product/duration combination
-                getTrackers().add(new Tracker(getProductsAllUsd().get(index).getId(), duration));
-            }
-        }
-
-        //load the history for each tracker, before we start tracking
-        for (Tracker tracker : getTrackers()) {
-            History.load(tracker.history, tracker.productId, tracker.duration, null);
-        }
+        //our history object
+        List<Period> history = new ArrayList<>();
 
         while (true) {
 
@@ -82,76 +60,88 @@ public class HistoryTracker implements Runnable {
                 //were any files changed?
                 boolean changed = false;
 
-                //check every tracker
-                for (int i = 0; i < getTrackers().size(); i++) {
+                //check every candle
+                for (int i = 0; i < candles.length; i++) {
 
-                    try {
+                    Candle candle = candles[i];
 
-                        //get the current tracker
-                        Tracker tracker = getTrackers().get(i);
+                    //check every product
+                    for (int j = 0; j < getProductsAllUsd().size(); j++) {
 
-                        //get the current size to check for changes
-                        int size = tracker.history.size();
+                        try {
 
-                        //display message
-                        displayMessage("Checking history: " + tracker.productId + ", " + tracker.duration.description + ", Size: " + tracker.history.size());
+                            //get the product id
+                            String productId = getProductsAllUsd().get(j).getId();
 
-                        //format our endpoint
-                        String endpoint = String.format(ENDPOINT_HISTORIC, tracker.productId, tracker.duration.duration);
+                            //clear our history list before we load
+                            history.clear();
 
-                        //display endpoint
-                        displayMessage("Endpoint: " + endpoint);
+                            //load the contents from the text file into our array list
+                            History.load(history, productId, candle, null);
 
-                        //make historic candle call and get json response
-                        String json = getJsonResponse(endpoint);
+                            //get the current size to check for changes
+                            int size = history.size();
 
-                        //convert json text to multi array
-                        double[][] data = GSon.getGson().fromJson(json, double[][].class);
+                            //display message
+                            displayMessage("Checking history: " + productId + ", " + candle.description + ", Size: " + history.size());
 
-                        //make sure we have data before we update and sort
-                        if (data != null && data.length > 0) {
-                            updateHistory(tracker.history, data);
-                            sortHistory(tracker.history);
+                            //format our endpoint
+                            String endpoint = String.format(ENDPOINT_HISTORIC, productId, candle.duration);
+
+                            //display endpoint
+                            displayMessage("Endpoint: " + endpoint);
+
+                            //make historic candle call and get json response
+                            String json = getJsonResponse(endpoint);
+
+                            //convert json text to multi array
+                            double[][] data = GSon.getGson().fromJson(json, double[][].class);
+
+                            //make sure we have data before we update and sort
+                            if (data != null && data.length > 0) {
+                                updateHistory(history, data);
+                                sortHistory(history);
+                            }
+
+                            //if the history changed, write it to local storage
+                            if (history.size() != size) {
+                                displayMessage("Writing history: " + productId + ", " + candle.description + ", Size: " + history.size(), getWriter());
+                                boolean result = History.write(history, productId, candle);
+
+                                //if writing the file was successful flag it was changed
+                                if (result)
+                                    changed = true;
+                            }
+
+                        } catch (Exception e) {
+
+                            //display message and write to log
+                            displayMessage(e, getWriter());
+
+                        } finally {
+
+                            //sleep the thread for a short time
+                            Thread.sleep(DELAY);
                         }
-
-                        //if the history changed, write it to local storage
-                        if (tracker.history.size() != size) {
-                            displayMessage("Writing history: " + tracker.productId + ", " + tracker.duration.description + ", Size: " + tracker.history.size(), getWriter());
-                            boolean result = History.write(tracker.history, tracker.productId, tracker.duration);
-
-                            //if writing the file was successful flag it was changed
-                            if (result)
-                                changed = true;
-                        }
-
-                    } catch (Exception ex) {
-
-                        //display message and write to log
-                        displayMessage(ex, getWriter());
-
-                    } finally {
-
-                        //sleep the thread for a short time
-                        Thread.sleep(DELAY);
                     }
                 }
 
                 if (changed) {
 
                     //display that we are calling the bash script
-                    displayMessage("Calling .sh Bash script...", getWriter());
+                    displayMessage("Running bash script: " + SHELL_SCRIPT_FILE, getWriter());
 
                     //run shell script to commit file changes into github
                     Runtime.getRuntime().exec(SHELL_SCRIPT_FILE);
 
                     //display that we called the bash script
-                    displayMessage(".sh Bash script called", getWriter());
+                    displayMessage("Bash script called", getWriter());
                 }
 
-            } catch (Exception ex1) {
+            } catch (Exception ex) {
 
                 //display error message and write to log
-                displayMessage(ex1, getWriter());
+                displayMessage(ex, getWriter());
             }
         }
     }
@@ -163,21 +153,5 @@ public class HistoryTracker implements Runnable {
             WRITER = LogFile.getPrintWriter(getFilenameHistoryTracker(), LogFile.getLogDirectory());
 
         return WRITER;
-    }
-
-    /**
-     * This class will track the candle history for a particular product and particular duration
-     */
-    private class Tracker {
-
-        private final String productId;
-        private final Candle duration;
-        private final List<Period> history;
-
-        private Tracker(String productId, Candle duration) {
-            this.productId = productId;
-            this.duration = duration;
-            this.history = new ArrayList<>();
-        }
     }
 }

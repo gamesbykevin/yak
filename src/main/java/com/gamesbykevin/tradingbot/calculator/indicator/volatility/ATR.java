@@ -27,6 +27,9 @@ public class ATR extends Indicator {
 
     public ATR(int periods) {
 
+        //call parent
+        super(Indicator.Key.ATR);
+
         //store our setting
         this.periods = periods;
 

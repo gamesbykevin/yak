@@ -18,6 +18,9 @@ public class OBV extends Indicator {
 
     public OBV() {
 
+        //call parent
+        super(Indicator.Key.OBV);
+
         //create list
         this.volume = new ArrayList<>();
     }

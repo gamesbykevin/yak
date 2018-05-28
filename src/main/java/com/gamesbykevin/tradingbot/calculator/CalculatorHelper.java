@@ -1,22 +1,23 @@
 package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.agent.AgentManager.TradingStrategy;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.util.History.NOTIFY_LIMIT;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class CalculatorHelper {
 
-    protected static Strategy createStrategy(TradingStrategy tradingStrategy) {
+    protected static Strategy createStrategy(Strategy.Key key) {
 
         //what is our strategy?
         Strategy strategy;
 
         //create the correct strategy
-        switch (tradingStrategy) {
+        switch (key) {
 
             case AE:
                 strategy = new AE();
@@ -66,10 +67,6 @@ public class CalculatorHelper {
                 strategy = new FMFI();
                 break;
 
-            case HASO:
-                strategy = new HASO();
-                break;
-
             case MACS:
                 strategy = new MACS();
                 break;
@@ -90,16 +87,8 @@ public class CalculatorHelper {
                 strategy = new RA();
                 break;
 
-            case RCR:
-                strategy = new RCR();
-                break;
-
             case SOADX:
                 strategy = new SOADX();
-                break;
-
-            case SOEMA:
-                strategy = new SOEMA();
                 break;
 
             case SSR:
@@ -107,7 +96,7 @@ public class CalculatorHelper {
                 break;
 
             default:
-                throw new RuntimeException("Strategy not found: " + tradingStrategy);
+                throw new RuntimeException("Strategy not found: " + key);
         }
 
         //return our object
@@ -137,10 +126,10 @@ public class CalculatorHelper {
             }
 
             //create our trading array
-            MY_TRADING_STRATEGIES = new TradingStrategy[TRADING_STRATEGIES.length];
+            MY_TRADING_STRATEGIES = new Strategy.Key[TRADING_STRATEGIES.length];
 
             //temp list of all values so we can check for a match
-            TradingStrategy[] tmp = TradingStrategy.values();
+            Strategy.Key[] tmp = Strategy.Key.values();
 
             //make sure the specified strategies exist
             for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
@@ -211,6 +200,10 @@ public class CalculatorHelper {
 
         //sort so the periods are in order from oldest to newest
         for (int x = 0; x < history.size(); x++) {
+
+            if (x != 0 && x % NOTIFY_LIMIT == 0)
+                displayMessage(x + " records sorted");
+
             for (int y = x; y < history.size() - 1; y++) {
 
                 //get the current and next period

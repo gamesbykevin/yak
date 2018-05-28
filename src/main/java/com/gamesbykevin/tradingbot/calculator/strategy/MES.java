@@ -6,12 +6,14 @@ import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.MACD;
-import com.gamesbykevin.tradingbot.transaction.TransactionHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA.calculateEMA;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import java.util.HashMap;
 
 /**
  * Moving Average Convergence Divergence / Exponential Moving Average / Simple Moving Average
@@ -44,6 +46,9 @@ public class MES extends Strategy {
     }
 
     public MES(int periodsSmaLong1, int periodsSmaLong2, int periodsSmaShort, int periodsEmaShort, int periodsMacdShort, int periodsMacdLong, int periodsMacdSignal) {
+
+        //call parent
+        super(Key.MES);
 
         //add our indicator objects
         INDEX_SMA_LONG_1 = addIndicator(new SMA(periodsSmaLong1));

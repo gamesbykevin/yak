@@ -7,9 +7,16 @@ import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import java.io.PrintWriter;
 
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
-import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_PERIOD_DURATIONS;
 
 public class AgentManagerHelper {
+
+    protected static void updateCalculators(AgentManager manager) {
+
+        //update each calculator
+        for (int i = 0; i < manager.getCalculators().size(); i++) {
+            manager.getCalculators().get(i).update(manager);
+        }
+    }
 
     protected static void updateAgents(AgentManager manager) {
 
@@ -21,19 +28,19 @@ public class AgentManagerHelper {
                 //get our agent
                 Agent agent = manager.getAgents().get(i);
 
-                //get the assigned calculator
-                Calculator calculator = manager.getCalculators().get(agent.getDuration());
+                //get the calculator for the candle the agent is assigned
+                Calculator calculator = manager.getCalculator(agent.getCandle());
 
                 //make sure we have enough data before we start trading
                 if (calculator.getHistory().size() < HISTORICAL_PERIODS_MINIMUM) {
 
                     //we are not ready to trade yet
-                    displayMessage(manager.getProductId() + ": Not enough periods to trade yet (" + agent.getDuration().description + ")- " + calculator.getHistory().size() + " < " + HISTORICAL_PERIODS_MINIMUM, null);
+                    displayMessage(manager.getProductId() + ": Not enough periods to trade yet (" + calculator.getCandle().description + ")- " + calculator.getHistory().size() + " < " + HISTORICAL_PERIODS_MINIMUM, null);
 
                 } else {
 
                     //get our trading strategy
-                    Strategy strategy = calculator.getStrategy(agent.getTradingStrategy());
+                    Strategy strategy = calculator.getStrategy(agent.getStrategyKey());
 
                     //update the agent accordingly
                     agent.update(strategy, calculator.getHistory(), manager.getProduct(), manager.getCurrentPrice());
@@ -58,6 +65,57 @@ public class AgentManagerHelper {
     }
 
     public static void displayMessage(Agent agent, String message, boolean write) {
-        displayMessage(agent.getProductId() + "-" + agent.getTradingStrategy() + " " + message, write ? agent.getWriter() : null);
+        displayMessage(agent.getProductId() + "-" + agent.getStrategyKey() + " " + message, write ? agent.getWriter() : null);
+    }
+
+    public static String getAgentDetails(AgentManager manager) {
+
+        String result = "\n";
+
+        //sort the agents to show which are most profitable
+        for (int i = 0; i < manager.getAgents().size(); i++) {
+            for (int j = i; j < manager.getAgents().size(); j++) {
+
+                //don't check the same agent
+                if (i == j)
+                    continue;
+
+                Agent agent1 = manager.getAgents().get(i);
+                Agent agent2 = manager.getAgents().get(j);
+
+                double assets1 = agent1.getAssets(manager.getCurrentPrice());
+                double assets2 = agent2.getAssets(manager.getCurrentPrice());
+
+                //if the next agent has more funds, switch
+                if (assets2 > assets1) {
+
+                    //switch positions of our agents
+                    manager.getAgents().set(i, agent2);
+                    manager.getAgents().set(j, agent1);
+                }
+            }
+        }
+
+        //message with all agent totals
+        for (int i = 0; i < manager.getAgents().size(); i++) {
+
+            Agent agent = manager.getAgents().get(i);
+
+            //start with product, strategy, hard stop ratio, and candle duration
+            result += manager.getProductId() + " : " + agent.getStrategyKey();
+
+            //how much $ does the agent currently have
+            result += " - $" + AgentHelper.round(agent.getAssets(manager.getCurrentPrice()));
+
+            //if this agent has stopped trading, include it in the message
+            if (agent.hasStop())
+                result += ", (Stopped)";
+
+            //make new line
+            result += "\n";
+        }
+
+        //return our result
+        return result;
     }
 }

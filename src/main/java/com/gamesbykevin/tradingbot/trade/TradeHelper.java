@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.trade;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
+import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.trade.Trade.Result;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
@@ -109,10 +110,10 @@ public class TradeHelper {
 
             //what happened during this order
             text += "Order Attempt Summary" + "\n";
-            text += "Sell Reject: " + trade.getCountRejectedSell() + "\n";
-            text += "Sell Cancel: " + trade.getCountCancelSell()   + "\n";
             text += "Buy Reject:  " + trade.getCountRejectedBuy()  + "\n";
             text += "Buy Cancel:  " + trade.getCountCancelBuy()    + "\n";
+            text += "Sell Reject: " + trade.getCountRejectedSell() + "\n";
+            text += "Sell Cancel: " + trade.getCountCancelSell()   + "\n";
 
             //what is the reason for selling
             displayMessage(agent, "Reason sell: " + trade.getReasonSell().getDescription(), true);
@@ -301,4 +302,19 @@ public class TradeHelper {
         return LogFile.getLogDirectory() + FILE_SEPARATOR + productId + FILE_SEPARATOR + TRADES_DIR + FILE_SEPARATOR;
     }
 
+    public static void createTrade(Agent agent) {
+
+        //if we have no trades or the most recent trade has been sold, we need to start a new trade
+        if (agent.getTrades().isEmpty() || agent.getTrade().getOrderSell() != null) {
+
+            //if there are no trades, create one
+            agent.getTrades().add(new Trade(agent.getProductId(), agent.getCandle()));
+
+        } else {
+
+            //we can use the existing trade
+            agent.getTrade().restart();
+
+        }
+    }
 }
