@@ -44,7 +44,7 @@ public class SSR extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the recent period
         Period period = history.get(history.size() - 1);
@@ -62,13 +62,16 @@ public class SSR extends Strategy {
 
                 //last thing we check is for the stochastic bullish crossover before we buy
                 if (hasCrossover(true, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
-                    agent.setBuy(true);
+                    return true;
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the recent period
         Period period = history.get(history.size() - 1);
@@ -83,13 +86,14 @@ public class SSR extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
 
         //if the stock is overbought, adjust our hard stop price and sell
-        if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT && getRecent(objSO.getStochasticOscillator()) > OVERBOUGHT) {
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-            adjustHardStopPrice(agent, currentPrice);
-        }
+        if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT && getRecent(objSO.getStochasticOscillator()) > OVERBOUGHT)
+            return true;
 
         //if bearish crossover we go short
         if (hasCrossover(false, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }

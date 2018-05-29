@@ -47,7 +47,7 @@ public class EMAS extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
@@ -67,11 +67,14 @@ public class EMAS extends Strategy {
 
         //the short ema needs to cross above the long ema and the close needs to be above the sma
         if (prevEmaShort < prevEmaLong && currEmaShort > currEmaLong && close > currSmaShort)
-            agent.setBuy(true);
+            return true;
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
@@ -89,10 +92,13 @@ public class EMAS extends Strategy {
 
         //if the close $ is below the long sma we will sell
         if (close < currSmaLong)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
 
         //adjust our hard stop price to protect our investment
         if (close < currSmaShort || currEmaShort < currEmaLong)
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }

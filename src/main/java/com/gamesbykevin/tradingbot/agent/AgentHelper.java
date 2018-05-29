@@ -1,19 +1,20 @@
 package com.gamesbykevin.tradingbot.agent;
 
-import com.coinbase.exchange.api.entity.NewLimitOrderSingle;
 import com.coinbase.exchange.api.entity.Product;
-import com.coinbase.exchange.api.orders.Order;
-import com.gamesbykevin.tradingbot.Main;
-import com.gamesbykevin.tradingbot.trade.TradeHelper;
-import com.gamesbykevin.tradingbot.util.Email;
+import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
+import com.gamesbykevin.tradingbot.order.BasicOrderHelper.Action;
+import com.gamesbykevin.tradingbot.trade.Trade;
+import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.displayMessageLimitIncrease;
-import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.displayMessageStopTrading;
+import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.*;
+import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.createLimitOrder;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.createTrade;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class AgentHelper {
@@ -29,11 +30,6 @@ public class AgentHelper {
     public static final int ROUND_DECIMALS_QUANTITY = 3;
 
     /**
-     * Our orders are limit orders in order to not have to pay a fee
-     */
-    private static final String LIMIT_ORDER_DESC = "limit";
-
-    /**
      * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
      */
     public static float HARD_STOP_RATIO;
@@ -44,19 +40,6 @@ public class AgentHelper {
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
 
     /**
-     * How many times do we check to see if the order was created before failing
-     */
-    private static final int FAILURE_LIMIT = 5;
-
-    //after creating a limit order, how long do we wait before we check if created (in milliseconds)
-    private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
-
-    /**
-     * Assume each trade has a 0.3% transaction fee
-     */
-    private static final float FEE_RATE = .003f;
-
-    /**
      * How many times do we wait for the sell order to fill before we cancel
      */
     public static int SELL_ATTEMPT_LIMIT = 10;
@@ -65,286 +48,6 @@ public class AgentHelper {
      * How many current prices do we track looking for a decline when selling?
      */
     public static int CURRENT_PRICE_HISTORY;
-
-    public enum Action {
-
-        Buy("buy"),
-        Sell("sell");
-
-        private final String description;
-
-        Action(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return this.description;
-        }
-    }
-
-    /**
-     * The possible status of our limit order
-     */
-    public enum Status {
-
-        Pending("pending"),
-        Open("open"),
-        Done("done"),
-        Filled("filled"),
-        Cancelled("cancelled"),
-        Rejected("rejected");
-
-        private final String description;
-
-        Status(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return this.description;
-        }
-    }
-
-    protected static synchronized Status updateLimitOrder(final Agent agent, final String orderId) {
-
-        //check the current order and let's see if we can tell when it is done
-        Order order = Main.getOrderService().getOrder(orderId);
-
-        //if the order was not found it must have been cancelled
-        if (order == null)
-            return Status.Cancelled;
-
-        //write order status to log
-        displayMessage(agent, "Checking order status: " + order.getStatus() + ", settled: " + order.getSettled(), true);
-
-        //if the order was successful, update our local order instance
-        if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription()) ||
-            order.getStatus().equalsIgnoreCase(Status.Done.getDescription()) && order.getSettled()) {
-            agent.getOrder().setFilled_size(order.getFilled_size());
-            agent.getOrder().setFill_fees(order.getFill_fees());
-            agent.getOrder().setPrice(order.getPrice());
-            agent.getOrder().setSize(order.getSize());
-        }
-
-        //is this order settled
-        agent.getOrder().setSettled(order.getSettled());
-
-        if (order.getStatus().equalsIgnoreCase(Status.Filled.getDescription())) {
-
-            //return that the order has been filled
-            return Status.Filled;
-
-        } else if (order.getStatus().equalsIgnoreCase(Status.Done.getDescription())) {
-
-            //if an order is done and settled we assume success
-            if (order.getSettled())
-                return Status.Filled;
-
-            return Status.Done;
-        } else if (order.getStatus().equalsIgnoreCase(Status.Open.getDescription())) {
-            //do nothing
-        } else if (order.getStatus().equalsIgnoreCase(Status.Pending.getDescription())) {
-            //do nothing
-        } else if (order.getStatus().equalsIgnoreCase(Status.Rejected.getDescription())) {
-            return Status.Rejected;
-        } else if (order.getStatus().equalsIgnoreCase(Status.Cancelled.getDescription())) {
-            return Status.Cancelled;
-        }
-
-        //let's say that we are still pending so we continue to wait until we have confirmation of something
-        return Status.Pending;
-    }
-
-    protected static synchronized void cancelOrder(Agent agent, String orderId) {
-
-        //don't cancel if we are simulating or paper trading
-        if (Main.PAPER_TRADING)
-            return;
-
-        //we are now going to cancel the order
-        displayMessage(agent, "Canceling order: " + orderId, true);
-
-        //cancel the order
-        final String result = Main.getOrderService().cancelOrder(orderId);
-
-        //notify we sent the message
-        displayMessage(agent, "Cancel order message sent", true);
-
-        //if we receive a result back, display it
-        if (result != null)
-            displayMessage(agent, result, true);
-    }
-
-    protected static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
-
-        //the price we want to buy/sell
-        BigDecimal price = new BigDecimal(currentPrice);
-
-        //what is the quantity that we are buying/selling
-        final float size;
-
-        //create a penny in case we need to alter the current price
-        BigDecimal penny;
-
-        //if we are treating this as a market order we don't need to adjust the $
-        if (PAPER_TRADING_FEES) {
-            penny = new BigDecimal(0);
-        } else {
-            penny = new BigDecimal(.01);
-        }
-
-        switch (action) {
-
-            case Buy:
-
-                //subtract a penny so when the price meets or goes below it executes
-                price = price.subtract(penny);
-
-                //see how much we can buy
-                size = (float)(agent.getWallet().getFunds() / currentPrice);
-                break;
-
-            case Sell:
-
-                //add a penny so when the price meets or exceeds above it executes
-                price = price.add(penny);
-
-                //sell all the quantity we have
-                size = agent.getWallet().getQuantity();
-                break;
-
-            default:
-                throw new RuntimeException("Action not defined: " + action.toString());
-        }
-
-        //round few decimals so our numbers aren't
-        price = round(ROUND_DECIMALS_PRICE, price);
-
-        //the quantity we want to purchase
-        BigDecimal quantity = round(ROUND_DECIMALS_QUANTITY, size);
-
-        //make sure we have enough quantity to buy or else we can't continue
-        if (quantity.floatValue() < product.getBase_min_size()) {
-
-            //create our message
-            final String message = "Not enough quantity: " + quantity.floatValue() + ", min: " + product.getBase_min_size();
-
-            //write message to log file
-            displayMessage(agent, message, true);
-
-            //stop trading
-            agent.setStop(true);
-
-            //send notification message
-            Email.sendEmail("We stopped trading because we are unable to " + action.getDescription() + " " + product.getId(), message);
-
-            //no order is created so we return null
-            return null;
-        }
-
-        //create our limit order
-        NewLimitOrderSingle newOrder = new NewLimitOrderSingle();
-
-        //which coin we are trading
-        newOrder.setProduct_id(product.getId());
-
-        //are we buying or selling
-        newOrder.setSide(action.getDescription());
-
-        //type of order "limit", "stop", etc...
-        newOrder.setType(LIMIT_ORDER_DESC);
-
-        //our price
-        newOrder.setPrice(price);
-
-        //our quantity
-        newOrder.setSize(quantity);
-
-        //set to post only to avoid fees
-        newOrder.setPost_only(true);
-
-        //write order details to log
-        displayMessage(agent, "Creating order (" + product.getId() + "): " + action.getDescription() + " $" + price.doubleValue() + ", Quantity: " + quantity.floatValue(), true);
-
-        //our order object
-        Order order = null;
-
-        //how many attempts to try
-        int attempts = 0;
-
-        if (Main.PAPER_TRADING) {
-
-            //if we are paper trading populate the order object ourselves
-            order = new Order();
-            order.setPrice(price.toString());
-            order.setSize(quantity.toString());
-            order.setFilled_size(quantity.toString());
-
-            //are we applying fees to this order
-            if (PAPER_TRADING_FEES) {
-
-                //fees are 0.25% of the total dollar amount you are investing
-                double fee = (price.doubleValue() * quantity.floatValue()) * FEE_RATE;
-                order.setFill_fees(fee + "");
-
-            } else {
-                order.setFill_fees("0");
-            }
-
-            order.setProduct_id(product.getId());
-            order.setStatus(Status.Done.getDescription());
-            order.setSide(action.getDescription());
-            order.setType(LIMIT_ORDER_DESC);
-
-        } else {
-
-            //sometimes creating an order doesn't work so we will try more than once if not successful
-            while (order == null) {
-
-                //keep track of the number of attempts
-                attempts++;
-
-                //notify user we are trying to create the order
-                displayMessage(agent, "Creating order attempt: " + attempts, true);
-
-                try {
-
-                    //create our limit order
-                    order = Main.getOrderService().createOrder(newOrder);
-
-                    //if we got our order, exit loop
-                    if (order != null)
-                        break;
-
-                } catch (Exception e) {
-
-                    //keep track of any errors
-                    displayMessage(e, agent.getWriter());
-                }
-
-                //if we reach our limit, just stop
-                if (attempts >= FAILURE_LIMIT)
-                    break;
-
-                try {
-                    //sleep for a short time
-                    Thread.sleep(LIMIT_ORDER_STATUS_DELAY);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        //write order result to log
-        if (order != null) {
-            displayMessage(agent, "Order created status: " + order.getStatus() + ", id: " + order.getId(), true);
-        } else {
-            displayMessage(agent, "Order NOT created", true);
-        }
-
-        //return our order
-        return order;
-    }
 
     protected static void checkStanding(Agent agent) {
 
@@ -407,5 +110,119 @@ public class AgentHelper {
 
         //every value continued to go down, so we have a decline
         return true;
+    }
+
+    protected static void checkSell(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double currentPrice) {
+
+        //get the latest closing price
+        final double close = history.get(history.size() - 1).close;
+
+        Trade trade = agent.getTrade();
+
+        //keep track of the lowest / highest price during a single trade
+        trade.checkPriceMinMax(currentPrice);
+
+        //right now we don't have a reason to sell
+        trade.setReasonSell(null);
+
+        //check our strategy for a sell signal
+        if (strategy.hasSellSignal(agent, history, currentPrice)) {
+
+            //check the child to confirm the sell signal
+            if (strategyChild.hasSellSignal(agent, historyChild, currentPrice))
+                trade.setReasonSell(ReasonSell.Reason_Strategy);
+        }
+
+        //if $ declines we sell, else we update the $ history
+        if (hasDecline(trade.getPriceHistory())) {
+            trade.setReasonSell(ReasonSell.Reason_PriceDecline);
+        } else {
+            trade.updatePriceHistory(currentPrice);
+        }
+
+        //if $ dropped below our hard stop, we must sell, else we adjust our stop $
+        if (close <= agent.getTrade().getHardStopPrice()) {
+            trade.setReasonSell(ReasonSell.Reason_HardStop);
+        } else {
+            trade.adjustHardStopPrice(agent, close);
+        }
+
+        //display our data
+        strategy.displayData(agent, trade.getReasonSell() != null);
+
+        //display recent stock prices
+        displayMessagePriceDecline(agent);
+
+        //if there is a reason to sell then we will sell
+        if (trade.getReasonSell() != null) {
+
+            //since we are selling let's adjust our hard stop
+            trade.adjustHardStopPrice(agent, currentPrice);
+
+            //if there is a reason, display message
+            displayMessage(agent, trade.getReasonSell().getDescription(), true);
+
+            //reset our attempt counter for our sell order
+            trade.setAttempts(0);
+
+            //create and assign our limit order at the last period closing price
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
+
+            //we want to wait until the next candle period before we check to buy stock again after this sells
+            strategy.setWait(true);
+
+        } else {
+
+            //display our waiting message
+            displayMessageOrderPending(agent, currentPrice);
+        }
+    }
+
+    protected static void checkBuy(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double currentPrice) {
+
+        //is it time to buy?
+        boolean buy = false;
+
+        //if the strategy does not need to wait for new candle data
+        if (!strategy.hasWait()) {
+
+            //check for a buy signal
+            buy = strategy.hasBuySignal(agent, history, currentPrice);
+
+            //if buying, check the child to confirm
+            if (buy && !strategyChild.hasBuySignal(agent, historyChild, currentPrice))
+                buy = false;
+
+            //display our data
+            strategy.displayData(agent, buy);
+        }
+
+        //we will buy if there is a reason
+        if (buy) {
+
+            //create our trade object
+            createTrade(agent);
+
+            //get the current trade
+            Trade trade = agent.getTrade();
+
+            //what is the lowest and highest price during this trade?
+            trade.setPriceMin(currentPrice);
+            trade.setPriceMax(currentPrice);
+
+            //let's set our hard stop $
+            trade.setHardStopPrice(currentPrice - (currentPrice * HARD_STOP_RATIO));
+
+            //write hard stop amount to our log file
+            displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + trade.getHardStopPrice(), true);
+
+            //create and assign our limit order
+            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
+
+        } else {
+
+            //we are still waiting
+            displayMessage(agent, "Waiting. Available funds $" + agent.getWallet().getFunds(), false);
+        }
     }
 }

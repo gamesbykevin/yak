@@ -100,9 +100,9 @@ public abstract class Strategy extends Calculation {
         agent.getTrade().adjustHardStopPrice(agent, currentPrice + increase);
     }
 
-    public abstract void checkBuySignal(Agent agent, List<Period> history, double currentPrice);
+    public abstract boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice);
 
-    public abstract void checkSellSignal(Agent agent, List<Period> history, double currentPrice);
+    public abstract boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice);
 
     /**
      * Does the strategy need to wait?

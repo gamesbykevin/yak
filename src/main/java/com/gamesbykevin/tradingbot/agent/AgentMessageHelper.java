@@ -89,6 +89,6 @@ public class AgentMessageHelper {
         }
 
         //display the recent prices so we can see the decline
-        displayMessage(agent, message, true);
+        displayMessage(agent, message, agent.getTrade().getReasonSell() != null);
     }
 }

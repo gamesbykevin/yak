@@ -51,7 +51,7 @@ public class AE extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
@@ -60,44 +60,39 @@ public class AE extends Strategy {
         //make sure adx is trending
         if (getRecent(objADX.getAdx()) > ADX_TREND) {
 
-            //confirm our adx isn't in a downtrend
-            boolean confirm = true;
-
             //check the previous number of periods to ensure adx is not declining
             for (int i = 1; i <= periodsAdxConfirm; i++) {
 
                 //if the current adx value is less than the previous adx value
-                if (getRecent(objADX.getAdx(), i) <= getRecent(objADX.getAdx(), i + 1)) {
-                    confirm = false;
-                    break;
-                }
+                if (getRecent(objADX.getAdx(), i) <= getRecent(objADX.getAdx(), i + 1))
+                    return false;
             }
 
-            //make sure there is no downtrend
-            if (confirm) {
-
-                //if the short crosses above the long let's buy and enter the trade
-                if (hasCrossover(true, objShortEMA.getEma(), objLongEMA.getEma()))
-                    agent.setBuy(true);
-            }
+            //if the short crosses above the long let's buy and enter the trade
+            if (hasCrossover(true, objShortEMA.getEma(), objLongEMA.getEma()))
+                return true;
         }
+
+        //we didn't find a buy signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
 
         //if the ema short crosses below the ema long, it is time to sell
-        if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-            adjustHardStopPrice(agent, currentPrice);
-        }
+        if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma()))
+            return true;
 
         //if the adx value goes below the trend, let's update our hard stop $
         if (getRecent(objADX.getAdx()) < ADX_TREND)
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal yet
+        return false;
     }
 }

@@ -39,11 +39,8 @@ public class AgentManagerHelper {
 
                 } else {
 
-                    //get our trading strategy
-                    Strategy strategy = calculator.getStrategy(agent.getStrategyKey());
-
                     //update the agent accordingly
-                    agent.update(strategy, calculator.getHistory(), manager.getProduct(), manager.getCurrentPrice());
+                    agent.update(manager.getCalculators(), manager.getProduct(), manager.getCurrentPrice());
 
                 }
 

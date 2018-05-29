@@ -65,10 +65,7 @@ public class MARS extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //is there an upward trend
-        boolean trend = true;
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //make sure each ema has a crossover
         for (int i = 0; i < PERIODS.length - 1; i++) {
@@ -78,19 +75,20 @@ public class MARS extends Strategy {
             double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
             //if the fast is less this isn't an upward trend
-            if (fast < slow) {
-                trend = false;
-                break;
-            }
+            if (fast < slow)
+                return false;
         }
 
         //if there is a trend, check when the longest emas cross over since that would happen last
-        if (trend && hasCrossover(true, ((EMA)getIndicator(INDEXES[INDEXES.length - 2])).getEma(), ((EMA)getIndicator(INDEXES[INDEXES.length - 1])).getEma()))
-            agent.setBuy(true);
+        if (hasCrossover(true, ((EMA)getIndicator(INDEXES[INDEXES.length - 2])).getEma(), ((EMA)getIndicator(INDEXES[INDEXES.length - 1])).getEma()))
+            return true;
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //is there a downward trend
         boolean trend = true;
@@ -111,10 +109,13 @@ public class MARS extends Strategy {
 
         //if we confirm the data is heading downward, sell
         if (trend)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
 
         //adjust our hard stop price to protect our investment checking the first 2 lists
         if (INDEXES.length >= 2 && getRecent((EMA)getIndicator(INDEXES[0])) < getRecent((EMA)getIndicator(INDEXES[1])))
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }

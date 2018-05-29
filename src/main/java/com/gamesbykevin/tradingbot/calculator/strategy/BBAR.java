@@ -54,7 +54,8 @@ public class BBAR extends Strategy {
         INDEX_BB = addIndicator(new BB(periodsBB, multiplier));
     }
 
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    @Override
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         BB objBB = (BB)getIndicator(INDEX_BB);
         ADL objADL = (ADL)getIndicator(INDEX_ADL);
@@ -72,17 +73,18 @@ public class BBAR extends Strategy {
 
                 //check that the price is heading down, then we have a bullish divergence
                 if (hasTrendDownward(history, Fields.Close, PERIOD_TREND))
-                    agent.setBuy(true);
+                    return true;
             }
         }
 
         //display our data
-        displayMessage(agent, "Ratio %" + SQUEEZE_RATIO, agent.hasBuy());
-        displayMessage(agent, "Price %" + percentage, agent.hasBuy());
+        //displayMessage(agent, "Ratio %" + SQUEEZE_RATIO, false);
+        //displayMessage(agent, "Price %" + percentage, false);
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         BB objBB = (BB)getIndicator(INDEX_BB);
 
@@ -96,20 +98,17 @@ public class BBAR extends Strategy {
         double upPrev = getRecent(objBB.getUpper(), 2);
         double upCurr = getRecent(objBB.getUpper());
 
-        //if we fall below the lower, we need to sell
-        if (closePrev > lowPrev && closeCurr < lowCurr)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        //if we were above the middle and just fell below it
-        if (closePrev > midPrev && closeCurr < midCurr)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-        //if the current close goes below the upper line, let's sell
-        if (closePrev > upPrev && closeCurr < upCurr)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+        //if we fall below the lower, we need to sell or if we were above the middle and just fell below it or if the current close goes below the upper line, let's sell
+        if (closePrev > lowPrev && closeCurr < lowCurr ||
+            closePrev > midPrev && closeCurr < midCurr ||
+            closePrev > upPrev && closeCurr < upCurr)
+            return true;
 
         //adjust our hard stop price to protect our investment
         if (closeCurr < midCurr || closeCurr < lowCurr)
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal yet
+        return false;
     }
 }

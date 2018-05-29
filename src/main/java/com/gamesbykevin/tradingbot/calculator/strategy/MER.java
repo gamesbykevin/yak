@@ -47,7 +47,7 @@ public class MER extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the recent period
         Period period = history.get(history.size() - 1);
@@ -70,14 +70,17 @@ public class MER extends Strategy {
 
                     //if the rsi line is above trend, we will buy
                     if (getRecent(objRSI.getValueRSI()) >= RSI_LINE)
-                        agent.setBuy(true);
+                        return true;
                 }
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get the recent period
         Period period = history.get(history.size() - 1);
@@ -90,10 +93,8 @@ public class MER extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //if below trend sell immediately
-        if (period.close < getRecent(ema5)) {
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-            adjustHardStopPrice(agent, currentPrice);
-        }
+        if (period.close < getRecent(ema5))
+            return true;
 
         //if 13 period ema is < 21 period ema (minor bearish trend)
         if (getRecent(ema3) < getRecent(ema4))
@@ -104,9 +105,10 @@ public class MER extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
 
         //if rsi drops below the line we will sell
-        if (getRecent(objRSI.getValueRSI()) < RSI_LINE) {
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-            adjustHardStopPrice(agent, currentPrice);
-        }
+        if (getRecent(objRSI.getValueRSI()) < RSI_LINE)
+            return true;
+
+        //no signal
+        return false;
     }
 }

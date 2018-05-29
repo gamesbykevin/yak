@@ -52,7 +52,7 @@ public class SOADX extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicator objects
         SO full = (SO)getIndicator(INDEX_SO_FULL);
@@ -75,13 +75,16 @@ public class SOADX extends Strategy {
 
                 //if the volume is above the sma average let's buy
                 if (getRecent(history, Fields.Volume) > getRecent(sma.getSma()))
-                    agent.setBuy(true);
+                    return true;
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicator objects
         SO full = (SO)getIndicator(INDEX_SO_FULL);
@@ -100,8 +103,11 @@ public class SOADX extends Strategy {
         if (getRecent(slow.getStochasticOscillator()) < OSCILLATOR_LOW &&
                 getRecent(full.getStochasticOscillator()) < OSCILLATOR_TREND &&
                 getRecent(adx.getAdx()) < ADX_TREND) {
-                    agent.setReasonSell(ReasonSell.Reason_Strategy);
                     adjustHardStopPrice(agent, currentPrice);
+                    return true;
         }
+
+        //no signal
+        return false;
     }
 }

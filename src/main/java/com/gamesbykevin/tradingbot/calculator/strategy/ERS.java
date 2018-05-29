@@ -46,7 +46,7 @@ public class ERS extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
@@ -70,15 +70,18 @@ public class ERS extends Strategy {
                     //make sure both stochastic and market rate values are increasing
                     if (marketRate > getRecent(objSO.getMarketRateFull(), 2) &&
                         stochastic > getRecent(objSO.getStochasticOscillator(), 2)) {
-                        agent.setBuy(true);
+                        return true;
                     }
                 }
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA objShortEMA = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
@@ -92,7 +95,10 @@ public class ERS extends Strategy {
 
             //if rsi is lower then we have confirmation to sell
             if (getRecent(objRSI.getValueRSI()) < RSI_LINE)
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
         }
+
+        //no signal
+        return false;
     }
 }

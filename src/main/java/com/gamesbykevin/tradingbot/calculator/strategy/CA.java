@@ -39,7 +39,7 @@ public class CA extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
@@ -50,6 +50,10 @@ public class CA extends Strategy {
         double cciCurr = getRecent(objCCI.getCCI(), 1);
         double cciPrev = getRecent(objCCI.getCCI(), 2);
 
+        if (adxCurr < TREND && cciCurr < CCI_LOW)
+            return true;
+
+        /*
         //are things trending with momentum? we want to catch it when the switch just happens
         if ((adxCurr < TREND && cciPrev > CCI_LOW && cciCurr < CCI_LOW) ||
             (adxPrev > TREND && adxCurr < TREND && cciCurr < CCI_LOW)) {
@@ -59,12 +63,16 @@ public class CA extends Strategy {
 
             //if the candle is bullish we will buy
             if (period.open < period.close)
-                agent.setBuy(true);
+                return true;
         }
+        */
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
@@ -77,7 +85,7 @@ public class CA extends Strategy {
 
             //if the candle is bearish we will sell
             if (period.open > period.close)
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
         }
 
         //if adx is trending
@@ -97,5 +105,8 @@ public class CA extends Strategy {
                     adjustHardStopPrice(agent, currentPrice);
             }
         }
+
+        //no signal
+        return false;
     }
 }

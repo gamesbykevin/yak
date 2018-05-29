@@ -3,9 +3,9 @@ package com.gamesbykevin.tradingbot.trade;
 import com.coinbase.exchange.api.orders.Order;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
-import com.gamesbykevin.tradingbot.agent.AgentHelper.Action;
-import com.gamesbykevin.tradingbot.agent.AgentHelper.Status;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.order.BasicOrderHelper.Action;
+import com.gamesbykevin.tradingbot.order.BasicOrderHelper.Status;
 import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.math.BigDecimal;
@@ -144,9 +144,6 @@ public class Trade {
             agent.getWallet().addQuantity(quantity);
 
         } else {
-
-            //save the reason for selling
-            setReasonSell(agent.getReasonSell());
 
             //add the sold amount to our available funds
             agent.getWallet().addFunds(price * quantity);
@@ -398,7 +395,7 @@ public class Trade {
         return this.result;
     }
 
-    private void setReasonSell(ReasonSell reason) {
+    public void setReasonSell(ReasonSell reason) {
         this.reason = reason;
     }
 

@@ -37,7 +37,7 @@ public class FA extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         Alligator gator = (Alligator)getIndicator(INDEX_ALLIGATOR);
@@ -76,55 +76,37 @@ public class FA extends Strategy {
             //we need a candle to break above this high $
             double highLine = period.high;
 
-            //confirm periods after are above the alligators teeth
-            boolean confirm = true;
-
             //check the next few periods to confirm we are above the alligators teeth
             for (int i = 1; i <= PERIODS_FRACTAL; i++) {
 
                 //if our index is out of bounds we don't have enough information to confirm
-                if (alligatorIndex + i >= gator.getTeeth().getSmma().size() || historyIndex + i >= history.size()) {
-                    confirm = false;
-                    break;
-                }
+                if (alligatorIndex + i >= gator.getTeeth().getSmma().size() || historyIndex + i >= history.size())
+                    return false;
 
                 //make sure the close $ stays above the teeth
                 double tmpTeeth = gator.getTeeth().getSmma().get(alligatorIndex + i);
                 double tmpClose = history.get(historyIndex + i).close;
 
                 //if the close $ goes below the teeth we need to exit our buy trade
-                if (tmpTeeth >= tmpClose) {
-                    confirm = false;
-                    break;
-                }
+                if (tmpTeeth >= tmpClose)
+                    return false;
             }
-
-            //if we are unable to confirm skip to the next period
-            if (!confirm)
-                continue;
 
             //check the periods afterwards for a price breakout
             for (int i = historyIndex + PERIODS_FRACTAL; i < history.size(); i++) {
 
                 //if the high exceeds our previous high line it is time to buy
-                if (history.get(i).high > highLine) {
-
-                    //flag that we want to buy
-                    agent.setBuy(true);
-
-                    //exit the loop if we have a buy
-                    break;
-                }
+                if (history.get(i).high > highLine)
+                    return true;
             }
-
-            //if we have a buy signal, exit the loop
-            if (agent.hasBuy())
-                break;
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         Alligator gator = (Alligator)getIndicator(INDEX_ALLIGATOR);
@@ -143,23 +125,20 @@ public class FA extends Strategy {
 
         //if any cross happens let's sell
         if (prevTeeth < prevJaw && currTeeth > currJaw) {
-            adjustHardStopPrice(agent, currentPrice);
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
         } else if (prevJaw < prevTeeth && currJaw > currTeeth) {
-            adjustHardStopPrice(agent, currentPrice);
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
         } else if (prevTeeth < prevLips && currTeeth > currLips) {
-            adjustHardStopPrice(agent, currentPrice);
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
         } else if (prevLips < prevTeeth && currLips > currTeeth) {
-            adjustHardStopPrice(agent, currentPrice);
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
         } else if (prevJaw < prevLips && currJaw > currLips) {
-            adjustHardStopPrice(agent, currentPrice);
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
         } else if (prevLips < prevJaw && currLips > currJaw) {
-            adjustHardStopPrice(agent, currentPrice);
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
         }
+
+        //no signal
+        return false;
     }
 }

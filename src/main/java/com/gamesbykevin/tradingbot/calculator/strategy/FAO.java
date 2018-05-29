@@ -36,7 +36,7 @@ public class FAO extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         AwesomeOscillator awesome = (AwesomeOscillator) getIndicator(INDEX_AWESOME);
@@ -61,13 +61,16 @@ public class FAO extends Strategy {
 
                 //val3 > val2 shows falling value, then val1 > val2 shows rising again
                 if (val3 > val2 && val1 > val2)
-                    agent.setBuy(true);
+                    return true;
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         AwesomeOscillator awesome = (AwesomeOscillator) getIndicator(INDEX_AWESOME);
@@ -92,10 +95,12 @@ public class FAO extends Strategy {
 
                 //val3 < val2 which shows rising, then val1 < val2 shows falling again
                 if (val3 < val2 && val1 < val2) {
-                    agent.setReasonSell(ReasonSell.Reason_Strategy);
-                    adjustHardStopPrice(agent, currentPrice);
+                    return true;
                 }
             }
         }
+
+        //no signal
+        return false;
     }
 }

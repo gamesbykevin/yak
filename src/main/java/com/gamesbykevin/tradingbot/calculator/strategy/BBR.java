@@ -45,7 +45,7 @@ public class BBR extends Strategy {
         INDEX_RSI = addIndicator(new RSI(periodsRSI));
     }
 
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         BB objBB = (BB)getIndicator(INDEX_BB);
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
@@ -67,12 +67,15 @@ public class BBR extends Strategy {
 
             //if the price is narrow and the close is above our upper band
             if (percentage <= SQUEEZE_RATIO && close > upper)
-                agent.setBuy(true);
+                return true;
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         BB objBB = (BB)getIndicator(INDEX_BB);
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
@@ -88,17 +91,19 @@ public class BBR extends Strategy {
 
             //if the middle band is not up-trending compared to previous we can exit our trade now
             if (middlePrev > middleCurr)
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
 
         } else if (rsi < RSI_TREND) {
 
             //if the rsi is going towards oversold territory, let's see if the close drops below our middle band or if the middle band is decreasing
             if (middlePrev > middleCurr || close < middleCurr)
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
         }
 
         //adjust our hard stop price to protect our investment
         if (close < middleCurr)
             adjustHardStopPrice(agent, currentPrice);
+
+        return false;
     }
 }

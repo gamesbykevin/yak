@@ -57,11 +57,13 @@ public class AgentManager {
         //create our list of agents
         this.agents = new ArrayList<>();
 
+        Candle candle = Candle.FiveMinutes;
+
         //create an agent for each strategy
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
             //create our agent
-            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], Candle.OneMinute);
+            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], candle);
 
             //add agent to the list
             getAgents().add(agent);

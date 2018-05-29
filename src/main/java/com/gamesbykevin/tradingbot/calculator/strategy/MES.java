@@ -58,7 +58,7 @@ public class MES extends Strategy {
         INDEX_EMA = addIndicator(new EMA(periodsEmaShort));
     }
 
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         boolean confirmA = false, confirmB = false;
 
@@ -88,13 +88,16 @@ public class MES extends Strategy {
 
                 //make sure the fast ema crosses above the sma short, let's buy
                 if (getRecent(objEMA) > getRecent(objSMA))
-                    agent.setBuy(true);
+                    return true;
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA objEMA = (EMA)getIndicator(INDEX_EMA);
         MACD objMACD = (MACD)getIndicator(INDEX_MACD);
@@ -110,13 +113,13 @@ public class MES extends Strategy {
 
             //next make sure the fast ema crosses below the sma short
             if (getRecent(objEMA) < getRecent(objSMA))
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
 
         } else {
 
             //if the close is less than the emas and the macd line is negative
             if (close < getRecent(objEMA) && close < getRecent(objSMA) && getRecent(objMACD.getMacdLine()) < 0)
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
         }
 
         //adjust our hard stop price to protect our investment
@@ -126,5 +129,8 @@ public class MES extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
         if (close < getRecent(objSmaLong1) || close < getRecent(objSmaLong2))
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }

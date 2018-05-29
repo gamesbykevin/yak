@@ -44,7 +44,7 @@ public class FADOA extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         Alligator gator = (Alligator)getIndicator(INDEX_ALLIGATOR);
@@ -76,17 +76,20 @@ public class FADOA extends Strategy {
 
                 if (val1 > val2 && val2 > val3 && val1 > 0 ) {
                     //if latest 2 are increasing and the latest is above 0
-                    agent.setBuy(true);
+                    return true;
                 } else if (val1 > val2 && val2 > val3 && val3 > val4 && val1 < 0) {
                     //if all are increasing and the latest is below 0
-                    agent.setBuy(true);
+                    return true;
                 }
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         Alligator gator = (Alligator)getIndicator(INDEX_ALLIGATOR);
@@ -119,17 +122,18 @@ public class FADOA extends Strategy {
                 if (val1 < val2 && val2 < val3 && val1 < 0) {
 
                     //if latest 2 are decreasing and the latest is below 0
-                    agent.setReasonSell(ReasonSell.Reason_Strategy);
-                    adjustHardStopPrice(agent, currentPrice);
+                    return true;
 
                 } else if (val1 < val2 && val2 < val3 && val3 < val4 && val1 > 0) {
 
                     //if all are decreasing and the latest is above 0
-                    agent.setReasonSell(ReasonSell.Reason_Strategy);
-                    adjustHardStopPrice(agent, currentPrice);
+                    return true;
 
                 }
             }
         }
+
+        //no signal
+        return false;
     }
 }

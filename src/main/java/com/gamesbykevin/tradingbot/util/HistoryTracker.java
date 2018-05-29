@@ -146,7 +146,8 @@ public class HistoryTracker implements Runnable {
         displayMessage("Running bash script: " + SHELL_SCRIPT_FILE, getWriter());
 
         //run shell script to commit file changes into github
-        Runtime.getRuntime().exec(SHELL_SCRIPT_FILE);
+        Process process = Runtime.getRuntime().exec(SHELL_SCRIPT_FILE);
+        process.waitFor();
 
         //display that we called the bash script
         displayMessage("Bash script called", getWriter());

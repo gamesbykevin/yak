@@ -37,7 +37,7 @@ public class RA extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         RSI rsi = (RSI)getIndicator(INDEX_RSI);
@@ -48,12 +48,15 @@ public class RA extends Strategy {
 
             //if + is above -
             if (getRecent(adx.getDmPlusIndicator()) > getRecent(adx.getDmMinusIndicator()))
-                agent.setBuy(true);
+                return true;
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         RSI rsi = (RSI)getIndicator(INDEX_RSI);
@@ -64,7 +67,7 @@ public class RA extends Strategy {
 
             //if + is below -
             if (getRecent(adx.getDmPlusIndicator()) < getRecent(adx.getDmMinusIndicator()))
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
         }
 
         //if trend is going down, protect our investment
@@ -72,5 +75,8 @@ public class RA extends Strategy {
             adjustHardStopPrice(agent, currentPrice);
         if (getRecent(adx.getDmPlusIndicator()) < getRecent(adx.getDmMinusIndicator()))
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }

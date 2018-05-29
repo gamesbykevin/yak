@@ -51,7 +51,7 @@ public class EMAR extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
@@ -59,11 +59,14 @@ public class EMAR extends Strategy {
 
         //if rsi is over the line and we have a bullish crossover
         if (getRecent(rsiObj.getValueRSI()) > rsiLine && hasCrossover(true, emaShortObj.getEma(), emaLongObj.getEma()))
-            agent.setBuy(true);
+            return true;
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
@@ -76,10 +79,13 @@ public class EMAR extends Strategy {
 
         //if rsi is under the line and the fast line is below the slow long indicating a downward trend
         if (current < rsiLine && emaShort < emaLong)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
 
         //adjust our hard stop price to protect our investment
         if (emaShort < emaLong || current < rsiLine)
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }

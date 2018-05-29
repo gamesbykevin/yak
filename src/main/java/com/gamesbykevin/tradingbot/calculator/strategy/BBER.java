@@ -54,7 +54,7 @@ public class BBER extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
         BB bbObj = (BB)getIndicator(INDEX_BB);
@@ -74,14 +74,17 @@ public class BBER extends Strategy {
 
         //we want to buy right when the close crosses the ema or close crosses the middle while the rsi is trending
         if (prevClose < prevEma && currClose > currEma && currClose > currMiddle && currRsi >= RSI_LINE) {
-            agent.setBuy(true);
+            return true;
         } else if (currClose > currEma && prevClose < prevMiddle && currClose > currMiddle && currRsi >= RSI_LINE) {
-            agent.setBuy(true);
+            return true;
         }
+
+        //no signal yet
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
         BB bbObj = (BB)getIndicator(INDEX_BB);
@@ -99,6 +102,9 @@ public class BBER extends Strategy {
 
         //if the close is below the ema long and bb middle and rsi is heading towards oversold
         if (close < ema && close < middle && rsi < RSI_LINE)
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
+
+        //no signal yet
+        return false;
     }
 }

@@ -34,7 +34,7 @@ public class FMFI extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         Fractal fractal = (Fractal)getIndicator(INDEX_FRACTAL);
@@ -54,12 +54,15 @@ public class FMFI extends Strategy {
 
             //green confirms the trend and if the price is increasing let's buy
             if (hasGreen(history, market) && curr.close > prev.close)
-                agent.setBuy(true);
+                return true;
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //get our indicators
         Fractal fractal = (Fractal)getIndicator(INDEX_FRACTAL);
@@ -84,9 +87,12 @@ public class FMFI extends Strategy {
             //green confirms the trend and if the price is decreasing let's sell
             if (hasGreen(history, market) && curr.close < prev.close) {
                 adjustHardStopPrice(agent, currentPrice);
-                agent.setReasonSell(ReasonSell.Reason_Strategy);
+                return true;
             }
         }
+
+        //no signal
+        return false;
     }
 
     private boolean hasGreen(List<Period> history, MarketFacilitationIndex market) {

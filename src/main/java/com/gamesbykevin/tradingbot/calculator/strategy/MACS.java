@@ -44,7 +44,7 @@ public class MACS extends Strategy {
     }
 
     @Override
-    public void checkBuySignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
         EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
@@ -68,13 +68,16 @@ public class MACS extends Strategy {
 
                 //last thing we check is that all ema values are going in the correct direction
                 if (prevEmaSlow < currEmaSlow && prevEmaFast  < currEmaFast && prevEmaTrend < currEmaTrend)
-                    agent.setBuy(true);
+                    return true;
             }
         }
+
+        //no signal
+        return false;
     }
 
     @Override
-    public void checkSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
         //did we confirm downtrend?
         boolean downtrend = true;
@@ -99,22 +102,19 @@ public class MACS extends Strategy {
             }
         }
 
-        //do we have a downtrend
-        if (downtrend) {
-
-            //we have a reason to sell
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
-
-            //adjust our hard stop price to protect our investment
-            adjustHardStopPrice(agent, currentPrice);
-        }
+        //do we have a downtrend?
+        if (downtrend)
+            return true;
 
         //if our fast value is below the slow and trend let's sell
         if (getRecent(emaFast) < getRecent(emaSlow) && getRecent(emaFast) < getRecent(emaTrend))
-            agent.setReasonSell(ReasonSell.Reason_Strategy);
+            return true;
 
         //adjust our hard stop price to protect our investment
         if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) < getRecent(emaTrend))
             adjustHardStopPrice(agent, currentPrice);
+
+        //no signal
+        return false;
     }
 }
