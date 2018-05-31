@@ -108,6 +108,7 @@ public class HistoryTracker implements Runnable {
 
                             //if the history changed, write it to local storage
                             if (history.size() != size) {
+
                                 displayMessage("Writing history: " + productId + ", " + candle.description + ", Size: " + history.size(), getWriter());
                                 boolean result = History.write(history, productId, candle);
 

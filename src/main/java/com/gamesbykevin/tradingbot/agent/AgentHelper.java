@@ -69,7 +69,6 @@ public class AgentHelper {
             final double newLimit = (STOP_TRADING_RATIO * agent.getWallet().getFundsBeforeTrade());
             displayMessageLimitIncrease(agent, oldLimit, newLimit);
         }
-
     }
 
     public static BigDecimal round(double number) {
@@ -112,32 +111,78 @@ public class AgentHelper {
         return true;
     }
 
-    protected static void checkSell(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double currentPrice) {
+    protected static void checkBuy(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double price) {
+
+        //if we need to wait for the next candle period we won't continue
+        if (strategy.hasWait()) {
+
+            //we are still waiting
+            displayMessage(agent, "Waiting for next candle. Available funds $" + agent.getWallet().getFunds(), false);
+            return;
+        }
+
+        //check for a buy signal
+        boolean buy = strategy.hasBuySignal(agent, history, price);
+
+        //if buying, check the child to confirm
+        if (buy && !strategyChild.hasBuySignal(agent, historyChild, price))
+            buy = false;
+
+        //display our data
+        strategy.displayData(agent, buy);
+
+        //we will buy if there is a reason
+        if (buy) {
+
+            //create our trade object
+            createTrade(agent);
+
+            //get the current trade
+            Trade trade = agent.getTrade();
+
+            //what is the lowest and highest price during this trade?
+            trade.setPriceMin(price);
+            trade.setPriceMax(price);
+
+            //let's set our hard stop $
+            trade.setHardStopPrice(price - (price * HARD_STOP_RATIO));
+
+            //write hard stop amount to our log file
+            displayMessage(agent, "Current Price $" + price + ", Hard stop $" + trade.getHardStopPrice(), true);
+
+            //create and assign our limit order
+            agent.setOrder(createLimitOrder(agent, Action.Buy, product, price));
+        } else {
+
+            //we are still waiting
+            displayMessage(agent, "Waiting. Available funds $" + agent.getWallet().getFunds(), false);
+        }
+    }
+
+    protected static void checkSell(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double price) {
 
         //get the latest closing price
         final double close = history.get(history.size() - 1).close;
 
+        //get the current trade
         Trade trade = agent.getTrade();
 
         //keep track of the lowest / highest price during a single trade
-        trade.checkPriceMinMax(currentPrice);
+        trade.checkPriceMinMax(price);
 
-        //right now we don't have a reason to sell
+        //right now we don't have a reason to sell until we check
         trade.setReasonSell(null);
 
-        //check our strategy for a sell signal
-        if (strategy.hasSellSignal(agent, history, currentPrice)) {
-
-            //check the child to confirm the sell signal
-            if (strategyChild.hasSellSignal(agent, historyChild, currentPrice))
-                trade.setReasonSell(ReasonSell.Reason_Strategy);
-        }
+        //check our strategy for a sell signal, and check the child as well
+        //if (strategy.hasSellSignal(agent, history, price) || strategyChild.hasSellSignal(agent, historyChild, price))
+        if (strategy.hasSellSignal(agent, history, price))
+            trade.setReasonSell(ReasonSell.Reason_Strategy);
 
         //if $ declines we sell, else we update the $ history
         if (hasDecline(trade.getPriceHistory())) {
             trade.setReasonSell(ReasonSell.Reason_PriceDecline);
         } else {
-            trade.updatePriceHistory(currentPrice);
+            trade.updatePriceHistory(price);
         }
 
         //if $ dropped below our hard stop, we must sell, else we adjust our stop $
@@ -157,7 +202,7 @@ public class AgentHelper {
         if (trade.getReasonSell() != null) {
 
             //since we are selling let's adjust our hard stop
-            trade.adjustHardStopPrice(agent, currentPrice);
+            trade.adjustHardStopPrice(agent, price);
 
             //if there is a reason, display message
             displayMessage(agent, trade.getReasonSell().getDescription(), true);
@@ -166,7 +211,7 @@ public class AgentHelper {
             trade.setAttempts(0);
 
             //create and assign our limit order at the last period closing price
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, currentPrice));
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, price));
 
             //we want to wait until the next candle period before we check to buy stock again after this sells
             strategy.setWait(true);
@@ -174,55 +219,7 @@ public class AgentHelper {
         } else {
 
             //display our waiting message
-            displayMessageOrderPending(agent, currentPrice);
-        }
-    }
-
-    protected static void checkBuy(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double currentPrice) {
-
-        //is it time to buy?
-        boolean buy = false;
-
-        //if the strategy does not need to wait for new candle data
-        if (!strategy.hasWait()) {
-
-            //check for a buy signal
-            buy = strategy.hasBuySignal(agent, history, currentPrice);
-
-            //if buying, check the child to confirm
-            if (buy && !strategyChild.hasBuySignal(agent, historyChild, currentPrice))
-                buy = false;
-
-            //display our data
-            strategy.displayData(agent, buy);
-        }
-
-        //we will buy if there is a reason
-        if (buy) {
-
-            //create our trade object
-            createTrade(agent);
-
-            //get the current trade
-            Trade trade = agent.getTrade();
-
-            //what is the lowest and highest price during this trade?
-            trade.setPriceMin(currentPrice);
-            trade.setPriceMax(currentPrice);
-
-            //let's set our hard stop $
-            trade.setHardStopPrice(currentPrice - (currentPrice * HARD_STOP_RATIO));
-
-            //write hard stop amount to our log file
-            displayMessage(agent, "Current Price $" + currentPrice + ", Hard stop $" + trade.getHardStopPrice(), true);
-
-            //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Buy, product, currentPrice));
-
-        } else {
-
-            //we are still waiting
-            displayMessage(agent, "Waiting. Available funds $" + agent.getWallet().getFunds(), false);
+            displayMessageOrderPending(agent, price);
         }
     }
 }

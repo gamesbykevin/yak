@@ -92,7 +92,7 @@ public class MainHelper {
     }
 
     /**
-     * Here we will group the agents together by trading strategy, hard stop ratio, and candle duration
+     * Here we will add the agents together by trading strategy
      * @param main
      * @return
      */

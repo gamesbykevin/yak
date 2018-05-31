@@ -57,8 +57,14 @@ public class EMAR extends Strategy {
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
 
+        /*
         //if rsi is over the line and we have a bullish crossover
         if (getRecent(rsiObj.getValueRSI()) > rsiLine && hasCrossover(true, emaShortObj.getEma(), emaLongObj.getEma()))
+            return true;
+        */
+
+        if (getRecent(rsiObj.getValueRSI()) > rsiLine &&
+                getRecent(emaShortObj.getEma()) > getRecent(emaLongObj.getEma()))
             return true;
 
         //no signal

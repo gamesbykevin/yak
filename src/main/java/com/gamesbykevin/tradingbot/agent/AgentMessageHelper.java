@@ -63,13 +63,22 @@ public class AgentMessageHelper {
 
     }
 
-    protected static void displayMessageOrderPending(Agent agent, double currentPrice) {
+    protected static void displayMessageOrderPending(Agent agent, double price) {
 
         //construct message
         String message = "Waiting. Product " + agent.getProductId();
-        message += ", Current $" + currentPrice;
-        message += ", Purchase $" + round(agent.getTrade().getPriceBuy());
-        message += ", Hard Stop $" + round(agent.getTrade().getHardStopPrice());
+        message += ", Current $" + price;
+
+        //if we already have a filled buy order we will use that information
+        if (agent.getTrade() != null && agent.getTrade().getOrderBuy() != null) {
+            message += ", Purchase $" + round(agent.getTrade().getPriceBuy());
+            message += ", Hard Stop $" + round(agent.getTrade().getHardStopPrice());
+        } else {
+            message += ", Purchase $" + agent.getOrder().getPrice();
+            message += ", Hard Stop $";
+            ;
+        }
+
         message += ", Quantity: " + agent.getWallet().getQuantity();
 
         //we are waiting

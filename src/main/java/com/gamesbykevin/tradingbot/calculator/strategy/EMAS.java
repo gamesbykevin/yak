@@ -65,8 +65,13 @@ public class EMAS extends Strategy {
         double currEmaLong = getRecent(emaLongObj.getEma());
         double currSmaShort = getRecent(smaObjShort.getSma());
 
+        /*
         //the short ema needs to cross above the long ema and the close needs to be above the sma
         if (prevEmaShort < prevEmaLong && currEmaShort > currEmaLong && close > currSmaShort)
+            return true;
+        */
+
+        if (currEmaShort > currEmaLong && close > currSmaShort)
             return true;
 
         //no signal

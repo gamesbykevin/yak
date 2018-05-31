@@ -60,6 +60,7 @@ public class MACS extends Strategy {
         double prevEmaFast = getRecent(emaFast, 2);
         double prevEmaTrend = getRecent(emaTrend, 2);
 
+        /*
         //make sure the fast just crossed above the slow
         if (prevEmaFast < prevEmaSlow && currEmaFast > currEmaSlow) {
 
@@ -71,6 +72,10 @@ public class MACS extends Strategy {
                     return true;
             }
         }
+        */
+
+        if (currEmaFast > currEmaSlow && currEmaSlow > currEmaTrend)
+            return true;
 
         //no signal
         return false;

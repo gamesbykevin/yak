@@ -72,12 +72,18 @@ public class BBER extends Strategy {
         double prevMiddle = getRecent(bbObj.getMiddle().getSma(), 2);
         double prevRsi = getRecent(rsiObj.getValueRSI(), 2);
 
+        /*
         //we want to buy right when the close crosses the ema or close crosses the middle while the rsi is trending
         if (prevClose < prevEma && currClose > currEma && currClose > currMiddle && currRsi >= RSI_LINE) {
             return true;
         } else if (currClose > currEma && prevClose < prevMiddle && currClose > currMiddle && currRsi >= RSI_LINE) {
             return true;
         }
+        */
+
+        if (currClose > currEma && currClose > currMiddle && currRsi >= RSI_LINE)
+            return true;
+
 
         //no signal yet
         return false;

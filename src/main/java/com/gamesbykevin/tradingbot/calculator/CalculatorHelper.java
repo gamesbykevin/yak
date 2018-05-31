@@ -41,6 +41,10 @@ public class CalculatorHelper {
                 strategy = new CA();
                 break;
 
+            case EMAC:
+                strategy = new EMAC();
+                break;
+
             case EMAR:
                 strategy = new EMAR();
                 break;
@@ -91,6 +95,10 @@ public class CalculatorHelper {
 
             case SOADX:
                 strategy = new SOADX();
+                break;
+
+            case SOEMA:
+                strategy = new SOEMA();
                 break;
 
             case SSR:

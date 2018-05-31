@@ -54,6 +54,7 @@ public class SSR extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
         SO objSO = (SO)getIndicator(INDEX_SO);
 
+        /*
         //if the close is above the sma we have a bullish trend
         if (period.close > getRecent(objSMA)) {
 
@@ -62,6 +63,19 @@ public class SSR extends Strategy {
 
                 //last thing we check is for the stochastic bullish crossover before we buy
                 if (hasCrossover(true, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
+                    return true;
+            }
+        }
+        */
+
+        //if the close is above the sma we have a bullish trend
+        if (period.close > getRecent(objSMA)) {
+
+            //we also want the rsi and the stochastic oscillator to be over sold
+            if (getRecent(objRSI.getValueRSI()) < OVERSOLD && getRecent(objSO.getStochasticOscillator()) < OVERSOLD) {
+
+                //last thing we check is for the stochastic bullish crossover before we buy
+                if (getRecent(objSO.getMarketRateFull()) > getRecent(objSO.getStochasticOscillator()))
                     return true;
             }
         }

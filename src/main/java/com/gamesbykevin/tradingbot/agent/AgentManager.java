@@ -31,9 +31,6 @@ public class AgentManager {
     //the product we are trading
     private final Product product;
 
-    //current price of stock
-    private double currentPrice = 0;
-
     //object used to write to a text file
     private PrintWriter writer;
 
@@ -83,16 +80,13 @@ public class AgentManager {
         //flag that this agent is working
         working = true;
 
-        //keep track of the current price
-        setCurrentPrice(price);
-
         try {
 
             //update our calculator, etc...
             updateCalculators(this);
 
             //update our agents
-            updateAgents(this);
+            updateAgents(this, price);
 
         } catch (Exception ex) {
 
@@ -145,7 +139,7 @@ public class AgentManager {
     }
 
     private double getAssets(Agent agent) {
-        return agent.getAssets(getCurrentPrice());
+        return agent.getAssets();
     }
 
     public PrintWriter getWriter() {
@@ -160,14 +154,6 @@ public class AgentManager {
 
     public double getFunds() {
         return (this.funds);
-    }
-
-    public void setCurrentPrice(final double currentPrice) {
-        this.currentPrice = currentPrice;
-    }
-
-    public double getCurrentPrice() {
-        return this.currentPrice;
     }
 
     public String getProductId() {

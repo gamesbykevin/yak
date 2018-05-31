@@ -107,8 +107,9 @@ public class Trade {
         if (agent.getOrder() == null)
             return;
 
-        //we can't continue if the order wasn't filled
-        if (!agent.getOrder().getStatus().equalsIgnoreCase(Status.Filled.getDescription()))
+        //we can't continue if the order wasn't completed
+        if (!agent.getOrder().getStatus().equalsIgnoreCase(Status.Filled.getDescription()) &&
+                !agent.getOrder().getStatus().equalsIgnoreCase(Status.Done.getDescription()))
             return;
 
         //is this transaction a buy or sell?
@@ -188,16 +189,22 @@ public class Trade {
         return this.orderBuy;
     }
 
-    private void setOrderBuy(Order orderBuy) {
-        this.orderBuy = orderBuy;
-    }
-
     public Order getOrderSell() {
         return this.orderSell;
     }
 
+    private void setOrderBuy(Order orderBuy) {
+        this.orderBuy = orderBuy;
+        feeBuy = new Double(getFee(getOrderBuy()));
+        priceBuy = new Double(getPrice(getOrderBuy()));
+        quantityBuy = new Float(getQuantity(getOrderBuy()));
+    }
+
     private void setOrderSell(Order orderSell) {
         this.orderSell = orderSell;
+        feeSell = new Double(getFee(getOrderSell()));
+        priceSell = new Double(getPrice(getOrderSell()));
+        quantitySell = new Float(getQuantity(getOrderSell()));
     }
 
     public void setFinish(long finish) {
@@ -246,18 +253,10 @@ public class Trade {
     }
 
     public double getFeeBuy() {
-
-        if (feeBuy == null)
-            feeBuy = new Double(getFee(getOrderBuy()));
-
         return feeBuy;
     }
 
     public double getFeeSell() {
-
-        if (feeSell == null)
-            feeSell = new Double(getFee(getOrderSell()));
-
         return feeSell;
     }
 
@@ -281,18 +280,10 @@ public class Trade {
     }
 
     public double getPriceBuy() {
-
-        if (priceBuy == null)
-            priceBuy = new Double(getPrice(getOrderBuy()));
-
         return priceBuy;
     }
 
     public double getPriceSell() {
-
-        if (priceSell == null)
-            priceSell = new Double(getPrice(getOrderSell()));
-
         return priceSell;
     }
 
@@ -312,18 +303,10 @@ public class Trade {
     }
 
     public float getQuantityBuy() {
-
-        if (quantityBuy == null)
-            quantityBuy = new Float(getQuantity(getOrderBuy()));
-
         return quantityBuy;
     }
 
     public float getQuantitySell() {
-
-        if (quantitySell == null)
-            quantitySell = new Float(getQuantity(getOrderSell()));
-
         return quantitySell;
     }
 
@@ -421,6 +404,10 @@ public class Trade {
 
     public void setAttempts(int attempts) {
         this.attempts = attempts;
+    }
+
+    public double getCurrentPrice() {
+        return getPriceHistory()[getPriceHistory().length - 1];
     }
 
     public double[] getPriceHistory() {

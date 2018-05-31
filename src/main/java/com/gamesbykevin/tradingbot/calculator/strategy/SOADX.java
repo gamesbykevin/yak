@@ -66,9 +66,23 @@ public class SOADX extends Strategy {
         double fullOscPrev = getRecent(full.getStochasticOscillator(), 2);
         double fullOscCurr = getRecent(full.getStochasticOscillator(), 1);
 
+        /*
         //are things looking bullish?
         if (slowOscPrev > OSCILLATOR_TREND && slowOscCurr > OSCILLATOR_HIGH &&
                 fullOscPrev > OSCILLATOR_TREND && fullOscCurr > OSCILLATOR_TREND) {
+
+            //if adx is above the trend
+            if (getRecent(adx.getAdx()) > ADX_TREND) {
+
+                //if the volume is above the sma average let's buy
+                if (getRecent(history, Fields.Volume) > getRecent(sma.getSma()))
+                    return true;
+            }
+        }
+        */
+
+        //are things looking bullish?
+        if (slowOscCurr > OSCILLATOR_HIGH && fullOscCurr > OSCILLATOR_TREND) {
 
             //if adx is above the trend
             if (getRecent(adx.getAdx()) > ADX_TREND) {

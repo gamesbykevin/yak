@@ -28,9 +28,10 @@ public abstract class Strategy extends Calculation {
      */
     public enum Key {
         AE,     BBAR,   BBER,   BBR,    CA,
-        EMAR,   EMAS,   ERS,    FA,     FADOA,
-        FAO,    FMFI,   MACS,   MARS,   MER,
-        MES,    RA,     SOADX,  SSR
+        EMAC,   EMAR,   EMAS,   ERS,    FA,
+        FADOA,  FAO,    FMFI,   MACS,   MARS,
+        MER,    MES,    RA,     SOADX,  SOEMA,
+        SSR
     }
 
     private final Key key;

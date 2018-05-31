@@ -50,9 +50,6 @@ public class CA extends Strategy {
         double cciCurr = getRecent(objCCI.getCCI(), 1);
         double cciPrev = getRecent(objCCI.getCCI(), 2);
 
-        if (adxCurr < TREND && cciCurr < CCI_LOW)
-            return true;
-
         /*
         //are things trending with momentum? we want to catch it when the switch just happens
         if ((adxCurr < TREND && cciPrev > CCI_LOW && cciCurr < CCI_LOW) ||
@@ -66,6 +63,10 @@ public class CA extends Strategy {
                 return true;
         }
         */
+
+
+        if (adxCurr < TREND && cciCurr < CCI_LOW)
+            return true;
 
         //no signal
         return false;

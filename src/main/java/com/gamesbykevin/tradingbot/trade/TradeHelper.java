@@ -68,7 +68,7 @@ public class TradeHelper {
         if (trade.getOrderBuy() != null && trade.getOrderSell() == null) {
 
             //setup our notification message
-            subject = "Purchase " + trade.getProductId();
+            subject = "Purchase " + trade.getProductId() + " (" + agent.getStrategyKey() + ")";
 
             //start off with the product to start the transaction description
             text = "Buy " + trade.getProductId();
@@ -77,7 +77,7 @@ public class TradeHelper {
             text += ", quantity: " + trade.getQuantityBuy();
 
             //what is the price
-            text += " @ $" + trade.getOrderBuy();
+            text += " @ $" + trade.getPriceBuy();
 
             //display our fees
             text += ", buy fee $" + trade.getFeeBuy();
@@ -126,9 +126,9 @@ public class TradeHelper {
 
             //did we win or lose?
             if (trade.getResult() == Result.Win) {
-                subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() - fees);
+                subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() - fees) + " (" + agent.getStrategyKey() + ")";
             } else {
-                subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() + fees);
+                subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() + fees) + " (" + agent.getStrategyKey() + ")";
             }
         }
 

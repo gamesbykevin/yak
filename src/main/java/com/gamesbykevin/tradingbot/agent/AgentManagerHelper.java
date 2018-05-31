@@ -18,7 +18,7 @@ public class AgentManagerHelper {
         }
     }
 
-    protected static void updateAgents(AgentManager manager) {
+    protected static void updateAgents(AgentManager manager, double price) {
 
         //update each agent
         for (int i = 0; i < manager.getAgents().size(); i++) {
@@ -40,7 +40,7 @@ public class AgentManagerHelper {
                 } else {
 
                     //update the agent accordingly
-                    agent.update(manager.getCalculators(), manager.getProduct(), manager.getCurrentPrice());
+                    agent.update(manager.getCalculators(), manager.getProduct(), price);
 
                 }
 
@@ -80,8 +80,8 @@ public class AgentManagerHelper {
                 Agent agent1 = manager.getAgents().get(i);
                 Agent agent2 = manager.getAgents().get(j);
 
-                double assets1 = agent1.getAssets(manager.getCurrentPrice());
-                double assets2 = agent2.getAssets(manager.getCurrentPrice());
+                double assets1 = agent1.getAssets();
+                double assets2 = agent2.getAssets();
 
                 //if the next agent has more funds, switch
                 if (assets2 > assets1) {
@@ -102,7 +102,7 @@ public class AgentManagerHelper {
             result += manager.getProductId() + " : " + agent.getStrategyKey();
 
             //how much $ does the agent currently have
-            result += " - $" + AgentHelper.round(agent.getAssets(manager.getCurrentPrice()));
+            result += " - $" + AgentHelper.round(agent.getAssets());
 
             //if this agent has stopped trading, include it in the message
             if (agent.hasStop())

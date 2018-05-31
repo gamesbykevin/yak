@@ -26,6 +26,7 @@ import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.*;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.getChild;
 import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.cancelOrder;
 import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.updateLimitOrder;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.createTrade;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.displayTradeSummary;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
@@ -46,17 +47,11 @@ public class Agent {
     //do we stop trading
     private boolean stop = false;
 
-    //the reason why we are selling
-    private ReasonSell reason;
-
     //what is our assigned trading strategy
     private Strategy.Key strategyKey = null;
 
     //the product we are trading
     private final String productId;
-
-    //do we buy stock?
-    private boolean buy = false;
 
     //the candle time of the order
     private long orderTime;
@@ -88,7 +83,7 @@ public class Agent {
         setCandle(candle);
     }
 
-    public synchronized void update(List<Calculator> calculators, Product product, double currentPrice) {
+    public synchronized void update(List<Calculator> calculators, Product product, double price) {
 
         //skip if we aren't allowed to trade
         if (hasStop())
@@ -131,12 +126,12 @@ public class Agent {
             if (getWallet().getQuantity() > 0 && getWallet().getQuantity() >= product.getBase_min_size()) {
 
                 //check if we in position to sell our stock
-                checkSell(this, strategy, strategyChild, history, historyChild, product, currentPrice);
+                checkSell(this, strategy, strategyChild, history, historyChild, product, price);
 
             } else {
 
                 //we don't have any quantity so let's see if we can buy
-                checkBuy(this, strategy, strategyChild, history, historyChild, product, currentPrice);
+                checkBuy(this, strategy, strategyChild, history, historyChild, product, price);
 
             }
 
@@ -147,7 +142,7 @@ public class Agent {
         } else {
 
             //keep track of the price range during a single trade
-            getTrade().checkPriceMinMax(currentPrice);
+            getTrade().checkPriceMinMax(price);
 
             //are we selling?
             boolean selling = getOrder().getSide().equalsIgnoreCase(Action.Sell.getDescription());
@@ -159,7 +154,7 @@ public class Agent {
             final double orderPrice = Double.parseDouble(getOrder().getPrice());
 
             //display our pending order
-            displayMessageOrderPending(this, currentPrice);
+            displayMessageOrderPending(this, price);
 
             //if we are selling and the sell price is less than the purchase price we will chase the sell
             if (selling && orderPrice < getTrade().getPriceBuy()) {
@@ -190,13 +185,13 @@ public class Agent {
                     if (selling) {
 
                         //the limit order will fill when the price goes at or above the order price
-                        if (currentPrice > orderPrice)
+                        if (price > orderPrice)
                             status = Status.Filled;
 
                     } else {
 
                         //the limit order will fill when the price goes at or below the order price
-                        if (currentPrice < orderPrice)
+                        if (price < orderPrice)
                             status = Status.Filled;
 
                     }
@@ -228,18 +223,28 @@ public class Agent {
                 case Filled:
 
                     //order has been filled
-                    displayMessage(this, "Order filled, current $" + currentPrice, true);
+                    displayMessage(this, "Order filled, current $" + price, true);
 
                     //get the recent trade
-                    Trade trade = getTrades().get(getTrades().size() - 1);
+                    Trade trade = getTrade();
 
                     //update the agent and trade status
                     trade.update(this);
 
+                    //display the trade summary AFTER we update the trade
+                    displayTradeSummary(this, trade);
+
                     //if we sold, display trade and totals
                     if (selling) {
-                        displayTradeSummary(this, trade);
+
+                        //show all summary of trades
                         displayMessageAllTradesSummary(this);
+
+                        //check the standing of our agent now that we have sold successfully
+                        checkStanding(this);
+
+                        //set to null so next trade will create a new log file
+                        this.writer = null;
                     }
 
                     //now that the order has been filled, remove it
@@ -279,16 +284,6 @@ public class Agent {
                     //do nothing
                     break;
             }
-
-            //if this is true we have finished a trade
-            if (selling && status == Status.Filled) {
-
-                //check the standing of our agent now that we have sold successfully
-                checkStanding(this);
-
-                //set to null so next trade will create a new log file
-                this.writer = null;
-            }
         }
     }
 
@@ -300,8 +295,12 @@ public class Agent {
         this.candle = candle;
     }
 
-    protected double getAssets(double currentPrice) {
-        return (getWallet().getQuantity() * currentPrice) + getWallet().getFunds();
+    protected double getAssets() {
+
+        if (getTrades().isEmpty())
+            return getWallet().getFunds();
+
+        return (getWallet().getQuantity() * getTrade().getCurrentPrice()) + getWallet().getFunds();
     }
 
     public PrintWriter getWriter() {

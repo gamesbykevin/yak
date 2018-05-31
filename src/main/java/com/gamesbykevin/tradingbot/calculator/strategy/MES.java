@@ -58,6 +58,7 @@ public class MES extends Strategy {
         INDEX_EMA = addIndicator(new EMA(periodsEmaShort));
     }
 
+    @Override
     public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
         boolean confirmA = false, confirmB = false;
