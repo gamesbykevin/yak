@@ -53,9 +53,6 @@ public class HistoryTracker implements Runnable {
         //get our list of candles
         Candle[] candles = Candle.values();
 
-        //our history object
-        List<Period> history = new ArrayList<>();
-
         while (true) {
 
             try {
@@ -76,8 +73,8 @@ public class HistoryTracker implements Runnable {
                             //display the message
                             displayMessage("Resuming " + productId + " " + candle.description, getWriter());
 
-                            //clear our history list before we load
-                            history.clear();
+                            //our history object
+                            List<Period> history = new ArrayList<>();
 
                             //load the contents from the text file into our array list
                             History.load(history, productId, candle, null);
@@ -117,6 +114,9 @@ public class HistoryTracker implements Runnable {
                                     commitChanges();
                             }
 
+                            history.clear();
+                            history = null;
+
                         } catch (Exception e) {
 
                             //display message and write to log
@@ -125,7 +125,7 @@ public class HistoryTracker implements Runnable {
                         } finally {
 
                             //we need to wait for a short while
-                            displayMessage("Sleeping for " + (DELAY/1000L) + " seconds", getWriter());
+                            displayMessage("Sleeping for " + (DELAY / 1000L) + " seconds", getWriter());
 
                             //sleep the thread for a short time
                             Thread.sleep(DELAY);

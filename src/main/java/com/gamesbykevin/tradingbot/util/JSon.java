@@ -51,6 +51,9 @@ public class JSon {
                 result += output;
             }
 
+            br.close();
+            br = null;
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -66,6 +69,8 @@ public class JSon {
 
             }
         }
+
+        connection = null;
 
         return result;
     }

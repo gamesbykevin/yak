@@ -95,8 +95,16 @@ public class Calculator {
 
         //create all strategies and add to our list
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
+
+            //add the strategy to the list
             getStrategies().add(createStrategy(MY_TRADING_STRATEGIES[i]));
+
+            //let's calculate the strategies so we can cleanup the data asap
+            calculate(writer, getStrategies().get(getStrategies().size() - 1), 0);
         }
+
+        //cleanup the history list
+        cleanupHistory(writer);
     }
 
     public synchronized boolean update(AgentManager manager) {
@@ -116,10 +124,10 @@ public class Calculator {
             if (lapsed >= minimum) {
 
                 //display message as sometimes the call is not successful
-                displayMessage("Making rest call to retrieve history " + productId + " (" + candle.description + ")", null);
+                displayMessage("Making rest call to retrieve history " + productId + " (" + getCandle().description + ")", null);
 
                 //make our rest call and get the json response
-                String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, candle.duration));
+                String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getCandle().duration));
 
                 //convert json text to multi array
                 double[][] data = GSon.getGson().fromJson(json, double[][].class);
@@ -175,32 +183,41 @@ public class Calculator {
         return result;
     }
 
+    private synchronized void calculate(PrintWriter writer, Strategy strategy, int newPeriods) {
+
+        //display info
+        displayMessage("Calculating " + getCandle().description + " " + strategy.getKey() + "...", writer);
+
+        //flag the strategy as no longer waiting for new candle data
+        strategy.setWait(false);
+
+        //calculate indicator values based on the current strategy
+        strategy.calculate(getHistory(), newPeriods);
+
+        //cleanup data list(s) to keep it at a manageable size
+        strategy.cleanup();
+
+        //display info
+        displayMessage("Calculating " + getCandle().description + " " + strategy.getKey() + " done", writer);
+    }
+
     public synchronized void calculate(AgentManager manager, int newPeriods) {
 
         //calculate all strategies
         for (int i = 0; i < getStrategies().size(); i++) {
 
-            //get the current strategy
-            Strategy strategy = getStrategies().get(i);
-
-            //display info
-            displayMessage("Calculating " + getCandle().description + " " + getStrategies().get(i).getKey() + "...", manager.getWriter());
-
-            //flag the strategy as no longer waiting for new candle data
-            strategy.setWait(false);
-
-            //calculate indicator values based on the current strategy
-            strategy.calculate(getHistory(), newPeriods);
-
-            //cleanup data list(s) to keep it at a manageable size
-            strategy.cleanup();
-
-            //display info
-            displayMessage("Calculating " + getCandle().description + " " + getStrategies().get(i).getKey() + " done", manager.getWriter());
+            //calculate the current strategy
+            calculate(manager.getWriter(), getStrategies().get(i), newPeriods);
         }
 
+        //cleanup the history list
+        cleanupHistory(manager.getWriter());
+    }
+
+    private void cleanupHistory(PrintWriter writer) {
+
         //size before cleanup
-        displayMessage("Cleaning up history: " + getHistory().size(), manager.getWriter());
+        displayMessage("Cleaning up history: " + getHistory().size(), writer);
 
         //let's keep our historical list at a manageable size
         while (getHistory().size() > PERIODS_RETAIN) {
@@ -208,7 +225,7 @@ public class Calculator {
         }
 
         //size after cleanup
-        displayMessage("Cleaned: " + getHistory().size(), manager.getWriter());
+        displayMessage("Cleaned: " + getHistory().size(), writer);
     }
 
     public List<Period> getHistory() {
