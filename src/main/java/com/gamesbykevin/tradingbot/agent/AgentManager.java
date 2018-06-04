@@ -37,7 +37,7 @@ public class AgentManager {
     //how many funds did we start with
     private final double funds;
 
-    public AgentManager(final Product product, final double funds) {
+    public AgentManager(Product product, double funds, Candle start) {
 
         //store the product this agent is trading
         this.product = product;
@@ -47,20 +47,30 @@ public class AgentManager {
 
         //create new calculator for each candle duration and perform our initial calculations
         for (Candle candle : Candle.values()) {
+
+            //we won't be trading on these candles
+            switch (candle) {
+
+                case OneMinute:
+                case FiveMinutes:
+                case FifteenMinutes:
+                    continue;
+
+                default:
+                    break;
+            }
+
             getCalculators().add(new Calculator(candle, getProductId(), getWriter()));
-            getCalculators().get(getCalculators().size() - 1).calculate(this, 0);
         }
 
         //create our list of agents
         this.agents = new ArrayList<>();
 
-        Candle candle = Candle.FiveMinutes;
-
         //create an agent for each strategy
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
             //create our agent
-            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], candle);
+            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], start);
 
             //add agent to the list
             getAgents().add(agent);

@@ -7,6 +7,7 @@ import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.HistoryTracker;
@@ -27,6 +28,7 @@ import static com.gamesbykevin.tradingbot.MainHelper.displayNextStatusUpdateDesc
 import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.getDurationDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameMain;
@@ -219,6 +221,9 @@ public class Main implements Runnable {
     @Override
     public void run() {
 
+        //current time
+        final long timePreInit = System.currentTimeMillis();
+
         //initialize
         init();
 
@@ -227,8 +232,11 @@ public class Main implements Runnable {
 
         try {
 
+            //current time
+            final long timePostInit = System.currentTimeMillis();
+
             //send notification our bot is starting
-            sendEmail("Trading Bot Started", "Paper trading: " + (PAPER_TRADING ? "On (fake money)" : "Off, You are using real funds!!!!!"));
+            sendEmail("Trading Bot Started: " + getDurationDesc(timePostInit - timePreInit), "Paper trading: " + (PAPER_TRADING ? "On (fake money)" : "Off, You are using real funds!!!!!"));
 
             while (true) {
 
@@ -325,7 +333,7 @@ public class Main implements Runnable {
         for (int i = 0; i < getProducts().size(); i++) {
 
             //create new manager agent
-            AgentManager agentManager = new AgentManager(getProducts().get(i), funds);
+            AgentManager agentManager = new AgentManager(getProducts().get(i), funds, Candle.TwentyFourHours);
 
             //add manager to list
             getAgentManagers().put(getProducts().get(i).getId(), agentManager);

@@ -45,6 +45,11 @@ public class AgentHelper {
     public static int SELL_ATTEMPT_LIMIT = 10;
 
     /**
+     * How many times do we wait for the buy order to fill before we cancel
+     */
+    public static int BUY_ATTEMPT_LIMIT = 10;
+
+    /**
      * How many current prices do we track looking for a decline when selling?
      */
     public static int CURRENT_PRICE_HISTORY;
@@ -124,12 +129,13 @@ public class AgentHelper {
         //check for a buy signal
         boolean buy = strategy.hasBuySignal(agent, history, price);
 
-        //if buying, check the child to confirm
+        //if we have a buy signal, check the child to confirm
         if (buy && !strategyChild.hasBuySignal(agent, historyChild, price))
             buy = false;
 
         //display our data
         strategy.displayData(agent, buy);
+        strategyChild.displayData(agent, buy);
 
         //we will buy if there is a reason
         if (buy) {
@@ -152,6 +158,7 @@ public class AgentHelper {
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, price));
+
         } else {
 
             //we are still waiting
@@ -174,8 +181,7 @@ public class AgentHelper {
         trade.setReasonSell(null);
 
         //check our strategy for a sell signal, and check the child as well
-        //if (strategy.hasSellSignal(agent, history, price) || strategyChild.hasSellSignal(agent, historyChild, price))
-        if (strategy.hasSellSignal(agent, history, price))
+        if (strategy.hasSellSignal(agent, history, price) || strategyChild.hasSellSignal(agent, historyChild, price))
             trade.setReasonSell(ReasonSell.Reason_Strategy);
 
         //if $ declines we sell, else we update the $ history
@@ -194,6 +200,7 @@ public class AgentHelper {
 
         //display our data
         strategy.displayData(agent, trade.getReasonSell() != null);
+        strategyChild.displayData(agent, trade.getReasonSell() != null);
 
         //display recent stock prices
         displayMessagePriceDecline(agent);

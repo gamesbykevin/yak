@@ -89,6 +89,10 @@ public class CalculatorHelper {
                 strategy = new MES();
                 break;
 
+            case OD:
+                strategy = new OD();
+                break;
+
             case RA:
                 strategy = new RA();
                 break;
@@ -251,7 +255,7 @@ public class CalculatorHelper {
         switch (parent) {
 
             case TwentyFourHours:
-                return Candle.SixHours;
+                return Candle.OneHour;
 
             case SixHours:
                 return Candle.OneHour;

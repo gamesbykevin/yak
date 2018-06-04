@@ -128,8 +128,9 @@ public class PropertyUtil {
         //do we send a notification for every transaction?
         AgentHelper.NOTIFICATION_EVERY_TRANSACTION = Boolean.parseBoolean(getProperties().getProperty("notificationEveryTransaction"));
 
-        //how many attempts do we sell before we cancel
+        //how many attempts do we buy/sell before we cancel
         AgentHelper.SELL_ATTEMPT_LIMIT = Integer.parseInt(getProperties().getProperty("sellAttemptLimit"));
+        AgentHelper.BUY_ATTEMPT_LIMIT = Integer.parseInt(getProperties().getProperty("buyAttemptLimit"));
 
         //how many consecutive prices do we check for a decline
         AgentHelper.CURRENT_PRICE_HISTORY = Integer.parseInt(getProperties().getProperty("currentPriceHistory"));

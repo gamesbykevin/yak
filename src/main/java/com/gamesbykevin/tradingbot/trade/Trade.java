@@ -183,6 +183,9 @@ public class Trade {
             }
 
         }
+
+        //reset the attempts back to 0
+        setAttempts(0);
     }
 
     public Order getOrderBuy() {

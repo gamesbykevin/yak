@@ -17,8 +17,8 @@ public abstract class Strategy extends Calculation {
     //does this strategy need to wait for new candle data to check for a buy signal?
     private boolean wait = false;
 
-    //adjust our price increase by half
-    private static final float ADJUST_HARD_STOP_RATIO = .5f;
+    //adjust our stop price by this ratio
+    private static final float ADJUST_HARD_STOP_RATIO = .75f;
 
     //list of indicators we are using
     private List<Indicator> indicators;
@@ -30,8 +30,8 @@ public abstract class Strategy extends Calculation {
         AE,     BBAR,   BBER,   BBR,    CA,
         EMAC,   EMAR,   EMAS,   ERS,    FA,
         FADOA,  FAO,    FMFI,   MACS,   MARS,
-        MER,    MES,    RA,     SOADX,  SOEMA,
-        SSR
+        MER,    MES,    OD,     RA,     SOADX,
+        SOEMA,  SSR
     }
 
     private final Key key;

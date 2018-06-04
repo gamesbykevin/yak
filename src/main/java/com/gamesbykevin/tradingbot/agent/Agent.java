@@ -156,16 +156,21 @@ public class Agent {
             //display our pending order
             displayMessageOrderPending(this, price);
 
-            //if we are selling and the sell price is less than the purchase price we will chase the sell
-            if (selling && orderPrice < getTrade().getPriceBuy()) {
+            if (selling) {
 
                 //if we exceeded our attempts we will cancel the limit order
                 if (getTrade().getAttempts() >= SELL_ATTEMPT_LIMIT)
                     cancel = true;
 
-                //keep track of our attempts
-                getTrade().setAttempts(getTrade().getAttempts() + 1);
+            } else {
+
+                //if we exceeded our attempts we will cancel the limit order
+                if (getTrade().getAttempts() >= BUY_ATTEMPT_LIMIT)
+                    cancel = true;
             }
+
+            //keep track of our attempts
+            getTrade().setAttempts(getTrade().getAttempts() + 1);
 
             //paper trading will try to treat same as live trading with limit/market orders
             if (Main.PAPER_TRADING) {
