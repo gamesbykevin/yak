@@ -107,11 +107,11 @@ public class Agent {
 
         //locate our historical list
         List<Period> history = calculator.getHistory();
-        List<Period> historyChild = calculatorChild.getHistory();
+        //List<Period> historyChild = calculatorChild.getHistory();
 
         //locate the strategy
         Strategy strategy = calculator.getStrategy(getStrategyKey());
-        Strategy strategyChild = calculatorChild.getStrategy(getStrategyKey());
+        //Strategy strategyChild = calculatorChild.getStrategy(getStrategyKey());
 
         if (getOrder() != null) {
 
@@ -127,12 +127,14 @@ public class Agent {
             if (getWallet().getQuantity() > 0 && getWallet().getQuantity() >= product.getBase_min_size()) {
 
                 //check if we in position to sell our stock
-                checkSell(this, strategy, strategyChild, history, historyChild, product, price);
+                //checkSell(this, strategy, strategyChild, history, historyChild, product, price);
+                checkSell(this, strategy, null, history, null, product, price);
 
             } else {
 
                 //we don't have any quantity so let's see if we can buy
-                checkBuy(this, strategy, strategyChild, history, historyChild, product, price);
+                //checkBuy(this, strategy, strategyChild, history, historyChild, product, price);
+                checkBuy(this, strategy, null, history, null, product, price);
 
             }
 

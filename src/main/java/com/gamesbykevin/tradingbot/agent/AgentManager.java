@@ -44,6 +44,9 @@ public class AgentManager {
     //current order book
     private Orderbook orderbook;
 
+    //which candle we want to start trading
+    public static final Candle CANDLE_START = Candle.OneHour;
+
     public AgentManager(Product product, double funds, Candle start) {
 
         //store the product this agent is trading

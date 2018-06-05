@@ -29,6 +29,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.MainHelper.displayNextStatusUpdateDesc;
 import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
+import static com.gamesbykevin.tradingbot.agent.AgentManager.CANDLE_START;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_ORDER_BOOK;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.getDurationDesc;
@@ -291,11 +292,13 @@ public class Main implements Runnable {
                                 //convert to pojo
                                 Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
+                                /*
                                 //get json response from order book
                                 final String jsonOB = getJsonResponse(String.format(ENDPOINT_ORDER_BOOK, agentManager.getProductId()));
 
                                 //convert to Order book class
-                                //Orderbook orderbook = OrderbookHelper.createOrderBook(GSon.getGson().fromJson(jsonOB, ProductOrderBook.class));
+                                Orderbook orderbook = OrderbookHelper.createOrderBook(GSon.getGson().fromJson(jsonOB, ProductOrderBook.class));
+                                */
 
                                 //sometimes we don't get a successful response so let's check for null
                                 if (ticker != null)
@@ -343,7 +346,7 @@ public class Main implements Runnable {
         for (int i = 0; i < getProducts().size(); i++) {
 
             //create new manager agent
-            AgentManager agentManager = new AgentManager(getProducts().get(i), funds, Candle.TwentyFourHours);
+            AgentManager agentManager = new AgentManager(getProducts().get(i), funds, CANDLE_START);
 
             //add manager to list
             getAgentManagers().put(getProducts().get(i).getId(), agentManager);

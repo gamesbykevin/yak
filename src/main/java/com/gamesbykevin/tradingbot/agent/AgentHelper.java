@@ -130,12 +130,12 @@ public class AgentHelper {
         boolean buy = strategy.hasBuySignal(agent, history, price);
 
         //if we have a buy signal, check the child to confirm
-        if (buy && !strategyChild.hasBuySignal(agent, historyChild, price))
-            buy = false;
+        //if (buy && !strategyChild.hasBuySignal(agent, historyChild, price))
+        //    buy = false;
 
         //display our data
         strategy.displayData(agent, buy);
-        strategyChild.displayData(agent, buy);
+        //strategyChild.displayData(agent, buy);
 
         //we will buy if there is a reason
         if (buy) {
@@ -181,7 +181,7 @@ public class AgentHelper {
         trade.setReasonSell(null);
 
         //check our strategy for a sell signal, and check the child as well
-        if (strategy.hasSellSignal(agent, history, price) || strategyChild.hasSellSignal(agent, historyChild, price))
+        if (strategy.hasSellSignal(agent, history, price))// || strategyChild.hasSellSignal(agent, historyChild, price))
             trade.setReasonSell(ReasonSell.Reason_Strategy);
 
         //if $ declines we sell, else we update the $ history
@@ -200,7 +200,7 @@ public class AgentHelper {
 
         //display our data
         strategy.displayData(agent, trade.getReasonSell() != null);
-        strategyChild.displayData(agent, trade.getReasonSell() != null);
+        //strategyChild.displayData(agent, trade.getReasonSell() != null);
 
         //display recent stock prices
         displayMessagePriceDecline(agent);
