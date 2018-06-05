@@ -4,6 +4,7 @@ import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
+import com.gamesbykevin.tradingbot.orderbook.Orderbook;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
@@ -36,6 +37,12 @@ public class AgentManager {
 
     //how many funds did we start with
     private final double funds;
+
+    //current product price
+    private double price;
+
+    //current order book
+    private Orderbook orderbook;
 
     public AgentManager(Product product, double funds, Candle start) {
 
@@ -77,7 +84,7 @@ public class AgentManager {
         }
     }
 
-    public synchronized void update(final double price) {
+    public synchronized void update(final double price, final Orderbook orderbook) {
 
         //if all agents have stopped trading don't continue
         if (hasStoppedTrading())
@@ -86,6 +93,10 @@ public class AgentManager {
         //don't continue if we are currently working
         if (working)
             return;
+
+        //store our object references
+        this.price = price;
+        this.orderbook = orderbook;
 
         //flag that this agent is working
         working = true;
@@ -96,7 +107,7 @@ public class AgentManager {
             updateCalculators(this);
 
             //update our agents
-            updateAgents(this, price);
+            updateAgents(this);
 
         } catch (Exception ex) {
 
@@ -214,5 +225,13 @@ public class AgentManager {
 
         //if nothing was found return null (shouldn't happen)
         return null;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public Orderbook getOrderbook() {
+        return orderbook;
     }
 }

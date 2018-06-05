@@ -37,6 +37,9 @@ public class Calculator {
     //endpoint to get the history
     public static final String ENDPOINT_TICKER = ENDPOINT + "/products/%s/ticker";
 
+    //endpoint to get the top 50 bid/ask
+    public static final String ENDPOINT_ORDER_BOOK = ENDPOINT + "/products/%s/book?level=2";
+
     //the product id
     private final String productId;
 

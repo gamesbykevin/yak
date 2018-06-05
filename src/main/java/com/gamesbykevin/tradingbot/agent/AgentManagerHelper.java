@@ -18,7 +18,7 @@ public class AgentManagerHelper {
         }
     }
 
-    protected static void updateAgents(AgentManager manager, double price) {
+    protected static void updateAgents(AgentManager manager) {
 
         //update each agent
         for (int i = 0; i < manager.getAgents().size(); i++) {
@@ -40,7 +40,7 @@ public class AgentManagerHelper {
                 } else {
 
                     //update the agent accordingly
-                    agent.update(manager.getCalculators(), manager.getProduct(), price);
+                    agent.update(manager.getCalculators(), manager.getProduct(), manager.getPrice());
 
                 }
 

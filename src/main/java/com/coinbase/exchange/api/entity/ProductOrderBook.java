@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class ProductOrderBook {
 
-    private Integer sequence;
+    private Long sequence;
     private List<List<String>> bids;
     private List<List<String>> asks;
 
@@ -27,11 +27,11 @@ public class ProductOrderBook {
         this.bids = bids;
     }
 
-    public Integer getSequence() {
+    public Long getSequence() {
         return sequence;
     }
 
-    public void setSequence(Integer sequence) {
+    public void setSequence(Long sequence) {
         this.sequence = sequence;
     }
 }

@@ -2,12 +2,15 @@ package com.gamesbykevin.tradingbot;
 
 import com.coinbase.exchange.api.GdaxApiApplication;
 import com.coinbase.exchange.api.entity.Product;
+import com.coinbase.exchange.api.entity.ProductOrderBook;
 import com.coinbase.exchange.api.exchange.Signature;
 import com.coinbase.exchange.api.orders.OrderService;
 import com.coinbase.exchange.api.products.ProductService;
 import com.coinbase.exchange.api.websocketfeed.message.Subscribe;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.orderbook.Orderbook;
+import com.gamesbykevin.tradingbot.orderbook.OrderbookHelper;
 import com.gamesbykevin.tradingbot.product.Ticker;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.HistoryTracker;
@@ -26,7 +29,7 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.MainHelper.displayNextStatusUpdateDesc;
 import static com.gamesbykevin.tradingbot.MainHelper.manageStatusUpdate;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_ORDER_BOOK;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.ENDPOINT_TICKER;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.getDurationDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -279,6 +282,7 @@ public class Main implements Runnable {
 
                             try {
 
+                                //get the agent manager of the coin we want to trade
                                 AgentManager agentManager = getAgentManagers().get(TRADING_CURRENCIES[i]);
 
                                 //get json response from ticker
@@ -287,9 +291,15 @@ public class Main implements Runnable {
                                 //convert to pojo
                                 Ticker ticker = GSon.getGson().fromJson(json, Ticker.class);
 
+                                //get json response from order book
+                                final String jsonOB = getJsonResponse(String.format(ENDPOINT_ORDER_BOOK, agentManager.getProductId()));
+
+                                //convert to Order book class
+                                //Orderbook orderbook = OrderbookHelper.createOrderBook(GSon.getGson().fromJson(jsonOB, ProductOrderBook.class));
+
                                 //sometimes we don't get a successful response so let's check for null
                                 if (ticker != null)
-                                    agentManager.update(ticker.price);
+                                    agentManager.update(ticker.price, null);
 
                                 //show when next notification message will take place
                                 displayNextStatusUpdateDesc();
