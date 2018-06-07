@@ -53,10 +53,6 @@ public class CalculatorHelper {
                 strategy = new EMAS();
                 break;
 
-            case ERS:
-                strategy = new ERS();
-                break;
-
             case FA:
                 strategy = new FA();
                 break;
@@ -97,8 +93,8 @@ public class CalculatorHelper {
                 strategy = new RA();
                 break;
 
-            case SOADX:
-                strategy = new SOADX();
+            case SEMAS:
+                strategy = new SEMAS();
                 break;
 
             case SOEMA:

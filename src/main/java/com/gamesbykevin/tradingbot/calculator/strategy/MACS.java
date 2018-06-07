@@ -20,7 +20,7 @@ public class MACS extends Strategy {
     //list of configurable values
     private static final int PERIODS_MACS_FAST = 5;
     private static final int PERIODS_MACS_SLOW = 10;
-    private static final int PERIODS_MACS_TREND = 20;
+    private static final int PERIODS_MACS_TREND = 50;
     private static final int PERIODS_CONFIRM = 3;
 
     private final int confirm;
@@ -54,11 +54,6 @@ public class MACS extends Strategy {
         double currEmaSlow = getRecent(emaSlow);
         double currEmaFast = getRecent(emaFast);
         double currEmaTrend = getRecent(emaTrend);
-
-        //previous values
-        double prevEmaSlow = getRecent(emaSlow, 2);
-        double prevEmaFast = getRecent(emaFast, 2);
-        double prevEmaTrend = getRecent(emaTrend, 2);
 
         /*
         //make sure the fast just crossed above the slow

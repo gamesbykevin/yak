@@ -26,8 +26,10 @@ public class SSR extends Strategy {
     //configurable values
     private static final int PERIODS_SMA = 150;
     private static final int PERIODS_RSI = 3;
-    private static final float OVERBOUGHT = 70.0f;
-    private static final float OVERSOLD = 30.0f;
+    private static final float SO_OVERBOUGHT = 70.0f;
+    private static final float SO_OVERSOLD = 30.0f;
+    private static final float RSI_OVERBOUGHT = 80.0f;
+    private static final float RSI_OVERSOLD = 20.0f;
     private static final int PERIODS_SO_MARKET_RATE = 6;
     private static final int PERIODS_SO_MARKET_RATE_SMA = 3;
     private static final int PERIODS_SO_STOCHASTIC_SMA = 3;
@@ -54,29 +56,19 @@ public class SSR extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
         SO objSO = (SO)getIndicator(INDEX_SO);
 
-        /*
         //if the close is above the sma we have a bullish trend
         if (period.close > getRecent(objSMA)) {
 
-            //we also want the rsi and the stochastic oscillator to be over sold
-            if (getRecent(objRSI.getValueRSI()) < OVERSOLD && getRecent(objSO.getStochasticOscillator()) < OVERSOLD) {
+            //we also want the rsi to be over sold
+            if (getRecent(objRSI.getValueRSI()) < RSI_OVERSOLD) {
 
-                //last thing we check is for the stochastic bullish crossover before we buy
-                if (hasCrossover(true, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
-                    return true;
-            }
-        }
-        */
+                //the stochastic oscillator should be in oversold territory as well
+                if (getRecent(objSO.getMarketRateFull()) < SO_OVERSOLD && getRecent(objSO.getStochasticOscillator()) < SO_OVERSOLD) {
 
-        //if the close is above the sma we have a bullish trend
-        if (period.close > getRecent(objSMA)) {
-
-            //we also want the rsi and the stochastic oscillator to be over sold
-            if (getRecent(objRSI.getValueRSI()) < OVERSOLD && getRecent(objSO.getStochasticOscillator()) < OVERSOLD) {
-
-                //last thing we check is for the stochastic bullish crossover before we buy
-                if (getRecent(objSO.getMarketRateFull()) > getRecent(objSO.getStochasticOscillator()))
-                    return true;
+                    //last thing we check is for the stochastic bullish crossover before we buy
+                    if (getRecent(objSO.getMarketRateFull()) > getRecent(objSO.getStochasticOscillator()))
+                        return true;
+                }
             }
         }
 
@@ -97,14 +89,14 @@ public class SSR extends Strategy {
 
         //if the close is below the sma we have a bearish trend
         if (period.close < getRecent(objSMA))
-            adjustHardStopPrice(agent, currentPrice);
+            return true;
 
         //if the stock is overbought, adjust our hard stop price and sell
-        if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT && getRecent(objSO.getStochasticOscillator()) > OVERBOUGHT)
+        if (getRecent(objRSI.getValueRSI()) > RSI_OVERBOUGHT && getRecent(objSO.getStochasticOscillator()) > SO_OVERBOUGHT)
             return true;
 
         //if bearish crossover we go short
-        if (hasCrossover(false, objSO.getMarketRateFull(), objSO.getStochasticOscillator()))
+        if (getRecent(objSO.getMarketRateFull()) < getRecent(objSO.getStochasticOscillator()))
             adjustHardStopPrice(agent, currentPrice);
 
         //no signal

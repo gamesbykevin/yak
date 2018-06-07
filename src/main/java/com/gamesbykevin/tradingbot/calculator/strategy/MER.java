@@ -10,6 +10,9 @@ import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
+
 /**
  * Multiple EMA / Relative Strength Index
  */
@@ -60,10 +63,10 @@ public class MER extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //is the close > our 80 period ema then there is bullish trend
-        if (period.close > getRecent(ema5)) {
+        //if (period.close > getRecent(ema5)) {
 
             //if 13 period ema is > 21 period ema (minor bullish trend)
-            if (getRecent(ema3,2) < getRecent(ema4,2) && getRecent(ema3) > getRecent(ema4)) {
+            if (getRecent(ema3) > getRecent(ema4)) {
 
                 //if 3 period ema is > 5 period ema (minor bullish trend)
                 if (getRecent(ema1) > getRecent(ema2)) {
@@ -73,7 +76,11 @@ public class MER extends Strategy {
                         return true;
                 }
             }
-        }
+        //}
+
+        //if the fast ema is going up, that is a good sign
+        if (hasTrendUpward(ema1.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE) && hasTrendUpward(ema2.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE))
+            return true;
 
         //no signal
         return false;
@@ -104,8 +111,17 @@ public class MER extends Strategy {
         if (getRecent(ema1) < getRecent(ema2))
             adjustHardStopPrice(agent, currentPrice);
 
+        //if our fastest moving ema goes below a longer ema
+        if (getRecent(ema1) < getRecent(ema4) || getRecent(ema1) < getRecent(ema5))
+            return true;
+
         //if rsi drops below the line we will sell
         if (getRecent(objRSI.getValueRSI()) < RSI_LINE)
+            return true;
+
+        //if things are going down we should sell
+        if (hasTrendDownward(ema1.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE) &&
+                hasTrendDownward(ema2.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
             return true;
 
         //no signal

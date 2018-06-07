@@ -29,8 +29,7 @@ public class EMAC extends Strategy {
     private static final int PERIODS_EMA_2 = 13;
     private static final int PERIODS_EMA_3 = 21;
     private static final int PERIODS_EMA_4 = 55;
-    private static final int PERIODS_SMA_VOLUME = 50;
-    private static final int PERIODS_CONFIRM_DECREASE = 5;
+    private static final int PERIODS_SMA_VOLUME = 100;
 
     public EMAC() {
         this(PERIODS_EMA_1, PERIODS_EMA_2, PERIODS_EMA_3, PERIODS_EMA_4);
@@ -87,16 +86,6 @@ public class EMAC extends Strategy {
             }
         }
 
-        /*
-        //if the short is above we are in an uptrend
-        if (getRecent(emaShortObj) > getRecent(emaLongObj))
-            return true;
-
-        //if the short ema is in an upward trend, we will buy
-        if (hasTrendUpward(emaShortObj.getEma(), PERIODS_CONFIRM_INCREASE))
-            return true;
-        */
-
         //no signal
         return false;
     }
@@ -115,7 +104,7 @@ public class EMAC extends Strategy {
         double d4 = getRecent(ema4.getEma());
 
         //if constantly going downward protect our investment
-        if (hasTrendDownward(ema1.getEma(), PERIODS_CONFIRM_DECREASE))
+        if (hasTrendDownward(ema1.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
             adjustHardStopPrice(agent, currentPrice);
 
         //if the candle closes below all ema's
@@ -126,23 +115,6 @@ public class EMAC extends Strategy {
         //if longest ema is the least, let's exit
         if (d4 < d3 && d4 < d2 && d4 < d1)
             return true;
-
-        /*
-        EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
-        EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
-
-        //if the short is below we should sell
-        if (getRecent(emaShortObj) < getRecent(emaLongObj))
-            return true;
-
-        //if the short ema is in a downward trend, we will sell
-        if (hasTrendDownward(emaShortObj.getEma(), PERIODS_CONFIRM_DECREASE))
-            return true;
-
-        //if the short is declining adjust our hard stop price
-        if (getRecent(emaShortObj, 1) < getRecent(emaShortObj, 2))
-            adjustHardStopPrice(agent, currentPrice);
-        */
 
         //no signal
         return false;

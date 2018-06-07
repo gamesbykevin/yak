@@ -29,20 +29,14 @@ public class EMAR extends Strategy {
     private static final int PERIODS_RSI = 21;
     private static final float RSI_LINE = 50.0f;
 
-    //our rsi trend line
-    private final float rsiLine;
-
     public EMAR() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_RSI, RSI_LINE);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_RSI);
     }
 
-    public EMAR(int emaLong, int emaShort, int periodsRSI, float rsiLine) {
+    public EMAR(int emaLong, int emaShort, int periodsRSI) {
 
         //call parent
         super(Key.EMAR);
-
-        //save our rsi line
-        this.rsiLine = rsiLine;
 
         //add our indicators
         INDEX_EMA_SHORT = addIndicator(new EMA(emaShort));
@@ -57,14 +51,8 @@ public class EMAR extends Strategy {
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
 
-        /*
-        //if rsi is over the line and we have a bullish crossover
-        if (getRecent(rsiObj.getValueRSI()) > rsiLine && hasCrossover(true, emaShortObj.getEma(), emaLongObj.getEma()))
-            return true;
-        */
-
-        if (getRecent(rsiObj.getValueRSI()) > rsiLine &&
-                getRecent(emaShortObj.getEma()) > getRecent(emaLongObj.getEma()))
+        //rsi needs to be above the line and our short needs to be above the long
+        if (getRecent(rsiObj.getValueRSI()) > RSI_LINE && getRecent(emaShortObj.getEma()) >  getRecent(emaLongObj.getEma()))
             return true;
 
         //no signal
@@ -72,7 +60,7 @@ public class EMAR extends Strategy {
     }
 
     @Override
-    public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
+    public boolean hasSellSignal(Agent agent, List<Period> history, double price) {
 
         RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
@@ -84,12 +72,12 @@ public class EMAR extends Strategy {
         double emaLong = getRecent(emaLongObj.getEma());
 
         //if rsi is under the line and the fast line is below the slow long indicating a downward trend
-        if (current < rsiLine && emaShort < emaLong)
+        if (current < RSI_LINE && emaShort < emaLong)
             return true;
 
         //adjust our hard stop price to protect our investment
-        if (emaShort < emaLong || current < rsiLine)
-            adjustHardStopPrice(agent, currentPrice);
+        if (emaShort < emaLong)
+            adjustHardStopPrice(agent, price);
 
         //no signal
         return false;

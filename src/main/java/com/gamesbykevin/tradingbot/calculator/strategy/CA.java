@@ -44,28 +44,7 @@ public class CA extends Strategy {
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
 
-        double adxCurr = getRecent(objADX.getAdx(), 1);
-        double adxPrev = getRecent(objADX.getAdx(), 2);
-
-        double cciCurr = getRecent(objCCI.getCCI(), 1);
-        double cciPrev = getRecent(objCCI.getCCI(), 2);
-
-        /*
-        //are things trending with momentum? we want to catch it when the switch just happens
-        if ((adxCurr < TREND && cciPrev > CCI_LOW && cciCurr < CCI_LOW) ||
-            (adxPrev > TREND && adxCurr < TREND && cciCurr < CCI_LOW)) {
-
-            //get the current candle
-            Period period = history.get(history.size() - 1);
-
-            //if the candle is bullish we will buy
-            if (period.open < period.close)
-                return true;
-        }
-        */
-
-
-        if (adxCurr < TREND && cciCurr < CCI_LOW)
+        if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW)
             return true;
 
         //no signal

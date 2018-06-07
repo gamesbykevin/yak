@@ -192,7 +192,7 @@ public class AgentHelper {
         }
 
         //if $ dropped below our hard stop, we must sell, else we adjust our stop $
-        if (close <= agent.getTrade().getHardStopPrice()) {
+        if (price <= agent.getTrade().getHardStopPrice()) {
             trade.setReasonSell(ReasonSell.Reason_HardStop);
         } else {
             trade.adjustHardStopPrice(agent, close);

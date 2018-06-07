@@ -64,6 +64,8 @@ public class AgentManager {
                 case OneMinute:
                 case FiveMinutes:
                 case FifteenMinutes:
+                case SixHours:
+                case TwentyFourHours:
                     continue;
 
                 default:

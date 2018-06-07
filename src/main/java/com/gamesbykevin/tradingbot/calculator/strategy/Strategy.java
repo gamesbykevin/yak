@@ -24,14 +24,25 @@ public abstract class Strategy extends Calculation {
     private List<Indicator> indicators;
 
     /**
+     * The default number of periods we check when confirming an uptrend
+     */
+    public static final int DEFAULT_PERIODS_CONFIRM_INCREASE = 5;
+
+    /**
+     * The default number of periods we check when confirming a downtrend
+     */
+    public static final int DEFAULT_PERIODS_CONFIRM_DECREASE = 5;
+
+
+    /**
      * Different trading strategies we can use
      */
     public enum Key {
         AE,     BBAR,   BBER,   BBR,    CA,
-        EMAC,   EMAR,   EMAS,   ERS,    FA,
-        FADOA,  FAO,    FMFI,   MACS,   MARS,
-        MER,    MES,    OD,     RA,     SOADX,
-        SOEMA,  SSR
+        EMAC,   EMAR,   EMAS,   FA,     FADOA,
+        FAO,    FMFI,   MACS,   MARS,   MER,
+        MES,    OD,     RA,     SEMAS,  SOEMA,
+        SSR
     }
 
     private final Key key;
