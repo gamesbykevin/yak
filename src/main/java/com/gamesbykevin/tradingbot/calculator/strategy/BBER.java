@@ -2,15 +2,12 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 /**
  * Bollinger Bands, EMA, & RSI
@@ -61,13 +58,17 @@ public class BBER extends Strategy {
         RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
 
         //get the current values
-        double currClose = getRecent(history, Period.Fields.Close);
+        double currClose = getRecent(history, Fields.Close);
         double currEma = getRecent(emaLongObj.getEma());
         double currMiddle = getRecent(bbObj.getMiddle().getSma());
-        double currRsi = getRecent(rsiObj.getValueRSI());
 
-        if (currClose > currEma && currClose > currMiddle && currRsi >= RSI_LINE)
-            return true;
+        //the close $ is greater than the ema and the bb middle line and the middle line is above the ema
+        if (currClose > currEma && currClose > currMiddle && currMiddle > currEma) {
+
+            //rsi also has to be trending
+            if (getRecent(rsiObj.getValueRSI()) > RSI_LINE)
+                return true;
+        }
 
         //no signal yet
         return false;
@@ -83,16 +84,14 @@ public class BBER extends Strategy {
         RSI rsiObj = (RSI)getIndicator(INDEX_RSI);
 
         //get the current values
-        double close = getRecent(history, Period.Fields.Close);
-        double middle = getRecent(bbObj.getMiddle().getSma());
-        double rsi = getRecent(rsiObj.getValueRSI());
+        double close = getRecent(history, Fields.Close);
 
         //if at least one of our values are below trending set the hard stop $
-        if (close < getRecent(emaLongObj.getEma()) || close < middle || rsi < RSI_LINE)
+        if (close < getRecent(bbObj.getMiddle().getSma()))
             adjustHardStopPrice(agent, currentPrice);
 
         //if the close is below the ema long and bb middle and rsi is heading towards oversold
-        if (close < getRecent(emaLongObj.getEma()) && close < middle && rsi < RSI_LINE)
+        if (close < getRecent(emaLongObj.getEma()) || getRecent(rsiObj.getValueRSI()) < RSI_LINE)
             return true;
 
         //if the fast goes below the long let's protect our investment

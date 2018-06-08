@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
 
 /**
  * Average Directional Index / Exponential Moving Average
@@ -26,23 +28,16 @@ public class AE extends Strategy {
     private static final int PERIODS_EMA_LONG = 10;
     private static final int PERIODS_EMA_SHORT = 3;
     private static final int PERIODS_ADX = 14;
-    private static final int PERIODS_ADX_CONFIRM = 2;
     private static final double ADX_TREND = 20.0d;
 
-    //how many periods do we confirm our adx is not declining
-    private final int periodsAdxConfirm;
-
     public AE() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_ADX, PERIODS_ADX_CONFIRM);
+        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_ADX);
     }
 
-    public AE(int periodsEmaLong, int periodsEmaShort, int periodsAdx, int periodsAdxConfirm) {
+    public AE(int periodsEmaLong, int periodsEmaShort, int periodsAdx) {
 
         //call parent
         super(Key.AE);
-
-        //save the periods to confirm
-        this.periodsAdxConfirm = periodsAdxConfirm;
 
         //add our indicators
         INDEX_EMA_SHORT = addIndicator(new EMA(periodsEmaShort));
@@ -60,16 +55,17 @@ public class AE extends Strategy {
         //make sure adx is trending
         if (getRecent(objADX.getAdx()) > ADX_TREND) {
 
-            //check the previous number of periods to ensure adx is not declining
-            for (int i = 1; i <= periodsAdxConfirm; i++) {
+            //check to ensure adx is not declining
+            if (hasTrendDownward(objADX.getAdx(), DEFAULT_PERIODS_CONFIRM_DECREASE))
+                return false;
 
-                //if the current adx value is less than the previous adx value
-                if (getRecent(objADX.getAdx(), i) <= getRecent(objADX.getAdx(), i + 1))
-                    return false;
-            }
+            //if the short ema is not trending upwards
+            if (!hasTrendUpward(objShortEMA.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE))
+                return false;
 
             //if the short crosses above the long let's buy and enter the trade
-            if (hasCrossover(true, objShortEMA.getEma(), objLongEMA.getEma()))
+            if (getRecent(objShortEMA.getEma(), 2) < getRecent(objLongEMA.getEma(), 2) &&
+                    getRecent(objShortEMA.getEma()) > getRecent(objLongEMA.getEma()))
                 return true;
         }
 
@@ -85,11 +81,11 @@ public class AE extends Strategy {
         EMA objLongEMA = (EMA)getIndicator(INDEX_EMA_LONG);
 
         //if the ema short crosses below the ema long, it is time to sell
-        if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma()))
+        if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma()) || getRecent(objADX.getAdx()) < ADX_TREND)
             return true;
 
-        //if the adx value goes below the trend, let's update our hard stop $
-        if (getRecent(objADX.getAdx()) < ADX_TREND)
+        //if going downward, protect investment
+        if (hasTrendDownward(objShortEMA.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
             adjustHardStopPrice(agent, currentPrice);
 
         //no signal yet

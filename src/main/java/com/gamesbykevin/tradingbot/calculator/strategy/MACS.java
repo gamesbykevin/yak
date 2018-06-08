@@ -5,6 +5,8 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
+
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 /**
@@ -18,15 +20,15 @@ public class MACS extends Strategy {
     private static int INDEX_EMA_TREND;
 
     //list of configurable values
-    private static final int PERIODS_MACS_FAST = 5;
-    private static final int PERIODS_MACS_SLOW = 10;
-    private static final int PERIODS_MACS_TREND = 50;
+    private static final int PERIODS_EMA_FAST = 5;
+    private static final int PERIODS_EMA_SLOW = 10;
+    private static final int PERIODS_EMA_TREND = 50;
     private static final int PERIODS_CONFIRM = 3;
 
     private final int confirm;
 
     public MACS() {
-        this(PERIODS_MACS_FAST, PERIODS_MACS_SLOW, PERIODS_MACS_TREND, PERIODS_CONFIRM);
+        this(PERIODS_EMA_FAST, PERIODS_EMA_SLOW, PERIODS_EMA_TREND, PERIODS_CONFIRM);
     }
 
     public MACS(int fast, int slow, int trend, int confirm) {
@@ -55,22 +57,13 @@ public class MACS extends Strategy {
         double currEmaFast = getRecent(emaFast);
         double currEmaTrend = getRecent(emaTrend);
 
-        /*
-        //make sure the fast just crossed above the slow
-        if (prevEmaFast < prevEmaSlow && currEmaFast > currEmaSlow) {
+        //if make sure there is an uptrend
+        if (currEmaFast > currEmaSlow && currEmaSlow > currEmaTrend) {
 
-            //we also want the slow to be above the trend
-            if (currEmaSlow > currEmaTrend) {
-
-                //last thing we check is that all ema values are going in the correct direction
-                if (prevEmaSlow < currEmaSlow && prevEmaFast  < currEmaFast && prevEmaTrend < currEmaTrend)
-                    return true;
-            }
+            //if the fast ema has an upward trend
+            if (hasTrendUpward(emaFast.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE + 1))
+                return true;
         }
-        */
-
-        if (currEmaFast > currEmaSlow && currEmaSlow > currEmaTrend)
-            return true;
 
         //no signal
         return false;

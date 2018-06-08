@@ -41,8 +41,7 @@ public abstract class Strategy extends Calculation {
         AE,     BBAR,   BBER,   BBR,    CA,
         EMAC,   EMAR,   EMAS,   FA,     FADOA,
         FAO,    FMFI,   MACS,   MARS,   MER,
-        MES,    OD,     RA,     SEMAS,  SOEMA,
-        SSR
+        MES,    RA,     SEMAS,  SOEMA,  SSR
     }
 
     private final Key key;

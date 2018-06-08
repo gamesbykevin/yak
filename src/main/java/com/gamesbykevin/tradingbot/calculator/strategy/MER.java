@@ -63,7 +63,7 @@ public class MER extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //is the close > our 80 period ema then there is bullish trend
-        //if (period.close > getRecent(ema5)) {
+        if (period.close > getRecent(ema5)) {
 
             //if 13 period ema is > 21 period ema (minor bullish trend)
             if (getRecent(ema3) > getRecent(ema4)) {
@@ -71,16 +71,16 @@ public class MER extends Strategy {
                 //if 3 period ema is > 5 period ema (minor bullish trend)
                 if (getRecent(ema1) > getRecent(ema2)) {
 
-                    //if the rsi line is above trend, we will buy
-                    if (getRecent(objRSI.getValueRSI()) >= RSI_LINE)
-                        return true;
+                    //and the 3 period is constantly going upward
+                    if (hasTrendUpward(ema1.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
+
+                        //if the rsi line is above trend, we will buy
+                        if (getRecent(objRSI.getValueRSI()) >= RSI_LINE)
+                            return true;
+                    }
                 }
             }
-        //}
-
-        //if the fast ema is going up, that is a good sign
-        if (hasTrendUpward(ema1.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE) && hasTrendUpward(ema2.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE))
-            return true;
+        }
 
         //no signal
         return false;

@@ -355,7 +355,7 @@ public class StrategyHelper {
 
                 if (low != null && curr <= low) {
 
-                    //if the current loss is lower than the previous high, we don't have success
+                    //if the current low is lower than the previous low, we don't have success
                     success = false;
                     break;
 

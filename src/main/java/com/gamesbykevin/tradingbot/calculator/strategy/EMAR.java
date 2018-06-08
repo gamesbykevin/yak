@@ -51,8 +51,21 @@ public class EMAR extends Strategy {
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
 
-        //rsi needs to be above the line and our short needs to be above the long
-        if (getRecent(rsiObj.getValueRSI()) > RSI_LINE && getRecent(emaShortObj.getEma()) >  getRecent(emaLongObj.getEma()))
+        double currRsi = getRecent(rsiObj.getValueRSI(), 1);
+        double prevRsi = getRecent(rsiObj.getValueRSI(), 2);
+
+        double currEmaS = getRecent(emaShortObj.getEma(), 1);
+        double prevEmaS = getRecent(emaShortObj.getEma(), 2);
+
+        double currEmaL = getRecent(emaLongObj.getEma(), 1);
+        double prevEmaL = getRecent(emaLongObj.getEma(), 2);
+
+        //if the rsi just crossed and our short ema is trending above
+        if (prevRsi < RSI_LINE && currRsi >= RSI_LINE && currEmaS > currEmaL)
+            return true;
+
+        //if rsi is trending and short ema just crossed
+        if (currRsi >= RSI_LINE && prevEmaS < prevEmaL && currEmaS > currEmaL)
             return true;
 
         //no signal
@@ -76,7 +89,7 @@ public class EMAR extends Strategy {
             return true;
 
         //adjust our hard stop price to protect our investment
-        if (emaShort < emaLong)
+        if (emaShort < emaLong || current < RSI_LINE)
             adjustHardStopPrice(agent, price);
 
         //no signal

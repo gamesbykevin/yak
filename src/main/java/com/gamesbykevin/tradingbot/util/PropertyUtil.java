@@ -9,7 +9,9 @@ import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.CURRENT_PRICE_HISTORY;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
+import static com.gamesbykevin.tradingbot.trade.Trade.HARD_STOP_PRICE_HISTORY_CONFIRM;
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
 
 public class PropertyUtil {
@@ -134,6 +136,10 @@ public class PropertyUtil {
 
         //how many consecutive prices do we check for a decline
         AgentHelper.CURRENT_PRICE_HISTORY = Integer.parseInt(getProperties().getProperty("currentPriceHistory"));
+
+        //make sure the price history is long enough
+        if (CURRENT_PRICE_HISTORY < HARD_STOP_PRICE_HISTORY_CONFIRM)
+            throw new RuntimeException("The length of price history (" + CURRENT_PRICE_HISTORY + ") is shorter than the hard stop confirm (" + HARD_STOP_PRICE_HISTORY_CONFIRM + ")");
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));

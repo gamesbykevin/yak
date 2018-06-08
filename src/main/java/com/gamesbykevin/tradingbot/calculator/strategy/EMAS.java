@@ -53,16 +53,18 @@ public class EMAS extends Strategy {
         SMA smaObjLong = (SMA)getIndicator(INDEX_SMA_LONG);
 
         //our current values
-        double currEmaShort = getRecent(emaShortObj.getEma());
-        double currEmaLong = getRecent(emaLongObj.getEma());
-        double currSmaShort = getRecent(smaObjShort.getSma());
-        double currSmaLong = getRecent(smaObjLong.getSma());
+        double emaS = getRecent(emaShortObj.getEma());
+        double emaL = getRecent(emaLongObj.getEma());
 
-        //the short ema needs to be above the long ema
-        if (currEmaShort > currEmaLong) {
+
+        double smaS = getRecent(smaObjShort.getSma());
+        double smaL = getRecent(smaObjLong.getSma());
+
+        //the short ema needs to be above the long ema and it should be trending upward
+        if (emaS > emaL && hasTrendUpward(emaShortObj.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
 
             //we also need the short sma to be above the long sma
-            if (currSmaShort > currSmaLong)
+            if (smaS > smaL)
                 return true;
         }
 
@@ -75,17 +77,10 @@ public class EMAS extends Strategy {
 
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
-        SMA smaObjShort = (SMA)getIndicator(INDEX_SMA_SHORT);
-        SMA smaObjLong = (SMA)getIndicator(INDEX_SMA_LONG);
-
-        //recent closing $
-        final double close = getRecent(history, Fields.Close);
 
         //our current values
         double currEmaShort = getRecent(emaShortObj.getEma());
         double currEmaLong = getRecent(emaLongObj.getEma());
-        double currSmaShort = getRecent(smaObjShort.getSma());
-        double currSmaLong = getRecent(smaObjLong.getSma());
 
         //if the ema short went below the ema long
         if (currEmaShort < currEmaLong)

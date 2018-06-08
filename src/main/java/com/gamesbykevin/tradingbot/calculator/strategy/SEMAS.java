@@ -2,12 +2,14 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
 
+/**
+ * Stochastic Oscillator / EMA's
+ */
 public class SEMAS extends Strategy {
 
     //how to access our indicator objects
@@ -43,12 +45,11 @@ public class SEMAS extends Strategy {
         EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
         EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
 
-        //make sure fast is above slow confidently
-        if (getRecent(emaFast.getEma()) > getRecent(emaSlow.getEma()) &&
-                getRecent(emaFast.getEma(),2) > getRecent(emaSlow.getEma(),2)) {
+        //make sure indicator is below the line
+        if (getRecent(so.getStochasticOscillator()) < LINE) {
 
-            //make sure indicator is below the line
-            if (getRecent(so.getStochasticOscillator()) < LINE)
+            //let's also make sure there is a bullish cross
+            if (getRecent(emaFast.getEma(),2) < getRecent(emaSlow.getEma(),2) && getRecent(emaFast.getEma()) > getRecent(emaSlow.getEma()))
                 return true;
         }
 

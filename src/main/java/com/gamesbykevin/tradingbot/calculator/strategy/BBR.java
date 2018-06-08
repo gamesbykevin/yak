@@ -62,8 +62,8 @@ public class BBR extends Strategy {
         //current upper band
         final double upper = getRecent(objBB.getUpper());
 
-        //first make sure the rsi value is above the trend
-        if (rsi >= RSI_TREND) {
+        //first make sure the rsi value goes above the trend
+        if (getRecent(objRSI.getValueRSI(), 2) < RSI_TREND && rsi >= RSI_TREND) {
 
             //if the price is narrow and the close is above our upper band
             if (percentage <= SQUEEZE_RATIO && close > upper)
@@ -89,11 +89,17 @@ public class BBR extends Strategy {
         //if the rsi is overbought ....
         if (rsi >= RSI_OVERBOUGHT) {
 
+            //adjust our hard stop price to protect our investment
+            adjustHardStopPrice(agent, currentPrice);
+
             //if the middle band is not up-trending compared to previous we can exit our trade now
             if (middlePrev > middleCurr)
                 return true;
 
         } else if (rsi < RSI_TREND) {
+
+            //adjust our hard stop price to protect our investment
+            adjustHardStopPrice(agent, currentPrice);
 
             //if the rsi is going towards oversold territory, let's see if the close drops below our middle band or if the middle band is decreasing
             if (middlePrev > middleCurr || close < middleCurr)

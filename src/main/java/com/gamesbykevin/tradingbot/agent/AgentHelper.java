@@ -191,8 +191,11 @@ public class AgentHelper {
             trade.updatePriceHistory(price);
         }
 
-        //if $ dropped below our hard stop, we must sell, else we adjust our stop $
-        if (price <= agent.getTrade().getHardStopPrice()) {
+        /**
+         * If the latest historical $ are all below the hard stop $ then we need to sel
+         * Reason for checking multiple is to filter out false signals when price dips quickly for 1 second
+         */
+        if (agent.getTrade().hasConfirmedHardStop()) {
             trade.setReasonSell(ReasonSell.Reason_HardStop);
         } else {
             trade.adjustHardStopPrice(agent, close);

@@ -81,7 +81,16 @@ public class Trade {
     //what is our hard stop amount
     private double hardStopPrice = 0;
 
+    /**
+     * How many prices in  our history do we look at to confirm we are below the hard stop $
+     */
+    public static final int HARD_STOP_PRICE_HISTORY_CONFIRM = 3;
+
     public Trade(String productId, Candle candle) {
+
+        //our price history needs to be as long as our hard stop history confirm
+        if (CURRENT_PRICE_HISTORY < HARD_STOP_PRICE_HISTORY_CONFIRM)
+            throw new RuntimeException("The length of price history (" + CURRENT_PRICE_HISTORY + ") is shorter than the hard stop confirm (" + HARD_STOP_PRICE_HISTORY_CONFIRM + ")");
 
         //track our product and candle
         this.productId = productId;
@@ -438,6 +447,32 @@ public class Trade {
 
         //add the new price to the end
         getPriceHistory()[getPriceHistory().length - 1] = price;
+    }
+
+    /**
+     * Look at the 3 latest stock prices to confirm $ is below the hard stop $<br>
+     * We need to check 3 prices because sometimes the price will dip for 1 second then rebound immediately
+     * @return true if the latest 3 prices is below the hard stop price, false otherwise
+     */
+    public boolean hasConfirmedHardStop() {
+
+        //look at the most recent historical periods to confirm
+        for (int i = 1; i <= HARD_STOP_PRICE_HISTORY_CONFIRM; i++) {
+
+            //get the latest price from the history
+            double price = getPriceHistory()[getPriceHistory().length - i];
+
+            //if the historical price is $0 we don't have enough data yet
+            if (price == 0)
+                return false;
+
+            //if the historical price is above the hard stop $ we can't confirm
+            if (price > getHardStopPrice())
+                return false;
+        }
+
+        //all recent prices are below so we return true
+        return true;
     }
 
     public double getHardStopPrice() {
