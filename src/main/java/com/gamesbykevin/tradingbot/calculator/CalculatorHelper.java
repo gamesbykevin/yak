@@ -33,6 +33,10 @@ public class CalculatorHelper {
                 strategy = new BBER();
                 break;
 
+            case BBR:
+                strategy = new BBR();
+                break;
+
             case CA:
                 strategy = new CA();
                 break;
@@ -45,12 +49,20 @@ public class CalculatorHelper {
                 strategy = new EMAR();
                 break;
 
+            case EMAS:
+                strategy = new EMAS();
+                break;
+
             case FA:
                 strategy = new FA();
                 break;
 
             case FADOA:
                 strategy = new FADOA();
+                break;
+
+            case FAO:
+                strategy = new FAO();
                 break;
 
             case FMFI:
@@ -67,6 +79,10 @@ public class CalculatorHelper {
 
             case MER:
                 strategy = new MER();
+                break;
+
+            case MES:
+                strategy = new MES();
                 break;
 
             case RA:

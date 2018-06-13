@@ -38,10 +38,27 @@ public abstract class Strategy extends Calculation {
      * Different trading strategies we can use
      */
     public enum Key {
-        AE,     BBAR,   BBER,   CA,     EMAC,
-        EMAR,   FA,     FADOA,  FMFI,   MACS,
-        MARS,   MER,    RA,     SEMAS,  SMASR,
-        SOEMA,  SSR
+        AE,
+        BBAR,
+        BBER,
+        BBR,
+        CA,
+        EMAC,
+        EMAR,
+        EMAS,
+        FA,
+        FADOA,
+        FAO,
+        FMFI,
+        MACS,
+        MARS,
+        MER,
+        MES,
+        RA,
+        SEMAS,
+        SMASR,
+        SOEMA,
+        SSR
     }
 
     private final Key key;
