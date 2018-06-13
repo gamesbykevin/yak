@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator.indicator.williams;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
@@ -163,7 +164,7 @@ public class Fractal extends Indicator {
     @Override
     public void cleanup() {
 
-        while (getStatusList().size() > PERIODS_RETAIN) {
+        while (getStatusList().size() > Calculator.HISTORICAL_PERIODS_MINIMUM) {
             getStatusList().remove(0);
         }
     }

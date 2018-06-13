@@ -9,6 +9,7 @@ import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
 import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -31,13 +32,13 @@ public class MainHelper {
     protected static void manageStatusUpdate(Main main) {
 
         //text of our notification message
-        String subject = "", text = "\n";
+        String subject = "", text = NEW_LINE;
 
         //how much did we start with
-        text = text + "Started with $" + FUNDS + "\n";
+        text = text + "Started with $" + FUNDS + NEW_LINE;
 
         //how long has the bot been running
-        text = text + "Bot Running: " + TradeHelper.getDurationDesc(System.currentTimeMillis() - START) + "\n\n";
+        text = text + "Bot Running: " + TradeHelper.getDurationDesc(System.currentTimeMillis() - START) + NEW_LINE + NEW_LINE;
 
         double total = 0;
 
@@ -51,16 +52,16 @@ public class MainHelper {
             total += assets;
 
             //add to our details
-            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.round(assets) + "\n";
+            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.round(assets) + NEW_LINE;
 
             //display each agent's funds as well
             text = text + AgentManagerHelper.getAgentDetails(main.getAgentManagers().get(TRADING_CURRENCIES[i]));
 
             //add line break in the end
-            text = text + "\n";
+            text = text + NEW_LINE;
         }
 
-        text = text + "\n";
+        text = text + NEW_LINE;
 
         //format our message
         subject = "Total assets $" + AgentHelper.round(total);
@@ -84,7 +85,7 @@ public class MainHelper {
         if (System.currentTimeMillis() - PREVIOUS_TIME >= NOTIFICATION_DELAY) {
 
             //send our total assets in an email
-            sendEmail(subject, getProgressSummary(main) + "\n\n\n" + text);
+            sendEmail(subject, getProgressSummary(main) + NEW_LINE + NEW_LINE + NEW_LINE + text);
 
             //update the timer
             PREVIOUS_TIME = System.currentTimeMillis();
@@ -130,7 +131,7 @@ public class MainHelper {
             }
 
             //assign our data
-            DESC[index] = key.toString() + " $" + AgentHelper.round(total) + "\n";
+            DESC[index] = key.toString() + " $" + AgentHelper.round(total) + NEW_LINE;
             TOTALS[index] = total;
 
             //increase index

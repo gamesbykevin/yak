@@ -7,6 +7,7 @@ import com.gamesbykevin.tradingbot.util.PropertyUtil;
 import java.io.PrintWriter;
 
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 
 public class AgentManagerHelper {
 
@@ -67,7 +68,7 @@ public class AgentManagerHelper {
 
     public static String getAgentDetails(AgentManager manager) {
 
-        String result = "\n";
+        String result = NEW_LINE;
 
         //sort the agents to show which are most profitable
         for (int i = 0; i < manager.getAgents().size(); i++) {
@@ -109,7 +110,7 @@ public class AgentManagerHelper {
                 result += ", (Stopped)";
 
             //make new line
-            result += "\n";
+            result += NEW_LINE;
         }
 
         //return our result

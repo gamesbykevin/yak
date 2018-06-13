@@ -36,6 +36,7 @@ import static com.gamesbykevin.tradingbot.trade.TradeHelper.getDurationDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameMain;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.DEBUG;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 @SpringBootApplication
@@ -168,9 +169,13 @@ public class Main implements Runnable {
     private static void createHistoryTracker(Main main) {
 
         //create a new history tracker
-        displayMessage("Creating history tracker", main.getWriter());
-        HistoryTracker historyTracker = new HistoryTracker();
-        displayMessage("History tracker created", main.getWriter());
+        if (!DEBUG) {
+            displayMessage("Creating history tracker", main.getWriter());
+            HistoryTracker historyTracker = new HistoryTracker();
+            displayMessage("History tracker created", main.getWriter());
+        } else {
+            displayMessage("History tracker not created because we are debugging", main.getWriter());
+        }
     }
 
     private void loadProducts() {
@@ -302,7 +307,7 @@ public class Main implements Runnable {
 
                                 //sometimes we don't get a successful response so let's check for null
                                 if (ticker != null)
-                                    agentManager.update(ticker.price, null);
+                                    agentManager.update(ticker.price);
 
                                 //show when next notification message will take place
                                 displayNextStatusUpdateDesc();

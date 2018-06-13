@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Stoch RSI
  */
-public class SR extends Indicator {
+public class STRSI extends Indicator {
 
     //our rsi object
     private RSI objRsi;
@@ -23,14 +23,14 @@ public class SR extends Indicator {
     public static final double OVER_BOUGHT = .80d;
     public static final double OVER_SOLD = .20d;
 
-    public SR() {
+    public STRSI() {
         this(PERIODS);
     }
 
-    public SR(int periods) {
+    public STRSI(int periods) {
 
         //call parent
-        super(Indicator.Key.SR, periods);
+        super(Indicator.Key.STRSI, periods);
 
         //create our rsi object
         this.objRsi = new RSI(periods);

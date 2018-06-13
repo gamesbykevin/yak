@@ -20,17 +20,12 @@ public abstract class Calculation {
      */
     public static final int RECENT_PERIODS = 5;
 
-    /**
-     * After we perform all our calculations we don't need to retain all values
-     */
-    public static final int PERIODS_RETAIN = 300;
-
     public abstract void cleanup();
 
     protected void cleanup(List<Double> list) {
 
         //remove the first values until we are at the desired size
-        while (list.size() > PERIODS_RETAIN) {
+        while (list.size() > Calculator.HISTORICAL_PERIODS_MINIMUM) {
             list.remove(0);
         }
     }

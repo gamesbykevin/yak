@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
-import static com.gamesbykevin.tradingbot.calculator.Calculation.PERIODS_RETAIN;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
@@ -223,7 +222,7 @@ public class Calculator {
         displayMessage("Cleaning up history: " + getHistory().size(), writer);
 
         //let's keep our historical list at a manageable size
-        while (getHistory().size() > PERIODS_RETAIN) {
+        while (getHistory().size() > Calculator.HISTORICAL_PERIODS_MINIMUM) {
             getHistory().remove(0);
         }
 

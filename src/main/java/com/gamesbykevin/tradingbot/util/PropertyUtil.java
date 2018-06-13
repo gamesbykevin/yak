@@ -12,6 +12,8 @@ import java.util.Properties;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.CURRENT_PRICE_HISTORY;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.trade.Trade.HARD_STOP_PRICE_HISTORY_CONFIRM;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.TAB;
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
 
 public class PropertyUtil {
@@ -26,6 +28,9 @@ public class PropertyUtil {
 
     public static final String DELIMITER = ",";
 
+    //are we running this in IntelliJ?
+    public static final boolean DEBUG = false;
+
     //how many milliseconds are there per minute
     public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
 
@@ -37,11 +42,17 @@ public class PropertyUtil {
 
             try {
 
-                //call this when running the project in intellij
-                PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
+                if (DEBUG) {
 
-                //call this when you create an executable .jar and place the application.properties file in the same directory as the .jar
-                //PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
+                    //call this when running the project in intellij
+                    PROPERTIES.load(Main.class.getClassLoader().getResourceAsStream(PROPERTY_FILE));
+
+                } else {
+
+                    //call this when you create an executable .jar and place the application.properties file in the same directory as the .jar
+                    PROPERTIES.load(new FileInputStream(PROPERTY_FILE));
+
+                }
 
             } catch(Exception ex) {
                 ex.printStackTrace();
@@ -197,12 +208,12 @@ public class PropertyUtil {
 
         try {
 
-            message += e.getMessage() + "\n\t\t";;
+            message += e.getMessage() + NEW_LINE + TAB + TAB;
 
             StackTraceElement[] stack = e.getStackTrace();
 
             for (int i = 0; i <  stack.length; i++) {
-                message = message + stack[i].toString() + "\n\t\t";
+                message = message + stack[i].toString() + NEW_LINE + TAB + TAB;
             }
 
         } catch (Exception ex) {

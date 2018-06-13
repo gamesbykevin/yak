@@ -33,10 +33,6 @@ public class CalculatorHelper {
                 strategy = new BBER();
                 break;
 
-            case BBR:
-                strategy = new BBR();
-                break;
-
             case CA:
                 strategy = new CA();
                 break;
@@ -49,20 +45,12 @@ public class CalculatorHelper {
                 strategy = new EMAR();
                 break;
 
-            case EMAS:
-                strategy = new EMAS();
-                break;
-
             case FA:
                 strategy = new FA();
                 break;
 
             case FADOA:
                 strategy = new FADOA();
-                break;
-
-            case FAO:
-                strategy = new FAO();
                 break;
 
             case FMFI:
@@ -81,16 +69,16 @@ public class CalculatorHelper {
                 strategy = new MER();
                 break;
 
-            case MES:
-                strategy = new MES();
-                break;
-
             case RA:
                 strategy = new RA();
                 break;
 
             case SEMAS:
                 strategy = new SEMAS();
+                break;
+
+            case SMASR:
+                strategy = new SMASR();
                 break;
 
             case SOEMA:
@@ -161,10 +149,32 @@ public class CalculatorHelper {
         }
     }
 
+    public static long getTimeMax(List<Period> history) {
+
+        long timeMax = 0;
+
+        //search for the highest value
+        for (int i = 0; i < history.size(); i++) {
+
+            if (history.get(i).time > timeMax)
+                timeMax = history.get(i).time;
+        }
+
+        return timeMax;
+    }
+
     public static void updateHistory(List<Period> history, double[][] data) {
+
+        //get the greatest time
+        long timeMax = getTimeMax(history);
 
         //parse each period from the data
         for (int row = data.length - 1; row >= 0; row--) {
+
+            //at this point we only want to add new history with a greater time
+            if (timeMax > data[row][PERIOD_INDEX_TIME])
+                continue;
+
             addHistory(history, data[row]);
         }
     }

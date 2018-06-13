@@ -6,6 +6,7 @@ import com.gamesbykevin.tradingbot.util.Email;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.wallet.Wallet.STOP_TRADING_RATIO;
 
 public class AgentMessageHelper {
@@ -32,11 +33,11 @@ public class AgentMessageHelper {
         displayMessage(agent, text4, true);
 
         //include the funds in our message
-        String message = text1 + "\n" + text2 + "\n" + text3 + "\n" + text4 + "\n";
+        String message = text1 + NEW_LINE + text2 + NEW_LINE + text3 + NEW_LINE + text4 + NEW_LINE;
 
         //also include the summary of wins/losses
-        message += TradeHelper.getDescWins(agent) + "\n";
-        message += TradeHelper.getDescLost(agent) + "\n";
+        message += TradeHelper.getDescWins(agent) + NEW_LINE;
+        message += TradeHelper.getDescLost(agent) + NEW_LINE;
 
         //send email notification
         Email.sendEmail(subject + " (" + agent.getProductId() + "-" + agent.getStrategyKey() + ")", message);

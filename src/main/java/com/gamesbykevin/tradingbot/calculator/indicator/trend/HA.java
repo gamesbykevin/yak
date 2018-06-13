@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator.indicator.trend;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
@@ -151,7 +152,7 @@ public class HA extends Indicator {
     public void cleanup() {
 
         //don't allow the size to grow too much
-        while (getHaPeriods().size() > PERIODS_RETAIN) {
+        while (getHaPeriods().size() > Calculator.HISTORICAL_PERIODS_MINIMUM) {
             getHaPeriods().remove(0);
         }
     }

@@ -22,6 +22,12 @@ public class TradeHelper {
     //the trades directoru
     public static final String TRADES_DIR = "trades";
 
+    //character used to create a new line in the message
+    public static final String NEW_LINE = "\n";
+
+    //character used to tab
+    public static final String TAB = "\t";
+
     /**
      * The reasons for why we sold
      */
@@ -48,7 +54,7 @@ public class TradeHelper {
         final long duration = trade.getDuration();
 
         //create our message
-        return "Duration of the order from buy to sell (HH:MM:SS): " + getDurationDesc(duration);
+        return "Duration (HH:MM:SS): " + getDurationDesc(duration);
     }
 
     public static String getDurationDesc(final long duration) {
@@ -84,51 +90,46 @@ public class TradeHelper {
 
         } else if (trade.getOrderSell() != null) {
 
-            //start off with the product to start the transaction description
-            text = "Sell " + trade.getProductId();
-
-            //what is the quantity
-            text += ", quantity: " + trade.getQuantitySell();
-
-            //what is the price
-            text += " @ $" + trade.getPriceSell();
-
-            //how much did we pay initially
-            text += ", purchase $" + trade.getPriceBuy();
-
-            //display our fee
-            text += ", buy fee $" + trade.getFeeBuy();
-
-            //display our fee
-            text += ", sell fee $" + trade.getFeeSell() + "\n";
-
-            //what was the low / high $ during the trade
-            text += "Stock Max $" + trade.getPriceMax() + ", Stock Min $" + trade.getPriceMin() + "\n";
-
-            //add our trade duration message
-            text += createTradeDuration(trade) + "\n";
-
-            //what happened during this order
-            text += "Order Attempt Summary" + "\n";
-            text += "Buy Reject:  " + trade.getCountRejectedBuy()  + "\n";
-            text += "Buy Cancel:  " + trade.getCountCancelBuy()    + "\n";
-            text += "Sell Reject: " + trade.getCountRejectedSell() + "\n";
-            text += "Sell Cancel: " + trade.getCountCancelSell()   + "\n";
-
-            //what is the reason for selling
-            displayMessage(agent, "Reason sell: " + trade.getReasonSell().getDescription(), true);
-
-            //display the amount of fees that we paid
-            displayMessage(agent, "Fees $" + trade.getFeeSell(), true);
-
             //get the total fees
             final double fees = trade.getFeeBuy() + trade.getFeeSell();
 
+            //start off with the product to start the transaction description
+            text = "Sold " + trade.getQuantitySell() + " " + trade.getProductId() + NEW_LINE;
+
+            //what $ did we buy and sell
+            text += "Sell $" + trade.getPriceSell() + ", Buy $" + trade.getPriceBuy() + NEW_LINE;
+
+            //what was the low / high $ during the trade
+            text += "Max  $" + trade.getPriceMax() + ", Min  $" + trade.getPriceMin() + NEW_LINE;
+
+            //summarize our fees (if exist)
+            text += "Fees $" + fees + ", buy $" + trade.getFeeBuy() + ", sell $" + trade.getFeeSell() + NEW_LINE;
+
+            //why did we sell?
+            text += "Reason sell: " + trade.getReasonSell().getDescription() + NEW_LINE;
+
+            //add our trade duration message
+            text += createTradeDuration(trade) + NEW_LINE;
+
+            //what happened during this order
+            text += "Order Attempt Summary" + NEW_LINE;
+            text += "Buy Reject:  " + trade.getCountRejectedBuy()  + NEW_LINE;
+            text += "Buy Cancel:  " + trade.getCountCancelBuy()    + NEW_LINE;
+            text += "Sell Reject: " + trade.getCountRejectedSell() + NEW_LINE;
+            text += "Sell Cancel: " + trade.getCountCancelSell()   + NEW_LINE;
+
             //did we win or lose?
-            if (trade.getResult() == Result.Win) {
-                subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() - fees) + " (" + agent.getStrategyKey() + ")";
-            } else {
-                subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() + fees) + " (" + agent.getStrategyKey() + ")";
+            switch (trade.getResult()) {
+                case Win:
+                    subject = "We made $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() - fees) + " (" + agent.getStrategyKey() + ")";
+                    break;
+
+                case Lose:
+                    subject = "We lost $" + AgentHelper.round(DESCRIPTION_DECIMALS_ACCURACY, trade.getAmount() + fees) + " (" + agent.getStrategyKey() + ")";
+                    break;
+
+                default:
+                    throw new RuntimeException("Result not handled: " + trade.getResult());
             }
         }
 

@@ -41,9 +41,6 @@ public class AgentManager {
     //current product price
     private double price;
 
-    //current order book
-    private Orderbook orderbook;
-
     //which candle we want to start trading
     public static final Candle CANDLE_START = Candle.OneHour;
 
@@ -58,22 +55,22 @@ public class AgentManager {
         //create new calculator for each candle duration and perform our initial calculations
         for (Candle candle : Candle.values()) {
 
-            //we won't be trading on these candles
+            //we will trade the specified candles
             switch (candle) {
 
-                case OneMinute:
-                case FiveMinutes:
-                case FifteenMinutes:
-                case SixHours:
-                case TwentyFourHours:
-                    continue;
+                case OneHour:
+                    break;
 
                 default:
-                    break;
+                    continue;
             }
 
             getCalculators().add(new Calculator(candle, getProductId(), getWriter()));
         }
+
+        //we should have a calculator for the candle we are trading with
+        if (getCalculator(CANDLE_START) == null)
+            throw new RuntimeException("We don't have a calculator for candle: " + CANDLE_START);
 
         //create our list of agents
         this.agents = new ArrayList<>();
@@ -89,7 +86,7 @@ public class AgentManager {
         }
     }
 
-    public synchronized void update(final double price, final Orderbook orderbook) {
+    public synchronized void update(final double price) {
 
         //if all agents have stopped trading don't continue
         if (hasStoppedTrading())
@@ -101,7 +98,6 @@ public class AgentManager {
 
         //store our object references
         this.price = price;
-        this.orderbook = orderbook;
 
         //flag that this agent is working
         working = true;
@@ -234,9 +230,5 @@ public class AgentManager {
 
     public double getPrice() {
         return price;
-    }
-
-    public Orderbook getOrderbook() {
-        return orderbook;
     }
 }

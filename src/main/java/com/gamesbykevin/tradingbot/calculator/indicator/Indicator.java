@@ -1,6 +1,7 @@
 package com.gamesbykevin.tradingbot.calculator.indicator;
 
 import com.gamesbykevin.tradingbot.calculator.Calculation;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Period;
 
 import java.util.List;
@@ -13,13 +14,10 @@ public abstract class Indicator extends Calculation {
     public enum Key {
 
         //momentum
-        CCI, RSI, SO, SR,
-
-        //other
-        RC,
+        CCI, RSI, SO, STRSI,
 
         //trend
-        ADX, EMA, HA, LR, MACD, SMA, SMMA,
+        ADX, EMA, HA, LR, MACD, SMA, SMMA, SR,
 
         //volatility
         ATR, BB,
@@ -28,7 +26,7 @@ public abstract class Indicator extends Calculation {
         ADL, EMV, NVI, OBV, PVI,
 
         //bill williams
-        ADO, A, AO, F, MFI
+        ADO, A, AO, F, MFI,
     }
 
     //each indicator is checking a number of periods
@@ -39,8 +37,8 @@ public abstract class Indicator extends Calculation {
         this.periods = periods;
 
         //make sure we are retaining enough data
-        if (getPeriods() > PERIODS_RETAIN)
-            throw new RuntimeException("Indicator (" + getKey() + ") is calculating more than (" + PERIODS_RETAIN + ") periods: " + getPeriods());
+        if (getPeriods() > Calculator.HISTORICAL_PERIODS_MINIMUM)
+            throw new RuntimeException("Indicator (" + getKey() + ") is calculating more than (" + Calculator.HISTORICAL_PERIODS_MINIMUM + ") periods: " + getPeriods());
     }
 
     public int getPeriods() {
