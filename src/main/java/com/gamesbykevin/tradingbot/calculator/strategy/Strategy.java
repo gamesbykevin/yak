@@ -18,7 +18,7 @@ public abstract class Strategy extends Calculation {
     private boolean wait = false;
 
     //adjust our stop price by this ratio
-    private static final float ADJUST_HARD_STOP_RATIO = .75f;
+    private static final float ADJUST_HARD_STOP_RATIO = .5f;
 
     //list of indicators we are using
     private List<Indicator> indicators;
@@ -39,6 +39,7 @@ public abstract class Strategy extends Calculation {
      */
     public enum Key {
         AE,
+        AR,
         BBAR,
         BBER,
         BBR,
@@ -46,10 +47,12 @@ public abstract class Strategy extends Calculation {
         EMAC,
         EMAR,
         EMAS,
+        ERS,
         FA,
         FADOA,
         FAO,
         FMFI,
+        HASO,
         MACS,
         MARS,
         MER,
@@ -57,8 +60,11 @@ public abstract class Strategy extends Calculation {
         RA,
         SEMAS,
         SMASR,
+        SOADX,
         SOEMA,
-        SSR
+        SSR,
+        TWOA,
+        TWOR,
     }
 
     private final Key key;

@@ -25,6 +25,10 @@ public class CalculatorHelper {
                 strategy = new AE();
                 break;
 
+            case AR:
+                strategy = new AR();
+                break;
+
             case BBAR:
                 strategy = new BBAR();
                 break;
@@ -53,6 +57,10 @@ public class CalculatorHelper {
                 strategy = new EMAS();
                 break;
 
+            case ERS:
+                strategy = new ERS();
+                break;
+
             case FA:
                 strategy = new FA();
                 break;
@@ -67,6 +75,10 @@ public class CalculatorHelper {
 
             case FMFI:
                 strategy = new FMFI();
+                break;
+
+            case HASO:
+                strategy = new HASO();
                 break;
 
             case MACS:
@@ -97,12 +109,24 @@ public class CalculatorHelper {
                 strategy = new SMASR();
                 break;
 
+            case SOADX:
+                strategy = new SOADX();
+                break;
+
             case SOEMA:
                 strategy = new SOEMA();
                 break;
 
             case SSR:
                 strategy = new SSR();
+                break;
+
+            case TWOA:
+                strategy = new TWOA();
+                break;
+
+            case TWOR:
+                strategy = new TWOR();
                 break;
 
             default:

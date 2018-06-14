@@ -35,7 +35,8 @@ public class TradeHelper {
 
         Reason_Strategy("Sold based on strategy logic"),
         Reason_HardStop("We have hit our hard stop"),
-        Reason_PriceDecline("Current $ has declined");
+        Reason_PriceDecline("Current $ has declined"),
+        Reason_Increase("Current $ has increased above ratio");
 
         private final String description;
 
@@ -101,6 +102,9 @@ public class TradeHelper {
 
             //what was the low / high $ during the trade
             text += "Max  $" + trade.getPriceMax() + ", Min  $" + trade.getPriceMin() + NEW_LINE;
+
+            //what was our hard stop and hard sell $
+            text += "Hard Stop $" + trade.getHardStopPrice() + ", Hard Sell $" + trade.getHardSellPrice() + NEW_LINE;
 
             //summarize our fees (if exist)
             text += "Fees $" + fees + ", buy $" + trade.getFeeBuy() + ", sell $" + trade.getFeeSell() + NEW_LINE;

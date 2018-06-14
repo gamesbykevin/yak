@@ -30,9 +30,14 @@ public class AgentHelper {
     public static final int ROUND_DECIMALS_QUANTITY = 3;
 
     /**
-     * If the stock price increases let's set a bar so in case the price goes back down we can still sell and make some $
+     * Let's protect our investment in case the stock price drops too much
      */
     public static float HARD_STOP_RATIO;
+
+    /**
+     * If the stock price increases soo much let's sell and take profit while we can
+     */
+    public static float HARD_SELL_RATIO;
 
     /**
      * Do we want to send a notification for every transaction?
@@ -153,8 +158,11 @@ public class AgentHelper {
             //let's set our hard stop $
             trade.setHardStopPrice(price - (price * HARD_STOP_RATIO));
 
+            //let's sell if the $ goes above this amount
+            trade.setHardSellPrice(price + (price * HARD_SELL_RATIO));
+
             //write hard stop amount to our log file
-            displayMessage(agent, "Current Price $" + price + ", Hard stop $" + trade.getHardStopPrice(), true);
+            displayMessage(agent, "Current Price $" + price + ", Hard stop $" + trade.getHardStopPrice() + ", Hard sell $" + trade.getHardSellPrice(), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, price));
@@ -190,6 +198,10 @@ public class AgentHelper {
         } else {
             trade.updatePriceHistory(price);
         }
+
+        //if the close $ has increased so much, let's just take the profit
+        if (close >= trade.getHardSellPrice())
+            trade.setReasonSell(ReasonSell.Reason_Increase);
 
         /**
          * If the latest historical $ are all below the hard stop $ then we need to sel

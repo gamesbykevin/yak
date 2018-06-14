@@ -81,6 +81,9 @@ public class Trade {
     //what is our hard stop amount
     private double hardStopPrice = 0;
 
+    //we will sell if the $ goes above this price
+    private double hardSellPrice = 0;
+
     /**
      * How many prices in  our history do we look at to confirm we are below the hard stop $
      */
@@ -380,6 +383,14 @@ public class Trade {
 
     public void addCountCancelSell() {
         this.countCancelSell++;
+    }
+
+    public double getHardSellPrice() {
+        return this.hardSellPrice;
+    }
+
+    public void setHardSellPrice(double hardSellPrice) {
+        this.hardSellPrice = hardSellPrice;
     }
 
     private void setResult(Result result) {

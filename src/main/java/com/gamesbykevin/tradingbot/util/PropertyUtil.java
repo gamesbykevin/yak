@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.Properties;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.CURRENT_PRICE_HISTORY;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_SELL_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.trade.Trade.HARD_STOP_PRICE_HISTORY_CONFIRM;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
@@ -29,7 +30,7 @@ public class PropertyUtil {
     public static final String DELIMITER = ",";
 
     //are we running this in IntelliJ?
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
 
     //how many milliseconds are there per minute
     public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
@@ -122,11 +123,19 @@ public class PropertyUtil {
             }
         }
 
-        //what hard stop ratio do we use to test our simulations?
+        //what hard stop ratio are we using?
         HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
 
+        //make sure we are using a valid value
         if (HARD_STOP_RATIO <= 0)
             throw new RuntimeException("Hard stop ratio has to be greater than 0");
+
+        //what hard sell ratio are we using?
+        HARD_SELL_RATIO = Float.parseFloat(getProperties().getProperty("hardSellRatio"));
+
+        //make sure we are using a valid value
+        if (HARD_SELL_RATIO <= 0)
+            throw new RuntimeException("Hard sell ratio has to be greater than 0");
 
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
