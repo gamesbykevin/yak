@@ -30,7 +30,7 @@ public class PropertyUtil {
     public static final String DELIMITER = ",";
 
     //are we running this in IntelliJ?
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     //how many milliseconds are there per minute
     public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
@@ -136,6 +136,9 @@ public class PropertyUtil {
         //make sure we are using a valid value
         if (AgentHelper.HARD_SELL_RATIO <= 0)
             throw new RuntimeException("Hard sell ratio has to be greater than 0");
+
+        //do we only want to sell if we make $
+        AgentHelper.ONLY_PROFIT = Boolean.parseBoolean(getProperties().getProperty("onlyProfit"));
 
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));

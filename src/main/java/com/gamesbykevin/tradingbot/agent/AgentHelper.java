@@ -40,6 +40,11 @@ public class AgentHelper {
     public static float HARD_SELL_RATIO;
 
     /**
+     * If true we will only sell if we make $, unless the $ drops below the hard stop ratio
+     */
+    public static boolean ONLY_PROFIT;
+
+    /**
      * Do we want to send a notification for every transaction?
      */
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
@@ -186,8 +191,12 @@ public class AgentHelper {
         trade.setReasonSell(null);
 
         //check our strategy for a sell signal, and check the child as well
-        if (strategy.hasSellSignal(agent, history, price))// || strategyChild.hasSellSignal(agent, historyChild, price))
+        if (strategy.hasSellSignal(agent, history, price))
             trade.setReasonSell(ReasonSell.Reason_Strategy);
+
+        //if we only want to profit and the $ is less we won't sell
+        if (ONLY_PROFIT && price < trade.getPriceBuy())
+            trade.setReasonSell(null);
 
         //if $ declines we sell, else we update the $ history
         if (hasDecline(trade.getPriceHistory())) {
