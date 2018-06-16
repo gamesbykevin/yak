@@ -534,6 +534,7 @@ public class Trade {
 
         //reset $
         setHardStopPrice(0);
+        setHardSellPrice(0);
 
         //reset our $ history
         resetPriceHistory();

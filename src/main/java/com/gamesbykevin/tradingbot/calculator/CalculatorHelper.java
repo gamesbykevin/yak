@@ -1,6 +1,5 @@
 package com.gamesbykevin.tradingbot.calculator;
 
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 
 import java.util.List;
@@ -43,6 +42,10 @@ public class CalculatorHelper {
 
             case CA:
                 strategy = new CA();
+                break;
+
+            case DM:
+                strategy = new DM();
                 break;
 
             case EMAC:
@@ -95,6 +98,14 @@ public class CalculatorHelper {
 
             case MES:
                 strategy = new MES();
+                break;
+
+            case NVE:
+                strategy = new NVE();
+                break;
+
+            case PVE:
+                strategy = new PVE();
                 break;
 
             case RA:
@@ -288,34 +299,6 @@ public class CalculatorHelper {
                     history.set(y + 1, tmp1);
                 }
             }
-        }
-    }
-
-    public static Candle getChild(Candle parent) {
-
-        //the child will be determined by the parent
-        switch (parent) {
-
-            case TwentyFourHours:
-                return Candle.OneHour;
-
-            case SixHours:
-                return Candle.OneHour;
-
-            case OneHour:
-                return Candle.FifteenMinutes;
-
-            case FifteenMinutes:
-                return Candle.FiveMinutes;
-
-            case FiveMinutes:
-                return Candle.OneMinute;
-
-            case OneMinute:
-                return null;
-
-            default:
-                throw new RuntimeException("Child not found: " + parent);
         }
     }
 }

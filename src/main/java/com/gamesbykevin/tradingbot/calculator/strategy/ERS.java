@@ -8,6 +8,9 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
 
+/**
+ * Exponential Moving Average / Relative Strength Index / Stochastic Oscillator
+ */
 public class ERS extends Strategy {
 
 

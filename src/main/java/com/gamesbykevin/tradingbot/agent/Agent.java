@@ -9,10 +9,8 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.order.BasicOrderHelper.Action;
 import com.gamesbykevin.tradingbot.order.BasicOrderHelper.Status;
-import com.gamesbykevin.tradingbot.orderbook.Orderbook;
 import com.gamesbykevin.tradingbot.trade.Trade;
 import com.gamesbykevin.tradingbot.trade.TradeHelper;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 import com.gamesbykevin.tradingbot.util.LogFile;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
@@ -24,10 +22,8 @@ import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.*;
-import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.getChild;
 import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.cancelOrder;
 import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.updateLimitOrder;
-import static com.gamesbykevin.tradingbot.trade.TradeHelper.createTrade;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.displayTradeSummary;
 import static com.gamesbykevin.tradingbot.util.Email.getFileDateDesc;
 
@@ -93,25 +89,22 @@ public class Agent {
         //do we cancel the order?
         boolean cancel = false;
 
-        Calculator calculator = null, calculatorChild = null;
+        Calculator calculator = null;
 
         //find our calculator
         for (int i =  0; i < calculators.size(); i++) {
 
             if (calculators.get(i).getCandle() == getCandle()) {
                 calculator = calculators.get(i);
-            } else if (calculators.get(i).getCandle() == getChild(getCandle())) {
-                calculatorChild = calculators.get(i);
+                break;
             }
         }
 
         //locate our historical list
         List<Period> history = calculator.getHistory();
-        //List<Period> historyChild = calculatorChild.getHistory();
 
         //locate the strategy
         Strategy strategy = calculator.getStrategy(getStrategyKey());
-        //Strategy strategyChild = calculatorChild.getStrategy(getStrategyKey());
 
         if (getOrder() != null) {
 
@@ -127,14 +120,12 @@ public class Agent {
             if (getWallet().getQuantity() > 0 && getWallet().getQuantity() >= product.getBase_min_size()) {
 
                 //check if we in position to sell our stock
-                //checkSell(this, strategy, strategyChild, history, historyChild, product, price);
-                checkSell(this, strategy, null, history, null, product, price);
+                checkSell(this, strategy, history, product, price);
 
             } else {
 
                 //we don't have any quantity so let's see if we can buy
-                //checkBuy(this, strategy, strategyChild, history, historyChild, product, price);
-                checkBuy(this, strategy, null, history, null, product, price);
+                checkBuy(this, strategy, history, product, price);
 
             }
 

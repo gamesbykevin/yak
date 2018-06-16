@@ -1,18 +1,18 @@
 package com.gamesbykevin.tradingbot.util;
 
 import com.gamesbykevin.tradingbot.Main;
+import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
+import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.*;
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.trade.Trade;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
 import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.CURRENT_PRICE_HISTORY;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_SELL_RATIO;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
-import static com.gamesbykevin.tradingbot.trade.Trade.HARD_STOP_PRICE_HISTORY_CONFIRM;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.TAB;
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
@@ -124,17 +124,17 @@ public class PropertyUtil {
         }
 
         //what hard stop ratio are we using?
-        HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
+        AgentHelper.HARD_STOP_RATIO = Float.parseFloat(getProperties().getProperty("hardStopRatio"));
 
         //make sure we are using a valid value
-        if (HARD_STOP_RATIO <= 0)
+        if (AgentHelper.HARD_STOP_RATIO <= 0)
             throw new RuntimeException("Hard stop ratio has to be greater than 0");
 
         //what hard sell ratio are we using?
-        HARD_SELL_RATIO = Float.parseFloat(getProperties().getProperty("hardSellRatio"));
+        AgentHelper.HARD_SELL_RATIO = Float.parseFloat(getProperties().getProperty("hardSellRatio"));
 
         //make sure we are using a valid value
-        if (HARD_SELL_RATIO <= 0)
+        if (AgentHelper.HARD_SELL_RATIO <= 0)
             throw new RuntimeException("Hard sell ratio has to be greater than 0");
 
         //get how long we wait until sending a notification delay of total assets
@@ -158,8 +158,25 @@ public class PropertyUtil {
         AgentHelper.CURRENT_PRICE_HISTORY = Integer.parseInt(getProperties().getProperty("currentPriceHistory"));
 
         //make sure the price history is long enough
-        if (CURRENT_PRICE_HISTORY < HARD_STOP_PRICE_HISTORY_CONFIRM)
-            throw new RuntimeException("The length of price history (" + CURRENT_PRICE_HISTORY + ") is shorter than the hard stop confirm (" + HARD_STOP_PRICE_HISTORY_CONFIRM + ")");
+        if (AgentHelper.CURRENT_PRICE_HISTORY < Trade.HARD_STOP_PRICE_HISTORY_CONFIRM)
+            throw new RuntimeException("The length of price history (" + AgentHelper.CURRENT_PRICE_HISTORY + ") is shorter than the hard stop confirm (" + Trade.HARD_STOP_PRICE_HISTORY_CONFIRM + ")");
+
+        //get the duration of our trading candle
+        int tmp = Integer.parseInt(getProperties().getProperty("tradingCandle"));
+
+        //loop through our candles to find our candle
+        for (Candle candle : Candle.values()) {
+
+            //matching our candle
+            if (candle.duration == tmp) {
+                AgentManager.TRADING_CANDLE = candle;
+                break;
+            }
+        }
+
+        //we need a candle or else error
+        if (AgentManager.TRADING_CANDLE == null)
+            throw new RuntimeException("We couldn't find a candle with a duration matching: " + tmp);
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));

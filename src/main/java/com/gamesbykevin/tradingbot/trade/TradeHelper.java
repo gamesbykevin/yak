@@ -104,7 +104,7 @@ public class TradeHelper {
             text += "Max  $" + trade.getPriceMax() + ", Min  $" + trade.getPriceMin() + NEW_LINE;
 
             //what was our hard stop and hard sell $
-            text += "Hard Stop $" + trade.getHardStopPrice() + ", Hard Sell $" + trade.getHardSellPrice() + NEW_LINE;
+            text += "Hard Stop $" + round(trade.getHardStopPrice()) + ", Hard Sell $" + round(trade.getHardSellPrice()) + NEW_LINE;
 
             //summarize our fees (if exist)
             text += "Fees $" + fees + ", buy $" + trade.getFeeBuy() + ", sell $" + trade.getFeeSell() + NEW_LINE;

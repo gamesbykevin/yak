@@ -121,7 +121,7 @@ public class AgentHelper {
         return true;
     }
 
-    protected static void checkBuy(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double price) {
+    protected static void checkBuy(Agent agent, Strategy strategy, List<Period> history, Product product, double price) {
 
         //if we need to wait for the next candle period we won't continue
         if (strategy.hasWait()) {
@@ -134,13 +134,8 @@ public class AgentHelper {
         //check for a buy signal
         boolean buy = strategy.hasBuySignal(agent, history, price);
 
-        //if we have a buy signal, check the child to confirm
-        //if (buy && !strategyChild.hasBuySignal(agent, historyChild, price))
-        //    buy = false;
-
         //display our data
         strategy.displayData(agent, buy);
-        //strategyChild.displayData(agent, buy);
 
         //we will buy if there is a reason
         if (buy) {
@@ -155,14 +150,16 @@ public class AgentHelper {
             trade.setPriceMin(price);
             trade.setPriceMax(price);
 
-            //let's set our hard stop $
-            trade.setHardStopPrice(price - (price * HARD_STOP_RATIO));
+            //let's set our hard stop $ if it isn't already set
+            if (trade.getHardStopPrice() == 0)
+                trade.setHardStopPrice(price - (price * HARD_STOP_RATIO));
 
-            //let's sell if the $ goes above this amount
-            trade.setHardSellPrice(price + (price * HARD_SELL_RATIO));
+            //let's sell if the $ goes above this amount if it isn't already set
+            if (trade.getHardSellPrice() == 0)
+                trade.setHardSellPrice(price + (price * HARD_SELL_RATIO));
 
             //write hard stop amount to our log file
-            displayMessage(agent, "Current Price $" + price + ", Hard stop $" + trade.getHardStopPrice() + ", Hard sell $" + trade.getHardSellPrice(), true);
+            displayMessage(agent, "Current Price $" + price + ", Hard stop $" + round(trade.getHardStopPrice()) + ", Hard sell $" + round(trade.getHardSellPrice()), true);
 
             //create and assign our limit order
             agent.setOrder(createLimitOrder(agent, Action.Buy, product, price));
@@ -174,7 +171,7 @@ public class AgentHelper {
         }
     }
 
-    protected static void checkSell(Agent agent, Strategy strategy, Strategy strategyChild, List<Period> history, List<Period> historyChild, Product product, double price) {
+    protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double price) {
 
         //get the latest closing price
         final double close = history.get(history.size() - 1).close;
@@ -215,7 +212,6 @@ public class AgentHelper {
 
         //display our data
         strategy.displayData(agent, trade.getReasonSell() != null);
-        //strategyChild.displayData(agent, trade.getReasonSell() != null);
 
         //display recent stock prices
         displayMessagePriceDecline(agent);

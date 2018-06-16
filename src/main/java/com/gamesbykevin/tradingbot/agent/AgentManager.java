@@ -42,9 +42,9 @@ public class AgentManager {
     private double price;
 
     //which candle we want to start trading
-    public static final Candle CANDLE_START = Candle.OneHour;
+    public static Candle TRADING_CANDLE;
 
-    public AgentManager(Product product, double funds, Candle start) {
+    public AgentManager(Product product, double funds) {
 
         //store the product this agent is trading
         this.product = product;
@@ -52,10 +52,11 @@ public class AgentManager {
         //how many funds do we start with?
         this.funds = funds;
 
+        /*
         //create new calculator for each candle duration and perform our initial calculations
         for (Candle candle : Candle.values()) {
 
-            //we will trade the specified candles
+            //we will trade the specified candle
             switch (candle) {
 
                 case OneHour:
@@ -67,10 +68,14 @@ public class AgentManager {
 
             getCalculators().add(new Calculator(candle, getProductId(), getWriter()));
         }
+        */
+
+        //add 1 calculator (for now)
+        getCalculators().add(new Calculator(TRADING_CANDLE, getProductId(), getWriter()));
 
         //we should have a calculator for the candle we are trading with
-        if (getCalculator(CANDLE_START) == null)
-            throw new RuntimeException("We don't have a calculator for candle: " + CANDLE_START);
+        if (getCalculator(TRADING_CANDLE) == null)
+            throw new RuntimeException("We don't have a calculator for candle: " + TRADING_CANDLE);
 
         //create our list of agents
         this.agents = new ArrayList<>();
@@ -79,7 +84,7 @@ public class AgentManager {
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
 
             //create our agent
-            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], start);
+            Agent agent = new Agent(getFunds(), getProductId(), MY_TRADING_STRATEGIES[i], TRADING_CANDLE);
 
             //add agent to the list
             getAgents().add(agent);

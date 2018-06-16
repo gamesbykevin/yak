@@ -4,6 +4,7 @@ import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.trade.TradeHelper;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
@@ -84,8 +85,13 @@ public class MainHelper {
         //if enough time has passed send ourselves a notification
         if (System.currentTimeMillis() - PREVIOUS_TIME >= NOTIFICATION_DELAY) {
 
+            String desc = getProgressSummary(main) + NEW_LINE + NEW_LINE + NEW_LINE + text;
+
             //send our total assets in an email
-            sendEmail(subject, getProgressSummary(main) + NEW_LINE + NEW_LINE + NEW_LINE + text);
+            sendEmail(subject, desc);
+
+            //write summary to log
+            displayMessage(desc, main.getWriter());
 
             //update the timer
             PREVIOUS_TIME = System.currentTimeMillis();
@@ -97,7 +103,7 @@ public class MainHelper {
      * @param main
      * @return
      */
-    protected static String getProgressSummary(Main main) {
+    private static String getProgressSummary(Main main) {
 
         String result = "";
 

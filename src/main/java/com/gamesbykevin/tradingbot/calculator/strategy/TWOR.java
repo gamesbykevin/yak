@@ -50,7 +50,9 @@ public class TWOR extends Strategy {
         if (getRecent(objRSI.getValueRSI()) <= RSI_OVERSOLD) {
 
             //we want to close above the long sma, but below the short sma
-            if (period.close > getRecent(objSmaLong.getSma()) && period.close < getRecent(objSmaShort.getSma()))
+            //if (period.close > getRecent(objSmaLong.getSma()) && period.close < getRecent(objSmaShort.getSma()))
+            //    return true;
+            if (period.close > getRecent(objSmaLong.getSma()))
                 return true;
         }
 
