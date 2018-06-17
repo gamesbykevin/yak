@@ -34,7 +34,7 @@ public class HASO extends Strategy {
         super(Key.HASO);
 
         //add our indicators
-        INDEX_HA = addIndicator(new HA(periodsHa));
+        INDEX_HA = addIndicator(new HA());
         INDEX_SO = addIndicator(new SO(periodsMarketRate, periodsMarketRateSma, periodsStochasticSma));
     }
 
@@ -46,11 +46,10 @@ public class HASO extends Strategy {
 
         //get the most recent ha candles
         Period curr = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 1);
-        Period prev1 = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 2);
-        Period prev2 = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 3);
+        Period prev = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 2);
 
-        //if 3 candles ago things were bearish, but the next 2 candles are bullish
-        if (objHA.isBearish(prev2) && objHA.isBullish(prev1) && objHA.isBullish(curr)) {
+        //if the 2 recent candles are bullish
+        if (objHA.isBullish(prev) && objHA.isBullish(curr)) {
 
             //if our stochastic indicator is low, let's buy
             if (getRecent(objSO.getStochasticOscillator()) <= STOCHASTIC_MIN)
@@ -69,19 +68,18 @@ public class HASO extends Strategy {
 
         //get the most recent ha candles
         Period curr = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 1);
-        Period prev1 = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 2);
+        Period prev = objHA.getHaPeriods().get(objHA.getHaPeriods().size() - 2);
 
         //if the last 2 candles are bearish
-        if (objHA.isBearish(prev1) && objHA.isBearish(curr)) {
+        if (objHA.isBearish(prev) && objHA.isBearish(curr)) {
+
+            //protect investment
+            adjustHardStopPrice(agent, currentPrice);
 
             //if our stochastic indicator is high, let's sell
             if (getRecent(objSO.getStochasticOscillator()) >= STOCHASTIC_MAX)
                 return true;
         }
-
-        //adjust our hard stop price to protect our investment
-        if (objHA.isBearish(prev1) || objHA.isBearish(curr))
-            adjustHardStopPrice(agent, currentPrice);
 
         //no signal
         return false;

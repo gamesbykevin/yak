@@ -23,7 +23,7 @@ public abstract class Indicator extends Calculation {
         ATR, BB,
 
         //volume
-        ADL, EMV, NVI, OBV, PVI,
+        ADL, EMV, NVI, OBV, PVI, VWAP,
 
         //bill williams
         ADO, A, AO, F, MFI,

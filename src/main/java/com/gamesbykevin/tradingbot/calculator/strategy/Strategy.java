@@ -68,6 +68,7 @@ public abstract class Strategy extends Calculation {
         SSR,
         TWOA,
         TWOR,
+        VS,
     }
 
     private final Key key;

@@ -18,19 +18,10 @@ public class HA extends Indicator {
     //we will create our own candles
     private List<Period> haPeriods;
 
-    /**
-     * We only want to calculate the latest heiken ashi candles for accurate results
-     */
-    private static final int PERIODS = 10;
-
     public HA() {
-        this(PERIODS);
-    }
-
-    public HA(int periods) {
 
         //call parent
-        super(Indicator.Key.HA, periods);
+        super(Indicator.Key.HA, 0);
 
         //create new list
         this.haPeriods = new ArrayList<>();
@@ -45,7 +36,7 @@ public class HA extends Indicator {
 
         String desc = "";
 
-        for (int i = getHaPeriods().size() - getPeriods(); i < getHaPeriods().size(); i++) {
+        for (int i = getHaPeriods().size() - RECENT_PERIODS; i < getHaPeriods().size(); i++) {
 
             if (desc.length() > 0)
                 desc = desc + ", ";
@@ -63,11 +54,11 @@ public class HA extends Indicator {
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
-        //clear the list
-        getHaPeriods().clear();
+        //where do we start
+        int start = getHaPeriods().isEmpty() ? 0 : history.size() - newPeriods;
 
         //check the latest periods only for accurate results
-        for (int i = history.size() - getPeriods(); i < history.size(); i++) {
+        for (int i = start; i < history.size(); i++) {
 
             //get the current period
             Period current = history.get(i);

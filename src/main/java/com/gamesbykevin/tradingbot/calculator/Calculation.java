@@ -36,23 +36,36 @@ public abstract class Calculation {
 
         int size = RECENT_PERIODS;
 
-        if (size >= list.size())
+        if (size > list.size())
             size = list.size();
 
         String info = "";
-        for (int i = list.size() - size; i < list.size(); i++) {
 
-            if (info != null && info.length() > 0)
-                info += ", ";
+        //we can only append if the list is not empty
+        if (!list.isEmpty()) {
+            for (int i = list.size() - size; i < list.size(); i++) {
 
-            if (list.get(i) == 0) {
-                info += "0";
-            } else {
-                info += list.get(i);
+                if (info != null && info.length() > 0)
+                    info += ", ";
+
+                if (list.get(i) == 0) {
+                    info += "0";
+                } else {
+                    info += list.get(i);
+                }
             }
         }
 
         displayMessage(agent, desc + info, write);
+    }
+
+    public String getPeriodDesc(Period period) {
+
+        //in case null
+        if (period == null)
+            return "null";
+
+        return "Time: " + period.time + ", High:" + period.high + ", Low:" + period.low + ", Open:" + period.open + ", Close:" + period.close + ", Volume:" + period.volume;
     }
 
     protected double getRecent(List<Period> periods, Fields field) {

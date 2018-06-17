@@ -140,6 +140,10 @@ public class CalculatorHelper {
                 strategy = new TWOR();
                 break;
 
+            case VS:
+                strategy = new VS();
+                break;
+
             default:
                 throw new RuntimeException("Strategy not found: " + key);
         }

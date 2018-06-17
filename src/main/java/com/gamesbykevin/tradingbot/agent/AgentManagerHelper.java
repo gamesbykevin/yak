@@ -105,9 +105,13 @@ public class AgentManagerHelper {
             //how much $ does the agent currently have
             result += " - $" + AgentHelper.round(agent.getAssets());
 
-            //if this agent has stopped trading, include it in the message
-            if (agent.hasStop())
+            if (agent.hasStop()) {
+                //if this agent has stopped trading, include it in the message
                 result += ", (Stopped)";
+            } else if (agent.getWallet().getQuantity() > 0) {
+                //if there is pending stock we include that as well
+                result += ", (Pending)";
+            }
 
             //make new line
             result += NEW_LINE;

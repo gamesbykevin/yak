@@ -43,10 +43,10 @@ public class DMT extends Indicator {
         PrintWriter writer = (write) ? agent.getWriter() : null;
 
         //display our data
-        displayMessage("DM: Bullish previous time: " + bullPrev.time + ", high:" + bullPrev.high + ", low:" + bullPrev.low + ", open:" + bullPrev.open + ", close:" + bullPrev.close + ", volume:" + bullPrev.volume, writer);
-        displayMessage("DM: Bullish current  time: " + bullCurr.time + ", high:" + bullCurr.high + ", low:" + bullCurr.low + ", open:" + bullCurr.open + ", close:" + bullCurr.close + ", volume:" + bullCurr.volume, writer);
-        displayMessage("DM: Bearish previous time: " + bearPrev.time + ", high:" + bearPrev.high + ", low:" + bearPrev.low + ", open:" + bearPrev.open + ", close:" + bearPrev.close + ", volume:" + bearPrev.volume, writer);
-        displayMessage("DM: Bearish current  time: " + bearCurr.time + ", high:" + bearCurr.high + ", low:" + bearCurr.low + ", open:" + bearCurr.open + ", close:" + bearCurr.close + ", volume:" + bearCurr.volume, writer);
+        displayMessage("DM: Bullish previous " + getPeriodDesc(getBullPrev()), writer);
+        displayMessage("DM: Bullish current  " + getPeriodDesc(getBullCurr()), writer);
+        displayMessage("DM: Bearish previous " + getPeriodDesc(getBearPrev()), writer);
+        displayMessage("DM: Bearish current  " + getPeriodDesc(getBearCurr()), writer);
         displayMessage("DM: Bullish Slope: " + getSlopeBull(), writer);
         displayMessage("DM: Bearish Slope: " + getSlopeBear(), writer);
         display(agent, "Bullish $: ", getBullSlopeData(), write);
