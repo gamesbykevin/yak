@@ -24,6 +24,12 @@ public class CA extends Strategy {
     private static final float CCI_LOW = -100;
     private static final float CCI_HIGH = 100;
 
+    //we need to wait until the end of the candle when buying
+    private boolean wait = false;
+
+    //track time so we know when we are close to the end of the period
+    private long time = 0, end = 0;
+
     public CA() {
         this(PERIODS_CCI, PERIODS_ADX);
     }
@@ -44,8 +50,41 @@ public class CA extends Strategy {
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
 
-        if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW)
-            return true;
+        if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW) {
+
+            //get the recent period
+            Period period = history.get(history.size() - 1);
+
+            //we need to track time so we know when to buy
+            if (!wait) {
+
+                //track the current time
+                time = System.currentTimeMillis();
+
+                //calculate the end time when we can buy stock
+                end = (long)(period.time + (agent.getCandle().duration * .75)) * 1000L;
+
+                //flag that we setup our wait time
+                wait = true;
+
+            } else {
+
+                //how much time has passed
+                long lapsed = (System.currentTimeMillis() - time);
+
+                //add to the candle to get the current time
+                long current = (period.time * 1000L) + lapsed;
+
+                //if we are close to the end of the candle we can now buy
+                if (current >= end)
+                    return true;
+            }
+
+        } else {
+
+            //flag setup false
+            wait = false;
+        }
 
         //no signal
         return false;
@@ -53,6 +92,9 @@ public class CA extends Strategy {
 
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //flag wait false for the next trade
+        this.wait = false;
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);

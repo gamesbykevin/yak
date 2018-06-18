@@ -290,7 +290,7 @@ public class Agent {
         return this.candle;
     }
 
-    public void setCandle(Candle candle) {
+    private void setCandle(Candle candle) {
         this.candle = candle;
     }
 
