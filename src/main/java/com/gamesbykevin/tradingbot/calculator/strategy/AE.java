@@ -10,7 +10,6 @@ import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
 

@@ -9,6 +9,9 @@ import java.util.List;
 
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
+/**
+ * 2 Simple Moving Averages / Support & Ressistance
+ */
 public class SMASR extends Strategy {
 
     //how to access our indicator objects

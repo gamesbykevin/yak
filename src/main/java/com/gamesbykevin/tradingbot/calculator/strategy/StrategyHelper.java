@@ -37,66 +37,6 @@ public class StrategyHelper {
         }
     }
 
-    /**
-     * Do we have crossover?
-     *
-     * If bullish we look for this:
-     * a) We check the previous data where fast < slow
-     * b) Then we check the current data where fast > slow
-     *
-     * If bearish we look for this:
-     * a) We check the previous data where slow < fast
-     * b) Then we check the current data where slow > fast
-     *
-     * @param bullish Are we checking bullish? if false we are checking bearish
-     * @param fast Array of fast moving data
-     * @param slow Array of slow moving data
-     * @return true if crossover, false otherwise
-     */
-    public static boolean hasCrossover(boolean bullish, List<Double> fast, List<Double> slow) {
-
-        //our previous slow and fast values
-        double previousSlow = slow.get(slow.size() - 2);
-        double previousFast = fast.get(fast.size() - 2);
-
-        //our current slow and fast values
-        double currentSlow = slow.get(slow.size() - 1);
-        double currentFast = fast.get(fast.size() - 1);
-
-        //now check if we have a crossover
-        return hasCrossover(bullish, previousSlow, previousFast, currentSlow, currentFast);
-    }
-
-    /**
-     * Do we have a crossover?
-     * @param bullish True: Check if previousValue1 > previousValue2 then currentValue1 < currentValue2.
-     *                False: Check if previousValue1 < previousValue2 then currentValue1 > currentValue2
-     * @param previousValue1
-     * @param previousValue2
-     * @param currentValue1
-     * @param currentValue2
-     * @return true if the specified bullish or bearish check mentioned above is verified, false otherwise
-     */
-    public static boolean hasCrossover(boolean bullish, double previousValue1, double previousValue2, double currentValue1, double currentValue2) {
-
-        if (bullish) {
-
-            //if the previous value1 > previous value2 and now the current value1 < current value2 we have a crossover
-            if (previousValue1 > previousValue2 && currentValue1 < currentValue2)
-                return true;
-
-        } else {
-
-            //if the previous value1 < previous value2 and now the current value1 > current value2 we have a crossover
-            if (previousValue1 < previousValue2 && currentValue1 > currentValue2)
-                return true;
-
-        }
-
-        //we did not find a crossover
-        return false;
-    }
-
     public static boolean hasTrendDownward(List<Period> data, Fields field, int periods) {
 
         //check for lower highs and lower lows

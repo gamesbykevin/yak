@@ -4,14 +4,8 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
-import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
-import java.util.HashMap;
 
 /**
  * Exponential Moving Average / Relative Strength Index

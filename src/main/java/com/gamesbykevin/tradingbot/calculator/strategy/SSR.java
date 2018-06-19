@@ -1,17 +1,11 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
-
-import java.util.HashMap;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
 
 /**
  * Stochastic Oscillator / Simple Moving Average / Relative Strength Index

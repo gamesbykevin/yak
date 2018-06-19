@@ -4,7 +4,7 @@ import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.CCI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
 
@@ -16,19 +16,17 @@ public class CA extends Strategy {
     //how to access our indicator objects
     private static int INDEX_CCI;
     private static int INDEX_ADX;
+    private static int INDEX_EMA_FAST;
+    private static int INDEX_EMA_SLOW;
 
     //configurable values
+    private static final int PERIODS_EMA_FAST = 12;
+    private static final int PERIODS_EMA_SLOW = 26;
     private static final int PERIODS_CCI = 4;
     private static final int PERIODS_ADX = 50;
     private static final double TREND = 15.0d;
     private static final float CCI_LOW = -100;
     private static final float CCI_HIGH = 100;
-
-    //we need to wait until the end of the candle when buying
-    private boolean wait = false;
-
-    //track time so we know when we are close to the end of the period
-    private long time = 0, end = 0;
 
     public CA() {
         this(PERIODS_CCI, PERIODS_ADX);
@@ -42,6 +40,8 @@ public class CA extends Strategy {
         //add our indicators
         INDEX_CCI = addIndicator(new CCI(periodsCCI));
         INDEX_ADX = addIndicator(new ADX(periodsADX));
+        INDEX_EMA_FAST = addIndicator(new EMA(PERIODS_EMA_FAST));
+        INDEX_EMA_SLOW = addIndicator(new EMA(PERIODS_EMA_SLOW));
     }
 
     @Override
@@ -49,41 +49,36 @@ public class CA extends Strategy {
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
+        EMA objEmaFast = (EMA)getIndicator(INDEX_EMA_FAST);
+        EMA objEmaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
 
         if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW) {
 
-            //get the recent period
-            Period period = history.get(history.size() - 1);
+            double emaFastCurr = getRecent(objEmaFast.getEma());
+            double emaFastPrev = getRecent(objEmaFast.getEma(), 2);
+            double emaSlowCurr = getRecent(objEmaSlow.getEma());
 
-            //we need to track time so we know when to buy
-            if (!wait) {
+            //if things are trending up buy asap, else we buy at the end of the current period
+            if (emaFastCurr > emaSlowCurr && emaFastCurr > emaFastPrev) {
 
-                //track the current time
-                time = System.currentTimeMillis();
-
-                //calculate the end time when we can buy stock
-                end = (long)(period.time + (agent.getCandle().duration * .75)) * 1000L;
-
-                //flag that we setup our wait time
-                wait = true;
+                //we have signal to buy now
+                return true;
 
             } else {
 
-                //how much time has passed
-                long lapsed = (System.currentTimeMillis() - time);
+                //setup the time to trade (if we haven't already)
+                if (!hasSetupTimeTrade())
+                    setupTimeTrade(agent.getCandle());
 
-                //add to the candle to get the current time
-                long current = (period.time * 1000L) + lapsed;
-
-                //if we are close to the end of the candle we can now buy
-                if (current >= end)
+                //if enough time passed
+                if (hasTimeTrade())
                     return true;
             }
 
         } else {
 
-            //flag setup false
-            wait = false;
+            //start over for our next buy signal
+            resetTimeTrade();
         }
 
         //no signal
@@ -93,8 +88,8 @@ public class CA extends Strategy {
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //flag wait false for the next trade
-        this.wait = false;
+        //start over for our next buy signal
+        resetTimeTrade();
 
         ADX objADX = (ADX)getIndicator(INDEX_ADX);
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);

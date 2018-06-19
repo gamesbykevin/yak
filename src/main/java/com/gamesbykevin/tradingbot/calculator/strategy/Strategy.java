@@ -73,8 +73,51 @@ public abstract class Strategy extends Calculation {
 
     private final Key key;
 
+    //track the time so we know when the current candle will end
+    private long timeStart, timeEnd;
+
+    //did we setup the time to wait?
+    private boolean timeWait = false;
+
     protected Strategy(Key key) {
         this.key = key;
+    }
+
+    protected void resetTimeTrade() {
+
+        //flag that we haven't setup the wait time
+        this.timeWait = false;
+    }
+
+    protected boolean hasSetupTimeTrade() {
+        return this.timeWait;
+    }
+
+    protected void setupTimeTrade(Candle candle) {
+
+        //setup the time if we haven't already yet
+        if (!hasSetupTimeTrade()) {
+
+            //calculate when we are near the end of the candle
+            this.timeEnd = System.currentTimeMillis() + (long)((candle.duration * .8) * 1000L);
+
+            //we have setup the wait time
+            this.timeWait = true;
+        }
+    }
+
+    protected boolean hasTimeTrade() {
+
+        //if we haven't setup the time we can't tell if enough time lapsed
+        if (!hasSetupTimeTrade())
+            return false;
+
+        //if enough time has passed we are close to the end of the current period
+        if (System.currentTimeMillis() >= this.timeEnd)
+            return true;
+
+        //not enough time has lapsed
+        return false;
     }
 
     public Key getKey() {

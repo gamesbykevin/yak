@@ -1,15 +1,10 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
-import java.util.HashMap;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasCrossover;
 
 /**
  * Moving average ribbon strategy
@@ -79,12 +74,8 @@ public class MARS extends Strategy {
                 return false;
         }
 
-        //if there is a trend, check when the longest emas cross over since that would happen last
-        if (hasCrossover(true, ((EMA)getIndicator(INDEXES[INDEXES.length - 2])).getEma(), ((EMA)getIndicator(INDEXES[INDEXES.length - 1])).getEma()))
-            return true;
-
-        //no signal
-        return false;
+        //we have a sell signal
+        return true;
     }
 
     @Override
