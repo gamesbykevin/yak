@@ -60,12 +60,8 @@ public class EMAC extends Strategy {
         }
 
         //if we confirm fast is below slow
-        if (confirm) {
-
-            //if the fast ema is downward let's try to buy now before it goes back up
-            if (hasTrendDownward(emaFast.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
-                return true;
-        }
+        if (confirm)
+            return true;
 
         //no signal
         return false;

@@ -62,19 +62,19 @@ public class MARS extends Strategy {
     @Override
     public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //make sure each ema has a crossover
+        //let's confirm everything is down so we increase our chances buying at the dip (aka support)
         for (int i = 0; i < PERIODS.length - 1; i++) {
 
             //get the short and fast ema
             double fast = getRecent((EMA)getIndicator(INDEXES[i]));
             double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
-            //if the fast is less this isn't an upward trend
-            if (fast < slow)
+            //if the fast is greater then everything isn't down
+            if (fast > slow)
                 return false;
         }
 
-        //we have a sell signal
+        //we have a sell signal since all ema indicators are below
         return true;
     }
 
@@ -84,27 +84,24 @@ public class MARS extends Strategy {
         //is there a downward trend
         boolean trend = true;
 
-        //check only some of the periods when selling
+        //if half cross above let's assume this is as good as it gets
         for (int i = 0; i < (PERIODS.length / 2); i++) {
 
             //get the short and fast ema
             double fast = getRecent((EMA)getIndicator(INDEXES[i]));
             double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
-            //if the fast is more, the trend hasn't gone downward (yet)
-            if (fast > slow) {
+            //if the fast is less then it hasn't peaked to our liking
+            if (fast < slow) {
+                adjustHardStopPrice(agent, currentPrice);
                 trend = false;
                 break;
             }
         }
 
-        //if we confirm the data is heading downward, sell
+        //if confirmation sell
         if (trend)
             return true;
-
-        //adjust our hard stop price to protect our investment checking the first 2 lists
-        if (INDEXES.length >= 2 && getRecent((EMA)getIndicator(INDEXES[0])) < getRecent((EMA)getIndicator(INDEXES[1])))
-            adjustHardStopPrice(agent, currentPrice);
 
         //no signal
         return false;

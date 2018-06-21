@@ -38,10 +38,9 @@ public class VS extends Strategy {
 
         //get the most recent period
         Period current = history.get(history.size() - 1);
-        Period previous = history.get(history.size() - 2);
 
         //if price is above the average price this is good
-        if (previous.close < getRecent(vwap.getVwap(), 2) && current.close > getRecent(vwap.getVwap())) {
+        if (current.close > getRecent(vwap.getVwap())) {
 
             //let's also make sure it closes above the sma as well
             if (current.close > getRecent(sma.getSma()))

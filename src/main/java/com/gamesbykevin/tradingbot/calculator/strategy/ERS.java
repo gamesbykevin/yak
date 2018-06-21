@@ -13,7 +13,6 @@ import java.util.List;
  */
 public class ERS extends Strategy {
 
-
     //how to access our indicator objects
     private static int INDEX_EMA_SHORT;
     private static int INDEX_EMA_LONG;

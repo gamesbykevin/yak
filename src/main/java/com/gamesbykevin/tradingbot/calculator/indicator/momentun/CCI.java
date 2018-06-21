@@ -32,27 +32,17 @@ public class CCI extends Indicator {
      */
     private static final float CONSTANT_VALUE = .015f;
 
-    //the constant value
-    private final float constantValue;
-
     /**
      * Default Constructor
      */
     public CCI() {
-        this(PERIODS, CONSTANT_VALUE);
+        this(PERIODS);
     }
 
     public CCI(int periods) {
-        this(periods, CONSTANT_VALUE);
-    }
-
-    public CCI(int periods, float constantValue) {
 
         //call parent
         super(Indicator.Key.CCI, periods);
-
-        //store our constant value
-        this.constantValue = constantValue;
 
         //create new list for our data
         this.cci = new ArrayList<>();
@@ -62,12 +52,12 @@ public class CCI extends Indicator {
         this.objSMA = new SMA(periods);
     }
 
-    public float getConstantValue() {
-        return this.constantValue;
+    private SMA getObjSMA() {
+        return this.objSMA;
     }
 
     public List<Double> getTypicalPriceSma() {
-        return this.objSMA.getSma();
+        return getObjSMA().getSma();
     }
 
     public List<Double> getTypicalPrice() {
@@ -83,7 +73,7 @@ public class CCI extends Indicator {
 
         //display the information
         display(agent, "Typical          $", getTypicalPrice(), write);
-        display(agent, "Typical SMA (" + objSMA.getPeriods() + ") $", getTypicalPrice(), write);
+        display(agent, "Typical SMA (" + getObjSMA().getPeriods() + ") $", getTypicalPrice(), write);
         display(agent, "CC Index: ", getCCI(), write);
     }
 
@@ -107,30 +97,30 @@ public class CCI extends Indicator {
         }
 
         //calculate the simple moving average
-        objSMA.calculateSMA(getTypicalPrice(), newPeriods);
+        getObjSMA().calculateSMA(getTypicalPrice(), newPeriods);
 
         //where do we start
-        start = getCCI().isEmpty() ? objSMA.getPeriods() : getTypicalPrice().size() - newPeriods;
+        start = getCCI().isEmpty() ? getObjSMA().getPeriods() : getTypicalPrice().size() - newPeriods;
 
         //calculate cci for every value in this list
         for (int i = start; i < getTypicalPrice().size(); i++) {
 
             //get the sma typical price
-            double sma = getTypicalPriceSma().get(i - objSMA.getPeriods());
+            double sma = getTypicalPriceSma().get(i - getObjSMA().getPeriods());
 
             //the sum of the difference
             double sum = 0;
 
             //subtract the typical price from the sma typical price and add the absolute value
-            for (int j = i - objSMA.getPeriods(); j < i; j++) {
+            for (int j = i - getObjSMA().getPeriods(); j < i; j++) {
                 sum += Math.abs(getTypicalPrice().get(j) - sma);
             }
 
             //what is our mean deviation?
-            double meanDeviation = sum / (double)objSMA.getPeriods();
+            double meanDeviation = sum / (double)getObjSMA().getPeriods();
 
             //calculate the commodity channel index value
-            double cci = (getTypicalPrice().get(i) - sma) / (getConstantValue() * meanDeviation);
+            double cci = (getTypicalPrice().get(i) - sma) / (CONSTANT_VALUE * meanDeviation);
 
             //add the value to our list
             getCCI().add(cci);
@@ -141,6 +131,6 @@ public class CCI extends Indicator {
     public void cleanup() {
         cleanup(getCCI());
         cleanup(getTypicalPrice());
-        objSMA.cleanup();
+        getObjSMA().cleanup();
     }
 }
