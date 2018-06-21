@@ -5,6 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.CCI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.List;
 
@@ -18,8 +19,10 @@ public class CA extends Strategy {
     private static int INDEX_ADX;
     private static int INDEX_EMA_FAST;
     private static int INDEX_EMA_SLOW;
+    private static int INDEX_SMA;
 
     //configurable values
+    private static final int PERIODS_SMA = 200;
     private static final int PERIODS_EMA_FAST = 12;
     private static final int PERIODS_EMA_SLOW = 26;
     private static final int PERIODS_CCI = 4;
@@ -42,6 +45,7 @@ public class CA extends Strategy {
         INDEX_ADX = addIndicator(new ADX(periodsADX));
         INDEX_EMA_FAST = addIndicator(new EMA(PERIODS_EMA_FAST));
         INDEX_EMA_SLOW = addIndicator(new EMA(PERIODS_EMA_SLOW));
+        INDEX_SMA = addIndicator(new SMA(PERIODS_SMA));
     }
 
     @Override
@@ -51,8 +55,13 @@ public class CA extends Strategy {
         CCI objCCI = (CCI)getIndicator(INDEX_CCI);
         EMA objEmaFast = (EMA)getIndicator(INDEX_EMA_FAST);
         EMA objEmaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
+        SMA objSma = (SMA)getIndicator(INDEX_SMA);
 
-        if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW) {
+        //get the close price of the recent candle
+        final double close = history.get(history.size() - 1).close;
+
+        //let's time this right
+        if (getRecent(objADX.getAdx()) < TREND && getRecent(objCCI.getCCI()) < CCI_LOW && close >= getRecent(objSma.getSma())) {
 
             double emaFastCurr = getRecent(objEmaFast.getEma());
             double emaFastPrev = getRecent(objEmaFast.getEma(), 2);
