@@ -26,7 +26,7 @@ public class HistoryTracker implements Runnable {
     /**
      * How long do we wait between our json calls
      */
-    private static final long DELAY = (120L * 1000L);
+    private static final long DELAY = (180L * 1000L);
 
     //this script will check in the candle history to github
     private static final String SHELL_SCRIPT_FILE = "./auto_check.sh";
@@ -77,7 +77,7 @@ public class HistoryTracker implements Runnable {
                             List<Period> history = new ArrayList<>();
 
                             //load the contents from the text file into our array list
-                            History.load(history, productId, candle, null);
+                            History.load(history, productId, candle, null, true);
 
                             //get the current size to check for changes
                             int size = history.size();

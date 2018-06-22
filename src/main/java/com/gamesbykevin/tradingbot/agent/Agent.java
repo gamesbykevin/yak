@@ -22,6 +22,8 @@ import static com.gamesbykevin.tradingbot.Main.PAPER_TRADING_FEES;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.*;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.*;
+import static com.gamesbykevin.tradingbot.calculator.Calculation.getRecent;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_SMA;
 import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.cancelOrder;
 import static com.gamesbykevin.tradingbot.order.LimitOrderHelper.updateLimitOrder;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.displayTradeSummary;
@@ -124,9 +126,20 @@ public class Agent {
 
             } else {
 
-                //we don't have any quantity so let's see if we can buy
-                checkBuy(this, strategy, history, product, price);
+                //let's make sure we are above the 200 period sma before we try to buy
+                if (history.get(history.size() - 1).close > getRecent(calculator.getObjSMA().getSma())) {
 
+                    //we don't have any quantity so let's see if we can buy
+                    checkBuy(this, strategy, history, product, price);
+
+                } else {
+
+                    //we are below the 200 period sma
+                    displayMessage(this,"We are below the " + PERIODS_SMA + " period SMA", false);
+                    displayMessage(this,"Current $" + history.get(history.size() - 1).close, false);
+                    displayMessage(this,"SMA     $" + getRecent(calculator.getObjSMA().getSma()), false);
+
+                }
             }
 
             //if an order was created track the create time

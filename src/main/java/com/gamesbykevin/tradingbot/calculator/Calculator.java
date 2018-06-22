@@ -1,7 +1,9 @@
 package com.gamesbykevin.tradingbot.calculator;
 
 import com.gamesbykevin.tradingbot.agent.AgentManager;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
+import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.GSon;
 import com.gamesbykevin.tradingbot.util.History;
 
@@ -10,9 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.ENDPOINT;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
+import static com.gamesbykevin.tradingbot.calculator.Calculation.getRecent;
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.writeFile;
 
 public class Calculator {
 
@@ -47,6 +53,12 @@ public class Calculator {
      */
     public static Strategy.Key[] MY_TRADING_STRATEGIES;
 
+    //is this the first time checking the 200 period sma
+    private boolean initialize = false;
+
+    //is the recent candle close below the 200 SMA?
+    private boolean belowSMA = false;
+
     public enum Candle {
 
         OneMinute(60, "one_minute", 6),             //check every 10 seconds
@@ -78,6 +90,12 @@ public class Calculator {
     //when was the last time we updated our data
     private long timestamp = 0;
 
+    //object for calculating sma
+    private SMA objSMA;
+
+    //our sma will be 200 periods
+    public static final int PERIODS_SMA = 200;
+
     public Calculator(Candle candle, String productId, PrintWriter writer) {
 
         //save the candle for this calculator
@@ -90,10 +108,10 @@ public class Calculator {
         this.productId = productId;
 
         //populate the list based on existing file data
-        History.load(getHistory(), productId, candle, writer);
+        History.load(getHistory(), productId, candle, writer, false);
 
         //update the previous run time, so it runs immediately since we don't have data yet
-        timestamp = System.currentTimeMillis() - (candle.duration * 1000);
+        this.timestamp = System.currentTimeMillis() - (candle.duration * 1000);
 
         //create all strategies and add to our list
         for (int i = 0; i < MY_TRADING_STRATEGIES.length; i++) {
@@ -105,8 +123,16 @@ public class Calculator {
             calculate(writer, getStrategies().get(getStrategies().size() - 1), 0);
         }
 
+        //create our sma and do the first calculation
+        this.objSMA = new SMA(PERIODS_SMA);
+        getObjSMA().calculate(getHistory(), 0);
+
         //cleanup the history list
         cleanupHistory(writer);
+    }
+
+    public SMA getObjSMA() {
+        return this.objSMA;
     }
 
     public synchronized boolean update(AgentManager manager) {
@@ -129,7 +155,7 @@ public class Calculator {
                 displayMessage("Making rest call to retrieve history " + productId + " (" + getCandle().description + ")", null);
 
                 //make our rest call and get the json response
-                String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getCandle().duration));
+                final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getCandle().duration));
 
                 //convert json text to multi array
                 double[][] data = GSon.getGson().fromJson(json, double[][].class);
@@ -212,6 +238,53 @@ public class Calculator {
             calculate(manager.getWriter(), getStrategies().get(i), newPeriods);
         }
 
+        //calculate our values
+        getObjSMA().calculate(getHistory(), newPeriods);
+
+        //the period close $ of the most recent candle
+        final double close = getHistory().get(getHistory().size() - 1).close;
+
+        //the most recent sma value
+        final double sma = getRecent(getObjSMA().getSma());
+
+        String subject = null, text = null;
+
+        //if there is a significant change in  SMA notify the user
+        if (!initialize || (belowSMA && close > sma) || (!belowSMA && close < sma)) {
+
+            //if the close is above the sma we can continue trading now
+            if (close > sma) {
+
+                subject = manager.getProductId() + " is above the " + PERIODS_SMA + " period SMA";
+                text = "We can now resume trading" + NEW_LINE;
+
+                //we are no longer below the sma
+                belowSMA = false;
+
+            } else {
+
+                subject = manager.getProductId() + " is below the " + PERIODS_SMA + " period SMA";
+                text = "We will stop trading until it improves" + NEW_LINE;
+
+                //we are below the sma
+                belowSMA = true;
+
+            }
+
+            //we are now tracking for a change in $
+            initialize = true;
+
+            //show the user our current data
+            text += "Close $" + close + ", SMA $" + round(sma);
+        }
+
+        //if we have content send a notification email and write to log
+        if (subject != null && text != null) {
+            displayMessage(subject, manager.getWriter());
+            displayMessage(text, manager.getWriter());
+            Email.sendEmail(subject, text);
+        }
+
         //cleanup the history list
         cleanupHistory(manager.getWriter());
     }
@@ -225,6 +298,9 @@ public class Calculator {
         while (getHistory().size() > Calculator.HISTORICAL_PERIODS_MINIMUM) {
             getHistory().remove(0);
         }
+
+        //keep object at a decent size
+        getObjSMA().cleanup();
 
         //size after cleanup
         displayMessage("Cleaned: " + getHistory().size(), writer);

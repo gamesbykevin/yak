@@ -83,35 +83,35 @@ public abstract class Calculation {
         return getValue(periods, field, periods.size() - previous);
     }
 
-    protected double getRecent(List<Double> list) {
+    public static double getRecent(List<Double> list) {
         return getRecent(list, 1);
     }
 
-    protected double getRecent(List<Double> list, int index) {
+    public static double getRecent(List<Double> list, int index) {
         return list.get(list.size() - index);
     }
 
-    protected double getRecent(EMA objEMA, int index) {
+    public static double getRecent(EMA objEMA, int index) {
         return getRecent(objEMA.getEma(), index);
     }
 
-    protected double getRecent(EMA objEMA) {
+    public static double getRecent(EMA objEMA) {
         return getRecent(objEMA.getEma(), 1);
     }
 
-    protected double getRecent(SMA objSMA, int index) {
+    public static double getRecent(SMA objSMA, int index) {
         return getRecent(objSMA.getSma(), index);
     }
 
-    protected double getRecent(SMA objSMA) {
+    public static double getRecent(SMA objSMA) {
         return getRecent(objSMA.getSma(), 1);
     }
 
-    protected double getRecent(SMMA objSMMA) {
+    public static double getRecent(SMMA objSMMA) {
         return getRecent(objSMMA.getSmma(), 1);
     }
 
-    protected double getRecent(SMMA objSMMA, int index) {
+    public static double getRecent(SMMA objSMMA, int index) {
         return getRecent(objSMMA.getSmma(), index);
     }
 }
