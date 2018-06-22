@@ -30,7 +30,7 @@ public class PropertyUtil {
     public static final String DELIMITER = ",";
 
     //are we running this in IntelliJ?
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     //how many milliseconds are there per minute
     public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
