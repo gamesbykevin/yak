@@ -1,5 +1,6 @@
 package com.gamesbykevin.tradingbot.agent;
 
+import com.gamesbykevin.tradingbot.trade.Trade;
 import com.gamesbykevin.tradingbot.trade.Trade.Result;
 import com.gamesbykevin.tradingbot.trade.TradeHelper;
 import com.gamesbykevin.tradingbot.util.Email;
@@ -86,17 +87,25 @@ public class AgentMessageHelper {
         displayMessage(agent, message, true);
     }
 
-    protected static void displayMessagePriceDecline(Agent agent) {
+    public static String getPriceHistoryDesc(Trade trade) {
 
-        String message = "Price Decline: ";
+        String desc = "";
 
         //construct our message
-        for (int i = 0; i < agent.getTrade().getPriceHistory().length; i++) {
-            message += "$" + agent.getTrade().getPriceHistory()[i];
+        for (int i = 0; i < trade.getPriceHistory().length; i++) {
+            desc += "$" + trade.getPriceHistory()[i];
 
-            if (i < agent.getTrade().getPriceHistory().length - 1)
-                message += ", ";
+            if (i < trade.getPriceHistory().length - 1)
+                desc += ", ";
         }
+
+        //return our description
+        return desc;
+    }
+
+    protected static void displayMessagePriceDecline(Agent agent) {
+
+        String message = "History $: " + getPriceHistoryDesc(agent.getTrade());
 
         //display the recent prices so we can see the decline
         displayMessage(agent, message, agent.getTrade().getReasonSell() != null);

@@ -20,7 +20,7 @@ public abstract class Indicator extends Calculation {
         ADX, DMT, EMA, FIB, HA, IC, LR, MACD, SMA, SMMA, SR,
 
         //volatility
-        ATR, BB,
+        ATR, BB, NR,
 
         //volume
         ADL, EMV, NVI, OBV, PVI, VWAP,

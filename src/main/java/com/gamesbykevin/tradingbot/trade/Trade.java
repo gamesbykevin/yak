@@ -87,7 +87,7 @@ public class Trade {
     /**
      * How many prices in  our history do we look at to confirm we are below the hard stop $
      */
-    public static final int HARD_STOP_PRICE_HISTORY_CONFIRM = 3;
+    public static final int HARD_STOP_PRICE_HISTORY_CONFIRM = 5;
 
     public Trade(String productId, Candle candle) {
 

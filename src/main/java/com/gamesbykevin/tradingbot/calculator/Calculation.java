@@ -68,7 +68,7 @@ public abstract class Calculation {
         return "Time: " + period.time + ", High:" + period.high + ", Low:" + period.low + ", Open:" + period.open + ", Close:" + period.close + ", Volume:" + period.volume;
     }
 
-    protected double getRecent(List<Period> periods, Fields field) {
+    public static double getRecent(List<Period> periods, Fields field) {
         return getRecent(periods, field, 1);
     }
 
@@ -79,7 +79,7 @@ public abstract class Calculation {
      * @param previous How many periods do we go back from the most recent
      * @return The value of the desired data for the specified recent index
      */
-    protected double getRecent(List<Period> periods, Period.Fields field, int previous) {
+    public static double getRecent(List<Period> periods, Period.Fields field, int previous) {
         return getValue(periods, field, periods.size() - previous);
     }
 

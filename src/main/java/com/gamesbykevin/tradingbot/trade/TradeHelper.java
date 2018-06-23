@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.NOTIFICATION_EVERY_TRANSACTION;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
+import static com.gamesbykevin.tradingbot.agent.AgentMessageHelper.getPriceHistoryDesc;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
 import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 
@@ -111,6 +112,9 @@ public class TradeHelper {
 
             //why did we sell?
             text += "Reason sell: " + trade.getReasonSell().getDescription() + NEW_LINE;
+
+            //include the $ history
+            text += "Live (old-new) " + getPriceHistoryDesc(trade) + NEW_LINE;
 
             //add our trade duration message
             text += createTradeDuration(trade) + NEW_LINE;

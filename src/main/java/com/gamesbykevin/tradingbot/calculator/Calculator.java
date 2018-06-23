@@ -241,18 +241,16 @@ public class Calculator {
         //calculate our values
         getObjSMA().calculate(getHistory(), newPeriods);
 
-        //the period close $ of the most recent candle
-        final double close = getHistory().get(getHistory().size() - 1).close;
-
-        //the most recent sma value
-        final double sma = getRecent(getObjSMA().getSma());
-
+        //info for our message
         String subject = null, text = null;
+
+        //get the recent values
+        final double close = getRecent(getHistory(), Period.Fields.Close);
+        final double sma = getRecent(getObjSMA().getSma());
 
         //if there is a significant change in  SMA notify the user
         if (!initialize || (belowSMA && close > sma) || (!belowSMA && close < sma)) {
 
-            //if the close is above the sma we can continue trading now
             if (close > sma) {
 
                 subject = manager.getProductId() + " is above the " + PERIODS_SMA + " period SMA";
