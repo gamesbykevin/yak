@@ -2,6 +2,8 @@ package com.gamesbykevin.tradingbot;
 
 import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
+import com.gamesbykevin.tradingbot.calculator.Calculator;
+import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.trade.TradeHelper;
 import com.sun.org.apache.bcel.internal.generic.NEW;
@@ -9,7 +11,10 @@ import com.sun.org.apache.bcel.internal.generic.NEW;
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
 import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
+import static com.gamesbykevin.tradingbot.calculator.Calculation.getRecent;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_SMA;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.util.Email.hasContactAddress;
 import static com.gamesbykevin.tradingbot.util.Email.sendEmail;
@@ -33,13 +38,16 @@ public class MainHelper {
     protected static void manageStatusUpdate(Main main) {
 
         //text of our notification message
-        String subject = "", text = NEW_LINE;
+        String subject = "", text = "";
 
         //how much did we start with
-        text = text + "Started with $" + FUNDS + NEW_LINE;
+        text = "Started with $" + FUNDS + NEW_LINE;
 
         //how long has the bot been running
-        text = text + "Bot Running: " + TradeHelper.getDurationDesc(System.currentTimeMillis() - START) + NEW_LINE + NEW_LINE;
+        text += "Bot Running: " + TradeHelper.getDurationDesc(System.currentTimeMillis() - START) + NEW_LINE;
+
+        //show the sma summary so we are aware of our progress
+        text += getSmaSummary(main) + NEW_LINE + NEW_LINE;
 
         double total = 0;
 
@@ -53,19 +61,19 @@ public class MainHelper {
             total += assets;
 
             //add to our details
-            text = text + main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + AgentHelper.round(assets) + NEW_LINE;
+            text += main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + round(assets) + NEW_LINE;
 
             //display each agent's funds as well
-            text = text + AgentManagerHelper.getAgentDetails(main.getAgentManagers().get(TRADING_CURRENCIES[i]));
+            text += AgentManagerHelper.getAgentDetails(main.getAgentManagers().get(TRADING_CURRENCIES[i]));
 
             //add line break in the end
-            text = text + NEW_LINE;
+            text += NEW_LINE;
         }
 
         text = text + NEW_LINE;
 
         //format our message
-        subject = "Total assets $" + AgentHelper.round(total);
+        subject = "Total assets $" + round(total);
 
         if (total != TOTAL_PREVIOUS) {
 
@@ -96,6 +104,34 @@ public class MainHelper {
             //update the timer
             PREVIOUS_TIME = System.currentTimeMillis();
         }
+    }
+
+    /**
+     * In this method we will display all the 200 period smas for each coin
+     * @param main
+     * @return
+     */
+    private static String getSmaSummary(Main main) {
+
+        String desc = "";
+
+        for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
+
+            Calculator calc = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getCalculators().get(0);
+
+            //get the recent values
+            final double close = getRecent(calc.getHistory(), Period.Fields.Close);
+            final double sma = getRecent(calc.getObjSMA().getSma());
+
+            desc += TRADING_CURRENCIES[i] + " - Close $" + close + ", " + PERIODS_SMA + " SMA $" +  round(sma) + NEW_LINE;
+
+        }
+
+        //add an extra line
+        desc += NEW_LINE;
+
+        //return our message
+        return desc;
     }
 
     /**
@@ -137,7 +173,7 @@ public class MainHelper {
             }
 
             //assign our data
-            DESC[index] = key.toString() + " $" + AgentHelper.round(total) + NEW_LINE;
+            DESC[index] = key.toString() + " $" + round(total) + NEW_LINE;
             TOTALS[index] = total;
 
             //increase index
