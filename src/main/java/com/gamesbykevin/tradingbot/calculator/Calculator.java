@@ -93,8 +93,8 @@ public class Calculator {
     //object for calculating sma
     private SMA objSMA;
 
-    //our sma will be 200 periods
-    public static final int PERIODS_SMA = 200;
+    //our sma will be 200 periods typically
+    public static int PERIODS_SMA;
 
     public Calculator(Candle candle, String productId, PrintWriter writer) {
 
@@ -238,42 +238,45 @@ public class Calculator {
             calculate(manager.getWriter(), getStrategies().get(i), newPeriods);
         }
 
-        //calculate our values
-        getObjSMA().calculate(getHistory(), newPeriods);
-
         //info for our message
         String subject = null, text = null;
 
-        //get the recent values
-        final double close = getRecent(getHistory(), Period.Fields.Close);
-        final double sma = getRecent(getObjSMA().getSma());
+        if (PERIODS_SMA > 0) {
 
-        //if there is a significant change in  SMA notify the user
-        if (!initialize || (belowSMA && close > sma) || (!belowSMA && close < sma)) {
+            //calculate our values
+            getObjSMA().calculate(getHistory(), newPeriods);
 
-            if (close > sma) {
+            //get the recent values
+            final double close = getRecent(getHistory(), Period.Fields.Close);
+            final double sma = getRecent(getObjSMA().getSma());
 
-                subject = manager.getProductId() + " is above the " + PERIODS_SMA + " period SMA";
-                text = "We can now resume trading" + NEW_LINE;
+            //if there is a significant change in  SMA notify the user
+            if (!initialize || (belowSMA && close > sma) || (!belowSMA && close < sma)) {
 
-                //we are no longer below the sma
-                belowSMA = false;
+                if (close > sma) {
 
-            } else {
+                    subject = manager.getProductId() + " is above the " + PERIODS_SMA + " period SMA";
+                    text = "We can now resume trading" + NEW_LINE;
 
-                subject = manager.getProductId() + " is below the " + PERIODS_SMA + " period SMA";
-                text = "We will stop trading until it improves" + NEW_LINE;
+                    //we are no longer below the sma
+                    belowSMA = false;
 
-                //we are below the sma
-                belowSMA = true;
+                } else {
 
+                    subject = manager.getProductId() + " is below the " + PERIODS_SMA + " period SMA";
+                    text = "We will stop trading until it improves" + NEW_LINE;
+
+                    //we are below the sma
+                    belowSMA = true;
+
+                }
+
+                //we are now tracking for a change in $
+                initialize = true;
+
+                //show the user our current data
+                text += "Close $" + close + ", SMA $" + round(sma);
             }
-
-            //we are now tracking for a change in $
-            initialize = true;
-
-            //show the user our current data
-            text += "Close $" + close + ", SMA $" + round(sma);
         }
 
         //if we have content send a notification email and write to log

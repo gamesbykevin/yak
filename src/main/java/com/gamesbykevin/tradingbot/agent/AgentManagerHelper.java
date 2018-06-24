@@ -6,7 +6,9 @@ import com.gamesbykevin.tradingbot.util.PropertyUtil;
 
 import java.io.PrintWriter;
 
+import static com.gamesbykevin.tradingbot.calculator.Calculation.getRecent;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.HISTORICAL_PERIODS_MINIMUM;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_SMA;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 
 public class AgentManagerHelper {
@@ -40,9 +42,21 @@ public class AgentManagerHelper {
 
                 } else {
 
-                    //update the agent accordingly
-                    agent.update(manager.getCalculators(), manager.getProduct(), manager.getPrice());
+                    //if we don't have any pending activity
+                    if (agent.getWallet().getQuantity() <= 0 && agent.getOrder() == null && PERIODS_SMA > 0) {
 
+                        //get the close $
+                        final double close = calculator.getHistory().get(calculator.getHistory().size() - 1).close;
+
+                        //if the close $ is above the sma we can continue updating the agent
+                        if (close > getRecent(calculator.getObjSMA().getSma()))
+                            agent.update(manager.getCalculators(), manager.getProduct(), manager.getPrice());
+
+                    } else {
+
+                        //if we have quantity or a pending order we need to update the agent
+                        agent.update(manager.getCalculators(), manager.getProduct(), manager.getPrice());
+                    }
                 }
 
             } catch (Exception ex1) {

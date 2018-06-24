@@ -23,10 +23,19 @@ public class PropertyUtil {
 
     private static Properties PROPERTIES;
 
+    /**
+     * How many seconds per minute
+     */
     public static final long SECONDS_PER_MINUTE = 60L;
 
+    /**
+     * How many milliseconds per second
+     */
     public static final long MILLISECONDS_PER_SECOND = 1000L;
 
+    /**
+     * Character delimiter for when we have multiple values supplied for a property
+     */
     public static final String DELIMITER = ",";
 
     //are we running this in IntelliJ?
@@ -80,7 +89,7 @@ public class PropertyUtil {
         //grab the email address from our config
         Email.EMAIL_NOTIFICATION_ADDRESS = getProperties().getProperty("emailNotification");
 
-        //our gmail login we need so we have an smtp server to send emails
+        //our g-mail login we need so we have an smtp server to send emails
         Email.GMAIL_SMTP_USERNAME = getProperties().getProperty("gmailUsername");
         Email.GMAIL_SMTP_PASSWORD = getProperties().getProperty("gmailPassword");
 
@@ -186,6 +195,9 @@ public class PropertyUtil {
 
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));
+
+        //# of periods to calculate our sma
+        Calculator.PERIODS_SMA = Integer.parseInt(getProperties().getProperty("periodsSMA"));
     }
 
     public static synchronized void displayMessage(final String message) {

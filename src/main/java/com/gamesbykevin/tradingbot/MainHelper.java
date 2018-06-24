@@ -1,12 +1,10 @@
 package com.gamesbykevin.tradingbot;
 
-import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManagerHelper;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
-import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.trade.TradeHelper;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
@@ -47,7 +45,8 @@ public class MainHelper {
         text += "Bot Running: " + TradeHelper.getDurationDesc(System.currentTimeMillis() - START) + NEW_LINE;
 
         //show the sma summary so we are aware of our progress
-        text += getSmaSummary(main) + NEW_LINE + NEW_LINE;
+        if (PERIODS_SMA > 0)
+            text += getSmaSummary(main) + NEW_LINE + NEW_LINE;
 
         double total = 0;
 
@@ -120,7 +119,7 @@ public class MainHelper {
             Calculator calc = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getCalculators().get(0);
 
             //get the recent values
-            final double close = getRecent(calc.getHistory(), Period.Fields.Close);
+            final double close = getRecent(calc.getHistory(), Fields.Close);
             final double sma = getRecent(calc.getObjSMA().getSma());
 
             desc += TRADING_CURRENCIES[i] + " - Close $" + close + ", " + PERIODS_SMA + " SMA $" +  round(sma) + NEW_LINE;
