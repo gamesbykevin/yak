@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator;
 
 import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.GSon;
@@ -18,7 +19,6 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.*;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
-import static com.gamesbykevin.tradingbot.util.PropertyUtil.writeFile;
 
 public class Calculator {
 
@@ -52,12 +52,6 @@ public class Calculator {
      * Our list of chosen trading strategies
      */
     public static Strategy.Key[] MY_TRADING_STRATEGIES;
-
-    //is this the first time checking the 200 period sma
-    private boolean initialize = false;
-
-    //is the recent candle close below the 200 SMA?
-    private boolean belowSMA = false;
 
     public enum Candle {
 
@@ -238,53 +232,9 @@ public class Calculator {
             calculate(manager.getWriter(), getStrategies().get(i), newPeriods);
         }
 
-        //info for our message
-        String subject = null, text = null;
-
-        if (PERIODS_SMA > 0) {
-
-            //calculate our values
+        //calculate our values
+        if (PERIODS_SMA > 0)
             getObjSMA().calculate(getHistory(), newPeriods);
-
-            //get the recent values
-            final double close = getRecent(getHistory(), Period.Fields.Close);
-            final double sma = getRecent(getObjSMA().getSma());
-
-            //if there is a significant change in  SMA notify the user
-            if (!initialize || (belowSMA && close > sma) || (!belowSMA && close < sma)) {
-
-                if (close > sma) {
-
-                    subject = manager.getProductId() + " is above the " + PERIODS_SMA + " period SMA";
-                    text = "We can now resume trading" + NEW_LINE;
-
-                    //we are no longer below the sma
-                    belowSMA = false;
-
-                } else {
-
-                    subject = manager.getProductId() + " is below the " + PERIODS_SMA + " period SMA";
-                    text = "We will stop trading until it improves" + NEW_LINE;
-
-                    //we are below the sma
-                    belowSMA = true;
-
-                }
-
-                //we are now tracking for a change in $
-                initialize = true;
-
-                //show the user our current data
-                text += "Close $" + close + ", SMA $" + round(sma);
-            }
-        }
-
-        //if we have content send a notification email and write to log
-        if (subject != null && text != null) {
-            displayMessage(subject, manager.getWriter());
-            displayMessage(text, manager.getWriter());
-            Email.sendEmail(subject, text);
-        }
 
         //cleanup the history list
         cleanupHistory(manager.getWriter());

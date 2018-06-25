@@ -3,18 +3,21 @@ package com.gamesbykevin.tradingbot.agent;
 import com.coinbase.exchange.api.entity.Product;
 import com.gamesbykevin.tradingbot.calculator.Calculator;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
-import com.gamesbykevin.tradingbot.orderbook.Orderbook;
+import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
+import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.*;
+import static com.gamesbykevin.tradingbot.calculator.Calculation.getRecent;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.calculator.Calculator.PERIODS_SMA;
+import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.util.LogFile.FILE_SEPARATOR;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameManager;
 
@@ -24,7 +27,8 @@ public class AgentManager {
     private List<Agent> agents;
 
     //our reference to the calculator
-    private List<Calculator> calculators;
+    //private List<Calculator> calculators;
+    private Calculator calculator;
 
     //are we updating the agent?
     private boolean working = false;
@@ -44,6 +48,12 @@ public class AgentManager {
     //which candle we want to start trading
     public static Candle TRADING_CANDLE;
 
+    //is this the first time checking the x period SMA line
+    private boolean initialize = false;
+
+    //is the recent candle close below the x period SMA?
+    private boolean belowSMA = false;
+
     public AgentManager(Product product, double funds) {
 
         //store the product this agent is trading
@@ -52,30 +62,8 @@ public class AgentManager {
         //how many funds do we start with?
         this.funds = funds;
 
-        /*
-        //create new calculator for each candle duration and perform our initial calculations
-        for (Candle candle : Candle.values()) {
-
-            //we will trade the specified candle
-            switch (candle) {
-
-                case OneHour:
-                    break;
-
-                default:
-                    continue;
-            }
-
-            getCalculators().add(new Calculator(candle, getProductId(), getWriter()));
-        }
-        */
-
         //add 1 calculator (for now)
-        getCalculators().add(new Calculator(TRADING_CANDLE, getProductId(), getWriter()));
-
-        //we should have a calculator for the candle we are trading with
-        if (getCalculator(TRADING_CANDLE) == null)
-            throw new RuntimeException("We don't have a calculator for candle: " + TRADING_CANDLE);
+        this.calculator = new Calculator(TRADING_CANDLE, getProductId(), getWriter());
 
         //create our list of agents
         this.agents = new ArrayList<>();
@@ -115,6 +103,9 @@ public class AgentManager {
             //update our agents
             updateAgents(this);
 
+            //track if we go below / above sma
+            checkSMA();
+
         } catch (Exception ex) {
 
             //print stack trace and write exception to log file
@@ -125,6 +116,59 @@ public class AgentManager {
 
             //last step is to make that we are done working
             working = false;
+        }
+    }
+
+    /**
+     * Check if we are above / below our trading sma
+     */
+    private void checkSMA() {
+
+        if (PERIODS_SMA < 1)
+            return;
+
+        //info for our message
+        String subject = null, text = null;
+
+        //get the recent values
+        final double close = getRecent(getCalculator().getHistory(), Fields.Close);
+        final double sma = getRecent(getCalculator().getObjSMA().getSma());
+
+        //if there is a significant change in  SMA notify the user
+        if (!initialize || (belowSMA && close > sma) || (!belowSMA && close < sma)) {
+
+            if (close > sma) {
+
+                subject = getProductId() + " is above the " + PERIODS_SMA + " period SMA";
+                //text = "We can now resume trading" + NEW_LINE;
+
+                //we are no longer below the sma
+                belowSMA = false;
+
+            } else {
+
+                subject = getProductId() + " is below the " + PERIODS_SMA + " period SMA";
+                //text = "We will stop trading until it improves" + NEW_LINE;
+
+                //we are below the sma
+                belowSMA = true;
+
+            }
+
+            //we are now tracking for a change in $
+            initialize = true;
+
+            //show the user our current data
+            if (text == null) {
+                text = "Close $" + close + ", SMA $" + round(sma);
+            } else {
+                text += "Close $" + close + ", SMA $" + round(sma);
+            }
+
+            //notify
+            displayMessage(subject, getWriter());
+            displayMessage(text, getWriter());
+            Email.sendEmail(subject, text);
         }
     }
 
@@ -213,24 +257,8 @@ public class AgentManager {
         return true;
     }
 
-    public List<Calculator> getCalculators() {
-
-        if (this.calculators == null)
-            this.calculators = new ArrayList<>();
-
-        return this.calculators;
-    }
-
-    public Calculator getCalculator(Candle candle) {
-
-        for (int i = 0; i < getCalculators().size(); i++) {
-
-            if (getCalculators().get(i).getCandle() == candle)
-                return getCalculators().get(i);
-        }
-
-        //if nothing was found return null (shouldn't happen)
-        return null;
+    public Calculator getCalculator() {
+        return this.calculator;
     }
 
     public double getPrice() {

@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.CURRENT_PRICE_HISTORY;
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.ROUND_DECIMALS_PRICE;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
@@ -437,6 +436,21 @@ public class Trade {
         return this.priceHistory;
     }
 
+    public double getPriceHistoryLow() {
+
+        double result = 0;
+
+        for (int index = 0; index < getPriceHistory().length; index++) {
+
+            if (result == 0 || getPriceHistory()[index] < result)
+                result = getPriceHistory()[index];
+        }
+
+        //return our result
+        return result;
+
+    }
+
     private void resetPriceHistory() {
         for (int i = 0; i < getPriceHistory().length; i++) {
             getPriceHistory()[i] = 0;
@@ -494,16 +508,17 @@ public class Trade {
         this.hardStopPrice = hardStopPrice;
     }
 
-    public void adjustHardStopPrice(Agent agent, double newPrice) {
+    public void goShort(Agent agent) {
+        goShort(agent, agent.getTrade().getPriceHistoryLow());
+    }
 
-        //what is the increase we check to see if we set a new hard stop amount
-        double increase = (getPriceBuy() * HARD_STOP_RATIO);
+    public void goShort(Agent agent, final double price) {
 
-        //if the price has increased some more, let's set a new hard stop
-        if (newPrice > getHardStopPrice() + increase && newPrice > getPriceBuy() + increase) {
+        //we only adjust hard stop if it is higher than the previous
+        if (price > getHardStopPrice()) {
 
-            //set our new hard stop limit slightly below the current stock price
-            setHardStopPrice(newPrice - increase);
+            //assign our new hard stop
+            setHardStopPrice(price);
 
             //write hard stop amount to our log file
             displayMessage(agent, "New hard stop $" + getHardStopPrice(), true);

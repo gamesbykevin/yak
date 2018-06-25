@@ -116,7 +116,7 @@ public class MainHelper {
 
         for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
 
-            Calculator calc = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getCalculators().get(0);
+            Calculator calc = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getCalculator();
 
             //get the recent values
             final double close = getRecent(calc.getHistory(), Fields.Close);

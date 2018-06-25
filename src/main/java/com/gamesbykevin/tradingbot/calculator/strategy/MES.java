@@ -125,11 +125,11 @@ public class MES extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (getRecent(objEMA) < getRecent(objSMA))
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
         if (getRecent(objMACD.getMacdLine()) < getRecent(objMACD.getSignalLine()) || getRecent(objMACD.getMacdLine()) < 0)
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
         if (close < getRecent(objSmaLong1) || close < getRecent(objSmaLong2))
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //no signal
         return false;

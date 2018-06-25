@@ -91,7 +91,7 @@ public class SSR extends Strategy {
 
         //if bearish crossover we go short
         if (getRecent(objSO.getMarketRateFull()) < getRecent(objSO.getStochasticOscillator()))
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //no signal
         return false;

@@ -84,7 +84,7 @@ public class EMAR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (emaShort < emaLong || current < RSI_LINE)
-            adjustHardStopPrice(agent, price);
+            goShort(agent);
 
         //no signal
         return false;

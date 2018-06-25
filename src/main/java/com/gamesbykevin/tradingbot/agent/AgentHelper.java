@@ -30,17 +30,27 @@ public class AgentHelper {
     public static final int ROUND_DECIMALS_QUANTITY = 3;
 
     /**
-     * Let's protect our investment in case the stock price drops too much
+     * Let's protect our investment in case the stock price drops too much (when we are above our sma)
      */
-    public static float HARD_STOP_RATIO;
+    public static float HARD_STOP_RATIO_ABOVE_SMA;
 
     /**
-     * If the stock price increases soo much let's sell and take profit while we can
+     * Let's protect our investment in case the stock price drops too much (when we are below our sma)
      */
-    public static float HARD_SELL_RATIO;
+    public static float HARD_STOP_RATIO_BELOW_SMA;
 
     /**
-     * If true we will only sell if we make $, unless the $ drops below the hard stop ratio
+     * If the stock price increases soo much let's sell and take profit while we can (when we are above our sma)
+     */
+    public static float HARD_SELL_RATIO_ABOVE_SMA;
+
+    /**
+     * If the stock price increases soo much let's sell and take profit while we can (when we are below our sma)
+     */
+    public static float HARD_SELL_RATIO_BELOW_SMA;
+
+    /**
+     * When our indicator tells us to sell, we will only do so if we will profit
      */
     public static boolean ONLY_PROFIT;
 
@@ -126,7 +136,7 @@ public class AgentHelper {
         return true;
     }
 
-    protected static void checkBuy(Agent agent, Strategy strategy, List<Period> history, Product product, double price) {
+    protected static void checkBuy(Agent agent, Strategy strategy, List<Period> history, Product product, double price, final boolean aboveSMA) {
 
         //if we need to wait for the next candle period we won't continue
         if (strategy.hasWait()) {
@@ -155,14 +165,27 @@ public class AgentHelper {
             trade.setPriceMin(price);
             trade.setPriceMax(price);
 
-            //let's set our hard stop $ if it isn't already set
-            if (trade.getHardStopPrice() == 0)
-                trade.setHardStopPrice(price - (price * HARD_STOP_RATIO));
+            if (aboveSMA) {
 
-            //let's sell if the $ goes above this amount if it isn't already set
-            if (trade.getHardSellPrice() == 0)
-                trade.setHardSellPrice(price + (price * HARD_SELL_RATIO));
+                //let's set our hard stop $ if it isn't already set
+                if (trade.getHardStopPrice() == 0)
+                    trade.setHardStopPrice(price - (price * HARD_STOP_RATIO_ABOVE_SMA));
 
+                //let's sell if the $ goes above this amount if it isn't already set
+                if (trade.getHardSellPrice() == 0)
+                    trade.setHardSellPrice(price + (price * HARD_SELL_RATIO_ABOVE_SMA));
+
+            } else {
+
+                //let's set our hard stop $ if it isn't already set
+                if (trade.getHardStopPrice() == 0)
+                    trade.setHardStopPrice(price - (price * HARD_STOP_RATIO_BELOW_SMA));
+
+                //let's sell if the $ goes above this amount if it isn't already set
+                if (trade.getHardSellPrice() == 0)
+                    trade.setHardSellPrice(price + (price * HARD_SELL_RATIO_BELOW_SMA));
+
+            }
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + price + ", Hard stop $" + round(trade.getHardStopPrice()) + ", Hard sell $" + round(trade.getHardSellPrice()), true);
 
@@ -176,7 +199,7 @@ public class AgentHelper {
         }
     }
 
-    protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double price) {
+    protected static void checkSell(Agent agent, Strategy strategy, List<Period> history, Product product, double price, final boolean aboveSMA) {
 
         //get the latest closing price
         final double close = history.get(history.size() - 1).close;
@@ -210,13 +233,24 @@ public class AgentHelper {
             trade.setReasonSell(ReasonSell.Reason_Increase);
 
         /**
-         * If the latest historical $ are all below the hard stop $ then we need to sel
+         * If the latest historical $ are all below the hard stop $ then we need to sell
          * Reason for checking multiple is to filter out false signals when price dips quickly for 1 second
          */
         if (agent.getTrade().hasConfirmedHardStop()) {
             trade.setReasonSell(ReasonSell.Reason_HardStop);
         } else {
-            trade.adjustHardStopPrice(agent, close);
+
+            double increase;
+
+            //the $ increase will vary
+            if (aboveSMA) {
+                increase = trade.getPriceBuy() * HARD_STOP_RATIO_ABOVE_SMA;
+            } else {
+                increase = trade.getPriceBuy() * HARD_STOP_RATIO_BELOW_SMA;
+            }
+
+            //adjust our hard stop $ in case we have a better price
+            trade.goShort(agent, price - increase);
         }
 
         //display our data
@@ -229,7 +263,7 @@ public class AgentHelper {
         if (trade.getReasonSell() != null) {
 
             //since we are selling let's adjust our hard stop
-            trade.adjustHardStopPrice(agent, price);
+            trade.goShort(agent);
 
             //if there is a reason, display message
             displayMessage(agent, trade.getReasonSell().getDescription(), true);

@@ -106,7 +106,7 @@ public class BBAR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (closeCurr < midCurr || closeCurr < lowCurr)
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //no signal yet
         return false;

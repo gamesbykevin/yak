@@ -7,18 +7,12 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.indicator.Indicator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
-import static com.gamesbykevin.tradingbot.agent.AgentHelper.HARD_STOP_RATIO;
 
 public abstract class Strategy extends Calculation {
 
     //does this strategy need to wait for new candle data to check for a buy signal?
     private boolean wait = false;
-
-    //adjust our stop price by this ratio
-    private static final float ADJUST_HARD_STOP_RATIO = .5f;
 
     //list of indicators we are using
     private List<Indicator> indicators;
@@ -173,13 +167,16 @@ public abstract class Strategy extends Calculation {
         }
     }
 
-    public void adjustHardStopPrice(Agent agent, double currentPrice) {
+    /**
+     * Go short on this trade.<br>
+     * @param agent
+     */
+    public void goShort(Agent agent) {
+        goShort(agent, agent.getTrade().getPriceHistoryLow());
+    }
 
-        //figure out our increase and get half of that
-        double increase = ((agent.getTrade().getPriceBuy() * HARD_STOP_RATIO) * ADJUST_HARD_STOP_RATIO);
-
-        //adjust our hard stop price around the current price to protect our investment
-        agent.getTrade().adjustHardStopPrice(agent, currentPrice + increase);
+    public void goShort(Agent agent, double price) {
+        agent.getTrade().goShort(agent, price);
     }
 
     public abstract boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice);

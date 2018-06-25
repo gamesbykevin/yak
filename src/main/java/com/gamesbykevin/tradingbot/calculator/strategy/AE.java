@@ -85,7 +85,7 @@ public class AE extends Strategy {
 
         //if going downward, protect investment
         if (hasTrendDownward(objShortEMA.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //no signal yet
         return false;

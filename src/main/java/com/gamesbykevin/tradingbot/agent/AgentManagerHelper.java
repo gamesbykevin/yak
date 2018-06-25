@@ -16,9 +16,7 @@ public class AgentManagerHelper {
     protected static void updateCalculators(AgentManager manager) {
 
         //update each calculator
-        for (int i = 0; i < manager.getCalculators().size(); i++) {
-            manager.getCalculators().get(i).update(manager);
-        }
+        manager.getCalculator().update(manager);
     }
 
     protected static void updateAgents(AgentManager manager) {
@@ -32,7 +30,7 @@ public class AgentManagerHelper {
                 Agent agent = manager.getAgents().get(i);
 
                 //get the calculator for the candle the agent is assigned
-                Calculator calculator = manager.getCalculator(agent.getCandle());
+                Calculator calculator = manager.getCalculator();
 
                 //make sure we have enough data before we start trading
                 if (calculator.getHistory().size() < HISTORICAL_PERIODS_MINIMUM) {
@@ -42,21 +40,21 @@ public class AgentManagerHelper {
 
                 } else {
 
-                    //if we don't have any pending activity
-                    if (agent.getWallet().getQuantity() <= 0 && agent.getOrder() == null && PERIODS_SMA > 0) {
+                    //are we above our sma?
+                    boolean aboveSMA = true;
 
-                        //get the close $
+                    if (PERIODS_SMA > 0) {
+
+                        //get the $ for comparison
                         final double close = calculator.getHistory().get(calculator.getHistory().size() - 1).close;
+                        final double sma = getRecent(calculator.getObjSMA().getSma());
 
-                        //if the close $ is above the sma we can continue updating the agent
-                        if (close > getRecent(calculator.getObjSMA().getSma()))
-                            agent.update(manager.getCalculators(), manager.getProduct(), manager.getPrice());
-
-                    } else {
-
-                        //if we have quantity or a pending order we need to update the agent
-                        agent.update(manager.getCalculators(), manager.getProduct(), manager.getPrice());
+                        //are we above?
+                        aboveSMA = (close > sma);
                     }
+
+                    //update the agent
+                    agent.update(manager.getCalculator(), manager.getProduct(), manager.getPrice(), aboveSMA);
                 }
 
             } catch (Exception ex1) {

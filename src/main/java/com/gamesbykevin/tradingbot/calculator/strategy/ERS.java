@@ -88,7 +88,7 @@ public class ERS extends Strategy {
         if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
 
             //protect our investment
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
             //if rsi is lower then we have confirmation to sell
             if (getRecent(objRSI.getValueRSI()) < RSI_LINE)

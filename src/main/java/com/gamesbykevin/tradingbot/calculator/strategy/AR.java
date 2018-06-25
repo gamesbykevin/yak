@@ -47,7 +47,7 @@ public class AR extends Strategy {
         if (getRecent(objRSI.getValueRSI(), 2) < OVERSOLD && getRecent(objRSI.getValueRSI()) > OVERSOLD) {
 
             //adjust our hard stop based on average true range
-            adjustHardStopPrice(agent, history.get(history.size() - 1).close - getRecent(objATR.getAverageTrueRange()));
+            goShort(agent, history.get(history.size() - 1).close - getRecent(objATR.getAverageTrueRange()));
 
             //we have a signal
             return true;
@@ -64,7 +64,7 @@ public class AR extends Strategy {
 
         //if over bought adjust our hard stop price
         if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT)
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //make sure we just came out of over bought territory before selling
         if (getRecent(objRSI.getValueRSI(), 2) > OVERBOUGHT && getRecent(objRSI.getValueRSI()) < OVERBOUGHT)

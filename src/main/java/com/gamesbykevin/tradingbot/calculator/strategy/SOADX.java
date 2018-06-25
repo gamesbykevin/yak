@@ -90,11 +90,11 @@ public class SOADX extends Strategy {
 
         //if we go below 50 protect our profits
         if (getRecent(slow.getStochasticOscillator()) < OSCILLATOR_TREND || getRecent(full.getStochasticOscillator()) < OSCILLATOR_TREND || getRecent(adx.getAdx()) < ADX_TREND)
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //if indicators fall below these levels we will sell
         if (getRecent(slow.getStochasticOscillator()) < OSCILLATOR_LOW && getRecent(full.getStochasticOscillator()) < OSCILLATOR_TREND && getRecent(adx.getAdx()) < ADX_TREND) {
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
             return true;
         }
 

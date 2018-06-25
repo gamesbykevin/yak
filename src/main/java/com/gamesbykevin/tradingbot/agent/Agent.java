@@ -82,7 +82,7 @@ public class Agent {
         setCandle(candle);
     }
 
-    public synchronized void update(List<Calculator> calculators, Product product, double price) {
+    public synchronized void update(Calculator calculator, Product product, double price, final boolean aboveSMA) {
 
         //skip if we aren't allowed to trade
         if (hasStop())
@@ -90,17 +90,6 @@ public class Agent {
 
         //do we cancel the order?
         boolean cancel = false;
-
-        Calculator calculator = null;
-
-        //find our calculator
-        for (int i =  0; i < calculators.size(); i++) {
-
-            if (calculators.get(i).getCandle() == getCandle()) {
-                calculator = calculators.get(i);
-                break;
-            }
-        }
 
         //locate our historical list
         List<Period> history = calculator.getHistory();
@@ -122,12 +111,12 @@ public class Agent {
             if (getWallet().getQuantity() > 0 && getWallet().getQuantity() >= product.getBase_min_size()) {
 
                 //check if we in position to sell our stock
-                checkSell(this, strategy, history, product, price);
+                checkSell(this, strategy, history, product, price, aboveSMA);
 
             } else {
 
                 //we don't have any quantity so let's see if we can buy
-                checkBuy(this, strategy, history, product, price);
+                checkBuy(this, strategy, history, product, price, aboveSMA);
 
             }
 

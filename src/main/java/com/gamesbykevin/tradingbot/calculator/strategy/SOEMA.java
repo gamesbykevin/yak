@@ -93,11 +93,11 @@ public class SOEMA extends Strategy {
 
         //if the price is below the ema average we have a signal
         if (getRecent(history, Fields.Close) < getRecent(objEMA))
-            adjustHardStopPrice(agent, price);
+            goShort(agent);
 
         //if both indicators are over sold, let's help protect our investment
         if (getRecent(objSoFast.getStochasticOscillator()) <= OVER_SOLD && getRecent(objSoSlow.getStochasticOscillator()) <= OVER_SOLD)
-            adjustHardStopPrice(agent, price);
+            goShort(agent);
 
         //if both indicators are over bought, let's sell
         if (getRecent(objSoFast.getStochasticOscillator()) >= OVER_BOUGHT && getRecent(objSoSlow.getStochasticOscillator()) >= OVER_BOUGHT)

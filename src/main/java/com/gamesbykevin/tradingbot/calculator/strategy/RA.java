@@ -72,9 +72,9 @@ public class RA extends Strategy {
 
         //if trend is going down, protect our investment
         if (getRecent(rsi.getValueRSI()) < RSI_LOW)
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
         if (getRecent(adx.getDmPlusIndicator()) < getRecent(adx.getDmMinusIndicator()))
-            adjustHardStopPrice(agent, currentPrice);
+            goShort(agent);
 
         //no signal
         return false;

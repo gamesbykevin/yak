@@ -66,11 +66,11 @@ public class SEMAS extends Strategy {
 
         //if fast goes below, protect investment
         if (getRecent(emaFast.getEma()) < getRecent(emaSlow.getEma()))
-            adjustHardStopPrice(agent, price);
+            goShort(agent);
 
         //if above the line, protect investment
         if (getRecent(so.getStochasticOscillator()) > LINE)
-            adjustHardStopPrice(agent, price);
+            goShort(agent);
 
         //if overbought and goes below
         if (getRecent(so.getStochasticOscillator(),2) > OVER_BOUGHT && getRecent(so.getStochasticOscillator(),1) < OVER_BOUGHT)

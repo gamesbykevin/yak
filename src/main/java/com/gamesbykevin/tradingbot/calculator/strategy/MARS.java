@@ -93,7 +93,7 @@ public class MARS extends Strategy {
 
             //if the fast is less then it hasn't peaked to our liking
             if (fast < slow) {
-                adjustHardStopPrice(agent, currentPrice);
+                goShort(agent);
                 trend = false;
                 break;
             }

@@ -147,7 +147,7 @@ public class SMASR extends Strategy {
 
             //if the candle high was above, let's adjust our stop
             if (period.high > getRecent(sr.getResistanceLevel1()))
-                adjustHardStopPrice(agent, price);
+                goShort(agent);
 
             //if the candle closed below the support, we need to sell quickly
             if (period.close < getRecent(sr.getSupportLevel1()))
@@ -161,7 +161,7 @@ public class SMASR extends Strategy {
 
             //if the candle high was above, let's adjust our stop
             if (period.high > getRecent(sr.getResistanceLevel2()))
-                adjustHardStopPrice(agent, price);
+                goShort(agent);
 
             //if the candle closed below the support, we need to sell quickly
             if (period.close < getRecent(sr.getSupportLevel2()))
@@ -175,7 +175,7 @@ public class SMASR extends Strategy {
 
             //if the candle high was above, let's adjust our stop
             if (period.high > getRecent(sr.getResistanceLevel3()))
-                adjustHardStopPrice(agent, price);
+                goShort(agent);
 
             //if the candle closed below the support, we need to sell quickly
             if (period.close < getRecent(sr.getSupportLevel3()))
