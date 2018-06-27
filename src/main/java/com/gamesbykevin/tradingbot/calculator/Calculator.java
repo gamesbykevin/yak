@@ -210,7 +210,7 @@ public class Calculator {
         //display info
         displayMessage("Calculating " + getCandle().description + " " + strategy.getKey() + "...", writer);
 
-        //flag the strategy as no longer waiting for new candle data
+        //if there are new periods we are no longer waiting to calculate
         strategy.setWait(false);
 
         //calculate indicator values based on the current strategy

@@ -62,27 +62,27 @@ public class MARS extends Strategy {
     @Override
     public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //let's confirm everything is down so we increase our chances buying at the dip (aka support)
+        //let's confirm everything is down so we increase our chances buying at the dip (aka support line)
         for (int i = 0; i < PERIODS.length - 1; i++) {
 
             //get the short and fast ema
             double fast = getRecent((EMA)getIndicator(INDEXES[i]));
             double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
-            //if the fast is greater then everything isn't down
+            //if the fast is greater than the slow we don't want to buy yet
             if (fast > slow)
                 return false;
         }
 
-        //we have a sell signal since all ema indicators are below
+        //we have a buy signal since all ema indicators are below
         return true;
     }
 
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //is there a downward trend
-        boolean trend = true;
+        //is the downtrend broken
+        boolean confirm = true;
 
         //if half cross above let's assume this is as good as it gets
         for (int i = 0; i < (PERIODS.length / 2); i++) {
@@ -93,14 +93,13 @@ public class MARS extends Strategy {
 
             //if the fast is less then it hasn't peaked to our liking
             if (fast < slow) {
-                goShort(agent);
-                trend = false;
+                confirm = false;
                 break;
             }
         }
 
         //if confirmation sell
-        if (trend)
+        if (confirm)
             return true;
 
         //no signal

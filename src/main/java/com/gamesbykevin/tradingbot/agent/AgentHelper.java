@@ -271,7 +271,7 @@ public class AgentHelper {
             //reset our attempt counter for our sell order
             trade.setAttempts(0);
 
-            //create and assign our limit order at the last period closing price
+            //create and assign our limit order at the current $
             agent.setOrder(createLimitOrder(agent, Action.Sell, product, price));
 
             //we want to wait until the next candle period before we check to buy stock again after this sells

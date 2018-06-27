@@ -100,8 +100,16 @@ public class CalculatorHelper {
                 strategy = new MES();
                 break;
 
+            case NR4:
+                strategy = new NR4();
+                break;
+
             case NR7:
                 strategy = new NR7();
+                break;
+
+            case NR20:
+                strategy = new NR20();
                 break;
 
             case NVE:
