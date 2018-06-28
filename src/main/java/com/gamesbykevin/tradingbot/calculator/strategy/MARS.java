@@ -92,17 +92,11 @@ public class MARS extends Strategy {
             double slow = getRecent((EMA)getIndicator(INDEXES[i + 1]));
 
             //if the fast is less then it hasn't peaked to our liking
-            if (fast < slow) {
-                confirm = false;
-                break;
-            }
+            if (fast < slow)
+                return false;
         }
 
-        //if confirmation sell
-        if (confirm)
-            return true;
-
-        //no signal
-        return false;
+        //signal to sell
+        return true;
     }
 }

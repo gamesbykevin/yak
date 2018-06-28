@@ -2,13 +2,13 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
-import static com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 /**
  * Moving average crossover strategy
@@ -88,7 +88,7 @@ public class MACS extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) >= getRecent(emaTrend))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Close));
 
         //no signal
         return false;

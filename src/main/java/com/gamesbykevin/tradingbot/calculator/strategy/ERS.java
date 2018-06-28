@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
@@ -88,7 +89,7 @@ public class ERS extends Strategy {
         if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
 
             //protect our investment
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Close));
 
             //if rsi is lower then we have confirmation to sell
             if (getRecent(objRSI.getValueRSI()) < RSI_LINE)

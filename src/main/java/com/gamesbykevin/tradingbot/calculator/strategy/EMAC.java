@@ -46,25 +46,33 @@ public class EMAC extends Strategy {
         EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
         EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
 
-        //did we confirm fast below slow
-        boolean confirm = true;
-
         //let's check to confirm
         for (int i = 1; i <= DEFAULT_PERIODS_CONFIRM_DECREASE; i++) {
 
-            //if the fast is above then things aren't down
-            if (getRecent(emaFast, i) > getRecent(emaSlow, i)) {
-                confirm = false;
-                break;
+            //get the current fast & slow ema lines
+            double fast1 = getRecent(emaFast, i);
+            double slow1 = getRecent(emaSlow, i);
+
+            //make sure ema fast is below ema slow
+            if (fast1 < slow1) {
+
+                //look at the previous period's values
+                double fast2 = getRecent(emaFast, i + 1);
+                double slow2 = getRecent(emaSlow, i + 1);
+
+                //if the difference of the current ema's is greater than the previous then the downtrend is getting stronger
+                if (slow1 - fast1 > slow2 - fast2)
+                    return false;
+
+            } else {
+
+                //if fast is above slow we are too late
+                return false;
             }
         }
 
-        //if we confirm fast is below slow
-        if (confirm)
-            return true;
-
-        //no signal
-        return false;
+        //we have signal
+        return true;
     }
 
     @Override
@@ -74,17 +82,18 @@ public class EMAC extends Strategy {
         EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
         EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
 
-        //if things are up
         if (getRecent(emaFast.getEma()) > getRecent(emaSlow.getEma())) {
 
-            //but ema is heading downward, let's sell
+            //if ema is bullish, but heading downward, let's sell
             if (hasTrendDownward(emaFast.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
                 return true;
 
-        } else if (hasTrendUpward(emaFast.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
+        } else {
 
-            //if the ema fast is constantly going up let's sell
-            return true;
+            //if the previous was above and now we are below let's go short
+            if (getRecent(emaFast.getEma(), 2) > getRecent(emaSlow.getEma(), 2))
+                goShort(agent);
+
         }
 
         //no signal

@@ -3,6 +3,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
+import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.NR;
 
 import java.util.List;
@@ -11,6 +12,7 @@ public class NR7 extends Strategy {
 
     //how we access our indicator(s)
     private static int INDEX_NR;
+    private static int INDEX_RSI;
 
     //configurable values
     private static final int PERIODS = 7;
@@ -21,6 +23,9 @@ public class NR7 extends Strategy {
     //track the time of the current candle
     private long candleTime;
 
+    //is the stock oversold
+    private static final float OVERSOLD = 30.0f;
+
     public NR7() {
 
         //call parent
@@ -28,6 +33,7 @@ public class NR7 extends Strategy {
 
         //add indicator(s)
         INDEX_NR = addIndicator(new NR(PERIODS));
+        INDEX_RSI = addIndicator(new RSI(PERIODS));
     }
 
     @Override
@@ -35,17 +41,23 @@ public class NR7 extends Strategy {
 
         //obtain our indicator
         NR nr = (NR)getIndicator(INDEX_NR);
+        RSI rsi = (RSI)getIndicator(INDEX_RSI);
 
+        //obtain the timestamp of the recent candle
         long time = (long)getRecent(history, Fields.Time);
 
-        //make sure the narrow range candle is the most recent
-        if (nr.getNarrowRangeCandle().time == time) {
+        //we want the rsi level to be oversold
+        if (getRecent(rsi.getValueRSI()) <= OVERSOLD) {
 
-            //when the price breaks out above the high, we will buy
-            if (currentPrice > nr.getNarrowRangeCandle().high) {
-                candleTime = time;
-                sellBreak = nr.getNarrowRangeCandle().low;
-                return true;
+            //make sure the narrow range candle is the most recent
+            if (nr.getNarrowRangeCandle().time == time) {
+
+                //when the price breaks out above the high, we will buy
+                if (currentPrice > nr.getNarrowRangeCandle().high) {
+                    candleTime = time;
+                    sellBreak = nr.getNarrowRangeCandle().low;
+                    return true;
+                }
             }
         }
 
