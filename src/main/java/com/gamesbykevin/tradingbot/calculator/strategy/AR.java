@@ -2,13 +2,18 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
+import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.ATR;
 
 import java.util.List;
 
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
+import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
+
 /**
- * Average True Range / Relative Strength Index
+ * Average True Range / Relative Strength Index / Simple Moving Average
  */
 public class AR extends Strategy {
 
@@ -17,9 +22,8 @@ public class AR extends Strategy {
     private static int INDEX_RSI;
 
     //configurable values
-    private static final int PERIODS_ATR = 10;
-    private static final int PERIODS_RSI = 7;
-
+    private static final int PERIODS_ATR = 14;
+    private static final int PERIODS_RSI = 14;
     private static final float OVERBOUGHT = 75.0f;
     private static final float OVERSOLD = 25.0f;
 
@@ -43,13 +47,9 @@ public class AR extends Strategy {
         ATR objATR = (ATR)getIndicator(INDEX_ATR);
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
-        //make sure we just came out of oversold territory
-        if (getRecent(objRSI.getValueRSI(), 2) < OVERSOLD && getRecent(objRSI.getValueRSI()) > OVERSOLD) {
-
-            //adjust our hard stop based on average true range
-            goShort(agent, history.get(history.size() - 1).close - getRecent(objATR.getAverageTrueRange()));
-
-            //we have a signal
+        //if the atr is not going up, but the rsi is
+        if (!hasTrendUpward(objATR.getAverageTrueRange(), DEFAULT_PERIODS_CONFIRM_INCREASE) &&
+                hasTrendUpward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
             return true;
         }
 
@@ -60,15 +60,18 @@ public class AR extends Strategy {
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
+        ATR objATR = (ATR)getIndicator(INDEX_ATR);
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
-        //if over bought adjust our hard stop price
-        if (getRecent(objRSI.getValueRSI()) > OVERBOUGHT)
-            goShort(agent);
-
-        //make sure we just came out of over bought territory before selling
-        if (getRecent(objRSI.getValueRSI(), 2) > OVERBOUGHT && getRecent(objRSI.getValueRSI()) < OVERBOUGHT)
+        //if atr is not going up, and rsi is going down
+        if (!hasTrendUpward(objATR.getAverageTrueRange(), DEFAULT_PERIODS_CONFIRM_INCREASE) &&
+                hasTrendDownward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
             return true;
+        }
+
+        //if rsi is consistently going down, let's short
+        if (hasTrendDownward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE))
+            goShort(agent);
 
         //no signal
         return false;

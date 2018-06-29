@@ -27,13 +27,13 @@ public abstract class Strategy extends Calculation {
      */
     public static final int DEFAULT_PERIODS_CONFIRM_DECREASE = 5;
 
-
     /**
      * Different trading strategies we can use
      */
     public enum Key {
         AE,
         AR,
+        AS,
         BBAR,
         BBER,
         BBR,

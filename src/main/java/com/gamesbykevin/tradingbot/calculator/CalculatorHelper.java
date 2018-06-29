@@ -28,6 +28,10 @@ public class CalculatorHelper {
                 strategy = new AR();
                 break;
 
+            case AS:
+                strategy = new AS();
+                break;
+
             case BBAR:
                 strategy = new BBAR();
                 break;

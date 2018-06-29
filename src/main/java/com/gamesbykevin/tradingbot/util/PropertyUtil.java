@@ -152,9 +152,6 @@ public class PropertyUtil {
         if (AgentHelper.HARD_SELL_RATIO_BELOW_SMA <= 0 || AgentHelper.HARD_SELL_RATIO_ABOVE_SMA <= 0)
             throw new RuntimeException("Hard sell ratio has to be greater than 0");
 
-        //do we only want to sell if we make $
-        AgentHelper.ONLY_PROFIT = Boolean.parseBoolean(getProperties().getProperty("onlyProfit"));
-
         //get how long we wait until sending a notification delay of total assets
         Main.NOTIFICATION_DELAY = Long.parseLong(getProperties().getProperty("notificationDelay"));
 

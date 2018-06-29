@@ -50,11 +50,6 @@ public class AgentHelper {
     public static float HARD_SELL_RATIO_BELOW_SMA;
 
     /**
-     * When our indicator tells us to sell, we will only do so if we will profit
-     */
-    public static boolean ONLY_PROFIT;
-
-    /**
      * Do we want to send a notification for every transaction?
      */
     public static boolean NOTIFICATION_EVERY_TRANSACTION = false;
@@ -217,8 +212,8 @@ public class AgentHelper {
         if (strategy.hasSellSignal(agent, history, price))
             trade.setReasonSell(ReasonSell.Reason_Strategy);
 
-        //if we only want to profit and the $ is less we won't sell
-        if (ONLY_PROFIT && price < trade.getPriceBuy())
+        //if we are above the sma and the price is less, let's wait for it to turn around
+        if (aboveSMA && price < trade.getPriceBuy())
             trade.setReasonSell(null);
 
         //if $ declines we sell, else we update the $ history
