@@ -8,7 +8,6 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
 import java.util.List;
 
-
 /**
  * stochastic oscillator / ema
  */
@@ -30,25 +29,18 @@ public class SOEMA extends Strategy {
     private static final int PERIODS_SO_FAST_RATE_FULL = 2;
     private static final int PERIODS_SO_FAST_STOCHASTIC = 1;
 
-    private static final double OVER_SOLD = 20.0d;
-    private static final double OVER_BOUGHT = 80.0d;
+    private static final double OVER_SOLD = 30.0d;
+    private static final double OVER_BOUGHT = 70.0d;
 
     public SOEMA() {
-        this(PERIODS_EMA,
-                PERIODS_SO_SLOW_RATE_BASIC, PERIODS_SO_SLOW_RATE_FULL, PERIODS_SO_SLOW_STOCHASTIC,
-                PERIODS_SO_FAST_RATE_BASIC, PERIODS_SO_FAST_RATE_FULL, PERIODS_SO_FAST_STOCHASTIC
-        );
-    }
-
-    public SOEMA(int periodsEMA, int slowBasic, int slowFull, int slowSO, int fastBasic, int fastFull, int fastSO) {
 
         //call parent
         super(Key.SOEMA);
 
         //add our indicators
-        INDEX_SO_SLOW = addIndicator(new SO(slowBasic, slowFull, slowSO));
-        INDEX_SO_FAST = addIndicator(new SO(fastBasic, fastFull, fastSO));
-        INDEX_EMA = addIndicator(new EMA(periodsEMA));
+        INDEX_SO_SLOW = addIndicator(new SO(PERIODS_SO_SLOW_RATE_BASIC, PERIODS_SO_SLOW_RATE_FULL, PERIODS_SO_SLOW_STOCHASTIC));
+        INDEX_SO_FAST = addIndicator(new SO(PERIODS_SO_FAST_RATE_BASIC, PERIODS_SO_FAST_RATE_FULL, PERIODS_SO_FAST_STOCHASTIC));
+        INDEX_EMA = addIndicator(new EMA(PERIODS_EMA));
     }
 
     @Override
@@ -65,18 +57,8 @@ public class SOEMA extends Strategy {
         //first we check that both indicators are at the extreme opposite of each other
         if (fastSO <= OVER_SOLD && slowSO >= OVER_BOUGHT || slowSO <= OVER_SOLD && fastSO >= OVER_BOUGHT) {
 
-            double close1 = getRecent(history, Fields.Close, 1);
-            double close2 = getRecent(history, Fields.Close, 2);
-            double low3   = getRecent(history, Fields.Low, 3);
-            double close4 = getRecent(history, Fields.Close, 4);
-
-            double ema1 = getRecent(objEMA, 1);
-            double ema2 = getRecent(objEMA, 2);
-            double ema3 = getRecent(objEMA, 3);
-            double ema4 = getRecent(objEMA, 4);
-
-            //let's check to see if the close $ bounces off the ema
-            if (close4 > ema4 && low3 < ema3 && close2 > ema2 && close1 > ema1)
+            //if the candle closes above the ema, we will buy
+            if (getRecent(history, Fields.Close) > getRecent(objEMA))
                 return true;
         }
 

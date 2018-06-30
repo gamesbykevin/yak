@@ -23,25 +23,21 @@ public class EMAS extends Strategy {
     private static int INDEX_SMA_LONG;
 
     //our list of variations
-    private static final int PERIODS_EMA_LONG = 34;
-    private static final int PERIODS_EMA_SHORT = 13;
-    private static final int PERIODS_SMA_LONG = 200;
-    private static final int PERIODS_SMA_SHORT = 50;
+    private static final int PERIODS_EMA_SHORT = 144;
+    private static final int PERIODS_EMA_LONG = 169;
+    private static final int PERIODS_SMA_SHORT = 5;
+    private static final int PERIODS_SMA_LONG = 14;
 
     public EMAS() {
-        this(PERIODS_EMA_LONG, PERIODS_EMA_SHORT, PERIODS_SMA_LONG, PERIODS_SMA_SHORT);
-    }
-
-    public EMAS(int emaLong, int emaShort, int smaLong, int smaShort) {
 
         //call parent
         super(Key.EMAS);
 
         //add our indicators
-        INDEX_EMA_SHORT = addIndicator(new EMA(emaShort));
-        INDEX_EMA_LONG = addIndicator(new EMA(emaLong));
-        INDEX_SMA_SHORT = addIndicator(new SMA(smaShort));
-        INDEX_SMA_LONG = addIndicator(new SMA(smaLong));
+        INDEX_EMA_SHORT = addIndicator(new EMA(PERIODS_EMA_SHORT));
+        INDEX_EMA_LONG = addIndicator(new EMA(PERIODS_EMA_LONG));
+        INDEX_SMA_SHORT = addIndicator(new SMA(PERIODS_SMA_SHORT));
+        INDEX_SMA_LONG = addIndicator(new SMA(PERIODS_SMA_LONG));
     }
 
     @Override
@@ -52,20 +48,19 @@ public class EMAS extends Strategy {
         SMA smaObjShort = (SMA)getIndicator(INDEX_SMA_SHORT);
         SMA smaObjLong = (SMA)getIndicator(INDEX_SMA_LONG);
 
-        //our current values
-        double emaS = getRecent(emaShortObj.getEma());
-        double emaL = getRecent(emaLongObj.getEma());
+        //make sure the short ema is above the long ema
+        if (getRecent(emaShortObj) > getRecent(emaLongObj)) {
 
-
-        double smaS = getRecent(smaObjShort.getSma());
-        double smaL = getRecent(smaObjLong.getSma());
-
-        //the short ema needs to be above the long ema and it should be trending upward
-        if (emaS > emaL && hasTrendUpward(emaShortObj.getEma(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
-
-            //we also need the short sma to be above the long sma
-            if (smaS > smaL)
+            //if the period closes above the short sma let's buy
+            if (getRecent(history, Fields.Close) > getRecent(smaObjShort))
                 return true;
+
+        } else {
+
+            //if the period closes above the short sma let's buy
+            if (getRecent(history, Fields.Close) > getRecent(smaObjLong))
+                return true;
+
         }
 
         //no signal
@@ -77,18 +72,23 @@ public class EMAS extends Strategy {
 
         EMA emaShortObj = (EMA)getIndicator(INDEX_EMA_SHORT);
         EMA emaLongObj = (EMA)getIndicator(INDEX_EMA_LONG);
+        SMA smaObjShort = (SMA)getIndicator(INDEX_SMA_SHORT);
+        SMA smaObjLong = (SMA)getIndicator(INDEX_SMA_LONG);
 
-        //our current values
-        double currEmaShort = getRecent(emaShortObj.getEma());
-        double currEmaLong = getRecent(emaLongObj.getEma());
+        //make sure the short ema is above the long ema
+        if (getRecent(emaShortObj) > getRecent(emaLongObj)) {
 
-        //if the ema short went below the ema long
-        if (currEmaShort < currEmaLong)
-            return true;
+            //if the candle closes below the long sma let's sell
+            if (getRecent(history, Fields.Close) < getRecent(smaObjLong))
+                return true;
 
-        //if we confirmed there is a downward trend, we should sell
-        if (hasTrendDownward(emaShortObj.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
-            return true;
+        } else {
+
+            //if the candle closes below the short sma let's go short
+            if (getRecent(history, Fields.Close) < getRecent(smaObjShort))
+                goShort(agent);
+
+        }
 
         //no signal
         return false;

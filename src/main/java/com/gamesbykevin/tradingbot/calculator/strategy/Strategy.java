@@ -39,6 +39,7 @@ public abstract class Strategy extends Calculation {
         BBR,
         CA,
         DM,
+        EMA3,
         EMAC,
         EMAR,
         EMAS,
@@ -51,7 +52,6 @@ public abstract class Strategy extends Calculation {
         MACS,
         MARS,
         MER,
-        MES,
         NR4,
         NR7,
         NR20,
@@ -66,6 +66,7 @@ public abstract class Strategy extends Calculation {
         TWOA,
         TWOR,
         VS,
+        VWM,
     }
 
     private final Key key;

@@ -2,9 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
-import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.ATR;
 
 import java.util.List;
@@ -13,7 +11,7 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.has
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
 
 /**
- * Average True Range / Relative Strength Index / Simple Moving Average
+ * Average True Range / Relative Strength Index
  */
 public class AR extends Strategy {
 
@@ -24,8 +22,6 @@ public class AR extends Strategy {
     //configurable values
     private static final int PERIODS_ATR = 14;
     private static final int PERIODS_RSI = 14;
-    private static final float OVERBOUGHT = 75.0f;
-    private static final float OVERSOLD = 25.0f;
 
     public AR() {
         this(PERIODS_ATR, PERIODS_RSI);

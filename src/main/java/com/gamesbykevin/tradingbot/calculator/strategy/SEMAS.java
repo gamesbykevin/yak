@@ -25,7 +25,6 @@ public class SEMAS extends Strategy {
     private static final int PERIODS_SO_STOCHASTIC = 3;
     private static final double LINE = 50.0d;
     private static final double OVER_BOUGHT = 70.0d;
-    private static final double OVER_SOLD = 30.0d;
 
     public SEMAS() {
 
@@ -33,23 +32,23 @@ public class SEMAS extends Strategy {
         super(Key.SEMAS);
 
         //add our indicators
-        INDEX_SO = addIndicator(new SO(PERIODS_SO_BASIC, PERIODS_SO_FULL, PERIODS_SO_STOCHASTIC));
-        INDEX_EMA_FAST = addIndicator(new EMA(PERIODS_EMA_FAST));
-        INDEX_EMA_SLOW = addIndicator(new EMA(PERIODS_EMA_SLOW));
+        INDEX_SO        = addIndicator(new SO(PERIODS_SO_BASIC, PERIODS_SO_FULL, PERIODS_SO_STOCHASTIC));
+        INDEX_EMA_FAST  = addIndicator(new EMA(PERIODS_EMA_FAST));
+        INDEX_EMA_SLOW  = addIndicator(new EMA(PERIODS_EMA_SLOW));
     }
 
     @Override
     public boolean hasBuySignal(Agent agent, List<Period> history, double price) {
 
-        SO so = (SO)getIndicator(INDEX_SO);
+        SO so       = (SO)getIndicator(INDEX_SO);
         EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
         EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
 
         //make sure indicator is below the line
         if (getRecent(so.getStochasticOscillator()) < LINE) {
 
-            //let's also make sure there is a bullish cross
-            if (getRecent(emaFast.getEma(),2) < getRecent(emaSlow.getEma(),2) && getRecent(emaFast.getEma()) > getRecent(emaSlow.getEma()))
+            //let's also make sure there is a bullish trend
+            if (getRecent(emaFast.getEma()) > getRecent(emaSlow.getEma()))
                 return true;
         }
 
@@ -60,16 +59,12 @@ public class SEMAS extends Strategy {
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double price) {
 
-        SO so = (SO)getIndicator(INDEX_SO);
+        SO so       = (SO)getIndicator(INDEX_SO);
         EMA emaFast = (EMA)getIndicator(INDEX_EMA_FAST);
         EMA emaSlow = (EMA)getIndicator(INDEX_EMA_SLOW);
 
-        //if fast goes below, protect investment
-        if (getRecent(emaFast.getEma()) < getRecent(emaSlow.getEma()))
-            goShort(agent);
-
-        //if above the line, protect investment
-        if (getRecent(so.getStochasticOscillator()) > LINE)
+        //protect investment
+        if (getRecent(so.getStochasticOscillator()) >= OVER_BOUGHT)
             goShort(agent);
 
         //if overbought and goes below

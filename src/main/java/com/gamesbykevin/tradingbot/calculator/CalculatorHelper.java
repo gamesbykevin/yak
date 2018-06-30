@@ -52,6 +52,10 @@ public class CalculatorHelper {
                 strategy = new DM();
                 break;
 
+            case EMA3:
+                strategy = new EMA3();
+                break;
+
             case EMAC:
                 strategy = new EMAC();
                 break;
@@ -98,10 +102,6 @@ public class CalculatorHelper {
 
             case MER:
                 strategy = new MER();
-                break;
-
-            case MES:
-                strategy = new MES();
                 break;
 
             case NR4:
@@ -158,6 +158,10 @@ public class CalculatorHelper {
 
             case VS:
                 strategy = new VS();
+                break;
+
+            case VWM:
+                strategy = new VWM();
                 break;
 
             default:

@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 
@@ -84,7 +85,7 @@ public class EMAR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (emaShort < emaLong || current < RSI_LINE)
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Close));
 
         //no signal
         return false;

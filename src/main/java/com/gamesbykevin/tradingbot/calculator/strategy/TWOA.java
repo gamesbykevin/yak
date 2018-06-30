@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
@@ -38,14 +39,10 @@ public class TWOA extends Strategy {
         ADX adx = (ADX)getIndicator(INDEX_ADX);
         EMA ema = (EMA)getIndicator(INDEX_EMA);
 
-        //get the recent period
-        double closeCurr = history.get(history.size() - 1).close;
-        double closePrev = history.get(history.size() - 2).close;
-
         if (getRecent(adx.getAdx()) < ADX_TREND) {
 
-            //make sure price comes from below ema and finishes above it
-            if (closePrev < getRecent(ema.getEma(), 2) && closeCurr > getRecent(ema.getEma()))
+            //make sure price is above the sma
+            if (getRecent(history, Fields.Close) > getRecent(ema.getEma()))
                 return true;
         }
 
