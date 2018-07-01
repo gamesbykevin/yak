@@ -49,12 +49,13 @@ public abstract class Strategy extends Calculation {
         FAO,
         FMFI,
         HASO,
+        MA,
         MACS,
         MARS,
         MER,
+        MH,
         NR4,
         NR7,
-        NR20,
         NVE,
         PVE,
         RA,
@@ -168,14 +169,6 @@ public abstract class Strategy extends Calculation {
         for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).cleanup();
         }
-    }
-
-    /**
-     * Go short on this trade.<br>
-     * @param agent
-     */
-    public void goShort(Agent agent) {
-        goShort(agent, agent.getTrade().getPriceHistoryLow());
     }
 
     public void goShort(Agent agent, double price) {

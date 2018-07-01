@@ -62,7 +62,7 @@ public class EMAC extends Strategy {
 
         //if fast ema is constantly going down, let's short
         if (hasTrendDownward(emaFast.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         if (getRecent(emaFast) < getRecent(emaSlow))
             return true;

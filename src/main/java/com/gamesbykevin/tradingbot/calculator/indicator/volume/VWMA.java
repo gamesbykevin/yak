@@ -41,7 +41,7 @@ public class VWMA extends Indicator {
     public void calculate(List<Period> history, int newPeriods) {
 
         //where do we start
-        int start = getVWMA().isEmpty() ? 0 : newPeriods;
+        int start = getVWMA().isEmpty() ? 0 : (history.size() - newPeriods);
 
         //calculate missing values
         for (int index = start; index < history.size(); index++) {

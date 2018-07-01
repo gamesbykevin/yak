@@ -2,13 +2,11 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
-import java.util.HashMap;
 
 /**
  * Relative Strength Index / Average Directional Index
@@ -72,9 +70,9 @@ public class RA extends Strategy {
 
         //if trend is going down, protect our investment
         if (getRecent(rsi.getValueRSI()) < RSI_LOW)
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
         if (getRecent(adx.getDmPlusIndicator()) < getRecent(adx.getDmMinusIndicator()))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal
         return false;

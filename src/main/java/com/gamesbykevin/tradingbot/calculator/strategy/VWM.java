@@ -37,7 +37,8 @@ public class VWM extends Strategy {
         VWMA fast = (VWMA)getIndicator(INDEX_VWMA_FAST);
 
         //if the fast crosses above, let's buy
-        if (getRecent(fast.getVWMA(), 2) < getRecent(slow.getVWMA(), 2) && getRecent(fast.getVWMA()) > getRecent(slow.getVWMA()))
+        if (getRecent(fast.getVWMA(), 2) < getRecent(slow.getVWMA(), 2) &&
+                getRecent(fast.getVWMA()) > getRecent(slow.getVWMA()))
             return true;
 
         //no signal

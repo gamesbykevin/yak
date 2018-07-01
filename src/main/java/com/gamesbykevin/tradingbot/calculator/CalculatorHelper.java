@@ -92,6 +92,10 @@ public class CalculatorHelper {
                 strategy = new HASO();
                 break;
 
+            case MA:
+                strategy = new MA();
+                break;
+
             case MACS:
                 strategy = new MACS();
                 break;
@@ -104,16 +108,16 @@ public class CalculatorHelper {
                 strategy = new MER();
                 break;
 
+            case MH:
+                strategy = new MH();
+                break;
+
             case NR4:
                 strategy = new NR4();
                 break;
 
             case NR7:
                 strategy = new NR7();
-                break;
-
-            case NR20:
-                strategy = new NR20();
                 break;
 
             case NVE:

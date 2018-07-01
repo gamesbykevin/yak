@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.HA;
 
@@ -74,7 +75,7 @@ public class HASO extends Strategy {
         if (objHA.isBearish(prev) && objHA.isBearish(curr)) {
 
             //protect investment
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
             //if our stochastic indicator is high, let's sell
             if (getRecent(objSO.getStochasticOscillator()) >= STOCHASTIC_MAX)

@@ -88,7 +88,7 @@ public class BBER extends Strategy {
 
         //if at least one of our values are below trending set the hard stop $
         if (close < getRecent(bbObj.getMiddle().getSma()))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //if the close is below the ema long and bb middle and rsi is heading towards oversold
         if (close < getRecent(emaLongObj.getEma()) || getRecent(rsiObj.getValueRSI()) < RSI_LINE)
@@ -96,7 +96,7 @@ public class BBER extends Strategy {
 
         //if the fast goes below the long let's protect our investment
         if (getRecent(emaShortObj.getEma()) < getRecent(emaLongObj.getEma()))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal yet
         return false;

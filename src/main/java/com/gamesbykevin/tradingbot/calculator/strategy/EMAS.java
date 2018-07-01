@@ -8,9 +8,6 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
-import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
-
 /**
  * Exponential Moving Average / Simple Moving Average
  */
@@ -58,7 +55,7 @@ public class EMAS extends Strategy {
         } else {
 
             //if the period closes above the short sma let's buy
-            if (getRecent(history, Fields.Close) > getRecent(smaObjLong))
+            if (getRecent(history, Fields.Close) > getRecent(smaObjShort) && getRecent(smaObjShort) > getRecent(smaObjLong))
                 return true;
 
         }
@@ -86,8 +83,7 @@ public class EMAS extends Strategy {
 
             //if the candle closes below the short sma let's go short
             if (getRecent(history, Fields.Close) < getRecent(smaObjShort))
-                goShort(agent);
-
+                goShort(agent, getRecent(history, Fields.Low));
         }
 
         //no signal

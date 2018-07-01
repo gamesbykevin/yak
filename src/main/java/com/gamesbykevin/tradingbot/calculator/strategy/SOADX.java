@@ -5,7 +5,6 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.List;
 
@@ -61,7 +60,7 @@ public class SOADX extends Strategy {
 
         //if overbought, get ready to sell
         if (getRecent(so.getStochasticOscillator()) >= OVERBOUGHT)
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //if overbought and the adx crosses, we will sell
         if (getRecent(so.getStochasticOscillator()) >= OVERBOUGHT) {

@@ -63,7 +63,7 @@ public class VS extends Strategy {
 
         //go short if closing below the sma
         if (current.close < getRecent(sma.getSma()))
-            goShort(agent, current.close);
+            goShort(agent, current.low);
 
         //if it closes below the line, now is a good time to exit the trade
         if (current.close < getRecent(vwap.getVwap()))

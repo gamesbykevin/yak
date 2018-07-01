@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.ATR;
 
@@ -60,14 +61,12 @@ public class AR extends Strategy {
         RSI objRSI = (RSI)getIndicator(INDEX_RSI);
 
         //if atr is not going up, and rsi is going down
-        if (!hasTrendUpward(objATR.getAverageTrueRange(), DEFAULT_PERIODS_CONFIRM_INCREASE) &&
-                hasTrendDownward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE)) {
+        if (!hasTrendUpward(objATR.getAverageTrueRange(), DEFAULT_PERIODS_CONFIRM_INCREASE) && hasTrendDownward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE))
             return true;
-        }
 
         //if rsi is consistently going down, let's short
         if (hasTrendDownward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal
         return false;

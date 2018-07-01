@@ -2,14 +2,12 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.Fractal.Status;
 import com.gamesbykevin.tradingbot.calculator.indicator.williams.MarketFacilitationIndex;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
 import java.util.List;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
-import java.util.HashMap;
 
 /**
  * Fractal / Market Facilitation Index
@@ -82,11 +80,11 @@ public class FMFI extends Strategy {
 
             //protect our investment
             if (hasFake(history, market) || hasFade(history, market) || hasSquat(history, market))
-                goShort(agent);
+                goShort(agent, getRecent(history, Fields.Low));
 
             //green confirms the trend and if the price is decreasing let's sell
             if (hasGreen(history, market) && curr.close < prev.close) {
-                goShort(agent);
+                goShort(agent, getRecent(history, Fields.Low));
                 return true;
             }
         }

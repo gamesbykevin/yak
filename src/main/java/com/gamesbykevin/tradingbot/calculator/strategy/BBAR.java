@@ -1,18 +1,14 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.volume.ADL;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.BB;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
-import java.util.HashMap;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendUpward;
 
@@ -106,7 +102,7 @@ public class BBAR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (closeCurr < midCurr || closeCurr < lowCurr)
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal yet
         return false;

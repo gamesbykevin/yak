@@ -84,9 +84,14 @@ public class Trade {
     private double hardSellPrice = 0;
 
     /**
-     * How many prices in  our history do we look at to confirm we are below the hard stop $
+     * How many prices in our history do we look at to confirm we are below the hard stop $
      */
     public static final int HARD_STOP_PRICE_HISTORY_CONFIRM = 5;
+
+    /**
+     * How many prices in our history do we look at to confirm the price increase isn't a false signal
+     */
+    public static final int HARD_STOP_PRICE_INCREASE_CONFIRM = 5;
 
     public Trade(String productId, Candle candle) {
 
@@ -438,17 +443,20 @@ public class Trade {
 
     public double getPriceHistoryLow() {
 
-        double result = 0;
+        //our final result
+        double low = 0;
 
+        //search for the lowest price in our history
         for (int index = 0; index < getPriceHistory().length; index++) {
 
-            if (result == 0 || getPriceHistory()[index] < result)
-                result = getPriceHistory()[index];
+            //if we haven't found one yet or the current price is lower than previous
+            if (low == 0 || getPriceHistory()[index] < low)
+                low = getPriceHistory()[index];
+
         }
 
-        //return our result
-        return result;
-
+        //return result
+        return low;
     }
 
     private void resetPriceHistory() {
@@ -475,9 +483,32 @@ public class Trade {
     }
 
     /**
-     * Look at the 3 latest stock prices to confirm $ is below the hard stop $<br>
-     * We need to check 3 prices because sometimes the price will dip for 1 second then rebound immediately
-     * @return true if the latest 3 prices is below the hard stop price, false otherwise
+     * Look at the latest stock prices to confirm $ is valid<br>
+     * We need to check a few prices because sometimes the price will change for 1 second then rebound immediately
+     * @param price Current $
+     * @return true if the latest prices are above the current price, false otherwise
+     */
+    public boolean hasConfirmedIncrease(double price) {
+
+        //look at the most recent historical periods to confirm
+        for (int i = 1; i <= HARD_STOP_PRICE_INCREASE_CONFIRM; i++) {
+
+            //get the latest price from the history
+            double tmp = getPriceHistory()[getPriceHistory().length - i];
+
+            //if this price is greater than our history, return false
+            if (price > tmp || tmp <= 0)
+                return false;
+        }
+
+        //the current price is below our recent history so we have confirmed increase
+        return true;
+    }
+
+    /**
+     * Look at the latest stock prices to confirm $ is below the hard stop $<br>
+     * We need to check a few prices because sometimes the price will change for 1 second then rebound immediately
+     * @return true if the latest prices are below the hard stop price, false otherwise
      */
     public boolean hasConfirmedHardStop() {
 
@@ -506,10 +537,6 @@ public class Trade {
 
     public void setHardStopPrice(double hardStopPrice) {
         this.hardStopPrice = hardStopPrice;
-    }
-
-    public void goShort(Agent agent) {
-        goShort(agent, agent.getTrade().getPriceHistoryLow());
     }
 
     public void goShort(Agent agent, final double price) {

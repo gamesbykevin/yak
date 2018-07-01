@@ -63,12 +63,12 @@ public class AS extends Strategy {
 
             //if the atr is going up, it is sign of a trend change
             if (hasTrendUpward(objATR.getAverageTrueRange(), DEFAULT_PERIODS_CONFIRM_INCREASE))
-                goShort(agent);
+                goShort(agent, getRecent(history, Fields.Low));
 
         } else if (getRecent(history, Fields.Close) < getRecent(objSMA.getSma())) {
 
             //if we are below the sma go short
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
         }
 
         //no signal

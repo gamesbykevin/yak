@@ -2,10 +2,10 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.CCI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 
 import java.util.List;
 
@@ -115,13 +115,13 @@ public class CA extends Strategy {
 
                 //cci is below -100 and the current period closed bullish
                 if (getRecent(objCCI.getCCI()) <= CCI_LOW && period.open < period.close)
-                    goShort(agent);
+                    goShort(agent, getRecent(history, Fields.Low));
 
             } else if (getRecent(objADX.getDmPlusIndicator()) > getRecent(objADX.getDmMinusIndicator())) {
 
                 //cci is above 100 and the current period closed bearish
                 if (getRecent(objCCI.getCCI()) >= CCI_HIGH && period.open > period.close)
-                    goShort(agent);
+                    goShort(agent, getRecent(history, Fields.Low));
             }
         }
 

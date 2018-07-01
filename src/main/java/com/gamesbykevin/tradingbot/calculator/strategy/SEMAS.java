@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 
@@ -65,7 +66,7 @@ public class SEMAS extends Strategy {
 
         //protect investment
         if (getRecent(so.getStochasticOscillator()) >= OVER_BOUGHT)
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //if overbought and goes below
         if (getRecent(so.getStochasticOscillator(),2) > OVER_BOUGHT && getRecent(so.getStochasticOscillator(),1) < OVER_BOUGHT)

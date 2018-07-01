@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.SO;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
@@ -91,7 +92,7 @@ public class SSR extends Strategy {
 
         //if bearish crossover we go short
         if (getRecent(objSO.getMarketRateFull()) < getRecent(objSO.getStochasticOscillator()))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal
         return false;

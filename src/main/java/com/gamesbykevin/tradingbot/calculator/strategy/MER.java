@@ -1,13 +1,11 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
-import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
@@ -105,11 +103,11 @@ public class MER extends Strategy {
 
         //if 13 period ema is < 21 period ema (minor bearish trend)
         if (getRecent(ema3) < getRecent(ema4))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //if 3 period ema is < 5 period ema (minor bearish trend)
         if (getRecent(ema1) < getRecent(ema2))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //if our fastest moving ema goes below a longer ema
         if (getRecent(ema1) < getRecent(ema4) || getRecent(ema1) < getRecent(ema5))

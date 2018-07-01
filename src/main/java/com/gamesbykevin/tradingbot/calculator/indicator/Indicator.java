@@ -14,7 +14,7 @@ public abstract class Indicator extends Calculation {
     public enum Key {
 
         //momentum
-        CCI, RSI, SO, STRSI,
+        CCI, MFLI, RSI, SO, STRSI,
 
         //trend
         ADX, DMT, EMA, FIB, HA, IC, LR, MACD, SMA, SMMA, SR,

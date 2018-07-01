@@ -181,6 +181,7 @@ public class AgentHelper {
                     trade.setHardSellPrice(price + (price * HARD_SELL_RATIO_BELOW_SMA));
 
             }
+
             //write hard stop amount to our log file
             displayMessage(agent, "Current Price $" + price + ", Hard stop $" + round(trade.getHardStopPrice()) + ", Hard sell $" + round(trade.getHardSellPrice()), true);
 
@@ -232,20 +233,30 @@ public class AgentHelper {
          * Reason for checking multiple is to filter out false signals when price dips quickly for 1 second
          */
         if (agent.getTrade().hasConfirmedHardStop()) {
+
+            //we have a reason to sell
             trade.setReasonSell(ReasonSell.Reason_HardStop);
+
         } else {
 
-            double increase;
+            /**
+             * Check multiple prices in our history to confirm price increase
+             * Reason for checking multiple is to filter our false price increases
+             */
+            if (trade.hasConfirmedIncrease(price)) {
 
-            //the $ increase will vary
-            if (aboveSMA) {
-                increase = trade.getPriceBuy() * HARD_STOP_RATIO_ABOVE_SMA;
-            } else {
-                increase = trade.getPriceBuy() * HARD_STOP_RATIO_BELOW_SMA;
+                double increase;
+
+                //the $ increase will vary
+                if (aboveSMA) {
+                    increase = trade.getPriceBuy() * HARD_STOP_RATIO_ABOVE_SMA;
+                } else {
+                    increase = trade.getPriceBuy() * HARD_STOP_RATIO_BELOW_SMA;
+                }
+
+                //adjust our hard stop $ in case we have a better price
+                trade.goShort(agent, price - increase);
             }
-
-            //adjust our hard stop $ in case we have a better price
-            trade.goShort(agent, price - increase);
         }
 
         //display our data
@@ -256,9 +267,6 @@ public class AgentHelper {
 
         //if there is a reason to sell then we will sell
         if (trade.getReasonSell() != null) {
-
-            //since we are selling let's adjust our hard stop
-            trade.goShort(agent);
 
             //if there is a reason, display message
             displayMessage(agent, trade.getReasonSell().getDescription(), true);

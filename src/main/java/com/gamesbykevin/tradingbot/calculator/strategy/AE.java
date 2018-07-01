@@ -1,13 +1,11 @@
 package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
-import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.ADX;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
-import com.gamesbykevin.tradingbot.trade.TradeHelper.ReasonSell;
 
-import java.util.HashMap;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.hasTrendDownward;
@@ -85,7 +83,7 @@ public class AE extends Strategy {
 
         //if going downward, protect investment
         if (hasTrendDownward(objShortEMA.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal yet
         return false;

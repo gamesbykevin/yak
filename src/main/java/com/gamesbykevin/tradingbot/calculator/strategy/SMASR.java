@@ -2,6 +2,7 @@ package com.gamesbykevin.tradingbot.calculator.strategy;
 
 import com.gamesbykevin.tradingbot.agent.Agent;
 import com.gamesbykevin.tradingbot.calculator.Period;
+import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SMA;
 import com.gamesbykevin.tradingbot.calculator.indicator.trend.SR;
 
@@ -10,7 +11,7 @@ import java.util.List;
 import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessage;
 
 /**
- * 2 Simple Moving Averages / Support & Ressistance
+ * 2 Simple Moving Averages / Support & Resistance
  */
 public class SMASR extends Strategy {
 
@@ -147,7 +148,7 @@ public class SMASR extends Strategy {
 
             //if the candle high was above, let's adjust our stop
             if (period.high > getRecent(sr.getResistanceLevel1()))
-                goShort(agent);
+                goShort(agent, getRecent(history, Fields.Low));
 
             //if the candle closed below the support, we need to sell quickly
             if (period.close < getRecent(sr.getSupportLevel1()))
@@ -161,7 +162,7 @@ public class SMASR extends Strategy {
 
             //if the candle high was above, let's adjust our stop
             if (period.high > getRecent(sr.getResistanceLevel2()))
-                goShort(agent);
+                goShort(agent, getRecent(history, Fields.Low));
 
             //if the candle closed below the support, we need to sell quickly
             if (period.close < getRecent(sr.getSupportLevel2()))
@@ -175,7 +176,7 @@ public class SMASR extends Strategy {
 
             //if the candle high was above, let's adjust our stop
             if (period.high > getRecent(sr.getResistanceLevel3()))
-                goShort(agent);
+                goShort(agent, getRecent(history, Fields.Low));
 
             //if the candle closed below the support, we need to sell quickly
             if (period.close < getRecent(sr.getSupportLevel3()))

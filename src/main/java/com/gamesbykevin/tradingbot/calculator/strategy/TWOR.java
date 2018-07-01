@@ -65,7 +65,7 @@ public class TWOR extends Strategy {
 
         //if we are below the long sma let's go short
         if (getRecent(history, Fields.Close) < getRecent(objSmaLong))
-            goShort(agent);
+            goShort(agent, getRecent(history, Fields.Low));
 
         //no signal
         return false;
