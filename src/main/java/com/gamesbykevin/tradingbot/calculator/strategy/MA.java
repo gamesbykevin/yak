@@ -57,7 +57,7 @@ public class MA extends Strategy {
 
         //if the macd is negative and the dm+ is < dm- go short
         if (getRecent(objMacd.getMacdLine()) < 0 && getRecent(objAdx.getDmPlusIndicator()) < getRecent(objAdx.getDmMinusIndicator()))
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //no signal
         return false;

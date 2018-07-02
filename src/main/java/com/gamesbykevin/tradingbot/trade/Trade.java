@@ -488,7 +488,7 @@ public class Trade {
      * @param price Current $
      * @return true if the latest prices are above the current price, false otherwise
      */
-    public boolean hasConfirmedIncrease(double price) {
+    public boolean hasConfirmedIncrease(final double price) {
 
         //look at the most recent historical periods to confirm
         for (int i = 1; i <= HARD_STOP_PRICE_INCREASE_CONFIRM; i++) {

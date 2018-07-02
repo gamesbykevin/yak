@@ -87,8 +87,8 @@ public class MACS extends Strategy {
             return true;
 
         //adjust our hard stop price to protect our investment
-        if (getRecent(emaFast) < getRecent(emaSlow) || getRecent(emaFast) >= getRecent(emaTrend))
-            goShort(agent, getRecent(history, Fields.Low));
+        if (getRecent(emaFast) < getRecent(emaSlow))
+            goShort(agent, getShortLow(history));
 
         //no signal
         return false;

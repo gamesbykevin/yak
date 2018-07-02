@@ -43,21 +43,14 @@ public class NR7 extends Strategy {
         NR nr = (NR)getIndicator(INDEX_NR);
         RSI rsi = (RSI)getIndicator(INDEX_RSI);
 
-        //obtain the timestamp of the recent candle
-        long time = (long)getRecent(history, Fields.Time);
-
         //we want the rsi level to be oversold
         if (getRecent(rsi.getValueRSI()) <= OVERSOLD) {
 
-            //make sure the narrow range candle is the most recent
-            if (nr.getNarrowRangeCandle().time == time) {
-
-                //when the price breaks out above the high, we will buy
-                if (currentPrice > nr.getNarrowRangeCandle().high) {
-                    candleTime = time;
-                    sellBreak = nr.getNarrowRangeCandle().low;
-                    return true;
-                }
+            //when the price breaks out above the high, we will buy
+            if (currentPrice > nr.getNarrowRangeCandle().high) {
+                candleTime = history.get(history.size() - 1).time;
+                sellBreak = nr.getNarrowRangeCandle().low;
+                return true;
             }
         }
 
@@ -73,7 +66,7 @@ public class NR7 extends Strategy {
             return true;
 
         //if the candle does not match the period has ended and we sell
-        if (candleTime != (long)getRecent(history, Fields.Time))
+        if (candleTime != history.get(history.size() - 1).time)
             return true;
 
         //no signal yet

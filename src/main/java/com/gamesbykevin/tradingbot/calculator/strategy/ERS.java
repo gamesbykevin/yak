@@ -89,7 +89,7 @@ public class ERS extends Strategy {
         if (getRecent(objShortEMA.getEma()) < getRecent(objLongEMA.getEma())) {
 
             //protect our investment
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
             //if rsi is lower then we have confirmation to sell
             if (getRecent(objRSI.getValueRSI()) < RSI_LINE)

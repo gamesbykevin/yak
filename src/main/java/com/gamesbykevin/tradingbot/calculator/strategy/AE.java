@@ -83,7 +83,7 @@ public class AE extends Strategy {
 
         //if going downward, protect investment
         if (hasTrendDownward(objShortEMA.getEma(), DEFAULT_PERIODS_CONFIRM_DECREASE))
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //no signal yet
         return false;

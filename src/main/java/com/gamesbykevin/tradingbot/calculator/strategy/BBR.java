@@ -90,7 +90,7 @@ public class BBR extends Strategy {
         if (rsi >= RSI_OVERBOUGHT) {
 
             //adjust our hard stop price to protect our investment
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
             //if the middle band is not up-trending compared to previous we can exit our trade now
             if (middlePrev > middleCurr)
@@ -99,7 +99,7 @@ public class BBR extends Strategy {
         } else if (rsi < RSI_TREND) {
 
             //adjust our hard stop price to protect our investment
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
             //if the rsi is going towards oversold territory, let's see if the close drops below our middle band or if the middle band is decreasing
             if (middlePrev > middleCurr || close < middleCurr)
@@ -108,7 +108,7 @@ public class BBR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (close < middleCurr)
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         return false;
     }

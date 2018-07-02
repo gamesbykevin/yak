@@ -18,6 +18,11 @@ public abstract class Strategy extends Calculation {
     private List<Indicator> indicators;
 
     /**
+     * The default number of periods we check for the short $
+     */
+    public static final int DEFAULT_PERIODS_SHORT = 5;
+
+    /**
      * The default number of periods we check when confirming an uptrend
      */
     public static final int DEFAULT_PERIODS_CONFIRM_INCREASE = 5;
@@ -73,7 +78,7 @@ public abstract class Strategy extends Calculation {
     private final Key key;
 
     //track the time so we know when the current candle will end
-    private long timeStart, timeEnd;
+    private long timeEnd;
 
     //did we setup the time to wait?
     private boolean timeWait = false;
@@ -169,6 +174,26 @@ public abstract class Strategy extends Calculation {
         for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).cleanup();
         }
+    }
+
+    protected double getShortLow(List<Period> history) {
+
+        //our final result
+        double low = 0;
+
+        //check the recent history for a short $
+        for (int index = history.size() - DEFAULT_PERIODS_SHORT; index < history.size(); index++) {
+
+            //get the current value
+            double tmp = history.get(index).low;
+
+            //if not set or there is a better low
+            if (low == 0 || tmp < low)
+                low = tmp;
+        }
+
+        //return our result
+        return low;
     }
 
     public void goShort(Agent agent, double price) {

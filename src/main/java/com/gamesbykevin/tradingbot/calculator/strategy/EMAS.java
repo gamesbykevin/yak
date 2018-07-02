@@ -83,7 +83,7 @@ public class EMAS extends Strategy {
 
             //if the candle closes below the short sma let's go short
             if (getRecent(history, Fields.Close) < getRecent(smaObjShort))
-                goShort(agent, getRecent(history, Fields.Low));
+                goShort(agent, getShortLow(history));
         }
 
         //no signal

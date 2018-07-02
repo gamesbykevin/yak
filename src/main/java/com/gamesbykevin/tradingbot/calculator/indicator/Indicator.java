@@ -17,7 +17,7 @@ public abstract class Indicator extends Calculation {
         CCI, MFLI, RSI, SO, STRSI,
 
         //trend
-        ADX, DMT, EMA, FIB, HA, IC, LR, MACD, SMA, SMMA, SR,
+        ADX, DMT, EMA, FIB, HA, IC, LR, MACD, PS, SMA, SMMA, SR,
 
         //volatility
         ATR, BB, NR,

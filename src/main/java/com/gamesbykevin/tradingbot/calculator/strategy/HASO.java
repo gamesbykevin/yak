@@ -75,7 +75,7 @@ public class HASO extends Strategy {
         if (objHA.isBearish(prev) && objHA.isBearish(curr)) {
 
             //protect investment
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
             //if our stochastic indicator is high, let's sell
             if (getRecent(objSO.getStochasticOscillator()) >= STOCHASTIC_MAX)

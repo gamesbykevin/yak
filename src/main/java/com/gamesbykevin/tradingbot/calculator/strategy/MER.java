@@ -103,11 +103,11 @@ public class MER extends Strategy {
 
         //if 13 period ema is < 21 period ema (minor bearish trend)
         if (getRecent(ema3) < getRecent(ema4))
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //if 3 period ema is < 5 period ema (minor bearish trend)
         if (getRecent(ema1) < getRecent(ema2))
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //if our fastest moving ema goes below a longer ema
         if (getRecent(ema1) < getRecent(ema4) || getRecent(ema1) < getRecent(ema5))

@@ -115,13 +115,13 @@ public class CA extends Strategy {
 
                 //cci is below -100 and the current period closed bullish
                 if (getRecent(objCCI.getCCI()) <= CCI_LOW && period.open < period.close)
-                    goShort(agent, getRecent(history, Fields.Low));
+                    goShort(agent, getShortLow(history));
 
             } else if (getRecent(objADX.getDmPlusIndicator()) > getRecent(objADX.getDmMinusIndicator())) {
 
                 //cci is above 100 and the current period closed bearish
                 if (getRecent(objCCI.getCCI()) >= CCI_HIGH && period.open > period.close)
-                    goShort(agent, getRecent(history, Fields.Low));
+                    goShort(agent, getShortLow(history));
             }
         }
 

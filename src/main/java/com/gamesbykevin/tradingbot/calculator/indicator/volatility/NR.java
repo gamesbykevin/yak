@@ -13,17 +13,8 @@ import static com.gamesbykevin.tradingbot.agent.AgentManagerHelper.displayMessag
  */
 public class NR extends Indicator {
 
-    /**
-     * Configurable values
-     */
-    private static final int PERIODS = 7;
-
     //our narrow range candle
     private Period narrowRangeCandle;
-
-    public NR() {
-        this(PERIODS);
-    }
 
     public NR(int periods) {
 

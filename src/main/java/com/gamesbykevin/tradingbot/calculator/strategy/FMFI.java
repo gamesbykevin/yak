@@ -80,11 +80,11 @@ public class FMFI extends Strategy {
 
             //protect our investment
             if (hasFake(history, market) || hasFade(history, market) || hasSquat(history, market))
-                goShort(agent, getRecent(history, Fields.Low));
+                goShort(agent, getShortLow(history));
 
             //green confirms the trend and if the price is decreasing let's sell
             if (hasGreen(history, market) && curr.close < prev.close) {
-                goShort(agent, getRecent(history, Fields.Low));
+                goShort(agent, getShortLow(history));
                 return true;
             }
         }

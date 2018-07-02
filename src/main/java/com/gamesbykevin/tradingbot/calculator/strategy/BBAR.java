@@ -102,7 +102,7 @@ public class BBAR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (closeCurr < midCurr || closeCurr < lowCurr)
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //no signal yet
         return false;

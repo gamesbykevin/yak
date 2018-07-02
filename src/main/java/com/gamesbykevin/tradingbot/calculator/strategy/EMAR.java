@@ -85,7 +85,7 @@ public class EMAR extends Strategy {
 
         //adjust our hard stop price to protect our investment
         if (emaShort < emaLong || current < RSI_LINE)
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //no signal
         return false;

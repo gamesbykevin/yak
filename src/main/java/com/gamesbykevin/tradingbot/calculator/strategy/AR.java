@@ -66,7 +66,7 @@ public class AR extends Strategy {
 
         //if rsi is consistently going down, let's short
         if (hasTrendDownward(objRSI.getValueRSI(), DEFAULT_PERIODS_CONFIRM_INCREASE))
-            goShort(agent, getRecent(history, Fields.Low));
+            goShort(agent, getShortLow(history));
 
         //no signal
         return false;
