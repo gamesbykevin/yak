@@ -52,6 +52,10 @@ public class CalculatorHelper {
                 strategy = new DM();
                 break;
 
+            case EC:
+                strategy = new EC();
+                break;
+
             case EMA3:
                 strategy = new EMA3();
                 break;
@@ -122,6 +126,10 @@ public class CalculatorHelper {
 
             case NVE:
                 strategy = new NVE();
+                break;
+
+            case PSE:
+                strategy = new PSE();
                 break;
 
             case PVE:
