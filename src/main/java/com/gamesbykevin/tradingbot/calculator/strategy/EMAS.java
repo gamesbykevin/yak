@@ -49,7 +49,7 @@ public class EMAS extends Strategy {
         if (getRecent(emaShortObj) > getRecent(emaLongObj)) {
 
             //if the period closes above the short sma let's buy
-            if (getRecent(history, Fields.Close) > getRecent(smaObjShort))
+            if (getRecent(history, Fields.Close) > getRecent(smaObjShort) && getRecent(smaObjShort) > getRecent(smaObjLong))
                 return true;
 
         } else {

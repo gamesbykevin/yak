@@ -5,6 +5,7 @@ import com.gamesbykevin.tradingbot.calculator.Period;
 import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.indicator.momentun.RSI;
 import com.gamesbykevin.tradingbot.calculator.indicator.volatility.NR;
+import com.gamesbykevin.tradingbot.trade.Trade;
 
 import java.util.List;
 
@@ -61,12 +62,25 @@ public class NR7 extends Strategy {
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
-        //if we hit our sell price we will sell
-        if (currentPrice <= sellBreak)
-            return true;
-
         //if the candle does not match the period has ended and we sell
         if (candleTime != history.get(history.size() - 1).time)
+            return true;
+
+        //get the current trade
+        Trade trade = agent.getTrade();
+
+        //confirm the $ is below the sell break $
+        boolean confirm = true;
+
+        //make sure enough $'s are below the sell break to trigger a sell
+        for (int index = trade.getPriceHistory().length - 5; index < trade.getPriceHistory().length; index++) {
+
+            if (trade.getPriceHistory()[index] == 0 || trade.getPriceHistory()[index] > sellBreak)
+                confirm = false;
+        }
+
+        //make sure we confirmed the price
+        if (confirm)
             return true;
 
         //no signal yet

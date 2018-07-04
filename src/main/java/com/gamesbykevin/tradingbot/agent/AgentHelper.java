@@ -214,8 +214,8 @@ public class AgentHelper {
             trade.setReasonSell(ReasonSell.Reason_Strategy);
 
         //if we are above the sma and the price is less, let's wait for it to turn around
-        if (aboveSMA && price < trade.getPriceBuy())
-            trade.setReasonSell(null);
+        //if (aboveSMA && price < trade.getPriceBuy())
+        //    trade.setReasonSell(null);
 
         //if $ declines we sell, else we update the $ history
         if (hasDecline(trade.getPriceHistory())) {

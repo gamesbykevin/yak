@@ -22,16 +22,48 @@ public class PS extends Indicator {
     private List<Double> product;
     private List<Boolean> trend;
 
+    //how much can we increment the acceleration factor?
+    private static final float ACCELERATION_FACTOR_INCREMENT = 0.02f;
+
     //what is our acceleration factor start?
     private static final float ACCELERATION_FACTOR_MIN = 0.02f;
 
     //what is our acceleration factor max?
     private static final float ACCELERATION_FACTOR_MAX = 0.2f;
 
+    //how much can we increment the acceleration factor
+    private final float accelerationFactorIncrement;
+
+    //where do we reset the acceleration factor
+    private final float accelerationFactorMin;
+
+    //what is the allowed max value for the acceleration factor
+    private final float accelerationFactorMax;
+
     public PS() {
+        this(ACCELERATION_FACTOR_INCREMENT, ACCELERATION_FACTOR_MIN, ACCELERATION_FACTOR_MAX);
+    }
+
+    public PS(float accelerationFactorIncrement, float accelerationFactorMin, float accelerationFactorMax) {
 
         //call parent
         super(Key.PS, 0);
+
+        this.accelerationFactorIncrement = accelerationFactorIncrement;
+        this.accelerationFactorMin = accelerationFactorMin;
+        this.accelerationFactorMax = accelerationFactorMax;
+    }
+
+    public float getAccelerationFactorIncrement() {
+        return this.accelerationFactorIncrement;
+    }
+
+    public float getAccelerationFactorMin() {
+        return this.accelerationFactorMin;
+    }
+
+    public float getAccelerationFactorMax() {
+        return this.accelerationFactorMax;
     }
 
     @Override
@@ -58,7 +90,7 @@ public class PS extends Indicator {
                 double difference = getRecent(getExtremePoint()) - getRecent(getSar());
 
                 //acceleration factor
-                getAccelerationFactor().add(ACCELERATION_FACTOR_MIN);
+                getAccelerationFactor().add(getAccelerationFactorMin());
 
                 //(ep - psar) * acceleration factor
                 getProduct().add(difference * getAccelerationFactor().get(0));
@@ -72,16 +104,16 @@ public class PS extends Indicator {
             } else {
 
                 double previousSar = getRecent(getSar());
-                double previousEp = getRecent(getExtremePoint());
-                float previousAf = getAccelerationFactor().get(getAccelerationFactor().size() - 1);
+                double previousExtremePoint = getRecent(getExtremePoint());
+                float previousAccelerationFactor = getAccelerationFactor().get(getAccelerationFactor().size() - 1);
                 double previousProduct = getRecent(getProduct());
                 boolean previousTrend = getTrend().get(getTrend().size() - 1);
 
                 //calculate the new psar
                 if (previousTrend && previousSar + previousProduct > period.low) {
-                    getSar().add(previousEp);
+                    getSar().add(previousExtremePoint);
                 } else if (!previousTrend && previousSar + previousProduct < period.high) {
-                    getSar().add(previousEp);
+                    getSar().add(previousExtremePoint);
                 } else {
                     getSar().add(previousSar + previousProduct);
                 }
@@ -97,14 +129,14 @@ public class PS extends Indicator {
                 boolean currentTrend = getTrend().get(getTrend().size() - 1);
 
                 //calculate the new extreme point
-                if (currentTrend && period.high > previousEp) {
+                if (currentTrend && period.high > previousExtremePoint) {
                     getExtremePoint().add(period.high);
-                } else if (currentTrend && period.high < previousEp) {
-                    getExtremePoint().add(previousEp);
-                } else if (!currentTrend && period.low < previousEp) {
+                } else if (currentTrend && period.high < previousExtremePoint) {
+                    getExtremePoint().add(previousExtremePoint);
+                } else if (!currentTrend && period.low < previousExtremePoint) {
                     getExtremePoint().add(period.low);
-                } else if (!currentTrend && period.low > previousEp) {
-                    getExtremePoint().add(previousEp);
+                } else if (!currentTrend && period.low > previousExtremePoint) {
+                    getExtremePoint().add(previousExtremePoint);
                 }
 
                 //now we can calculate the new difference
@@ -114,23 +146,23 @@ public class PS extends Indicator {
                 if (!currentTrend && previousTrend || currentTrend && !previousTrend) {
 
                     //if we go from (uptrend to downtrend) or (downtrend to uptrend) reset the acceleration factor
-                    getAccelerationFactor().add(ACCELERATION_FACTOR_MIN);
+                    getAccelerationFactor().add(getAccelerationFactorMin());
 
                 } else {
 
                     //we will calculate a new acceleration factor
-                    float newAf = previousAf;
+                    float newAccelerationFactor = previousAccelerationFactor;
 
                     //increase the acceleration factor if there is a new extreme point
-                    if (previousEp != getRecent(getExtremePoint()))
-                        newAf += ACCELERATION_FACTOR_MIN;
+                    if (previousExtremePoint != getRecent(getExtremePoint()))
+                        newAccelerationFactor += getAccelerationFactorIncrement();
 
                     //don't exceed the max value
-                    if (newAf >= ACCELERATION_FACTOR_MAX)
-                        newAf = ACCELERATION_FACTOR_MAX;
+                    if (newAccelerationFactor >= getAccelerationFactorMax())
+                        newAccelerationFactor = getAccelerationFactorMax();
 
                     //add the new acceleration factor to our list
-                    getAccelerationFactor().add(newAf);
+                    getAccelerationFactor().add(newAccelerationFactor);
                 }
 
                 //last but not least we can calculate our product

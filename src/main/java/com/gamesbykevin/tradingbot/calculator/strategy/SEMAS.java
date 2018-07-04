@@ -9,7 +9,7 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.EMA;
 import java.util.List;
 
 /**
- * Stochastic Oscillator / EMA's
+ * Stochastic Oscillator / 2 EMA's
  */
 public class SEMAS extends Strategy {
 
