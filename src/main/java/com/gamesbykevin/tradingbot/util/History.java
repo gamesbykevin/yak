@@ -66,8 +66,15 @@ public class History {
 
     public static synchronized void load(List<Period> history, String productId, Candle candle, PrintWriter writer, boolean archive) {
 
+        //the directory where our history is stored
+        File directory = null;
+
         //get the directory where our history is stored
-        File directory = new File(getDirectory(productId, candle));
+        if (candle.dependency == null) {
+            directory = new File(getDirectory(productId, candle));
+        } else {
+            directory = new File(getDirectory(productId, candle.dependency));
+        }
 
         //if the directory does not exist, there is nothing to load
         if (!directory.exists())

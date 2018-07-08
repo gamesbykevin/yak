@@ -62,6 +62,10 @@ public class HistoryTracker implements Runnable {
 
                     Candle candle = candles[i];
 
+                    //skip candles with a dependency
+                    if (candle.dependency != null)
+                        continue;
+
                     //check every product
                     for (int j = 0; j < getProductsAllUsd().size(); j++) {
 

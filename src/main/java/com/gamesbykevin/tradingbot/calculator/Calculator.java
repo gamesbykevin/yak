@@ -25,6 +25,9 @@ public class Calculator {
     //track our historical data for every candle duration
     private List<Period> history;
 
+    //list of periods for when we want to create custom candles
+    private List<Period> historyTmp;
+
     //all of the strategies we are trading
     private List<Strategy> strategies;
 
@@ -55,12 +58,14 @@ public class Calculator {
 
     public enum Candle {
 
-        OneMinute(60, "one_minute", 6),             //check every 10 seconds
-        FiveMinutes(300, "five_minutes", 10),       //check every 30 seconds
-        FifteenMinutes(900, "fifteen_minutes", 10), //check every 90 seconds  (1 minute 30 seconds)
-        OneHour(3600, "one_hour", 24),              //check every 150 seconds (2 minutes 30 seconds)
-        SixHours(21600, "six_hours", 45),          //check every 480 seconds  (8 minutes)
-        TwentyFourHours(86400, "one_day", 60);     //check every 1440 seconds (24 minutes)
+        OneMinute(60, "one_minute", 6, null),                       //check every  10 seconds
+        FiveMinutes(300, "five_minutes", 10, null),                 //check every  30 seconds
+        FifteenMinutes(900, "fifteen_minutes", 10, null),           //check every  90 seconds (1 minute 30 seconds)
+        ThirtyMinutes(1800, "thirty_minutes", 15, FifteenMinutes),  //check every 120 seconds (2 minutes)
+        OneHour(3600, "one_hour", 24, null),                        //check every 150 seconds (2 minutes 30 seconds)
+        FourHours(14400, "four_hours", 48, OneHour),                //check every 300 seconds (5 minutes)
+        SixHours(21600, "six_hours", 60, null),                     //check every 360 seconds (6 minutes)
+        TwentyFourHours(86400, "one_day", 120, null);               //check every 720 seconds (12 minutes)
 
         //how long (in seconds)
         public final long duration;
@@ -71,10 +76,14 @@ public class Calculator {
         //text description of this candle
         public final String description;
 
-        Candle(long duration, String description, int frequency) {
+        //is this candle dependent on another? this is for creating a custom candle?
+        public final Candle dependency;
+
+        Candle(long duration, String description, int frequency, Candle dependency) {
             this.duration = duration;
             this.description = description;
             this.frequency = frequency;
+            this.dependency = dependency;
         }
     }
 
@@ -103,6 +112,10 @@ public class Calculator {
 
         //populate the list based on existing file data
         History.load(getHistory(), productId, candle, writer, false);
+
+        //merge periods if this is a custom candle
+        if (candle.dependency != null)
+            merge(getHistory(), candle);
 
         //update the previous run time, so it runs immediately since we don't have data yet
         this.timestamp = System.currentTimeMillis() - (candle.duration * 1000);
@@ -148,8 +161,15 @@ public class Calculator {
                 //display message as sometimes the call is not successful
                 displayMessage("Making rest call to retrieve history " + productId + " (" + getCandle().description + ")", null);
 
+                //our json response
+                final String json;
+
                 //make our rest call and get the json response
-                final String json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getCandle().duration));
+                if (getCandle().dependency == null) {
+                    json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getCandle().duration));
+                } else {
+                    json = getJsonResponse(String.format(ENDPOINT_HISTORIC, productId, getCandle().dependency.duration));
+                }
 
                 //convert json text to multi array
                 double[][] data = GSon.getGson().fromJson(json, double[][].class);
@@ -160,8 +180,17 @@ public class Calculator {
                     //store the size
                     final int size = getHistory().size();
 
-                    //update our history list with potential new data
-                    updateHistory(getHistory(), data);
+                    //if there are no dependencies update as usual
+                    if (getCandle().dependency == null) {
+
+                        //update our history list with potential new data
+                        updateHistory(getHistory(), data);
+
+                    } else {
+
+                        //else we will need to store the periods separately until we have enough to create our own custom candle(s);
+                        updateHistory(getHistory(), getHistoryTmp(), getCandle(), data);
+                    }
 
                     //sort the history
                     sortHistory(getHistory());
@@ -255,6 +284,15 @@ public class Calculator {
 
         //size after cleanup
         displayMessage("Cleaned: " + getHistory().size(), writer);
+    }
+
+    public List<Period> getHistoryTmp() {
+
+        //instantiate if null
+        if (this.historyTmp == null)
+            this.historyTmp = new ArrayList<>();
+
+        return this.historyTmp;
     }
 
     public List<Period> getHistory() {

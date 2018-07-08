@@ -1,13 +1,16 @@
 package com.gamesbykevin.tradingbot.calculator;
 
+import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
 import com.gamesbykevin.tradingbot.calculator.strategy.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Period.*;
 import static com.gamesbykevin.tradingbot.util.History.NOTIFY_LIMIT;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.DEBUG;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 public class CalculatorHelper {
@@ -250,6 +253,129 @@ public class CalculatorHelper {
         return timeMax;
     }
 
+    /**
+     * Update the history according to our custom candle
+     * @param history Final list of candles
+     * @param historyTmp List of temp candles so we can create our custom period
+     * @param candle The custom period we are trying to create
+     * @param data JSon response of period data
+     */
+    public static void updateHistory(List<Period> history, List<Period> historyTmp, Candle candle, double[][] data) {
+
+        //check each row of data to filter out the valid periods
+        for (int row = 0; row < data.length; row++) {
+
+            //get the time from the period
+            long time = (long)data[row][PERIOD_INDEX_TIME];
+
+            //we are only interested in new candles
+            if (time <= history.get(history.size() - 1).time)
+                continue;
+
+            //make sure we don't already have this
+            boolean duplicate = false;
+
+            //make sure they aren't already part of the tmp list
+            for (int i = 0; i < historyTmp.size(); i++) {
+
+                if (historyTmp.get(i).time == time) {
+                    historyTmp.get(i).low = data[row][PERIOD_INDEX_LOW];
+                    historyTmp.get(i).high = data[row][PERIOD_INDEX_HIGH];
+                    historyTmp.get(i).open = data[row][PERIOD_INDEX_OPEN];
+                    historyTmp.get(i).close = data[row][PERIOD_INDEX_CLOSE];
+                    historyTmp.get(i).volume = data[row][PERIOD_INDEX_VOLUME];
+                    duplicate = true;
+                    break;
+                }
+            }
+
+            //if we already have this, skip to the next
+            if (duplicate)
+                continue;
+
+            //now we can create a period
+            Period period = new Period();
+            period.time = time;
+            period.low = data[row][PERIOD_INDEX_LOW];
+            period.high = data[row][PERIOD_INDEX_HIGH];
+            period.open = data[row][PERIOD_INDEX_OPEN];
+            period.close = data[row][PERIOD_INDEX_CLOSE];
+            period.volume = data[row][PERIOD_INDEX_VOLUME];
+
+            //and add to our tmp list
+            historyTmp.add(period);
+        }
+
+        //create new candles while we have enough data
+        while (historyTmp.size() >= (candle.duration / candle.dependency.duration)) {
+
+            long timePrevious = history.get(history.size() - 1).time;
+
+            //create our new candle
+            Period candleNew = new Period();
+
+            //assign values for our candle
+            candleNew.time = timePrevious + candle.duration;
+            candleNew.open = 0;
+            candleNew.close = 0;
+            candleNew.low = 0;
+            candleNew.high = 0;
+            candleNew.volume = 0;
+
+            //check all the candles so we can create our new one
+            for (int index = 0; index < historyTmp.size(); index++) {
+
+                //periods have to be in range
+                if (historyTmp.get(index).time <= timePrevious)
+                    continue;
+                if (historyTmp.get(index).time > candleNew.time)
+                    continue;
+
+                //if this is the very next candle we have our open
+                if (candleNew.open == 0 || historyTmp.get(index).time == timePrevious + candle.dependency.duration)
+                    candleNew.open = historyTmp.get(index).open;
+
+                //if this is the end, we have our close
+                if (candleNew.close == 0 || historyTmp.get(index).time == candleNew.time)
+                    candleNew.close = historyTmp.get(index).close;
+
+                //we have a new low
+                if (candleNew.low == 0 || historyTmp.get(index).low < candleNew.low)
+                    candleNew.low = historyTmp.get(index).low;
+
+                //we have a new high
+                if (candleNew.high == 0 || historyTmp.get(index).high > candleNew.high)
+                    candleNew.high = historyTmp.get(index).high;
+
+                //add to the total volume
+                candleNew.volume += historyTmp.get(index).volume;
+
+                //remove the candle that we used
+                historyTmp.remove(index);
+
+                //subtract 1
+                index--;
+            }
+
+            //add our new custom candle to the list
+            history.add(candleNew);
+        }
+
+        if (DEBUG) {
+
+            //print all our periods
+            for (int index = 0; index < history.size(); index++) {
+                Period p = history.get(index);
+                displayMessage("time: " + p.time + ", open $" + p.open + ", close $" + p.close + ", low $" + p.low + ", high $" + p.high + ", volume: " + p.volume);
+            }
+
+            for (int index = 0; index < historyTmp.size(); index++) {
+                Period p = historyTmp.get(index);
+                displayMessage("Queued time: " + p.time + ", open $" + p.open + ", close $" + p.close + ", low $" + p.low + ", high $" + p.high + ", volume: " + p.volume);
+            }
+        }
+    }
+
     public static void updateHistory(List<Period> history, double[][] data) {
 
         //get the greatest time
@@ -258,11 +384,40 @@ public class CalculatorHelper {
         //parse each period from the data
         for (int row = data.length - 1; row >= 0; row--) {
 
+            //if this is not new history we want to verify the existing history
+            if (timeMax > data[row][PERIOD_INDEX_TIME]) {
+                verifyHistory(history, data[row]);
+            } else {
+                addHistory(history, data[row]);
+            }
+
+            /*
             //at this point we only want to add new history with a greater time
             if (timeMax > data[row][PERIOD_INDEX_TIME])
                 continue;
 
             addHistory(history, data[row]);
+            */
+        }
+    }
+
+    private static void verifyHistory(List<Period> history, double[] data) {
+
+        long time = (long)data[PERIOD_INDEX_TIME];
+
+        for (int index = 0; index < history.size(); index++) {
+
+            Period period = history.get(index);
+
+            //if the time exists update the existing data
+            if (period.time == time) {
+
+                period.low = data[PERIOD_INDEX_LOW];
+                period.high = data[PERIOD_INDEX_HIGH];
+                period.open = data[PERIOD_INDEX_OPEN];
+                period.close = data[PERIOD_INDEX_CLOSE];
+                period.volume = data[PERIOD_INDEX_VOLUME];
+            }
         }
     }
 
@@ -336,5 +491,88 @@ public class CalculatorHelper {
                 }
             }
         }
+    }
+
+    /**
+     * Merge the array list of periods together based on the provided candle
+     * @param history List of candles that we want to merge
+     * @param candle The custom candle we want to create
+     */
+    public static void merge(List<Period> history, Candle candle) {
+
+        //our custom candle
+        Period tmp = null;
+
+        //create tmp list for custom candles
+        List<Period> custom = new ArrayList<>();
+
+        //merge every period available
+        for (int index = history.size() - 1; index >= 0; index--) {
+
+            //get the current period
+            Period period = history.get(index);
+
+            //if the period has not been created
+            if (tmp == null) {
+
+                //create a new candle
+                tmp = new Period();
+
+                //store our initial values
+                tmp.time = period.time;
+                tmp.open = period.open;
+                tmp.close = period.close;
+                tmp.low = period.low;
+                tmp.high = period.high;
+                tmp.volume = period.volume;
+
+            } else {
+
+                //let's see how we can update our existing candle
+                if (period.low < tmp.low)
+                    tmp.low = period.low;
+                if (period.high > tmp.high)
+                    tmp.high = period.high;
+
+                //add to the volume
+                tmp.volume += period.volume;
+
+                //how many times does the dependency candle fit inside the candle
+                int factor = (int)(candle.duration / candle.dependency.duration);
+
+                //check if the candle ended
+                if (period.time <= tmp.time - (candle.dependency.duration * (factor - 1))) {
+
+                    //if the candle ended this is our open $ since we are going backwards
+                    tmp.open = period.open;
+
+                    //add this period to the first item
+                    custom.add(0, tmp);
+
+                    //display message if we are missing a candle
+                    if (period.time < tmp.time - candle.duration)
+                        displayMessage("Candle missing: " + period.time + " < " + tmp.time + " - " +  candle.duration);
+
+                    //set the period back to null
+                    tmp = null;
+
+                } else if (period.time < tmp.time - candle.duration) {
+
+                    //throw exception if we are missing candle(s)
+                    //throw new RuntimeException("Candle missing: " + period.time + " < " + tmp.time + " - " +  candle.duration);
+                }
+            }
+        }
+
+        //remove obsolete periods
+        history.clear();
+
+        //add our custom periods to the history list
+        for (int index = 0; index < custom.size(); index++) {
+            history.add(custom.get(index));
+        }
+
+        //just make sure the periods are in order
+        sortHistory(history);
     }
 }

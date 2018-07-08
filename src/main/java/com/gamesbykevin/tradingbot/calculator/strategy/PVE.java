@@ -15,7 +15,6 @@ import static com.gamesbykevin.tradingbot.calculator.strategy.StrategyHelper.has
  */
 public class PVE extends Strategy {
 
-
     //how to access our indicator objects
     private static int INDEX_PVI;
     private static int INDEX_EMA;
