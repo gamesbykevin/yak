@@ -60,8 +60,8 @@ public class LimitOrderHelper extends BasicOrderHelper {
                 //subtract a penny so when the price meets or goes below it executes
                 price = price.subtract(penny);
 
-                //see how much we can buy
-                size = (float)(agent.getWallet().getFunds() / currentPrice);
+                //see how much we can buy based on our risk ratio
+                size = (float)((agent.getWallet().getFunds() * TRADE_RISK_RATIO) / currentPrice);
                 break;
 
             case Sell:

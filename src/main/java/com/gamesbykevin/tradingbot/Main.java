@@ -113,8 +113,14 @@ public class Main implements Runnable {
             Thread thread = new Thread(app);
             thread.start();
 
-            //create our history tracker
-            createHistoryTracker(app);
+            //create a new history tracker if we aren't debugging
+            if (DEBUG) {
+                displayMessage("History tracker not created because we are debugging", app.getWriter());
+            } else {
+                displayMessage("Creating history tracker", app.getWriter());
+                HistoryTracker historyTracker = new HistoryTracker();
+                displayMessage("History tracker created", app.getWriter());
+            }
 
         } catch (Exception e) {
             displayMessage("Trading bot not started...");
@@ -158,18 +164,6 @@ public class Main implements Runnable {
 
         //load our products we will be trading
         loadProducts();
-    }
-
-    private static void createHistoryTracker(Main main) {
-
-        //create a new history tracker
-        if (DEBUG) {
-            displayMessage("History tracker not created because we are debugging", main.getWriter());
-        } else {
-            displayMessage("Creating history tracker", main.getWriter());
-            HistoryTracker historyTracker = new HistoryTracker();
-            displayMessage("History tracker created", main.getWriter());
-        }
     }
 
     private void loadProducts() {

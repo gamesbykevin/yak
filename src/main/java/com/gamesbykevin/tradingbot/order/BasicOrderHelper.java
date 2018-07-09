@@ -2,6 +2,12 @@ package com.gamesbykevin.tradingbot.order;
 
 public class BasicOrderHelper {
 
+    public static float TRADE_RISK_RATIO;
+
+    //the allowed ratio range
+    public static final float TRADE_RISK_RATIO_MIN = 0.01f;
+    public static final float TRADE_RISK_RATIO_MAX = 1.00f;
+
     public enum Action {
 
         Buy("buy"),

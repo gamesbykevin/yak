@@ -6,6 +6,7 @@ import com.gamesbykevin.tradingbot.agent.AgentHelper;
 import com.gamesbykevin.tradingbot.agent.AgentManager;
 import com.gamesbykevin.tradingbot.calculator.*;
 import com.gamesbykevin.tradingbot.calculator.Calculator.Candle;
+import com.gamesbykevin.tradingbot.order.BasicOrderHelper;
 import com.gamesbykevin.tradingbot.trade.Trade;
 import com.gamesbykevin.tradingbot.wallet.Wallet;
 
@@ -13,6 +14,8 @@ import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
+import static com.gamesbykevin.tradingbot.order.BasicOrderHelper.TRADE_RISK_RATIO_MAX;
+import static com.gamesbykevin.tradingbot.order.BasicOrderHelper.TRADE_RISK_RATIO_MIN;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.TAB;
 import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
@@ -195,6 +198,13 @@ public class PropertyUtil {
 
         //how much money can we afford to lose before we stop trading
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
+
+        //when trading how much $ do we risk on a single trade
+        BasicOrderHelper.TRADE_RISK_RATIO = Float.parseFloat(getProperties().getProperty("tradeRiskRatio"));
+
+        //trade risk ratio has to be within range
+        if (BasicOrderHelper.TRADE_RISK_RATIO < TRADE_RISK_RATIO_MIN || BasicOrderHelper.TRADE_RISK_RATIO > TRADE_RISK_RATIO_MAX)
+            throw new RuntimeException("Trade risk ratio must be between " + TRADE_RISK_RATIO_MIN + " and " + TRADE_RISK_RATIO_MAX);
 
         //how many periods do we need in our history to start trading?
         Calculator.HISTORICAL_PERIODS_MINIMUM = Integer.parseInt(getProperties().getProperty("historyMinimum"));

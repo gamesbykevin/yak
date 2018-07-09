@@ -62,6 +62,7 @@ public abstract class Strategy extends Calculation {
         MER,
         MH,
         MP,
+        MS,
         NR4,
         NR7,
         NVE,

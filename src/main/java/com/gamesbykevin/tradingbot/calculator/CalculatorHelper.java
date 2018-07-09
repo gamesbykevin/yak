@@ -127,6 +127,10 @@ public class CalculatorHelper {
                 strategy = new MP();
                 break;
 
+            case MS:
+                strategy = new MS();
+                break;
+
             case NR4:
                 strategy = new NR4();
                 break;
