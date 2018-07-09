@@ -163,12 +163,12 @@ public class Main implements Runnable {
     private static void createHistoryTracker(Main main) {
 
         //create a new history tracker
-        if (!DEBUG) {
+        if (DEBUG) {
+            displayMessage("History tracker not created because we are debugging", main.getWriter());
+        } else {
             displayMessage("Creating history tracker", main.getWriter());
             HistoryTracker historyTracker = new HistoryTracker();
             displayMessage("History tracker created", main.getWriter());
-        } else {
-            displayMessage("History tracker not created because we are debugging", main.getWriter());
         }
     }
 

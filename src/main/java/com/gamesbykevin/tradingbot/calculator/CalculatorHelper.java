@@ -99,6 +99,10 @@ public class CalculatorHelper {
                 strategy = new HASO();
                 break;
 
+            case LDB:
+                strategy = new LDB();
+                break;
+
             case MA:
                 strategy = new MA();
                 break;
@@ -117,6 +121,10 @@ public class CalculatorHelper {
 
             case MH:
                 strategy = new MH();
+                break;
+
+            case MP:
+                strategy = new MP();
                 break;
 
             case NR4:
