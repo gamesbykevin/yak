@@ -278,6 +278,7 @@ public class CalculatorHelper {
             //make sure they aren't already part of the tmp list
             for (int i = 0; i < historyTmp.size(); i++) {
 
+                //update the data if already existing
                 if (historyTmp.get(i).time == time) {
                     historyTmp.get(i).low = data[row][PERIOD_INDEX_LOW];
                     historyTmp.get(i).high = data[row][PERIOD_INDEX_HIGH];
@@ -363,15 +364,19 @@ public class CalculatorHelper {
 
         if (DEBUG) {
 
+            displayMessage("Custom Candles");
+
             //print all our periods
             for (int index = 0; index < history.size(); index++) {
                 Period p = history.get(index);
                 displayMessage("time: " + p.time + ", open $" + p.open + ", close $" + p.close + ", low $" + p.low + ", high $" + p.high + ", volume: " + p.volume);
             }
 
+            displayMessage("Queued Candles");
+
             for (int index = 0; index < historyTmp.size(); index++) {
                 Period p = historyTmp.get(index);
-                displayMessage("Queued time: " + p.time + ", open $" + p.open + ", close $" + p.close + ", low $" + p.low + ", high $" + p.high + ", volume: " + p.volume);
+                displayMessage("time: " + p.time + ", open $" + p.open + ", close $" + p.close + ", low $" + p.low + ", high $" + p.high + ", volume: " + p.volume);
             }
         }
     }
@@ -390,14 +395,6 @@ public class CalculatorHelper {
             } else {
                 addHistory(history, data[row]);
             }
-
-            /*
-            //at this point we only want to add new history with a greater time
-            if (timeMax > data[row][PERIOD_INDEX_TIME])
-                continue;
-
-            addHistory(history, data[row]);
-            */
         }
     }
 

@@ -111,8 +111,8 @@ public class AgentManagerHelper {
 
             Agent agent = manager.getAgents().get(i);
 
-            //start with product, strategy, hard stop ratio, and candle duration
-            result += manager.getProductId() + " : " + agent.getStrategyKey();
+            //start with product, strategy, candle description
+            result += manager.getProductId() + " : " + agent.getStrategyKey() + " (" + agent.getCandle().description + ")";
 
             //how much $ does the agent currently have
             result += " - $" + AgentHelper.round(agent.getAssets());

@@ -60,9 +60,11 @@ public class Calculator {
 
         OneMinute(60, "one_minute", 6, null),                       //check every  10 seconds
         FiveMinutes(300, "five_minutes", 10, null),                 //check every  30 seconds
+        TenMinutes(600, "ten_minutes", 12, FiveMinutes),            //check every  50 seconds
         FifteenMinutes(900, "fifteen_minutes", 10, null),           //check every  90 seconds (1 minute 30 seconds)
         ThirtyMinutes(1800, "thirty_minutes", 15, FifteenMinutes),  //check every 120 seconds (2 minutes)
         OneHour(3600, "one_hour", 24, null),                        //check every 150 seconds (2 minutes 30 seconds)
+        TwoHours(7200, "two_hours", 36, OneHour),                   //check every 200 seconds (3 minutes 20 seconds)
         FourHours(14400, "four_hours", 48, OneHour),                //check every 300 seconds (5 minutes)
         SixHours(21600, "six_hours", 60, null),                     //check every 360 seconds (6 minutes)
         TwentyFourHours(86400, "one_day", 120, null);               //check every 720 seconds (12 minutes)
