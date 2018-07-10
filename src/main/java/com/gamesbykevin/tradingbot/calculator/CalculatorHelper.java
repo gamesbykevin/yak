@@ -51,6 +51,10 @@ public class CalculatorHelper {
                 strategy = new CA();
                 break;
 
+            case CC:
+                strategy = new CC();
+                break;
+
             case DM:
                 strategy = new DM();
                 break;

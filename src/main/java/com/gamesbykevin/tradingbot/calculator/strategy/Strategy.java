@@ -43,6 +43,7 @@ public abstract class Strategy extends Calculation {
         BBER,
         BBR,
         CA,
+        CC,
         DM,
         EC,
         EMA3,

@@ -49,7 +49,7 @@ public class NR7 extends Strategy {
 
             //when the price breaks out above the high, we will buy
             if (currentPrice > nr.getNarrowRangeCandle().high) {
-                candleTime = history.get(history.size() - 1).time;
+                candleTime = 0;
                 sellBreak = nr.getNarrowRangeCandle().low;
                 return true;
             }
@@ -61,6 +61,10 @@ public class NR7 extends Strategy {
 
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
+
+        //assign the candle time if not set yet
+        if (candleTime == 0)
+            candleTime = history.get(history.size() - 1).time;
 
         //if the candle does not match the period has ended and we sell
         if (candleTime != history.get(history.size() - 1).time)

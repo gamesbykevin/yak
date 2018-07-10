@@ -83,7 +83,6 @@ public class FIB extends Indicator {
         for (int index = 0; index < PERCENTAGES.length; index++) {
             getLevel(PERCENTAGES[index]).calculate();
         }
-
     }
 
     @Override
