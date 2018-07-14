@@ -8,7 +8,7 @@ import com.gamesbykevin.tradingbot.trade.TradeHelper;
 
 import static com.gamesbykevin.tradingbot.Main.FUNDS;
 import static com.gamesbykevin.tradingbot.Main.NOTIFICATION_DELAY;
-import static com.gamesbykevin.tradingbot.Main.TRADING_CURRENCIES;
+import static com.gamesbykevin.tradingbot.Main.getTradingCurrencies;
 import static com.gamesbykevin.tradingbot.agent.AgentHelper.round;
 import static com.gamesbykevin.tradingbot.calculator.Calculation.getRecent;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
@@ -51,19 +51,19 @@ public class MainHelper {
         double total = 0;
 
         //print the summary of each agent manager
-        for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
+        for (int i = 0; i < getTradingCurrencies().length; i++) {
 
             //get the total assets for the current product
-            final double assets = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getTotalAssets();
+            final double assets = main.getAgentManagers().get(getTradingCurrencies()[i]).getTotalAssets();
 
             //add to our total
             total += assets;
 
             //add to our details
-            text += main.getAgentManagers().get(TRADING_CURRENCIES[i]).getProductId() + " - $" + round(assets) + NEW_LINE;
+            text += main.getAgentManagers().get(getTradingCurrencies()[i]).getProductId() + " - $" + round(assets) + NEW_LINE;
 
             //display each agent's funds as well
-            text += AgentManagerHelper.getAgentDetails(main.getAgentManagers().get(TRADING_CURRENCIES[i]));
+            text += AgentManagerHelper.getAgentDetails(main.getAgentManagers().get(getTradingCurrencies()[i]));
 
             //add line break in the end
             text += NEW_LINE;
@@ -114,15 +114,15 @@ public class MainHelper {
 
         String desc = "";
 
-        for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
+        for (int i = 0; i < getTradingCurrencies().length; i++) {
 
-            Calculator calc = main.getAgentManagers().get(TRADING_CURRENCIES[i]).getCalculator();
+            Calculator calc = main.getAgentManagers().get(getTradingCurrencies()[i]).getCalculator();
 
             //get the recent values
             final double close = getRecent(calc.getHistory(), Fields.Close);
             final double sma = getRecent(calc.getObjSMA().getSma());
 
-            desc += TRADING_CURRENCIES[i] + " - Close $" + close + ", " + PERIODS_SMA + " SMA $" +  round(sma) + NEW_LINE;
+            desc += getTradingCurrencies()[i] + " - Close $" + close + ", " + PERIODS_SMA + " SMA $" +  round(sma) + NEW_LINE;
 
         }
 

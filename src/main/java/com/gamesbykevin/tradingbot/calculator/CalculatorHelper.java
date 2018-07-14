@@ -6,7 +6,7 @@ import com.gamesbykevin.tradingbot.calculator.strategy.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.gamesbykevin.tradingbot.Main.TRADING_STRATEGIES;
+import static com.gamesbykevin.tradingbot.Main.getTradingStrategies;
 import static com.gamesbykevin.tradingbot.calculator.Calculator.MY_TRADING_STRATEGIES;
 import static com.gamesbykevin.tradingbot.calculator.Period.*;
 import static com.gamesbykevin.tradingbot.util.History.NOTIFY_LIMIT;
@@ -212,33 +212,33 @@ public class CalculatorHelper {
         if (MY_TRADING_STRATEGIES == null) {
 
             //make sure we aren't using duplicate strategies
-            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
-                for (int j = 0; j < TRADING_STRATEGIES.length; j++) {
+            for (int i = 0; i < getTradingStrategies().length; i++) {
+                for (int j = 0; j < getTradingStrategies().length; j++) {
 
                     //don't check the same element
                     if (i == j)
                         continue;
 
                     //if the value already exists we have duplicate strategies
-                    if (TRADING_STRATEGIES[i].trim().equalsIgnoreCase(TRADING_STRATEGIES[j].trim()))
-                        throw new RuntimeException("Duplicate trading strategy in your property file \"" + TRADING_STRATEGIES[i] + "\"");
+                    if (getTradingStrategies()[i].trim().equalsIgnoreCase(getTradingStrategies()[j].trim()))
+                        throw new RuntimeException("Duplicate trading strategy in your property file \"" + getTradingStrategies()[i] + "\"");
                 }
             }
 
             //create our trading array
-            MY_TRADING_STRATEGIES = new Strategy.Key[TRADING_STRATEGIES.length];
+            MY_TRADING_STRATEGIES = new Strategy.Key[getTradingStrategies().length];
 
             //temp list of all values so we can check for a match
             Strategy.Key[] tmp = Strategy.Key.values();
 
             //make sure the specified strategies exist
-            for (int i = 0; i < TRADING_STRATEGIES.length; i++) {
+            for (int i = 0; i < getTradingStrategies().length; i++) {
 
                 //check each strategy for a match
                 for (int j = 0; j < tmp.length; j++) {
 
                     //if the spelling matches we have found our strategy
-                    if (tmp[j].toString().trim().equalsIgnoreCase(TRADING_STRATEGIES[i].trim())) {
+                    if (tmp[j].toString().trim().equalsIgnoreCase(getTradingStrategies()[i].trim())) {
 
                         //assign our strategy
                         MY_TRADING_STRATEGIES[i] = tmp[j];
@@ -250,7 +250,7 @@ public class CalculatorHelper {
 
                 //no matching strategy was found throw exception
                 if (MY_TRADING_STRATEGIES[i] == null)
-                    throw new RuntimeException("Strategy not found \"" + TRADING_STRATEGIES[i] + "\"");
+                    throw new RuntimeException("Strategy not found \"" + getTradingStrategies()[i] + "\"");
             }
         }
     }

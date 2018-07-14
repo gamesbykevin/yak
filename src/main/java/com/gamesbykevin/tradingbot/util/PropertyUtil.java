@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 
+import static com.gamesbykevin.tradingbot.Main.*;
 import static com.gamesbykevin.tradingbot.order.BasicOrderHelper.TRADE_RISK_RATIO_MAX;
 import static com.gamesbykevin.tradingbot.order.BasicOrderHelper.TRADE_RISK_RATIO_MIN;
 import static com.gamesbykevin.tradingbot.trade.TradeHelper.NEW_LINE;
@@ -106,32 +107,32 @@ public class PropertyUtil {
         Main.PAPER_TRADING_FEES = Boolean.parseBoolean(getProperties().getProperty("paperTradingFees"));
 
         //which crypto currencies do we want to trade
-        Main.TRADING_CURRENCIES = getProperties().getProperty("tradingCurrencies").split(DELIMITER);
+        setTradingCurrencies(getProperties().getProperty("tradingCurrencies").split(DELIMITER));
 
         //make sure we have something
-        if (Main.TRADING_CURRENCIES.length < 1) {
+        if (getTradingCurrencies().length < 1) {
 
             throw new RuntimeException("You haven't specified what products you want to trade in your properties file");
 
         } else {
 
             //make sure there aren't extra spaces
-            for (int i = 0; i < Main.TRADING_CURRENCIES.length; i++) {
-                Main.TRADING_CURRENCIES[i] = Main.TRADING_CURRENCIES[i].trim();
+            for (int i = 0; i < getTradingCurrencies().length; i++) {
+                getTradingCurrencies()[i] = getTradingCurrencies()[i].trim();
             }
         }
 
         //what strategies are we trading with
-        Main.TRADING_STRATEGIES = getProperties().getProperty("tradingStrategies").split(DELIMITER);
+        setTradingStrategies(getProperties().getProperty("tradingStrategies").split(DELIMITER));
 
         //make sure we have something
-        if (Main.TRADING_STRATEGIES.length < 1 || Main.TRADING_STRATEGIES[0].trim().length() < 1) {
+        if (getTradingStrategies().length < 1 || getTradingStrategies()[0].trim().length() < 1) {
             throw new RuntimeException("You don't have any trading strategies specified");
         } else {
 
             //make sure there aren't extra spaces
-            for (int i = 0; i < Main.TRADING_STRATEGIES.length; i++) {
-                Main.TRADING_STRATEGIES[i] = Main.TRADING_STRATEGIES[i].trim();
+            for (int i = 0; i < getTradingStrategies().length; i++) {
+                getTradingStrategies()[i] = getTradingStrategies()[i].trim();
             }
         }
 

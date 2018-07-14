@@ -64,10 +64,10 @@ public class Main implements Runnable {
     public static long NOTIFICATION_DELAY;
 
     //which currencies do we want to trade with (separated by comma)
-    public static String[] TRADING_CURRENCIES;
+    private static String[] TRADING_CURRENCIES;
 
     //which strategies do we want to trade with (separated by comma)
-    public static String[] TRADING_STRATEGIES;
+    private static String[] TRADING_STRATEGIES;
 
     /**
      * Are we paper trading? default true
@@ -146,7 +146,7 @@ public class Main implements Runnable {
         } else {
 
             //if we are using real money, let's only focus on 1 trading strategy
-            if (TRADING_STRATEGIES.length != 1)
+            if (getTradingStrategies().length != 1)
                 throw new RuntimeException("When using real money you can only have 1 strategy");
 
             //display message and pause if using real money
@@ -173,20 +173,14 @@ public class Main implements Runnable {
             //make the service call to gdax to get all coins
             List<Product> tmp = productService.getProducts();
 
-            //create new list of products we want to trade
-            PRODUCTS = new ArrayList<>();
-
-            //create new list of all us products
-            PRODUCTS_ALL_USD = new ArrayList<>();
-
             //figure out which products we are trading
             for (int i = 0; i < tmp.size(); i++) {
 
                 //make sure we only add products we want to trade
-                for (int x = 0; x < TRADING_CURRENCIES.length; x++) {
+                for (int x = 0; x < getTradingCurrencies().length; x++) {
 
                     //does this product match, if yes we will add it
-                    if (tmp.get(i).getId().trim().equalsIgnoreCase(TRADING_CURRENCIES[x].trim())) {
+                    if (tmp.get(i).getId().trim().equalsIgnoreCase(getTradingCurrencies()[x].trim())) {
 
                         //add to list
                         getProducts().add(tmp.get(i));
@@ -198,7 +192,7 @@ public class Main implements Runnable {
 
                 //add all US $ products to this list
                 if (tmp.get(i).getId().trim().contains("-USD"))
-                    PRODUCTS_ALL_USD.add(tmp.get(i));
+                    getProductsAllUsd().add(tmp.get(i));
             }
 
         } catch (Exception e) {
@@ -211,7 +205,7 @@ public class Main implements Runnable {
         }
 
         //make sure we are trading at least 1 product
-        if (getProducts().isEmpty() || PRODUCTS_ALL_USD.isEmpty())
+        if (getProducts().isEmpty() || getProductsAllUsd().isEmpty())
             throw new RuntimeException("No products were found");
     }
 
@@ -225,7 +219,7 @@ public class Main implements Runnable {
         init();
 
         //only need to create subscription once
-        Subscribe subscribe = new Subscribe(TRADING_CURRENCIES);
+        Subscribe subscribe = new Subscribe(getTradingCurrencies());
 
         try {
 
@@ -272,12 +266,12 @@ public class Main implements Runnable {
                     } else {
 
                         //if we aren't using the web socket we need to check each manager one by one
-                        for (int i = 0; i < TRADING_CURRENCIES.length; i++) {
+                        for (int i = 0; i < getTradingCurrencies().length; i++) {
 
                             try {
 
                                 //get the agent manager of the coin we want to trade
-                                AgentManager agentManager = getAgentManagers().get(TRADING_CURRENCIES[i]);
+                                AgentManager agentManager = getAgentManagers().get(getTradingCurrencies()[i]);
 
                                 //get json response from ticker
                                 final String json = getJsonResponse(String.format(ENDPOINT_TICKER, agentManager.getProductId()));
@@ -376,11 +370,37 @@ public class Main implements Runnable {
         }
     }
 
+    public static void setTradingCurrencies(String[] tradingCurrencies) {
+        TRADING_CURRENCIES = tradingCurrencies;
+    }
+
+    public static String[] getTradingCurrencies() {
+        return TRADING_CURRENCIES;
+    }
+
+    public static void setTradingStrategies(String[] tradingStrategies) {
+        TRADING_STRATEGIES = tradingStrategies;
+    }
+
+    public static String[] getTradingStrategies() {
+        return TRADING_STRATEGIES;
+    }
+
     protected static List<Product> getProducts() {
+
+        //create new list of products we want to trade
+        if (PRODUCTS == null)
+            PRODUCTS = new ArrayList<>();
+
         return PRODUCTS;
     }
 
     public static List<Product> getProductsAllUsd() {
+
+        //create new list
+        if (PRODUCTS_ALL_USD == null)
+            PRODUCTS_ALL_USD = new ArrayList<>();
+
         return PRODUCTS_ALL_USD;
     }
 
