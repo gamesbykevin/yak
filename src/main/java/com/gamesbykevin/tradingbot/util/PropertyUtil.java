@@ -84,7 +84,7 @@ public class PropertyUtil {
         //our api url endpoint
         Main.ENDPOINT = getProperties().getProperty("gdax.api.baseUrl");
 
-        //is the websocket enabled?
+        //is the web socket enabled?
         Main.WEBSOCKET_ENABLED = Boolean.parseBoolean(getProperties().getProperty("websocketEnabled"));
 
         //how long is each thread

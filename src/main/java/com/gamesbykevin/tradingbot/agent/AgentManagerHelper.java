@@ -43,14 +43,34 @@ public class AgentManagerHelper {
                     //are we above our sma?
                     boolean aboveSMA = true;
 
+                    //only check if we have data to compare
                     if (PERIODS_SMA > 0) {
 
-                        //get the $ for comparison
-                        final double close = calculator.getHistory().get(calculator.getHistory().size() - 1).close;
-                        final double sma = getRecent(calculator.getObjSMA().getSma());
+                        final int confirm = 3;
 
-                        //are we above?
-                        aboveSMA = (close > sma);
+                        //if we have more than x periods, let's confirm we are above the sma
+                        if (PERIODS_SMA >= confirm) {
+
+                            for (int index = 1; index <= confirm; index++) {
+
+                                double close = calculator.getHistory().get(calculator.getHistory().size() - index).close;
+                                double sma = getRecent(calculator.getObjSMA(), index);
+
+                                if (close < sma) {
+                                    aboveSMA = false;
+                                    break;
+                                }
+                            }
+
+                        } else {
+
+                            //get the $ for comparison
+                            final double close = calculator.getHistory().get(calculator.getHistory().size() - 1).close;
+                            final double sma = getRecent(calculator.getObjSMA().getSma());
+
+                            //are we above?
+                            aboveSMA = (close > sma);
+                        }
                     }
 
                     //update the agent
