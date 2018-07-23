@@ -119,6 +119,10 @@ public class CalculatorHelper {
                 strategy = new MARS();
                 break;
 
+            case MC:
+                strategy = new MC();
+                break;
+
             case MER:
                 strategy = new MER();
                 break;
@@ -161,6 +165,10 @@ public class CalculatorHelper {
 
             case SEMAS:
                 strategy = new SEMAS();
+                break;
+
+            case SM:
+                strategy = new SM();
                 break;
 
             case SMASR:

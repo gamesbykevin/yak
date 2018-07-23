@@ -186,7 +186,7 @@ public class AgentHelper {
             displayMessage(agent, "Current Price $" + price + ", Hard stop $" + round(trade.getHardStopPrice()) + ", Hard sell $" + round(trade.getHardSellPrice()), true);
 
             //create and assign our limit order
-            agent.setOrder(createLimitOrder(agent, Action.Buy, product, price));
+            agent.setOrder(createLimitOrder(agent, Action.Buy, product, price, aboveSMA));
 
         } else {
 
@@ -275,7 +275,7 @@ public class AgentHelper {
             trade.setAttempts(0);
 
             //create and assign our limit order at the current $
-            agent.setOrder(createLimitOrder(agent, Action.Sell, product, price));
+            agent.setOrder(createLimitOrder(agent, Action.Sell, product, price, aboveSMA));
 
             //we want to wait until the next candle period before we check to buy stock again after this sells
             strategy.setWait(true);

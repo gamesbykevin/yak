@@ -6,6 +6,9 @@ import com.gamesbykevin.tradingbot.calculator.indicator.trend.DMT;
 
 import java.util.List;
 
+/**
+ * Demark Trend
+ */
 public class DM extends Strategy {
 
     //how to access our indicator objects

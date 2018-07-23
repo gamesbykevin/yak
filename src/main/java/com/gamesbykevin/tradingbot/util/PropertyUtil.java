@@ -23,8 +23,13 @@ import static com.gamesbykevin.tradingbot.util.Email.getTextDateDesc;
 
 public class PropertyUtil {
 
+    //are we running this in IntelliJ?
+    public static final boolean DEBUG = true;
+
+    //location of property file
     public static final String PROPERTY_FILE = "./application.properties";
 
+    //object used to access property values
     private static Properties PROPERTIES;
 
     /**
@@ -41,9 +46,6 @@ public class PropertyUtil {
      * Character delimiter for when we have multiple values supplied for a property
      */
     public static final String DELIMITER = ",";
-
-    //are we running this in IntelliJ?
-    public static final boolean DEBUG = true;
 
     //how many milliseconds are there per minute
     public static final long MILLISECONDS_PER_MINUTE = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
@@ -201,10 +203,13 @@ public class PropertyUtil {
         Wallet.STOP_TRADING_RATIO = Float.parseFloat(getProperties().getProperty("stopTradingRatio"));
 
         //when trading how much $ do we risk on a single trade
-        BasicOrderHelper.TRADE_RISK_RATIO = Float.parseFloat(getProperties().getProperty("tradeRiskRatio"));
+        BasicOrderHelper.TRADE_RISK_RATIO_ABOVE_SMA = Float.parseFloat(getProperties().getProperty("tradeRiskRatioAboveSMA"));
+        BasicOrderHelper.TRADE_RISK_RATIO_BELOW_SMA = Float.parseFloat(getProperties().getProperty("tradeRiskRatioBelowSMA"));
 
         //trade risk ratio has to be within range
-        if (BasicOrderHelper.TRADE_RISK_RATIO < TRADE_RISK_RATIO_MIN || BasicOrderHelper.TRADE_RISK_RATIO > TRADE_RISK_RATIO_MAX)
+        if (BasicOrderHelper.TRADE_RISK_RATIO_ABOVE_SMA < TRADE_RISK_RATIO_MIN || BasicOrderHelper.TRADE_RISK_RATIO_ABOVE_SMA > TRADE_RISK_RATIO_MAX)
+            throw new RuntimeException("Trade risk ratio must be between " + TRADE_RISK_RATIO_MIN + " and " + TRADE_RISK_RATIO_MAX);
+        if (BasicOrderHelper.TRADE_RISK_RATIO_BELOW_SMA < TRADE_RISK_RATIO_MIN || BasicOrderHelper.TRADE_RISK_RATIO_BELOW_SMA > TRADE_RISK_RATIO_MAX)
             throw new RuntimeException("Trade risk ratio must be between " + TRADE_RISK_RATIO_MIN + " and " + TRADE_RISK_RATIO_MAX);
 
         //how many periods do we need in our history to start trading?

@@ -35,7 +35,7 @@ public class LimitOrderHelper extends BasicOrderHelper {
     //after creating a limit order, how long do we wait before we check if created (in milliseconds)
     private static final long LIMIT_ORDER_STATUS_DELAY = 250L;
 
-    public static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice) {
+    public static synchronized Order createLimitOrder(Agent agent, Action action, Product product, double currentPrice, boolean aboveSMA) {
 
         //the price we want to buy/sell
         BigDecimal price = new BigDecimal(currentPrice);
@@ -61,7 +61,11 @@ public class LimitOrderHelper extends BasicOrderHelper {
                 price = price.subtract(penny);
 
                 //see how much we can buy based on our risk ratio
-                size = (float)((agent.getWallet().getFunds() * TRADE_RISK_RATIO) / currentPrice);
+                if (aboveSMA) {
+                    size = (float)((agent.getWallet().getFunds() * TRADE_RISK_RATIO_ABOVE_SMA) / currentPrice);
+                } else {
+                    size = (float)((agent.getWallet().getFunds() * TRADE_RISK_RATIO_BELOW_SMA) / currentPrice);
+                }
                 break;
 
             case Sell:

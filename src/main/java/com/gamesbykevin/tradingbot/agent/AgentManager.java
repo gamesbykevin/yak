@@ -7,6 +7,7 @@ import com.gamesbykevin.tradingbot.calculator.Period.Fields;
 import com.gamesbykevin.tradingbot.calculator.strategy.Strategy;
 import com.gamesbykevin.tradingbot.util.Email;
 import com.gamesbykevin.tradingbot.util.LogFile;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public class AgentManager {
             return;
 
         //info for our message
-        String subject = null, text = null;
+        String subject = null, text = "";
 
         //get the recent values
         final double close = getRecent(getCalculator().getHistory(), Fields.Close);
@@ -140,7 +141,6 @@ public class AgentManager {
             if (close > sma) {
 
                 subject = getProductId() + " is above the " + PERIODS_SMA + " period SMA";
-                //text = "We can now resume trading" + NEW_LINE;
 
                 //we are no longer below the sma
                 belowSMA = false;
@@ -148,7 +148,6 @@ public class AgentManager {
             } else {
 
                 subject = getProductId() + " is below the " + PERIODS_SMA + " period SMA";
-                //text = "We will stop trading until it improves" + NEW_LINE;
 
                 //we are below the sma
                 belowSMA = true;
@@ -158,11 +157,17 @@ public class AgentManager {
             //we are now tracking for a change in $
             initialize = true;
 
-            //show the user our current data
-            if (text == null) {
-                text = "Close $" + close + ", SMA $" + round(sma);
-            } else {
-                text += "Close $" + close + ", SMA $" + round(sma);
+            //include previous data (if available)
+            for (int index = 1; index <= 5; index++) {
+
+                //skip if out of bounds
+                if (index > getCalculator().getHistory().size())
+                    break;
+                if (index > getCalculator().getObjSMA().getSma().size())
+                    break;
+
+                text += "Index: " + index + ", Close $" + getRecent(getCalculator().getHistory(), Fields.Close, index) +
+                        ", SMA $" + round(getRecent(getCalculator().getObjSMA().getSma(), index)) + NEW_LINE;
             }
 
             //notify

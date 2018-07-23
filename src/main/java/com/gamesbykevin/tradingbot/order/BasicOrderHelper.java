@@ -2,7 +2,8 @@ package com.gamesbykevin.tradingbot.order;
 
 public class BasicOrderHelper {
 
-    public static float TRADE_RISK_RATIO;
+    public static float TRADE_RISK_RATIO_ABOVE_SMA;
+    public static float TRADE_RISK_RATIO_BELOW_SMA;
 
     //the allowed ratio range
     public static final float TRADE_RISK_RATIO_MIN = 0.01f;
