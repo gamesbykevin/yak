@@ -12,10 +12,10 @@ import java.util.List;
 public class MARS extends Strategy {
 
     //our multiple periods in ascending order
-    private static final int[] PERIODS = {10, 20, 30, 40, 50, 60, 70, 80};
+    private static final int[] PERIODS = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
 
-    //how we will access our objects
-    private int[] INDEXES = {1, 2, 3, 4, 5, 6, 7, 8};
+    //how we will access our objects, these values will change
+    private int[] INDEXES = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     public MARS() {
 
@@ -74,15 +74,12 @@ public class MARS extends Strategy {
                 return false;
         }
 
-        //we have a buy signal since all ema indicators are below
-        return true;
+        //no signal
+        return false;
     }
 
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
-
-        //is the downtrend broken
-        boolean confirm = true;
 
         //if half cross above let's assume this is as good as it gets
         for (int i = 0; i < (PERIODS.length / 2); i++) {

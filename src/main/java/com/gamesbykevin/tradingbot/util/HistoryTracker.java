@@ -13,6 +13,7 @@ import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.sortHistor
 import static com.gamesbykevin.tradingbot.calculator.CalculatorHelper.updateHistory;
 import static com.gamesbykevin.tradingbot.util.JSon.getJsonResponse;
 import static com.gamesbykevin.tradingbot.util.LogFile.getFilenameHistoryTracker;
+import static com.gamesbykevin.tradingbot.util.PropertyUtil.DEBUG;
 import static com.gamesbykevin.tradingbot.util.PropertyUtil.displayMessage;
 
 /**
@@ -38,6 +39,10 @@ public class HistoryTracker implements Runnable {
      * Default constructor
      */
     public HistoryTracker() {
+
+        //if we are debugging, don't continue
+        if (DEBUG == true)
+            return;
 
         if (getProductsAllUsd() == null || getProductsAllUsd().isEmpty())
             throw new RuntimeException("There are no usd products to track...");

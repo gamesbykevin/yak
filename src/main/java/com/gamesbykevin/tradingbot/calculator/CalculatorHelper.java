@@ -163,6 +163,10 @@ public class CalculatorHelper {
                 strategy = new RA();
                 break;
 
+            case REMA:
+                strategy = new REMA();
+                break;
+
             case SEMAS:
                 strategy = new SEMAS();
                 break;

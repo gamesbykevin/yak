@@ -71,6 +71,7 @@ public abstract class Strategy extends Calculation {
         PSE,
         PVE,
         RA,
+        REMA,
         SEMAS,
         SM,
         SMASR,
@@ -162,14 +163,14 @@ public abstract class Strategy extends Calculation {
     }
 
     @Override
-    public final void displayData(Agent agent, boolean write) {
+    public void displayData(Agent agent, boolean write) {
 
         for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).displayData(agent, write);
         }
     }
 
-    public final void calculate(List<Period> history, int newPeriods) {
+    public void calculate(List<Period> history, int newPeriods) {
 
         for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).calculate(history, newPeriods);
@@ -177,7 +178,7 @@ public abstract class Strategy extends Calculation {
     }
 
     @Override
-    public final void cleanup() {
+    public void cleanup() {
 
         for (int index =  0; index < getIndicators().size(); index++) {
             getIndicator(index).cleanup();
