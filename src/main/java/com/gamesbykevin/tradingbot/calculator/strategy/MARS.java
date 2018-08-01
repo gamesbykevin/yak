@@ -12,10 +12,16 @@ import java.util.List;
 public class MARS extends Strategy {
 
     //our multiple periods in ascending order
-    private static final int[] PERIODS = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+    private static final int[] PERIODS = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 200};
 
     //how we will access our objects, these values will change
-    private int[] INDEXES = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    private int[] INDEXES = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+
+    //how many periods do we confirm for support resistance
+    private static final int PERIODS_CONFIRM = 20;
+
+    //where is the support and resistance
+    private int indexSupport = -1, indexResistance = -1;
 
     public MARS() {
 
@@ -62,6 +68,55 @@ public class MARS extends Strategy {
     @Override
     public boolean hasBuySignal(Agent agent, List<Period> history, double currentPrice) {
 
+        indexSupport = -1;
+        indexResistance = -1;
+
+        //get the short and fast ema
+        double fastest = getRecent((EMA)getIndicator(INDEXES[0]));
+        double slowest = getRecent((EMA)getIndicator(INDEXES[INDEXES.length - 1]));
+
+        //determine what is the support / resistance line
+        if (fastest > slowest) {
+
+            //where is the support line at
+            for (int index = INDEXES.length - 1; index >= 0; index --) {
+
+                //were we successful testing the support line
+                boolean success = true;
+
+                //let's confirm we reach support
+                for (int i = 1; i <= PERIODS_CONFIRM; i++) {
+
+                    //get the current period
+                    Period current = history.get(history.size() - i);
+
+                    //get the current ema value
+                    double ema = getRecent((EMA)getIndicator(INDEXES[index]), i);
+
+                    //if the current periods low is below the ema, it broke support
+                    if (current.low < ema) {
+                        success = false;
+                        break;
+                    }
+                }
+
+                if (success) {
+
+                    //if successful, update our index support line
+                    indexSupport = index;
+
+                } else {
+
+                    //if not successful, no need to continue
+                    break;
+                }
+            }
+
+        } else {
+
+        }
+
+        /*
         //let's confirm everything is down so we increase our chances buying at the dip (aka support line)
         for (int i = 0; i < PERIODS.length - 1; i++) {
 
@@ -73,6 +128,7 @@ public class MARS extends Strategy {
             if (fast > slow)
                 return false;
         }
+        */
 
         //no signal
         return false;
@@ -81,6 +137,7 @@ public class MARS extends Strategy {
     @Override
     public boolean hasSellSignal(Agent agent, List<Period> history, double currentPrice) {
 
+        /*
         //if half cross above let's assume this is as good as it gets
         for (int i = 0; i < (PERIODS.length / 2); i++) {
 
@@ -92,8 +149,9 @@ public class MARS extends Strategy {
             if (fast < slow)
                 return false;
         }
+        */
 
-        //signal to sell
-        return true;
+        //no signal
+        return false;
     }
 }
