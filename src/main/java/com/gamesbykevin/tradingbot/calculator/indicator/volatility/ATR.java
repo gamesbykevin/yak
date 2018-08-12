@@ -54,6 +54,10 @@ public class ATR extends Indicator {
         //where do we start?
         int start = getAverageTrueRange().isEmpty() ? 0 : history.size() - newPeriods;
 
+        //do we have enough data?
+        if (history.size() < getPeriods())
+            return;
+
         for (int i = start; i < history.size(); i++) {
 
             //get the current and previous periods

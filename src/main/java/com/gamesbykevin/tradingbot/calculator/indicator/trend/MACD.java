@@ -80,6 +80,12 @@ public class MACD extends Indicator {
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
+        //don't continue if we don't have enough information
+        if (history.size() < getObjShortEMA().getPeriods() ||
+                history.size() < getObjLongEMA().getPeriods() ||
+                history.size() < objSignalLine.getPeriods())
+            return;
+
         //calculate our short and long ema values first
         getObjShortEMA().calculate(history, newPeriods);
         getObjLongEMA().calculate(history, newPeriods);

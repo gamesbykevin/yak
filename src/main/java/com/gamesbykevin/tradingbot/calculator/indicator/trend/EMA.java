@@ -122,6 +122,10 @@ public class EMA extends Indicator {
      */
     public void calculateEma(List<Double> data, int newPeriods) {
 
+        //make sure enough data exists
+        if (data.size() < getPeriods())
+            return;
+
         //here is our multiplier
         final double multiplier = ((float) 2 / ((float)getPeriods() + 1.0f));
 

@@ -247,11 +247,15 @@ public class Calculator {
         //if there are new periods we are no longer waiting to calculate
         strategy.setWait(false);
 
-        //calculate indicator values based on the current strategy
-        strategy.calculate(getHistory(), newPeriods);
+        //if there is no history we can't calculate anything
+        if (!getHistory().isEmpty()) {
 
-        //cleanup data list(s) to keep it at a manageable size
-        strategy.cleanup();
+            //calculate indicator values based on the current strategy
+            strategy.calculate(getHistory(), newPeriods);
+
+            //cleanup data list(s) to keep it at a manageable size
+            strategy.cleanup();
+        }
 
         //display info
         displayMessage("Calculating " + getCandle().description + " " + strategy.getKey() + " done", writer);

@@ -35,6 +35,10 @@ public class NR extends Indicator {
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
+        //we need to have enough data
+        if (history.size() < getPeriods())
+            return;
+
         //look at the most recent periods
         for (int index = history.size() - getPeriods(); index < history.size(); index++) {
 

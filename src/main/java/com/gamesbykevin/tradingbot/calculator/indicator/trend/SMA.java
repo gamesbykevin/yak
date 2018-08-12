@@ -79,6 +79,10 @@ public class SMA extends Indicator {
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
+        //we can't do anything if the history is empty
+        if (history.isEmpty())
+            return;
+
         //where do we start
         int start = getSma().isEmpty() ? 0 : history.size() - newPeriods;
 

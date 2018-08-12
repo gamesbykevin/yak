@@ -125,7 +125,7 @@ public class AgentManager {
      */
     private void checkSMA() {
 
-        if (PERIODS_SMA < 1)
+        if (PERIODS_SMA < 1 || getCalculator().getObjSMA().getSma().isEmpty())
             return;
 
         //info for our message

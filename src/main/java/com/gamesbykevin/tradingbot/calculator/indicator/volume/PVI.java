@@ -52,6 +52,10 @@ public class PVI extends Indicator {
     @Override
     public void calculate(List<Period> history, int newPeriods) {
 
+        //do we have enough data?
+        if (history.size() < objEMA.getPeriods())
+            return;
+
         //start at 1,000
         double pvi = 1000;
 

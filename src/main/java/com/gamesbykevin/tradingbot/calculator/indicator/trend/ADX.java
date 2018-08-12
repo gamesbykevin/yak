@@ -83,6 +83,10 @@ public class ADX extends Indicator {
         //where do we start
         int start = getAdx().isEmpty() ? 0 : history.size() - newPeriods;
 
+        //do we have enough data?
+        if (history.size() < getPeriods())
+            return;
+
         //calculate for the entire history that we have
         for (int i = start; i < history.size(); i++) {
 

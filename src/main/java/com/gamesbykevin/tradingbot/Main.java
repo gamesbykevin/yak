@@ -118,7 +118,7 @@ public class Main implements Runnable {
                 displayMessage("History tracker not created because we are debugging", app.getWriter());
             } else {
                 displayMessage("Creating history tracker", app.getWriter());
-                HistoryTracker historyTracker = new HistoryTracker();
+                new HistoryTracker();
                 displayMessage("History tracker created", app.getWriter());
             }
 
@@ -331,6 +331,9 @@ public class Main implements Runnable {
 
         //add an agent for each product we are trading
         for (int i = 0; i < getProducts().size(); i++) {
+
+            //display agent is created
+            displayMessage("Creating agent - " + getProducts().get(i).getId(), getWriter());
 
             //create new manager agent
             AgentManager agentManager = new AgentManager(getProducts().get(i), funds);
