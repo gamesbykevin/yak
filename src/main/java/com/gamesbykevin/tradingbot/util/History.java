@@ -50,15 +50,18 @@ public class History {
 
     private static synchronized String getFileName(File directory, boolean existing) {
 
-        final int length = directory.listFiles().length;
+        final int length = (directory.listFiles() != null) ? directory.listFiles().length : 0;
 
         //if looking for the existing file name
         if (existing) {
 
-            if (length == 1)
+            if (length == 0) {
+                return FILENAME_DESC + "1" + FILENAME_EXT;
+            } else if (length == 1) {
                 return directory.listFiles()[0].getName();
-
-             return FILENAME_DESC + length + FILENAME_EXT;
+            } else {
+                return FILENAME_DESC + length + FILENAME_EXT;
+            }
         } else {
             return FILENAME_DESC + (length + 1) + FILENAME_EXT;
         }

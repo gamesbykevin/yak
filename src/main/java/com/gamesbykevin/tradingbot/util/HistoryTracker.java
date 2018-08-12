@@ -27,7 +27,7 @@ public class HistoryTracker implements Runnable {
     /**
      * How long do we wait between our json calls
      */
-    private static final long DELAY = (180L * 1000L);
+    private static final long DELAY = (150L * 1000L);
 
     //this script will check in the candle history to github
     private static final String SHELL_SCRIPT_FILE = "./auto_check.sh";
@@ -41,15 +41,20 @@ public class HistoryTracker implements Runnable {
     public HistoryTracker() {
 
         //if we are debugging, don't continue
-        if (DEBUG == true)
+        if (DEBUG == true) {
+
+            displayMessage("History Tracker will start", getWriter());
             return;
 
-        if (getProductsAllUsd() == null || getProductsAllUsd().isEmpty())
-            throw new RuntimeException("There are no usd products to track...");
+        } else {
 
-        //create new thread and start it
-        this.thread = new Thread(this);
-        this.thread.start();
+            if (getProductsAllUsd() == null || getProductsAllUsd().isEmpty())
+                throw new RuntimeException("There are no usd products to track...");
+
+            //create new thread and start it
+            this.thread = new Thread(this);
+            this.thread.start();
+        }
     }
 
     @Override
