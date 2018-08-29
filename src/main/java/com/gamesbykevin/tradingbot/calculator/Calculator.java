@@ -247,8 +247,8 @@ public class Calculator {
         //if there are new periods we are no longer waiting to calculate
         strategy.setWait(false);
 
-        //if there is no history we can't calculate anything
-        if (!getHistory().isEmpty()) {
+        //if there is no history we can't calculate anything, so we need to make sure we have enough
+        if (!getHistory().isEmpty() && getHistory().size() >= HISTORICAL_PERIODS_MINIMUM) {
 
             //calculate indicator values based on the current strategy
             strategy.calculate(getHistory(), newPeriods);
